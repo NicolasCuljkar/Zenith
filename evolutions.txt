@@ -1,0 +1,72 @@
+graphique Évolution mensuelle, les mois ne sont pas dans l'ordre
+
+dans Top dépenses fixes & variables (analyse) mettre de la couleur sur les différentes dépenses (mais ne pas toucher à celui dans commun qui doit montrer l'état des dépenses entre les utilisateurs)
+ 
+Dans vue d'ensemble commun répartition je veux un kpi qui permet de voir le pourcentage d'épargne commun au dessus de → Épargne calculée
+
+mettre le logo de l'app zenith en flaticon
+
+Réduire la taille du séparateur en dessous de mois et Année dans épargne pour qu'il ne soit que en dessous de deux onglets et plus jusqu'au bouton ajouter
+
+Enlever le hover sur et la puce sur Dépenses / revenu dans vue d'ensemble pour que le reponsive s'adapte mieux aux téléphones
+
+revoir le message ✓ Bon taux ▲ 2% dans Épargne calculée, je veux que ca soit sur la même ligne (dans analyse taux d'épargne aussi ✓ Objectif atteint ▲ 2% )
+
+dans épargne commun ajouter la MAJ "mois" dans Total épargne comme sur les deux puces juste à gauche
+Sur ces deux autre puces ajouter le nom de la personne à qui elle correspond 
+
+Dans projection (utilisateur unique pas commun) Épargne actuelle, enlever le nom et mettre des infos comme les puces à droite (Épargne mensuelle, Dans 10 ans (sans rdt), Dans 10 ans (4% rdt))
+
+améliore grandement le style de la page de réglages afin qu'elle soit plus complète et plus propre (je veux aussi pouvoir changer de mot de passe, de nom, de mail)
+
+améliore le visuel et le style de toute les pages de l'app et de toute l'app, ajoute un mode clair qu'on peut choisir en cliquant sur une option bien stylisée dans le profil en haut à droite, fais une belle animation quand le mode change
+
+Mets en place un GitHub et un hébergement de l'app (je veux que l'app soit accessible partout sur tous les supports avec une persistance des données)
+
+Adapte moi l'app aux mobiles (je veux que ça soit parfait et moderne sur téléphone)
+
+Je veux pouvoir lier l'app à ma banque pour pouvoir afficher en temps réel l'état de mes dépenses et de mes revenus sur une autre page, met en place l'api bridge, je veux pouvoir lier plusieurs comptes d'une ou plusieurs banques et je veux pouvoir voir combien j'ai sur mes différents comptes
+
+
+***
+
+
+Je développe une application de gestion financière personnelle.
+
+Je veux implémenter une fonctionnalité permettant de connecter l'application aux comptes bancaires des utilisateurs via une API (bridgeapi.io)
+
+Objectifs :
+
+Permettre à l’utilisateur de lier plusieurs comptes bancaires, provenant d’une ou plusieurs banques
+
+Mettre en place un l'api sécurisée pour récupérer les données financières
+
+Récupérer et synchroniser en temps réel (ou quasi temps réel) :
+
+le solde des comptes
+
+les transactions (revenus et dépenses)
+
+Stocker et structurer ces données côté backend
+
+Créer une page dédiée affichant :
+
+le solde total consolidé
+
+le détail des soldes par compte
+
+les flux (revenus / dépenses)
+
+Contraintes techniques :
+
+Authentification sécurisée (OAuth2 ou équivalent)
+
+Gestion des tokens et refresh tokens
+
+Gestion des erreurs API (timeouts, accès refusé, etc.)
+
+Support de plusieurs fournisseurs bancaires
+
+Architecture scalable et maintenable
+
+

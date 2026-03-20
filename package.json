@@ -1,0 +1,12 @@
+{
+  "name": "zenith-budget",
+  "version": "1.0.0",
+  "description": "Zénith Budget Manager — Full-stack app",
+  "engines": {
+    "node": ">=22.5.0"
+  },
+  "scripts": {
+    "start": "node backend/src/app.js",
+    "install-deps": "cd backend && npm install"
+  }
+}
