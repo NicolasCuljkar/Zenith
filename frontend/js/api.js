@@ -139,6 +139,7 @@ const get    = (ep, params = {}) => {
 };
 const post   = (ep, body) => request(ep, { method: 'POST',   body });
 const put    = (ep, body) => request(ep, { method: 'PUT',    body });
+const patch  = (ep, body) => request(ep, { method: 'PATCH',  body });
 const del    = (ep)       => request(ep, { method: 'DELETE' });
 
 // ── API modules ────────────────────────────────────────────────────────────────
@@ -355,14 +356,12 @@ const _users = {
     return updatedUser;
   },
   async updateProfile(data) {
-    const patch = (ep, body) => request(ep, { method: 'PATCH', body });
     const updatedUser = await patch('/users/profile', data);
     const current = getStoredUser();
     if (current) setStoredUser({ ...current, ...data });
     return updatedUser;
   },
   async changePassword(data) {
-    const patch = (ep, body) => request(ep, { method: 'PATCH', body });
     return patch('/users/password', data);
   },
 };
