@@ -367,6 +367,21 @@ const _users = {
   },
 };
 
+/**
+ * bridge — Open Banking via Nordigen (GoCardless Bank Account Data)
+ */
+const _bridge = {
+  getInstitutions: ()                           => get('/bridge/institutions'),
+  createConnection: (institutionId, name)        => post('/bridge/connect', { institutionId, institutionName: name }),
+  syncItem: (itemId)                             => post(`/bridge/sync/${itemId}`),
+  syncByRef: (ref)                               => post(`/bridge/sync-by-ref/${ref}`),
+  syncAll: ()                                    => post('/bridge/sync-all'),
+  getAccounts: ()                                => get('/bridge/accounts'),
+  getTransactions: (p={})                        => get('/bridge/transactions?' + new URLSearchParams(p)),
+  getSummary: ()                                 => get('/bridge/summary'),
+  deleteItem: (itemId)                           => del(`/bridge/items/${itemId}`),
+};
+
 // ── Export the API object ──────────────────────────────────────────────────────
 
 /**
@@ -381,7 +396,7 @@ const _users = {
  *   clearAuth: typeof clearAuth,
  * }}
  */
-const API = { auth: _auth, entries: _entries, savings: _savings, users: _users, getToken, clearAuth };
+const API = { auth: _auth, entries: _entries, savings: _savings, users: _users, bridge: _bridge, getToken, clearAuth };
 
 // Attach to window for global access in inline scripts
 if (typeof window !== 'undefined') {

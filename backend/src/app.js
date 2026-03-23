@@ -18,6 +18,7 @@ const authRoutes    = require('./routes/auth.routes');
 const entriesRoutes = require('./routes/entries.routes');
 const savingsRoutes = require('./routes/savings.routes');
 const usersRoutes   = require('./routes/users.routes');
+const bridgeRoutes  = require('./routes/bridge.routes');
 
 // ── Import middleware ──────────────────────────────────────────
 const { errorHandler, notFoundHandler } = require('./middleware/error.middleware');
@@ -56,6 +57,7 @@ app.use('/api/auth',    authRoutes);
 app.use('/api/entries', entriesRoutes);
 app.use('/api/savings', savingsRoutes);
 app.use('/api/users',   usersRoutes);
+app.use('/api/bridge',  bridgeRoutes);
 
 // ── Health check endpoint ───────────────────────────────────────
 app.get('/api/health', (req, res) => {
