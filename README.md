@@ -64,13 +64,6 @@ npx serve frontend
 
 > **Note :** L'API doit être démarrée AVANT d'ouvrir le frontend.
 
-## Comptes de démo
-
-| Utilisateur | Email                | Mot de passe |
-|-------------|----------------------|--------------|
-| Nicolas     | nicolas@budget.fr    | nicolas123   |
-| Carla       | carla@budget.fr      | carla123     |
-
 ## Variables d'environnement
 
 Copiez `.env.example` vers `.env` et modifiez les valeurs :
