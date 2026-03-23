@@ -9,5 +9,11 @@
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 3,
     "healthcheckPath": "/api/health"
-  }
+  },
+  "volumes": [
+    {
+      "mount": "/data",
+      "name": "zenith-db"
+    }
+  ]
 }
