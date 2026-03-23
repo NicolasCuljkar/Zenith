@@ -83,15 +83,6 @@ npx serve frontend
 
 ---
 
-## Comptes de démo
-
-| Utilisateur | Email             | Mot de passe |
-|-------------|-------------------|--------------|
-| Nicolas     | nicolas@budget.fr | nicolas123   |
-| Carla       | carla@budget.fr   | carla123     |
-
----
-
 ## Variables d'environnement
 
 | Variable       | Défaut        | Description                        |
