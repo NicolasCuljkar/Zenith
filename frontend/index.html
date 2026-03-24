@@ -2885,7 +2885,7 @@ function renderAnalysis(){
   const healthScore=scoreSav+scoreRig+scoreDep;
   const scoreColor=healthScore>=80?'var(--green)':healthScore>=60?'var(--blue)':healthScore>=40?'var(--amber)':'var(--red)';
   const scoreLabel=healthScore>=80?'Excellent':healthScore>=60?'Bon':healthScore>=40?'Correct':'À améliorer';
-  const scoreTip=`Épargne : ${scoreSav}/40 pts · Flexibilité : ${scoreRig}/30 pts · Dépenses : ${scoreDep}/30 pts`;
+  const scoreTip=`Épargne (${scoreSav}/40 pts) : taux d'épargne actuel ${epRateCalc}% — objectif ≥ 20% · Flexibilité (${scoreRig}/30 pts) : charges fixes ${fixRate}% du revenu net — objectif ≤ 30% · Dépenses (${scoreDep}/30 pts) : solde après dépenses et épargne — positif = bonne gestion · Score global : ≥ 75 excellent · ≥ 50 à surveiller · < 50 situation tendue`;
 
   // ── Badges ──
   const mkBadge=(txt,ok,warn)=>`<span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;background:${ok?'var(--green-bg)':warn?'var(--amber-bg)':'var(--red-bg)'};color:${ok?'var(--green)':warn?'var(--amber)':'var(--red)'}">${txt}</span>`;
