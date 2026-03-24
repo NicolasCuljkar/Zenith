@@ -4,6 +4,7 @@ const db = require('../config/database');
 
 const VALID_CATS = ['revenu', 'impot', 'fixe', 'variable', 'epargne', 'loisir'];
 
+// Membres valides = utilisateurs enregistrés + 'Commun'
 function getValidMembers() {
   return [...db.prepare('SELECT name FROM users').all().map(r => r.name), 'Commun'];
 }
@@ -14,10 +15,13 @@ function httpError(message, statusCode) {
   return err;
 }
 
+// ── Lecture ──────────────────────────────────────────────────────
+
 function getAll(filters = {}) {
   const conditions = [];
   const params     = [];
 
+  // Filtre par membre (affichage) — 'Commun' retourne toutes les entrées tous membres
   if (filters.member && filters.member !== 'all' && filters.member !== 'Commun') {
     conditions.push('member = ?');
     params.push(filters.member);
@@ -34,7 +38,7 @@ function getAll(filters = {}) {
   const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
 
   return db.prepare(`
-    SELECT id, name, amount, cat, member, sort_order, created_at, updated_at
+    SELECT id, user_id, name, amount, cat, member, sort_order, created_at, updated_at
     FROM entries
     ${where}
     ORDER BY member ASC, sort_order ASC, ABS(amount) DESC
@@ -45,10 +49,27 @@ function getById(id) {
   return db.prepare('SELECT * FROM entries WHERE id = ?').get(id) || null;
 }
 
-function create({ name, amount, cat, member }) {
-  if (!name || !name.trim())              throw httpError('La désignation est requise.', 400);
-  if (isNaN(Number(amount)))              throw httpError('Le montant doit être un nombre.', 400);
-  if (!VALID_CATS.includes(cat))          throw httpError(`Catégorie invalide : ${cat}`, 400);
+function getStats(filters = {}) {
+  const entries = getAll(filters);
+  const sum = (cat) => entries.filter(e => e.cat === cat).reduce((s, e) => s + Math.abs(e.amount), 0);
+  const rev    = sum('revenu');
+  const tax    = sum('impot');
+  const revNet = rev - tax;
+  const fix    = sum('fixe');
+  const vari   = sum('variable');
+  const ep     = sum('epargne');
+  const loi    = sum('loisir');
+  const dep    = fix + vari + loi;
+  const rav    = revNet - fix - vari;
+  return { rev, tax, revNet, fix, vari, ep, loi, dep, rav, solde: revNet - dep - ep };
+}
+
+// ── Écriture ─────────────────────────────────────────────────────
+
+function create({ name, amount, cat, member }, userId) {
+  if (!name || !name.trim())               throw httpError('La désignation est requise.', 400);
+  if (isNaN(Number(amount)))               throw httpError('Le montant doit être un nombre.', 400);
+  if (!VALID_CATS.includes(cat))           throw httpError(`Catégorie invalide : ${cat}`, 400);
   if (!getValidMembers().includes(member)) throw httpError(`Membre invalide : ${member}`, 400);
 
   const maxOrder = db.prepare(
@@ -56,16 +77,21 @@ function create({ name, amount, cat, member }) {
   ).get(member).m;
 
   const result = db.prepare(`
-    INSERT INTO entries (name, amount, cat, member, sort_order, updated_at)
-    VALUES (?, ?, ?, ?, ?, datetime('now'))
-  `).run(name.trim(), Number(amount), cat, member, maxOrder + 1);
+    INSERT INTO entries (user_id, name, amount, cat, member, sort_order, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, datetime('now'))
+  `).run(userId, name.trim(), Number(amount), cat, member, maxOrder + 1);
 
   return getById(result.lastInsertRowid);
 }
 
-function update(id, { name, amount, cat, member }) {
+function update(id, { name, amount, cat, member }, userId) {
   const existing = getById(id);
   if (!existing) throw httpError('Ligne budgétaire introuvable.', 404);
+
+  // Seul le propriétaire peut modifier (sauf entrées 'Commun' = tout le monde)
+  if (existing.member !== 'Commun' && existing.user_id !== userId) {
+    throw httpError('Non autorisé à modifier cette ligne.', 403);
+  }
 
   if (cat    !== undefined && !VALID_CATS.includes(cat))           throw httpError(`Catégorie invalide : ${cat}`, 400);
   if (member !== undefined && !getValidMembers().includes(member)) throw httpError(`Membre invalide : ${member}`, 400);
@@ -85,27 +111,17 @@ function update(id, { name, amount, cat, member }) {
   return getById(id);
 }
 
-function remove(id) {
-  if (!getById(id)) throw httpError('Ligne budgétaire introuvable.', 404);
+function remove(id, userId) {
+  const existing = getById(id);
+  if (!existing) throw httpError('Ligne budgétaire introuvable.', 404);
+
+  // Seul le propriétaire peut supprimer (sauf entrées 'Commun' = tout le monde)
+  if (existing.member !== 'Commun' && existing.user_id !== userId) {
+    throw httpError('Non autorisé à supprimer cette ligne.', 403);
+  }
+
   db.prepare('DELETE FROM entries WHERE id = ?').run(id);
   return { deleted: true };
-}
-
-function getStats(filters = {}) {
-  const entries = getAll(filters);
-  const sum = (cat) => entries.filter(e => e.cat === cat).reduce((s, e) => s + Math.abs(e.amount), 0);
-
-  const rev    = sum('revenu');
-  const tax    = sum('impot');
-  const revNet = rev - tax;
-  const fix    = sum('fixe');
-  const vari   = sum('variable');
-  const ep     = sum('epargne');
-  const loi    = sum('loisir');
-  const dep    = fix + vari + loi;
-  const rav    = revNet - fix - vari;
-
-  return { rev, tax, revNet, fix, vari, ep, loi, dep, rav, solde: revNet - dep - ep };
 }
 
 function updateOrder(memberName, groupKey, orderedIds) {

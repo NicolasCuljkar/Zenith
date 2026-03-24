@@ -30,7 +30,7 @@ async function listSavings(req, res, next) {
 async function createSaving(req, res, next) {
   try {
     const { member, year, month, amount } = req.body;
-    const saving = savingsService.create({ member, year, month, amount });
+    const saving = savingsService.create({ member, year, month, amount }, req.user.id);
     res.status(201).json({ success: true, data: saving });
   } catch (err) {
     next(err);
@@ -59,7 +59,7 @@ async function getSaving(req, res, next) {
 async function updateSaving(req, res, next) {
   try {
     const { member, year, month, amount } = req.body;
-    const saving = savingsService.update(Number(req.params.id), { member, year, month, amount });
+    const saving = savingsService.update(Number(req.params.id), { member, year, month, amount }, req.user.id);
     res.json({ success: true, data: saving });
   } catch (err) {
     next(err);
@@ -72,7 +72,7 @@ async function updateSaving(req, res, next) {
  */
 async function deleteSaving(req, res, next) {
   try {
-    const result = savingsService.remove(Number(req.params.id));
+    const result = savingsService.remove(Number(req.params.id), req.user.id);
     res.json({ success: true, data: result });
   } catch (err) {
     next(err);
