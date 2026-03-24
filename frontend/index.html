@@ -213,7 +213,7 @@ html.light .kpi{box-shadow:0 1px 4px rgba(0,0,0,.06)}
   white-space:nowrap;z-index:200;
   opacity:0;pointer-events:none;
   transition:opacity .15s,transform .15s;
-  min-width:180px;
+  min-width:180px;max-width:min(320px,90vw);white-space:normal;
 }
 html.dark .kpi-tooltip{box-shadow:0 8px 24px rgba(0,0,0,.4)}
 .kpi-trend{display:inline-flex;align-items:center;gap:3px;font-size:12px;font-weight:700;padding:2px 6px;border-radius:20px}
@@ -223,7 +223,7 @@ html.dark .kpi-tooltip{box-shadow:0 8px 24px rgba(0,0,0,.4)}
 
 /* ── Flow chart (Où va chaque euro?) ── */
 .flow-bar{display:flex;height:46px;border-radius:10px;overflow:hidden}
-.flow-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.flow-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px}
 .flow-leg-item{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--surface2);border-radius:10px;border:1px solid var(--border);transition:outline .12s}
 .flow-leg-accent{width:8px;height:36px;border-radius:4px;flex-shrink:0;display:block}
 .flow-leg-label{font-size:11px;font-weight:700;color:var(--hint);letter-spacing:.05em;text-transform:uppercase;margin-bottom:3px}
@@ -444,10 +444,24 @@ input[type=range]:hover::-moz-range-thumb{transform:scale(1.1)}
   .flow-leg-value{font-size:13px;margin-bottom:4px}
   .flow-leg-pct{font-size:16px;min-width:32px}
 }
+@media(max-width:480px){
+  html,body{font-size:17px}
+  .entry-card{padding:10px}
+  .flow-bar{height:38px}
+  .flow-leg-pct{font-size:15px;min-width:30px}
+  .kpi-tooltip{min-width:140px}
+  .user-menu-dropdown{min-width:160px;max-width:calc(100vw - 20px)}
+  #donut-chart-wrap,#proj-chart-wrap{height:200px!important}
+  #bar-chart-wrap{height:160px!important}
+  #conseils-steps{grid-template-columns:1fr!important}
+  #goal-btns{grid-template-columns:repeat(5,1fr)!important}
+  #horizon-btns{grid-template-columns:repeat(4,1fr)!important}
+  #goal-result-stats{grid-template-columns:1fr 1fr!important}
+}
 @media(max-width:380px){
   .kpi-grid{grid-template-columns:1fr 1fr;gap:6px}
   .kpi-value{font-size:16px}.kpi{padding:8px 10px 10px}
-  .main{padding:.75rem .5rem 5rem}.topbar{padding:0 .75rem}
+  .main{padding:.75rem .5rem 5rem}.topbar{padding:0 max(.75rem,env(safe-area-inset-left))}
   .auth-card{padding:1.5rem 1rem}
   .bnav-label{display:none}.bottom-nav-inner{height:52px}
   .flow-grid{grid-template-columns:1fr 1fr;gap:4px}
@@ -779,7 +793,7 @@ window.onerror = function(msg, src, line) {
   <div class="kpi-grid" id="conseils-kpis" style="margin-bottom:var(--sg);margin-top:0"></div>
 
   <!-- Parcours en 3 étapes — horizontal pills -->
-  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:1.5rem">
+  <div id="conseils-steps" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:1.5rem">
     <div style="background:linear-gradient(135deg,#0d9e6e18,#0d9e6e08);border:1px solid #0d9e6e44;border-radius:var(--rl);padding:14px 12px;text-align:center">
       <div style="width:36px;height:36px;border-radius:50%;background:#0d9e6e;color:#fff;font-size:18px;font-weight:800;display:flex;align-items:center;justify-content:center;margin:0 auto 10px">1</div>
       <div style="font-size:14px;font-weight:700;margin-bottom:4px;color:var(--text)">Sécurité</div>
@@ -3376,7 +3390,7 @@ function updateGoal(){
         <div style="width:${pctDone}%;height:100%;background:linear-gradient(90deg,#0d9e6e,#2979c8);border-radius:4px;transition:width .6s ease"></div>
       </div>
       <!-- 3 stats -->
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">
+      <div id="goal-result-stats" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">
         <div style="background:var(--surface2);border-radius:var(--r);padding:10px;text-align:center;border:1px solid var(--border)">
           <div style="font-size:12px;color:var(--hint);font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px">Atteint</div>
           <div style="font-size:15px;font-weight:700;color:#0d9e6e">${eur(curSav)}</div>
