@@ -331,9 +331,9 @@ html.dark .mtab-all.active{background:var(--mc-all-bg,linear-gradient(90deg,rgba
 
 /* ── Saving card ── */
 .scard{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;gap:12px}
-.scard-left{display:flex;align-items:center;gap:6px;flex-shrink:0}
-.scard-right{display:flex;align-items:center;gap:6px;margin-left:auto;flex-shrink:0}
-.scard-amount{text-align:right;margin-right:8px}
+.scard-left{display:flex;align-items:center;gap:6px;flex-shrink:0;min-width:0}
+.scard-right{display:flex;align-items:center;gap:5px;margin-left:auto;flex-shrink:0}
+.scard-amount{text-align:right;margin-right:6px}
 
 /* ── Color swatch ── */
 .cswatch{width:26px;height:26px;border-radius:50%;border:2px solid transparent;cursor:pointer;flex-shrink:0}
@@ -470,7 +470,9 @@ input[type=range]:hover::-moz-range-thumb{transform:scale(1.1)}
   /* profile rows */
   .prow-lbl,.prow-val{font-size:13px}
   /* saving cards */
-  .scard{padding:9px 11px}.entry-card{padding:11px}
+  .scard{padding:8px 10px;gap:8px;margin-bottom:6px}
+  .scard-amount{margin-right:3px}
+  .entry-card{padding:11px}
   /* bottom nav */
   .bnav-label{font-size:9px}.bnav-btn svg{width:20px;height:20px}
   .bottom-nav-inner{height:56px}
@@ -2795,7 +2797,7 @@ function renderSavings(){
         return{yr,total,a1,a2,delta,pctV};
       });
       if(isMobile){
-        wrap.innerHTML=rows.map(r=>{const col=r.delta==null?'var(--hint)':r.delta>=0?'var(--green)':'var(--red)';const bg=r.delta==null?'':'border-left:3px solid '+col+';background:'+( r.delta>=0?'var(--green-bg)':'var(--red-bg)');return`<div class="scard" style="${bg}"><div class="scard-left"><div style="font-weight:600;font-size:16px">${r.yr}</div></div><div class="scard-right"><div class="scard-amount"><div style="font-size:17px;font-weight:700;color:var(--green)">${eur(r.total)}</div><div style="font-size:13px;color:var(--muted)">${eur(r.a1)} · ${eur(r.a2)}</div><div style="font-size:14px;color:${col}">${dlt(r.delta)}${r.pctV!=null?' ('+fmtPct(r.pctV)+')':''}</div></div></div></div>`;}).join('');
+        wrap.innerHTML=rows.map(r=>{const col=r.delta==null?'var(--hint)':r.delta>=0?'var(--green)':'var(--red)';const bg=r.delta==null?'':'border-left:3px solid '+col+';background:'+( r.delta>=0?'var(--green-bg)':'var(--red-bg)');return`<div class="scard" style="${bg}"><div class="scard-left"><div style="font-weight:600;font-size:14px">${r.yr}</div></div><div class="scard-right"><div class="scard-amount"><div style="font-size:15px;font-weight:700;color:var(--green)">${eur(r.total)}</div><div style="font-size:12px;color:var(--muted)">${eur(r.a1)} · ${eur(r.a2)}</div><div style="font-size:12px;color:${col}">${dlt(r.delta)}${r.pctV!=null?' ('+fmtPct(r.pctV)+')':''}</div></div></div></div>`;}).join('');
       } else {
         const revN=calcStats(entries.filter(e=>e.member===m1)).revNet*12||1;
       const revC=calcStats(entries.filter(e=>e.member===m2)).revNet*12||1;
@@ -2819,7 +2821,7 @@ function renderSavings(){
         return{month,year,total,a1,a2,delta,pctV};
       });
       if(isMobile){
-        wrap.innerHTML=rows.map(r=>{const col=r.delta==null?'var(--hint)':r.delta>=0?'var(--green)':'var(--red)';const bg=r.delta==null?'':'border-left:3px solid '+col+';background:'+( r.delta>=0?'var(--green-bg)':'var(--red-bg)');return`<div class="scard" style="${bg}"><div class="scard-left"><div style="font-weight:600;font-size:16px">${r.month} ${r.year}</div></div><div class="scard-right"><div class="scard-amount"><div style="font-size:17px;font-weight:700;color:var(--green)">${eur(r.total)}</div><div style="font-size:13px;color:var(--muted)">${avatarHtml(m1,18,8)} ${eur(r.a1)} · ${avatarHtml(m2,18,8)} ${eur(r.a2)}</div><div style="font-size:14px;color:${col}">${dlt(r.delta)}${r.pctV!=null?' ('+fmtPct(r.pctV)+')':''}</div></div></div></div>`;}).join('');
+        wrap.innerHTML=rows.map(r=>{const col=r.delta==null?'var(--hint)':r.delta>=0?'var(--green)':'var(--red)';const bg=r.delta==null?'':'border-left:3px solid '+col+';background:'+( r.delta>=0?'var(--green-bg)':'var(--red-bg)');return`<div class="scard" style="${bg}"><div class="scard-left"><div style="font-weight:600;font-size:13px">${r.month}</div><div style="font-size:11px;color:var(--muted)">${r.year}</div></div><div class="scard-right"><div class="scard-amount"><div style="font-size:15px;font-weight:700;color:var(--green)">${eur(r.total)}</div><div style="font-size:11px;color:var(--muted);display:flex;align-items:center;gap:4px;justify-content:flex-end">${avatarHtml(m1,14,6)} ${eur(r.a1)} · ${avatarHtml(m2,14,6)} ${eur(r.a2)}</div><div style="font-size:12px;color:${col}">${dlt(r.delta)}${r.pctV!=null?' ('+fmtPct(r.pctV)+')':''}</div></div></div></div>`;}).join('');
       } else {
         const revNm=calcStats(entries.filter(e=>e.member===m1)).revNet||1;
       const revCm=calcStats(entries.filter(e=>e.member===m2)).revNet||1;
@@ -2839,7 +2841,8 @@ function renderSavings(){
         wrap.innerHTML=rows.length===0?'<div class="tbl-empty">Aucune donnée</div>':rows.map((s,i)=>{
           const delta=i>0&&rows[i-1]?s.amount-rows[i-1].amount:null;const p=pct(s,i);const col=delta==null?'var(--hint)':delta>=0?'var(--green)':'var(--red)';const bg=delta==null?'':'border-left:3px solid '+col+';background:'+(delta>=0?'var(--green-bg)':'var(--red-bg)');
           const lbl=isYear?String(s.year):`${s.month} ${s.year}`;
-          return`<div class="scard" style="${bg}"><div class="scard-left"><div style="font-weight:600;font-size:16px;white-space:nowrap">${lbl}</div></div><div class="scard-right"><div class="scard-amount"><div style="font-size:17px;font-weight:600">${eur(s.amount)}</div><div style="font-size:14px;color:${col}">${dlt(delta)}${p!=null?' ('+fmtPct(p)+')':''}</div></div>${!isYear?`<button class="btn-act" onclick="openEditSaving(${s.id})"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="btn-act btn-act-danger" onclick="deleteSaving(${s.id})"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg></button>`:''}</div></div>`;
+          const[lMonth,lYear]=isYear?[null,lbl]:lbl.split(' ');
+          return`<div class="scard" style="${bg}"><div class="scard-left">${isYear?`<div style="font-weight:600;font-size:14px">${lbl}</div>`:`<div style="font-weight:600;font-size:13px">${lMonth}</div><div style="font-size:11px;color:var(--muted)">${lYear}</div>`}</div><div class="scard-right"><div class="scard-amount"><div style="font-size:15px;font-weight:600">${eur(s.amount)}</div><div style="font-size:12px;color:${col}">${dlt(delta)}${p!=null?' ('+fmtPct(p)+')':''}</div></div>${!isYear?`<button class="btn-act" onclick="openEditSaving(${s.id})"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="btn-act btn-act-danger" onclick="deleteSaving(${s.id})"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg></button>`:''}</div></div>`;
         }).join('');
       } else if(isYear){
         wrap.innerHTML=`<div class="tbl-wrap"><table><thead><tr><th>Année</th><th style="text-align:right">Fonds fin d'année</th><th style="text-align:right">Évolution vs N-1</th><th style="text-align:right">%</th></tr></thead><tbody>${rows.length===0?'<tr><td colspan="4" class="tbl-empty">Aucune donnée</td></tr>':rows.map((s,i)=>{const p=pct(s,i);const delta=i>0&&rows[i-1]?s.amount-rows[i-1].amount:null;const col=delta==null?'var(--hint)':delta>=0?'var(--green)':'var(--red)';const bg=delta==null?'':delta>=0?'background:var(--green-bg)':'background:var(--red-bg)';return`<tr style="${bg}"><td style="color:var(--muted)">${s.year}</td><td style="text-align:right;font-weight:700;color:${memberColors[name]}">${eur(s.amount)}</td><td style="text-align:right;color:${col}">${dlt(delta)}</td><td style="text-align:right;font-size:14px;color:${col}">${fmtPct(p)}</td></tr>`;}).join('')}</tbody></table></div>`;
