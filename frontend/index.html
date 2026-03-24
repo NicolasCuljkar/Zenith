@@ -1070,6 +1070,7 @@ let memberColors={Nicolas:'#3B8BD4',Carla:'#e06fa0'};
 let savingPct={Nicolas:60,Carla:50};
 let savingsMember='all',analysisMember='all',projectionMember='all',dashboardMember='all',entriesMember='Commun',conseilsMember='all';
 let projAnnualRate=0.04; // default 4%
+let simMonthlyOverride=null;
 let entryOrder={}; // {memberId_groupKey: [id, id, ...]} custom sort order
 try{entryOrder=JSON.parse(localStorage.getItem('bm_entry_order')||'{}');}catch(e){}
 // profilePhotos is now fetched from the API (stored in users table)
@@ -1700,7 +1701,7 @@ function setEntriesMember(m){
 }
 function setSavingsMember(m){savingsMember=m;renderMemberTabsFor('savings-mtabs',m,'setSavingsMember');setTimeout(updateMtabColors,0);renderSavings();}
 function setAnalysisMember(m){analysisMember=m;renderMemberTabsFor('analysis-mtabs',m,'setAnalysisMember');setTimeout(updateMtabColors,0);renderAnalysis();}
-function setProjectionMember(m){projectionMember=m;renderMemberTabsFor('proj-mtabs',m,'setProjectionMember');setTimeout(updateMtabColors,0);renderProjection();}
+function setProjectionMember(m){projectionMember=m;simMonthlyOverride=null;renderMemberTabsFor('proj-mtabs',m,'setProjectionMember');setTimeout(updateMtabColors,0);renderProjection();}
 
 // ══════════════════════════════════════════════
 // DASHBOARD
@@ -3298,11 +3299,11 @@ function renderProjection(){
     <div style="margin-bottom:var(--sg)">
       <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px">
         <span style="font-size:14px;color:var(--muted);font-weight:500">Épargne mensuelle</span>
-        <span id="sim-val" style="font-size:16px;font-weight:700;color:var(--blue)">${monthly}&nbsp;€/mois</span>
+        <span id="sim-val" style="font-size:16px;font-weight:700;color:var(--blue)">${simMonthlyOverride??monthly}&nbsp;€/mois</span>
       </div>
-      <input type="range" min="100" max="3000" step="50" value="${monthly}" id="sim-slider"
+      <input type="range" min="100" max="3000" step="50" value="${simMonthlyOverride??monthly}" id="sim-slider"
         style="width:100%;accent-color:var(--blue);--accent-c:var(--blue)"
-        oninput="document.getElementById('sim-val').textContent=this.value+'\u00a0€/mois';updateSim();fillTrack(this)">
+        oninput="simMonthlyOverride=+this.value;document.getElementById('sim-val').textContent=this.value+'\u00a0€/mois';updateSim();fillTrack(this)">
       <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--hint);margin-top:2px"><span>100 €</span><span>3 000 €</span></div>
     </div>
     <div style="margin-bottom:var(--sg)">
