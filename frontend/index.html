@@ -1182,46 +1182,8 @@ function showApiError(msg){
 // ══════════════════════════════════════════════
 // PERSISTENCE
 // ══════════════════════════════════════════════
-const DEFAULT_ENTRIES=[
-  {id:1,name:'Salaire NET social',amount:2126,cat:'revenu',member:'Nicolas'},
-  {id:2,name:'Impôts',amount:-105,cat:'impot',member:'Nicolas'},
-  {id:3,name:'Loyer',amount:-450,cat:'fixe',member:'Nicolas'},
-  {id:4,name:'Moto',amount:-132,cat:'fixe',member:'Nicolas'},
-  {id:5,name:'Parking',amount:-100,cat:'fixe',member:'Nicolas'},
-  {id:6,name:'Électricité & Wifi',amount:-38,cat:'fixe',member:'Nicolas'},
-  {id:7,name:'Assurance habitation',amount:-22,cat:'fixe',member:'Nicolas'},
-  {id:8,name:'Abonnement',amount:-5,cat:'fixe',member:'Nicolas'},
-  {id:9,name:'Frais bancaires',amount:-11,cat:'fixe',member:'Nicolas'},
-  {id:10,name:'Courses',amount:-250,cat:'variable',member:'Nicolas'},
-  {id:11,name:'Carburant',amount:-250,cat:'variable',member:'Nicolas'},
-  {id:12,name:'Épargne Nicolas',amount:-458,cat:'epargne',member:'Nicolas'},
-  {id:13,name:'Loisir Nicolas',amount:-306,cat:'loisir',member:'Nicolas'},
-  {id:14,name:'Salaire Carla',amount:400,cat:'revenu',member:'Carla'},
-  {id:15,name:'Virements',amount:810,cat:'revenu',member:'Carla'},
-  {id:16,name:'CAF',amount:153,cat:'revenu',member:'Carla'},
-  {id:17,name:'Bourse',amount:145,cat:'revenu',member:'Carla'},
-  {id:18,name:'Loyer Carla',amount:-450,cat:'fixe',member:'Carla'},
-  {id:19,name:'Élec. & Wifi Carla',amount:-38,cat:'fixe',member:'Carla'},
-  {id:20,name:'Canal+',amount:-22,cat:'fixe',member:'Carla'},
-  {id:21,name:'iCloud',amount:-10,cat:'fixe',member:'Carla'},
-  {id:22,name:'Spotify',amount:-7,cat:'fixe',member:'Carla'},
-  {id:23,name:'Courses Carla',amount:-250,cat:'variable',member:'Carla'},
-  {id:24,name:'Carburant Carla',amount:-100,cat:'variable',member:'Carla'},
-  {id:25,name:'Épargne Carla',amount:-316,cat:'epargne',member:'Carla'},
-  {id:26,name:'Loisir Carla',amount:-316,cat:'loisir',member:'Carla'},
-];
-const DEFAULT_SAVINGS=[
-  {id:1,member:'Nicolas',year:2025,month:'Octobre',amount:3700,delta:null},
-  {id:2,member:'Nicolas',year:2025,month:'Novembre',amount:4434,delta:734},
-  {id:3,member:'Nicolas',year:2025,month:'Décembre',amount:4960,delta:526},
-  {id:4,member:'Nicolas',year:2026,month:'Janvier',amount:6229,delta:1269},
-  {id:5,member:'Nicolas',year:2026,month:'Février',amount:6000,delta:-229},
-  {id:6,member:'Nicolas',year:2026,month:'Mars',amount:6586,delta:586},
-  {id:7,member:'Carla',year:2025,month:'Décembre',amount:15219,delta:15219},
-  {id:8,member:'Carla',year:2026,month:'Janvier',amount:15191,delta:-28},
-  {id:9,member:'Carla',year:2026,month:'Février',amount:14905,delta:-286},
-  {id:10,member:'Carla',year:2026,month:'Mars',amount:15584,delta:679},
-];
+const DEFAULT_ENTRIES=[];
+const DEFAULT_SAVINGS=[];
 
 const CATS_DEF={
   revenu:{label:'Revenu',hex:'#0d9e6e',light:{bg:'#d1fae5',text:'#065f46'},dark:{bg:'#0d2e22',text:'#3ee8a8'}},
