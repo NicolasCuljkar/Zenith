@@ -120,15 +120,15 @@ html.light{
   --card-shadow:0 2px 12px rgba(0,0,0,.07);
   --card-shadow-hover:0 8px 28px rgba(0,0,0,.13);
 }
-html,body{height:100%;font-family:'Inter',-apple-system,sans-serif;font-size:19px;line-height:1.6;background:var(--bg);color:var(--text);-webkit-tap-highlight-color:transparent;overflow-x:hidden}
-*{max-width:100%;box-sizing:border-box}
+html,body{height:100%;font-family:'Inter',-apple-system,sans-serif;font-size:19px;line-height:1.6;background:var(--bg);color:var(--text);-webkit-tap-highlight-color:transparent;overflow-x:clip}
+*{box-sizing:border-box}
 html{transition:background-color .4s,color .4s}
 body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 50% at 50% -10%,rgba(94,174,255,.07),transparent);pointer-events:none;z-index:0}
 html.light body::before{background:radial-gradient(ellipse 80% 50% at 50% -10%,rgba(59,139,212,.04),transparent)}
 *{transition:background-color .25s,border-color .25s,color .2s,box-shadow .2s}
 body{overscroll-behavior-y:none}
 
-.shell{display:flex;flex-direction:column;min-height:100vh}
+.shell{display:flex;flex-direction:column;min-height:100vh;overflow-x:hidden;position:relative}
 .topbar{position:sticky;top:0;z-index:100;height:var(--nav);background:rgba(28,28,42,.88);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 max(1.25rem,env(safe-area-inset-left)) 0 max(1.25rem,env(safe-area-inset-right));gap:.75rem;backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);box-shadow:0 1px 0 rgba(255,255,255,.04)}
 html.light .topbar{background:rgba(255,255,255,.88);box-shadow:0 1px 0 rgba(0,0,0,.06),0 2px 12px rgba(0,0,0,.04)}
 .topbar-title{font-size:17px;font-weight:800;letter-spacing:-.03em;display:flex;align-items:center;gap:7px;flex-shrink:0}
@@ -212,10 +212,10 @@ html.light .kpi{box-shadow:0 1px 4px rgba(0,0,0,.06)}
   background:var(--surface);border:1px solid var(--border);
   border-radius:10px;padding:10px 14px;
   box-shadow:0 8px 24px rgba(0,0,0,.12);
-  white-space:nowrap;z-index:200;
+  white-space:normal;z-index:200;
   opacity:0;pointer-events:none;
   transition:opacity .15s,transform .15s;
-  min-width:180px;max-width:min(320px,90vw);white-space:normal;
+  min-width:180px;max-width:min(320px,90vw);
 }
 html.dark .kpi-tooltip{box-shadow:0 8px 24px rgba(0,0,0,.4)}
 .kpi-trend{display:inline-flex;align-items:center;gap:3px;font-size:12px;font-weight:700;padding:2px 6px;border-radius:20px}
@@ -416,72 +416,168 @@ input[type=range]:hover::-moz-range-thumb{transform:scale(1.1)}
 
 /* ── Responsive ── */
 @media(max-width:900px){.g3{grid-template-columns:1fr 1fr}}
+/* ══ 640px — tablette / grand mobile ══ */
 @media(max-width:640px){
-  .topbar{padding:0 1rem;gap:.5rem}
+  :root{--sg:.625rem;--nav:50px}
+  html,body{font-size:16px}
+  /* topbar */
+  .topbar{padding:0 .875rem;gap:.5rem;height:50px}
   .topbar-sub{display:none}
+  .topbar-title{font-size:14px;gap:5px}
+  .topbar-title svg{width:24px;height:24px}
+  /* navigation */
   .tabs-row{display:none}.bottom-nav{display:flex}
-  :root{--sg:.75rem}
-  .main{padding:1rem .75rem 5.5rem}
-  .kpi-grid{grid-template-columns:1fr 1fr;gap:8px}
-  .g2,.g3,.grid-chart{grid-template-columns:1fr;gap:.75rem}
-  .kpi{padding:10px 12px 12px}.kpi-value{font-size:18px}.kpi-sub{font-size:11px}.kpi-sub span:first-child{font-size:12px}
-  .card{padding:1rem}.card-head{font-size:12px}
+  /* layout */
+  .main{padding:.75rem .75rem 5.25rem}
+  /* KPI */
+  .kpi-grid{grid-template-columns:1fr 1fr;gap:7px}
+  .kpi{padding:10px 11px 11px}
+  .kpi-label{font-size:10px}
+  .kpi-value{font-size:17px}
+  .kpi-sub{font-size:10px}.kpi-sub span:first-child{font-size:11px}
+  /* page header */
+  .page-title{font-size:15px}
+  .page-header{margin-bottom:.625rem}
+  /* grids */
+  .g2,.g3,.grid-chart{grid-template-columns:1fr;gap:.625rem}
+  /* cards */
+  .card{padding:.875rem}.card-head{font-size:11px;margin-bottom:.75rem}
+  /* table → cards */
   .tbl-wrap{display:none}.entry-cards{display:block}
+  /* toolbar */
   .toolbar{flex-direction:column;gap:6px}.toolbar-inputs{flex-direction:column;width:100%}
-  .search-inp{min-width:unset;width:100%}.inp{width:100%;font-size:16px;padding:10px 12px}
+  .search-inp{min-width:unset;width:100%}
+  .inp{width:100%;font-size:15px;padding:9px 11px}
+  /* buttons */
+  .btn{font-size:14px;padding:6px 12px}
+  .btn-add{font-size:13px;padding:7px 16px;gap:5px}
   .btn-add-desktop{display:none!important}.fab{display:flex}
-  .frow{grid-template-columns:1fr;gap:10px}
-  .modal{padding:1.25rem 1rem 2rem}.modal h3{font-size:17px}
-  .auth-card{padding:1.75rem 1.25rem}
-  .prow-lbl,.prow-val{font-size:14px}
-  .scard{padding:10px 12px}.entry-card{padding:12px}
-  .bnav-label{font-size:9px}.bnav-btn svg{width:19px;height:19px}
-  #tab-dashboard input[type=range]{width:100px}
-  .member-tabs{position:sticky;top:var(--nav);z-index:90;background:var(--bg);padding:.5rem 0 .4rem;margin-bottom:.5rem;flex-wrap:nowrap;overflow-x:auto}
-  .flow-bar{height:34px}
+  /* tabs */
+  .tab{font-size:14px;padding:9px 14px}
+  .stab{font-size:13px;padding:6px 12px}
+  /* member tabs */
+  .member-tabs{position:sticky;top:var(--nav);z-index:90;background:var(--bg);padding:.35rem 0 .3rem;margin-bottom:.5rem;flex-wrap:nowrap;overflow-x:auto;gap:5px}
+  .mtab{font-size:13px;padding:4px 10px 4px 4px;gap:5px}
+  .mtab .mtab-av{width:22px;height:22px;font-size:11px}
+  /* modal */
+  .frow{grid-template-columns:1fr;gap:9px}
+  .modal{padding:1.125rem .875rem 2rem}.modal h3{font-size:16px;margin-bottom:1rem}
+  /* auth */
+  .auth-card{padding:1.5rem 1.125rem}
+  .auth-title{font-size:24px}
+  .auth-user-name{font-size:15px}
+  .auth-user-item{padding:12px 14px;gap:10px}
+  /* profile rows */
+  .prow-lbl,.prow-val{font-size:13px}
+  /* saving cards */
+  .scard{padding:9px 11px}.entry-card{padding:11px}
+  /* bottom nav */
+  .bnav-label{font-size:9px}.bnav-btn svg{width:20px;height:20px}
+  .bottom-nav-inner{height:56px}
+  /* flow chart */
+  .flow-bar{height:32px}
   .flow-grid{grid-template-columns:1fr 1fr;gap:6px}
-  .flow-leg-item{padding:8px 10px;gap:8px}
-  .flow-leg-accent{height:28px}
+  .flow-leg-item{padding:8px 9px;gap:7px}
+  .flow-leg-accent{height:26px;width:7px}
   .flow-leg-label{font-size:10px;margin-bottom:2px}
-  .flow-leg-value{font-size:13px;margin-bottom:4px}
-  .flow-leg-pct{font-size:16px;min-width:32px}
-}
-@media(max-width:480px){
-  html,body{font-size:17px}
-  .entry-card{padding:10px}
-  .flow-bar{height:38px}
+  .flow-leg-value{font-size:13px;margin-bottom:3px}
   .flow-leg-pct{font-size:15px;min-width:30px}
+  /* simulator */
+  .sim-card{padding:11px}
+  .sim-card-value{font-size:19px}
+  .sim-card-label{font-size:11px}
+  #tab-dashboard input[type=range]{width:90px}
+  /* divers */
+  .no-data-title{font-size:13px}
+  .no-data-sub{font-size:12px}
+  .no-data-icon{width:36px;height:36px}
+  .no-data-banner{padding:1.5rem 1rem;gap:7px}
+  .alert{font-size:13px;padding:8px 12px}
+  .badge{font-size:12px;padding:2px 7px}
+}
+
+/* ══ 480px — mobile standard ══ */
+@media(max-width:480px){
+  :root{--nav:48px}
+  html,body{font-size:15px}
+  /* layout */
+  .main{padding:.625rem .625rem 5rem}
+  /* kpi */
+  .kpi{padding:9px 10px 10px}
+  .kpi-value{font-size:15px}
+  .kpi-label{font-size:9px}
+  .kpi-sub{font-size:9px}.kpi-sub span:first-child{font-size:10px}
   .kpi-tooltip{min-width:140px}
+  /* cards */
+  .card{padding:.75rem}.card-head{font-size:10px}
+  /* entry card */
+  .entry-card{padding:9px}
+  /* user menu */
   .user-menu-dropdown{min-width:160px;max-width:calc(100vw - 20px)}
-  #donut-chart-wrap,#proj-chart-wrap{height:200px!important}
-  #bar-chart-wrap{height:160px!important}
+  /* member tabs */
+  .mtab{font-size:12px;padding:3px 9px 3px 3px}
+  .mtab .mtab-av{width:20px;height:20px;font-size:10px}
+  /* flow */
+  .flow-bar{height:28px}
+  .flow-leg-pct{font-size:14px;min-width:28px}
+  .flow-leg-value{font-size:12px}
+  /* page */
+  .page-title{font-size:14px}
+  /* sim */
+  .sim-card-value{font-size:17px}
+  /* charts */
+  #donut-chart-wrap,#proj-chart-wrap{height:190px!important}
+  #bar-chart-wrap{height:150px!important}
+  /* specific grids overrides */
   #conseils-steps{grid-template-columns:1fr!important}
   #goal-btns{grid-template-columns:repeat(5,1fr)!important}
   #horizon-btns{grid-template-columns:repeat(4,1fr)!important}
   #goal-result-stats{grid-template-columns:1fr 1fr!important}
 }
+
+/* ══ 380px — petit mobile (SE, etc.) ══ */
 @media(max-width:380px){
-  .kpi-grid{grid-template-columns:1fr 1fr;gap:6px}
-  .kpi-value{font-size:16px}.kpi{padding:8px 10px 10px}
-  .main{padding:.75rem .5rem 5rem}.topbar{padding:0 max(.75rem,env(safe-area-inset-left))}
-  .auth-card{padding:1.5rem 1rem}
+  :root{--nav:46px}
+  html,body{font-size:14px}
+  /* layout */
+  .main{padding:.5rem .5rem 5rem}
+  .topbar{padding:0 max(.75rem,env(safe-area-inset-left))}
+  /* kpi */
+  .kpi-grid{grid-template-columns:1fr 1fr;gap:5px}
+  .kpi{padding:8px 9px 9px}
+  .kpi-value{font-size:14px}
+  /* cards */
+  .card{padding:.625rem}
+  /* auth */
+  .auth-card{padding:1.25rem .875rem}
+  /* bottom nav */
   .bnav-label{display:none}.bottom-nav-inner{height:52px}
+  /* flow */
   .flow-grid{grid-template-columns:1fr 1fr;gap:4px}
-  .flow-leg-item{padding:7px 8px;gap:6px}
-  .flow-leg-value{font-size:12px}.flow-leg-pct{font-size:14px;min-width:28px}
+  .flow-leg-item{padding:6px 7px;gap:5px}
+  .flow-leg-value{font-size:11px}.flow-leg-pct{font-size:13px;min-width:26px}
   .flow-leg-label{font-size:9px}
+  /* member tabs */
+  .mtab{font-size:11px;padding:3px 8px 3px 3px}
+  .mtab .mtab-av{width:18px;height:18px;font-size:9px}
+  /* sim */
+  .sim-card-value{font-size:16px}
+  .sim-card{padding:9px}
 }
 @media(min-width:641px){
   .overlay{align-items:center}.modal{border-radius:var(--rl)}
   .modal-drag{display:none}.modal-footer{flex-direction:row;justify-content:flex-end}
   .fab{display:none!important}
 }
-@media(hover:none) and (pointer:coarse){
-  .btn{padding:10px 16px;min-height:44px}.btn-sm{padding:8px 12px;font-size:14px;min-height:36px}
+@media(hover:none) and (pointer:coarse) and (min-width:641px){
+  /* Targets tactiles sur tablette uniquement (mobile a ses propres règles) */
+  .btn{padding:10px 16px;min-height:44px}.btn-sm{padding:8px 12px;min-height:36px}
   .tab{padding:12px 16px}
+  .mtab{padding:7px 14px;min-height:36px}
+}
+@media(hover:none) and (pointer:coarse){
   input[type=range]::-webkit-slider-thumb{width:22px;height:22px;margin-top:-9px}
-  .auth-user-item{min-height:60px}.cswatch{width:30px;height:30px}
-  .mtab{padding:8px 16px;min-height:36px}
+  .auth-user-item{min-height:56px}.cswatch{width:28px;height:28px}
 }
 
 /* ── État vide (aucune donnée) ── */
@@ -2146,9 +2242,9 @@ function renderDashboard(){
       <!-- Tooltip -->
       <div class="bar-tip" style="position:absolute;top:calc(100% + 6px);left:50%;transform:translateX(-50%) translateY(-4px);
         background:var(--surface);border:1px solid var(--border);border-radius:10px;
-        padding:9px 13px;white-space:nowrap;pointer-events:none;
+        padding:9px 13px;white-space:normal;pointer-events:none;
         opacity:0;transition:opacity .15s,transform .15s;z-index:50;
-        box-shadow:0 8px 24px rgba(0,0,0,.15);min-width:180px">
+        box-shadow:0 8px 24px rgba(0,0,0,.15);min-width:160px;max-width:min(220px,70vw)">
         <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px">${e.name}</div>
         <div style="font-size:13px;color:var(--muted);line-height:1.7">${tooltipLines}</div>
       </div>
@@ -2961,7 +3057,7 @@ function renderAnalysis(){
     <div style="font-size:13px;color:var(--muted);margin-bottom:14px">Répartition sur <strong style="color:var(--text)">${baseDesc}</strong>${analysisMember!=='all'?' · '+analysisMember:' · groupe'}.</div>
     <div class="flow-bar-wrap" style="position:relative;margin-bottom:16px">
       <div class="flow-bar" onmousemove="zenFlowBarMove(event)" onmouseleave="zenFlowBarOut(event)">${flowBar}</div>
-      <div class="flow-bar-tooltip" style="position:absolute;bottom:calc(100% + 10px);left:50%;transform:translateX(-50%);pointer-events:none;opacity:0;transition:opacity .15s;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:8px 14px;box-shadow:0 8px 24px rgba(0,0,0,.18);z-index:20;white-space:nowrap">
+      <div class="flow-bar-tooltip" style="position:absolute;bottom:calc(100% + 10px);left:50%;transform:translateX(-50%);pointer-events:none;opacity:0;transition:opacity .15s;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:8px 14px;box-shadow:0 8px 24px rgba(0,0,0,.18);z-index:20;white-space:nowrap;max-width:min(200px,80vw)">
         <div style="display:flex;align-items:center;gap:8px">
           <span class="ftt-dot" style="width:10px;height:10px;border-radius:3px;display:inline-block;flex-shrink:0"></span>
           <span class="ftt-label" style="font-size:13px;font-weight:700;color:var(--text)"></span>
@@ -3128,7 +3224,7 @@ function renderAnalysis(){
       return`<div style="padding:9px 12px;border-radius:10px;background:var(--surface2);border:1px solid var(--border);transition:background .15s,box-shadow .15s;position:relative"
         onmouseenter="this.style.background='var(--hover)';this.style.boxShadow='0 2px 12px rgba(0,0,0,.08)';this.querySelector('.bar-tip').style.opacity='1';this.querySelector('.bar-tip').style.transform='translateX(-50%) translateY(0)'"
         onmouseleave="this.style.background='var(--surface2)';this.style.boxShadow='none';this.querySelector('.bar-tip').style.opacity='0';this.querySelector('.bar-tip').style.transform='translateX(-50%) translateY(-4px)'">
-        <div class="bar-tip" style="position:absolute;top:calc(100% + 6px);left:50%;transform:translateX(-50%) translateY(-4px);background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:9px 13px;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .15s,transform .15s;z-index:50;box-shadow:0 8px 24px rgba(0,0,0,.15);min-width:180px">
+        <div class="bar-tip" style="position:absolute;top:calc(100% + 6px);left:50%;transform:translateX(-50%) translateY(-4px);background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:9px 13px;white-space:normal;pointer-events:none;opacity:0;transition:opacity .15s,transform .15s;z-index:50;box-shadow:0 8px 24px rgba(0,0,0,.15);min-width:160px;max-width:min(220px,70vw)">
           <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px">${e.name}</div>
           <div style="font-size:13px;color:var(--muted);line-height:1.7">${tooltipLines}</div>
         </div>
