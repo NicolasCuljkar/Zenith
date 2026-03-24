@@ -1,0 +1,19 @@
+{
+  "name": "Zénith — Budget Manager",
+  "short_name": "Zénith",
+  "description": "Gestion budgétaire personnelle et en couple",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#1a1a2e",
+  "theme_color": "#1a1a2e",
+  "lang": "fr",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
