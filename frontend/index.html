@@ -416,55 +416,24 @@ input[type=range]:hover::-moz-range-thumb{transform:scale(1.1)}
 
 /* ── Responsive ── */
 @media(max-width:900px){.g3{grid-template-columns:1fr 1fr}}
-/* ══ 640px — mise en page mobile (tailles originales conservées) ══ */
+/* ══ 640px — mise en page uniquement (zéro changement de taille) ══ */
 @media(max-width:640px){
   :root{--sg:.75rem}
-  /* topbar */
   .topbar{padding:0 1rem;gap:.5rem}
   .topbar-sub{display:none}
-  /* navigation */
   .tabs-row{display:none}.bottom-nav{display:flex}
-  /* layout */
   .main{padding:1rem .75rem 5.5rem}
-  /* KPI */
   .kpi-grid{grid-template-columns:1fr 1fr;gap:8px}
-  .kpi{padding:10px 12px 12px}
-  .kpi-value{font-size:18px}
-  .kpi-sub{font-size:11px}.kpi-sub span:first-child{font-size:12px}
-  /* grids */
   .g2,.g3,.grid-chart{grid-template-columns:1fr;gap:.75rem}
-  /* cards */
-  .card{padding:1rem}.card-head{font-size:12px}
-  /* table → cards */
   .tbl-wrap{display:none}.entry-cards{display:block}
-  /* toolbar */
   .toolbar{flex-direction:column;gap:6px}.toolbar-inputs{flex-direction:column;width:100%}
   .search-inp{min-width:unset;width:100%}
-  .inp{width:100%;font-size:16px;padding:10px 12px}
+  .inp{width:100%;padding:10px 12px}
   .btn-add-desktop{display:none!important}.fab{display:flex}
-  /* member tabs sticky */
   .member-tabs{position:sticky;top:var(--nav);z-index:90;background:var(--bg);padding:.5rem 0 .4rem;margin-bottom:.5rem;flex-wrap:nowrap;overflow-x:auto}
-  /* modal */
   .frow{grid-template-columns:1fr;gap:10px}
-  .modal{padding:1.25rem 1rem 2rem}.modal h3{font-size:17px}
-  /* auth */
-  .auth-card{padding:1.75rem 1.25rem}
-  /* profile rows */
-  .prow-lbl,.prow-val{font-size:14px}
-  /* saving / entry cards */
-  .scard{padding:10px 12px;gap:10px;margin-bottom:8px}
-  .entry-card{padding:12px}
-  /* bottom nav */
-  .bnav-label{font-size:9px}.bnav-btn svg{width:19px;height:19px}
-  /* flow chart */
   .flow-bar{height:34px}
   .flow-grid{grid-template-columns:1fr 1fr;gap:6px}
-  .flow-leg-item{padding:8px 10px;gap:8px}
-  .flow-leg-accent{height:28px}
-  .flow-leg-label{font-size:10px;margin-bottom:2px}
-  .flow-leg-value{font-size:13px;margin-bottom:4px}
-  .flow-leg-pct{font-size:16px;min-width:32px}
-  #tab-dashboard input[type=range]{width:100px}
 }
 
 /* ══ 480px — mobile standard ══ */
