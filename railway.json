@@ -5,7 +5,7 @@
     "buildCommand": "cd backend && npm install"
   },
   "deploy": {
-    "startCommand": "node backend/src/app.js",
+    "startCommand": "node --experimental-sqlite backend/src/app.js",
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 3,
     "healthcheckPath": "/api/health"
