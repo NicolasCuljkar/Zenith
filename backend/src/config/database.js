@@ -4,8 +4,7 @@ const { DatabaseSync } = require('node:sqlite');
 const fs   = require('fs');
 const path = require('path');
 
-const DB_PATH    = path.resolve(__dirname, '../../', process.env.DB_PATH || './database/zenith.db');
-const SCHEMA_SQL = path.resolve(__dirname, '../../database/schema.sql');
+const DB_PATH = path.resolve(__dirname, '../../', process.env.DB_PATH || './database/zenith.db');
 
 fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
 
@@ -13,9 +12,83 @@ const db = new DatabaseSync(DB_PATH);
 db.exec('PRAGMA journal_mode = WAL');
 db.exec('PRAGMA foreign_keys = ON');
 
-const schema = fs.readFileSync(SCHEMA_SQL, 'utf8');
-db.exec(schema);
+// ── Migrations ────────────────────────────────────────────────────────────────
+// Chaque migration s'exécute exactement une fois, suivie via PRAGMA user_version.
+// RÈGLE : ne jamais modifier une migration existante — ajouter une nouvelle à la fin.
 
-console.log(`[DB] ${DB_PATH}`);
+const migrations = [
+
+  // v1 — schéma complet (users, settings, entries, savings + index)
+  `CREATE TABLE IF NOT EXISTS users (
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    name          TEXT    NOT NULL,
+    email         TEXT    NOT NULL UNIQUE COLLATE NOCASE,
+    password_hash TEXT    NOT NULL,
+    role          TEXT    NOT NULL DEFAULT 'Autre',
+    color         TEXT    NOT NULL DEFAULT '#3B8BD4',
+    photo         TEXT,
+    created_at    TEXT    NOT NULL DEFAULT (datetime('now'))
+  );
+  CREATE TABLE IF NOT EXISTS settings (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    key        TEXT    NOT NULL,
+    value      TEXT,
+    UNIQUE(user_id, key)
+  );
+  CREATE TABLE IF NOT EXISTS entries (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    name       TEXT    NOT NULL,
+    amount     REAL    NOT NULL,
+    cat        TEXT    NOT NULL CHECK(cat IN ('revenu','impot','fixe','variable','epargne','loisir')),
+    member     TEXT    NOT NULL,
+    sort_order INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT    NOT NULL DEFAULT (datetime('now')),
+    updated_at TEXT    NOT NULL DEFAULT (datetime('now'))
+  );
+  CREATE TABLE IF NOT EXISTS savings (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    member     TEXT    NOT NULL,
+    year       INTEGER NOT NULL,
+    month      TEXT    NOT NULL CHECK(month IN ('Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre')),
+    amount     REAL    NOT NULL,
+    delta      REAL,
+    created_at TEXT    NOT NULL DEFAULT (datetime('now')),
+    updated_at TEXT    NOT NULL DEFAULT (datetime('now')),
+    UNIQUE(user_id, year, month)
+  );
+  CREATE INDEX IF NOT EXISTS idx_entries_user   ON entries(user_id);
+  CREATE INDEX IF NOT EXISTS idx_entries_member ON entries(member);
+  CREATE INDEX IF NOT EXISTS idx_entries_cat    ON entries(cat);
+  CREATE INDEX IF NOT EXISTS idx_savings_user   ON savings(user_id);
+  CREATE INDEX IF NOT EXISTS idx_savings_member ON savings(member);
+  CREATE INDEX IF NOT EXISTS idx_savings_year   ON savings(year);`,
+
+  // ── Ajouter vos futures migrations ici, par exemple :
+  // v2 — ALTER TABLE entries ADD COLUMN notes TEXT;
+
+];
+
+// ── Apply pending migrations ──────────────────────────────────────────────────
+const currentVersion = db.prepare('PRAGMA user_version').get().user_version;
+
+if (currentVersion < migrations.length) {
+  // Sauvegarde automatique avant toute migration
+  if (currentVersion > 0 && fs.existsSync(DB_PATH)) {
+    const backupPath = `${DB_PATH}.v${currentVersion}.bak`;
+    fs.copyFileSync(DB_PATH, backupPath);
+    console.log(`[DB] Backup → ${backupPath}`);
+  }
+
+  for (let i = currentVersion; i < migrations.length; i++) {
+    db.exec(migrations[i]);
+    db.exec(`PRAGMA user_version = ${i + 1}`);
+    console.log(`[DB] Migration v${i + 1} appliquée`);
+  }
+}
+
+console.log(`[DB] ${DB_PATH} (schema v${migrations.length})`);
 
 module.exports = db;
