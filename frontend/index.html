@@ -60,32 +60,39 @@ document.addEventListener('keydown', e => {
 .auth-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:3rem 2rem 2rem;width:100%;max-width:400px;box-shadow:0 4px 40px rgba(59,139,212,.06)}
 .auth-logo{text-align:center;margin-bottom:1rem;display:flex;flex-direction:column;align-items:center;gap:10px}
 .auth-logo svg{filter:drop-shadow(0 6px 16px rgba(59,139,212,.35))}
-.auth-title{font-size:28px;font-weight:800;letter-spacing:-.05em;background:linear-gradient(135deg,#3B8BD4,#e06fa0);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-.auth-sub{font-size:15px;color:var(--muted);margin-top:2px}
+.auth-title{font-size:var(--fs-xl);font-weight:800;letter-spacing:-.05em;background:linear-gradient(135deg,#3B8BD4,#e06fa0);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.auth-sub{font-size:var(--fs-md);color:var(--muted);margin-top:2px}
 .auth-users-list{display:flex;flex-direction:column;gap:10px;margin-top:.5rem}
 .auth-user-item{display:flex;align-items:center;gap:14px;padding:14px 16px;border:1px solid var(--border);border-radius:var(--r);cursor:pointer;transition:background .12s,border-color .12s}
 .auth-user-item:hover{background:var(--hover);border-color:var(--blue)}
-.auth-user-name{font-size:17px;font-weight:600;flex:1}
+.auth-user-name{font-size:var(--fs-base);font-weight:600;flex:1}
 .auth-avatar{border-radius:50%;overflow:hidden;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;font-weight:600}
 .auth-avatar img{width:100%;height:100%;object-fit:cover}
 .auth-form{display:flex;flex-direction:column;gap:14px;margin-top:1.75rem}
 .auth-field{display:flex;flex-direction:column;gap:5px}
-.auth-field label{font-size:14px;font-weight:500;color:var(--muted)}
-.auth-field input{padding:10px 12px;border:1px solid var(--border);border-radius:var(--r);background:var(--surface);color:var(--text);font-size:16px;font-family:inherit}
+.auth-field label{font-size:var(--fs-sm);font-weight:500;color:var(--muted)}
+.auth-field input{padding:10px 12px;border:1px solid var(--border);border-radius:var(--r);background:var(--surface);color:var(--text);font-size:var(--fs-md);font-family:inherit}
 .auth-field input:focus{outline:none;border-color:var(--blue)}
 
-.auth-error{font-size:14px;color:var(--red);background:var(--red-bg);border:1px solid var(--red);border-radius:var(--r);padding:8px 12px;display:none}
+.auth-error{font-size:var(--fs-sm);color:var(--red);background:var(--red-bg);border:1px solid var(--red);border-radius:var(--r);padding:8px 12px;display:none}
 .auth-error.show{display:block}
-.auth-btn{width:100%;padding:11px;border-radius:var(--r);border:1px solid transparent;background:linear-gradient(135deg,#3B8BD4,#e06fa0);color:#fff;font-size:16px;font-weight:600;cursor:pointer;font-family:inherit;transition:opacity .12s;margin-top:4px}
+.auth-btn{width:100%;padding:11px;border-radius:var(--r);border:1px solid transparent;background:linear-gradient(135deg,#3B8BD4,#e06fa0);color:#fff;font-size:var(--fs-md);font-weight:600;cursor:pointer;font-family:inherit;transition:opacity .12s;margin-top:4px}
 .auth-btn:hover{opacity:.88}
 
-.auth-switch{text-align:center;font-size:15px;color:var(--muted);margin-top:1.25rem}
+.auth-switch{text-align:center;font-size:var(--fs-md);color:var(--muted);margin-top:1.25rem}
 .auth-switch a{color:var(--blue);cursor:pointer;font-weight:500}
 .auth-switch a:hover{text-decoration:underline}
-.auth-divider{display:flex;align-items:center;gap:10px;margin:4px 0;color:var(--hint);font-size:14px}
+.auth-divider{display:flex;align-items:center;gap:10px;margin:4px 0;color:var(--hint);font-size:var(--fs-sm)}
 .auth-divider::before,.auth-divider::after{content:'';flex:1;height:1px;background:var(--border)}
 
 :root{
+  /* ── Type scale ── */
+  --fs-xs:0.65rem;   /* labels, hints, badges */
+  --fs-sm:0.8rem;    /* secondary text, table */
+  --fs-md:0.95rem;   /* main UI text */
+  --fs-base:1rem;    /* body */
+  --fs-lg:1.2rem;    /* KPI values, section numbers */
+  --fs-xl:1.4rem;    /* large numbers */
   --hover:#313145;
   --bg:#1c1c2a;
   --surface:#252535;
@@ -120,7 +127,7 @@ html.light{
   --card-shadow:0 2px 12px rgba(0,0,0,.07);
   --card-shadow-hover:0 8px 28px rgba(0,0,0,.13);
 }
-html,body{height:100%;font-family:'Inter',-apple-system,sans-serif;font-size:19px;line-height:1.6;background:var(--bg);color:var(--text);-webkit-tap-highlight-color:transparent;overflow-x:clip}
+html,body{height:100%;font-family:'Inter',-apple-system,sans-serif;font-size:17px;line-height:1.6;background:var(--bg);color:var(--text);-webkit-tap-highlight-color:transparent;overflow-x:clip}
 *{box-sizing:border-box}
 html{transition:background-color .4s,color .4s}
 body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 50% at 50% -10%,rgba(94,174,255,.07),transparent);pointer-events:none;z-index:0}
@@ -131,10 +138,10 @@ body{overscroll-behavior-y:none}
 .shell{display:flex;flex-direction:column;min-height:100vh;overflow-x:hidden;position:relative}
 .topbar{position:sticky;top:0;z-index:100;height:var(--nav);background:rgba(28,28,42,.88);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 max(1.25rem,env(safe-area-inset-left)) 0 max(1.25rem,env(safe-area-inset-right));gap:.75rem;backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);box-shadow:0 1px 0 rgba(255,255,255,.04)}
 html.light .topbar{background:rgba(255,255,255,.88);box-shadow:0 1px 0 rgba(0,0,0,.06),0 2px 12px rgba(0,0,0,.04)}
-.topbar-title{font-size:17px;font-weight:800;letter-spacing:-.03em;display:flex;align-items:center;gap:7px;flex-shrink:0}
+.topbar-title{font-size:var(--fs-base);font-weight:800;letter-spacing:-.03em;display:flex;align-items:center;gap:7px;flex-shrink:0}
 .topbar-title span{background:linear-gradient(135deg,#3B8BD4,#e06fa0);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 
-.topbar-sub{font-size:14px;color:var(--hint);flex:1}
+.topbar-sub{font-size:var(--fs-sm);color:var(--hint);flex:1}
 .icon-btn{border:none;background:none;cursor:pointer;color:var(--muted);padding:5px;display:flex;align-items:center;border-radius:7px}
 .icon-btn:hover{background:var(--hover);color:var(--text)}
 .icon-btn svg{width:18px;height:18px;stroke-width:1.8;fill:none;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round}
@@ -143,22 +150,22 @@ html.light .topbar{background:rgba(255,255,255,.88);box-shadow:0 1px 0 rgba(0,0,
 /* ── Member tabs (pill style, left-aligned) ── */
 .member-tabs{display:flex;gap:6px;margin-bottom:1.25rem;flex-wrap:wrap;margin-top:.75rem;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
 .member-tabs::-webkit-scrollbar{display:none}
-.mtab .mtab-av{border-radius:50%;overflow:hidden;flex-shrink:0;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700}
+.mtab .mtab-av{border-radius:50%;overflow:hidden;flex-shrink:0;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:var(--fs-xs);font-weight:700}
 .mtab .mtab-av img{width:100%;height:100%;object-fit:cover;border-radius:50%}
 .mtab.active .mtab-av{opacity:.9}
 
 /* ── Page section header ── */
 .page-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem}
-.page-title{font-weight:600;font-size:17px}
+.page-title{font-weight:600;font-size:var(--fs-base)}
 
 /* ── Tabs ── */
 .tabs-row{display:flex;border-bottom:1px solid var(--border);margin-bottom:0;overflow-x:auto;scrollbar-width:none;padding-top:.75rem;justify-content:center}
 .tabs-row::-webkit-scrollbar{display:none}
-.tab{padding:10px 18px;font-size:15px;font-weight:500;cursor:pointer;border:none;background:none;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px;font-family:inherit;white-space:nowrap;flex-shrink:0}
+.tab{padding:10px 18px;font-size:var(--fs-sm);font-weight:500;cursor:pointer;border:none;background:none;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px;font-family:inherit;white-space:nowrap;flex-shrink:0}
 .tab.active{color:var(--text);border-bottom:2px solid transparent;border-image:linear-gradient(90deg,#3B8BD4,#e06fa0) 1}
 .tab:hover:not(.active){color:var(--text)}
 .tab-panel{display:none;padding-top:.75rem}.tab-panel.active{display:block}
-.stab{padding:7px 16px;font-size:14px;font-weight:500;cursor:pointer;border:none;background:none;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px;font-family:inherit;white-space:nowrap}
+.stab{padding:7px 16px;font-size:var(--fs-sm);font-weight:500;cursor:pointer;border:none;background:none;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px;font-family:inherit;white-space:nowrap}
 .stab:hover:not(.active){color:var(--text)}
 .stab.active{color:var(--text);border-bottom-color:var(--text)}
 
@@ -193,7 +200,7 @@ html.dark .bnav-btn{color:#aaa}
   stroke-linecap:round;stroke-linejoin:round;
 }
 .bnav-btn.active .bnav-icon svg{stroke:#fff;stroke-width:2}
-.bnav-label{font-size:13px;font-weight:600;letter-spacing:.01em}
+.bnav-label{font-size:var(--fs-sm);font-weight:600;letter-spacing:.01em}
 .bottom-nav-inner{display:flex;align-items:stretch;height:64px;max-width:480px;margin:0 auto;width:100%}
 
 /* ── KPI ── */
@@ -201,11 +208,11 @@ html.dark .bnav-btn{color:#aaa}
 .kpi{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px 14px;position:relative;overflow:hidden;transition:box-shadow .15s;display:flex;flex-direction:column}
 .kpi:hover{box-shadow:var(--card-shadow-hover)}
 .kpi-accent{position:absolute;top:0;left:0;right:0;height:3px;border-radius:var(--r) var(--r) 0 0}
-.kpi-label{font-size:11px;font-weight:700;color:var(--hint);letter-spacing:.07em;text-transform:uppercase;margin-bottom:6px}
-.kpi-value{font-size:22px;font-weight:700;letter-spacing:-.03em;line-height:1.1}
-.kpi-sub{font-size:12px;color:var(--muted);margin-top:6px;display:flex;flex-direction:column;gap:2px}
+.kpi-label{font-size:var(--fs-sm);font-weight:700;color:var(--hint);letter-spacing:.07em;text-transform:uppercase;margin-bottom:6px}
+.kpi-value{font-size:var(--fs-lg);font-weight:700;letter-spacing:-.03em;line-height:1.1}
+.kpi-sub{font-size:var(--fs-xs);color:var(--muted);margin-top:6px;display:flex;flex-direction:column;gap:2px}
 .kpi-sub span{display:block;line-height:1.35}
-.kpi-sub span:first-child{color:var(--text);font-weight:500;font-size:13px}
+.kpi-sub span:first-child{color:var(--text);font-weight:500;font-size:var(--fs-sm)}
 html.light .kpi{box-shadow:0 1px 4px rgba(0,0,0,.06)}
 .kpi-tooltip{
   position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%) translateY(4px);
@@ -218,7 +225,7 @@ html.light .kpi{box-shadow:0 1px 4px rgba(0,0,0,.06)}
   min-width:180px;max-width:min(320px,90vw);
 }
 html.dark .kpi-tooltip{box-shadow:0 8px 24px rgba(0,0,0,.4)}
-.kpi-trend{display:inline-flex;align-items:center;gap:3px;font-size:12px;font-weight:700;padding:2px 6px;border-radius:20px}
+.kpi-trend{display:inline-flex;align-items:center;gap:3px;font-size:var(--fs-xs);font-weight:700;padding:2px 6px;border-radius:20px}
 .kpi-trend.up{background:var(--green-bg);color:var(--green)}
 .kpi-trend.down{background:var(--red-bg);color:var(--red)}
 .kpi-trend.neutral{background:var(--surface2);color:var(--muted)}
@@ -228,16 +235,16 @@ html.dark .kpi-tooltip{box-shadow:0 8px 24px rgba(0,0,0,.4)}
 .flow-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px}
 .flow-leg-item{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--surface2);border-radius:10px;border:1px solid var(--border);transition:outline .12s}
 .flow-leg-accent{width:8px;height:36px;border-radius:4px;flex-shrink:0;display:block}
-.flow-leg-label{font-size:11px;font-weight:700;color:var(--hint);letter-spacing:.05em;text-transform:uppercase;margin-bottom:3px}
-.flow-leg-value{font-size:15px;font-weight:700;color:var(--text);margin-bottom:5px}
+.flow-leg-label{font-size:var(--fs-xs);font-weight:700;color:var(--hint);letter-spacing:.05em;text-transform:uppercase;margin-bottom:3px}
+.flow-leg-value{font-size:var(--fs-sm);font-weight:700;color:var(--text);margin-bottom:5px}
 .flow-leg-bar{height:3px;background:var(--border);border-radius:2px;overflow:hidden}
 .flow-leg-bar-fill{height:100%;border-radius:2px;transition:width .4s}
-.flow-leg-pct{font-size:19px;font-weight:800;min-width:38px;text-align:right;flex-shrink:0}
+.flow-leg-pct{font-size:var(--fs-base);font-weight:800;min-width:38px;text-align:right;flex-shrink:0}
 
 /* ── Cards ── */
 .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:1.25rem;margin-bottom:var(--sg);box-shadow:var(--card-shadow)}
 .card:hover{box-shadow:var(--card-shadow-hover)}
-.card-head{font-size:13px;font-weight:600;color:var(--hint);text-transform:uppercase;letter-spacing:.07em;margin-bottom:1rem;display:flex;align-items:center;justify-content:space-between}
+.card-head{font-size:var(--fs-md);font-weight:600;color:var(--hint);text-transform:uppercase;letter-spacing:.07em;margin-bottom:1rem;display:flex;align-items:center;justify-content:space-between}
 
 /* ── Grids ── */
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:var(--sg)}
@@ -246,20 +253,20 @@ html.dark .kpi-tooltip{box-shadow:0 8px 24px rgba(0,0,0,.4)}
 /* ── Profile rows ── */
 .prow{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)}
 .prow:last-of-type{border-bottom:none}
-.prow-lbl{font-size:15px;color:var(--muted)}
-.prow-val{font-size:15px;font-weight:600}
+.prow-lbl{font-size:var(--fs-sm);color:var(--muted)}
+.prow-val{font-size:var(--fs-sm);font-weight:600}
 .prog{height:4px;background:var(--surface2);border-radius:2px;overflow:hidden;margin-top:10px}
 .prog-fill{height:100%;border-radius:2px}
-.prog-hint{font-size:13px;color:var(--hint);margin-top:4px}
+.prog-hint{font-size:var(--fs-sm);color:var(--hint);margin-top:4px}
 
 /* ── Table ── */
 .tbl-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);overflow:hidden}
-table{width:100%;border-collapse:collapse;font-size:15px}
-th{text-align:left;font-size:13px;font-weight:600;color:var(--hint);text-transform:uppercase;letter-spacing:.05em;padding:9px 14px;border-bottom:1px solid var(--border);background:var(--surface2)}
+table{width:100%;border-collapse:collapse;font-size:var(--fs-sm)}
+th{text-align:left;font-size:var(--fs-xs);font-weight:600;color:var(--hint);text-transform:uppercase;letter-spacing:.05em;padding:9px 14px;border-bottom:1px solid var(--border);background:var(--surface2)}
 td{padding:10px 14px;border-bottom:1px solid var(--border);vertical-align:middle}
 tr:last-child td{border-bottom:none}
 tbody tr:hover td{background:var(--hover)}
-.tbl-empty{text-align:center;color:var(--hint);padding:2rem;font-size:15px}
+.tbl-empty{text-align:center;color:var(--hint);padding:2rem;font-size:var(--fs-md)}
 
 /* ── Mobile cards ── */
 .entry-cards{display:none}
@@ -271,15 +278,15 @@ tbody tr:hover td{background:var(--hover)}
 /* ── Toolbar ── */
 .toolbar{display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap;align-items:center}
 .toolbar-inputs{display:flex;gap:8px;flex:1;flex-wrap:wrap}
-.inp{padding:7px 11px;border:1px solid var(--border);border-radius:var(--r);background:var(--surface);color:var(--text);font-size:15px;font-family:inherit;appearance:none;-webkit-appearance:none}
+.inp{padding:7px 11px;border:1px solid var(--border);border-radius:var(--r);background:var(--surface);color:var(--text);font-size:var(--fs-md);font-family:inherit;appearance:none;-webkit-appearance:none}
 .inp:focus{outline:none;border-color:var(--blue)}
 .search-inp{flex:1;min-width:130px}
 
 /* ── Badge ── */
-.badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:13px;font-weight:600}
+.badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:var(--fs-sm);font-weight:600}
 
 /* ── Buttons ── */
-.btn{padding:7px 14px;border-radius:var(--r);border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:15px;font-weight:500;cursor:pointer;font-family:inherit;white-space:nowrap;transition:background .12s,border-color .12s}
+.btn{padding:7px 14px;border-radius:var(--r);border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:var(--fs-md);font-weight:500;cursor:pointer;font-family:inherit;white-space:nowrap;transition:background .12s,border-color .12s}
 .btn:hover{background:var(--hover);border-color:var(--hint)}
 html.dark .btn{background:var(--surface2);border-color:var(--border);color:var(--text)}
 
@@ -291,10 +298,10 @@ html.dark .btn-primary{background:var(--surface2);color:var(--text);border-color
 .btn-ghost-danger:hover{background:var(--red-bg)}
 html.dark .btn-ghost-danger{background:transparent;border-color:transparent;color:var(--red)}
 html.dark .btn-ghost-danger:hover{background:var(--red-bg)}
-.btn-sm{padding:3px 9px;font-size:13px}
+.btn-sm{padding:3px 9px;font-size:var(--fs-sm)}
 
 /* ── Member tabs (mtab) ── */
-.mtab{display:inline-flex;align-items:center;gap:6px;padding:5px 12px 5px 5px;border-radius:20px;font-size:14px;font-weight:600;cursor:pointer;border:1.5px solid var(--border);background:var(--surface);color:var(--muted);font-family:inherit;transition:all .15s;white-space:nowrap;vertical-align:middle}
+.mtab{display:inline-flex;align-items:center;gap:6px;padding:5px 12px 5px 5px;border-radius:20px;font-size:var(--fs-sm);font-weight:600;cursor:pointer;border:1.5px solid var(--border);background:var(--surface);color:var(--muted);font-family:inherit;transition:all .15s;white-space:nowrap;vertical-align:middle}
 .mtab:hover:not(.active){border-color:var(--muted);color:var(--text);background:var(--hover)}
 html.dark .mtab{background:var(--surface2);border-color:var(--border);color:var(--muted)}
 html.dark .mtab:hover:not(.active){background:#2e2e2c;border-color:var(--muted);color:var(--text)}
@@ -308,11 +315,11 @@ html.dark .mtab-carla.active{background:rgba(224,111,160,.2);border-color:var(--
 html.dark .mtab-all.active{background:var(--mc-all-bg,linear-gradient(90deg,rgba(59,139,212,.28),rgba(224,111,160,.28)));}
 
 /* ── Bouton Ajouter gradient ── */
-.btn-add{display:inline-flex;align-items:center;gap:6px;padding:9px 20px;background:linear-gradient(135deg,#3B8BD4,#e06fa0);color:#fff!important;border:none!important;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;letter-spacing:.02em;box-shadow:0 4px 16px rgba(59,139,212,.25);transition:opacity .15s,box-shadow .15s;font-family:inherit;white-space:nowrap}
+.btn-add{display:inline-flex;align-items:center;gap:6px;padding:9px 20px;background:linear-gradient(135deg,#3B8BD4,#e06fa0);color:#fff!important;border:none!important;border-radius:10px;font-size:var(--fs-sm);font-weight:600;cursor:pointer;letter-spacing:.02em;box-shadow:0 4px 16px rgba(59,139,212,.25);transition:opacity .15s,box-shadow .15s;font-family:inherit;white-space:nowrap}
 .btn-add:hover{opacity:.9;box-shadow:0 6px 20px rgba(59,139,212,.38)}
 
 /* ── FAB ── */
-.fab{position:fixed;bottom:70px;right:16px;z-index:50;width:48px;height:48px;border-radius:50%;font-size:24px;padding:0;display:none;align-items:center;justify-content:center;background:linear-gradient(135deg,#3B8BD4,#e06fa0)!important;color:#fff!important;border:none!important;box-shadow:0 4px 16px rgba(59,139,212,.35)!important}
+.fab{position:fixed;bottom:70px;right:16px;z-index:50;width:48px;height:48px;border-radius:50%;font-size:var(--fs-xl);padding:0;display:none;align-items:center;justify-content:center;background:linear-gradient(135deg,#3B8BD4,#e06fa0)!important;color:#fff!important;border:none!important;box-shadow:0 4px 16px rgba(59,139,212,.35)!important}
 .fab:hover{opacity:.9;box-shadow:0 6px 20px rgba(59,139,212,.48)!important}
 
 /* ── Modal ── */
@@ -320,12 +327,12 @@ html.dark .mtab-all.active{background:var(--mc-all-bg,linear-gradient(90deg,rgba
 .overlay.open{display:flex}
 .modal{background:var(--surface);width:100%;max-width:480px;border-radius:var(--rl) var(--rl) 0 0;padding:1.5rem 1.25rem 2rem;border:1px solid var(--border);max-height:92vh;overflow-y:auto}
 .modal-drag{width:36px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 1.25rem}
-.modal h3{font-size:18px;font-weight:600;margin-bottom:1.25rem}
+.modal h3{font-size:var(--fs-base);font-weight:600;margin-bottom:1.25rem}
 .fstack{display:flex;flex-direction:column;gap:13px}
 .frow{display:grid;grid-template-columns:1fr 1fr;gap:11px}
 .fgrp{display:flex;flex-direction:column;gap:4px}
-.fgrp label{font-size:14px;color:var(--muted);font-weight:500}
-.fgrp input,.fgrp select{padding:8px 11px;border:1px solid var(--border);border-radius:var(--r);background:var(--surface);color:var(--text);font-size:16px;font-family:inherit}
+.fgrp label{font-size:var(--fs-sm);color:var(--muted);font-weight:500}
+.fgrp input,.fgrp select{padding:8px 11px;border:1px solid var(--border);border-radius:var(--r);background:var(--surface);color:var(--text);font-size:var(--fs-md);font-family:inherit}
 .fgrp input:focus,.fgrp select:focus{outline:none;border-color:var(--blue)}
 .modal-footer{display:flex;flex-direction:column;gap:8px;margin-top:1.5rem}
 
@@ -343,15 +350,15 @@ html.dark .mtab-all.active{background:var(--mc-all-bg,linear-gradient(90deg,rgba
 /* ── Alert ── */
 /* ── Projection simulator ── */
 .sim-horizon-btns{display:flex;flex-wrap:wrap;gap:6px}
-.sim-h-btn{padding:5px 12px;border-radius:20px;border:1.5px solid var(--border);background:var(--surface);color:var(--muted);font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s;white-space:nowrap}
+.sim-h-btn{padding:5px 12px;border-radius:20px;border:1.5px solid var(--border);background:var(--surface);color:var(--muted);font-size:var(--fs-sm);font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s;white-space:nowrap}
 .sim-h-btn.active{background:var(--blue);color:#fff;border-color:var(--blue)}
 html.dark .sim-h-btn{background:var(--surface2)}
 html.dark .sim-h-btn.active{background:var(--blue);color:#fff}
 .sim-results{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px}
 .sim-card{border-radius:var(--r);padding:14px}
-.sim-card-label{font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px}
-.sim-card-value{font-size:22px;font-weight:700;letter-spacing:-.02em}
-.sim-card-sub{font-size:13px;margin-top:4px;opacity:.85}
+.sim-card-label{font-size:var(--fs-sm);font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px}
+.sim-card-value{font-size:var(--fs-lg);font-weight:700;letter-spacing:-.02em}
+.sim-card-sub{font-size:var(--fs-sm);margin-top:4px;opacity:.85}
 @media(max-width:400px){.sim-results{grid-template-columns:1fr}}
 .topbar-tooltip{
   display:none;position:absolute;bottom:calc(100% + 8px);left:0;
@@ -370,7 +377,7 @@ html.dark .user-menu-btn{background:var(--surface2);border-color:var(--border)}
 .user-menu-dropdown{display:none;position:absolute;top:calc(100% + 8px);right:0;min-width:200px;background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);box-shadow:0 8px 32px rgba(0,0,0,.12);z-index:200;overflow:hidden}
 html.dark .user-menu-dropdown{box-shadow:0 8px 32px rgba(0,0,0,.4)}
 .user-menu-dropdown.open{display:block}
-.user-menu-item{display:flex;align-items:center;gap:10px;padding:11px 16px;cursor:pointer;font-size:15px;color:var(--text);transition:background .1s;user-select:none}
+.user-menu-item{display:flex;align-items:center;gap:10px;padding:11px 16px;cursor:pointer;font-size:var(--fs-md);color:var(--text);transition:background .1s;user-select:none}
 .user-menu-item:hover{background:var(--hover)}
 .user-menu-item svg{flex-shrink:0;color:var(--muted)}
 .user-menu-danger{color:var(--red)!important}
@@ -393,7 +400,7 @@ tr.drag-over td,.entry-card.drag-over{outline:2px solid var(--blue);outline-offs
 .btn-act-danger:hover{background:var(--red-bg);border-color:var(--red);color:var(--red)}
 html.dark .btn-act{background:var(--surface2);border-color:var(--border)}
 .btn-act-group{display:flex;gap:3px}
-.alert{border-radius:var(--r);padding:10px 14px;font-size:15px;margin-bottom:1rem;display:flex;align-items:center;gap:10px}
+.alert{border-radius:var(--r);padding:10px 14px;font-size:var(--fs-md);margin-bottom:1rem;display:flex;align-items:center;gap:10px}
 .alert-warn{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber)}
 .alert-good{background:var(--green-bg);color:var(--green);border:1px solid var(--green)}
 .alert-info{background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue)}
@@ -416,8 +423,8 @@ input[type=range]:hover::-moz-range-thumb{transform:scale(1.1)}
 
 /* ── Responsive ── */
 @media(min-width:1200px){
-  html,body{font-size:20px}
-  .kpi-value{font-size:26px}
+  html,body{font-size:19px}
+  .kpi-value{font-size:var(--fs-lg)}
   .kpi{padding:18px 20px}
   .card{padding:1.5rem}
   .main{padding:0 2.5rem 5rem}
@@ -445,33 +452,27 @@ input[type=range]:hover::-moz-range-thumb{transform:scale(1.1)}
 
 /* ══ 480px — mobile standard ══ */
 @media(max-width:480px){
-  :root{--nav:48px}
+  :root{--nav:48px;--fs-xs:0.6rem;--fs-sm:0.73rem;--fs-md:0.87rem;--fs-lg:1rem;--fs-xl:1.2rem}
   html,body{font-size:15px}
   /* layout */
   .main{padding:.625rem .625rem 5rem}
   /* kpi */
   .kpi{padding:9px 10px 10px}
-  .kpi-value{font-size:15px}
-  .kpi-label{font-size:9px}
-  .kpi-sub{font-size:9px}.kpi-sub span:first-child{font-size:10px}
   .kpi-tooltip{min-width:140px}
   /* cards */
-  .card{padding:.75rem}.card-head{font-size:10px}
+  .card{padding:.75rem}
   /* entry card */
   .entry-card{padding:9px}
   /* user menu */
   .user-menu-dropdown{min-width:160px;max-width:calc(100vw - 20px)}
   /* member tabs */
-  .mtab{font-size:12px;padding:3px 9px 3px 3px}
-  .mtab .mtab-av{width:20px;height:20px;font-size:10px}
+  .mtab{padding:3px 9px 3px 3px}
+  .mtab .mtab-av{width:20px;height:20px}
   /* flow */
   .flow-bar{height:28px}
-  .flow-leg-pct{font-size:14px;min-width:28px}
-  .flow-leg-value{font-size:12px}
-  /* page */
-  .page-title{font-size:14px}
+  .flow-leg-pct{min-width:28px}
   /* sim */
-  .sim-card-value{font-size:17px}
+  .sim-card-value{font-size:var(--fs-base)}
   /* charts */
   #donut-chart-wrap,#proj-chart-wrap{height:190px!important}
   #bar-chart-wrap{height:150px!important}
@@ -484,7 +485,7 @@ input[type=range]:hover::-moz-range-thumb{transform:scale(1.1)}
 
 /* ══ 380px — petit mobile (SE, etc.) ══ */
 @media(max-width:380px){
-  :root{--nav:46px}
+  :root{--nav:46px;--fs-xs:0.58rem;--fs-sm:0.7rem;--fs-md:0.83rem;--fs-lg:0.95rem;--fs-xl:1.1rem}
   html,body{font-size:14px}
   /* layout */
   .main{padding:.5rem .5rem 5rem}
@@ -492,7 +493,7 @@ input[type=range]:hover::-moz-range-thumb{transform:scale(1.1)}
   /* kpi */
   .kpi-grid{grid-template-columns:1fr 1fr;gap:5px}
   .kpi{padding:8px 9px 9px}
-  .kpi-value{font-size:14px}
+  .kpi-value{font-size:var(--fs-sm)}
   /* cards */
   .card{padding:.625rem}
   /* auth */
@@ -502,13 +503,13 @@ input[type=range]:hover::-moz-range-thumb{transform:scale(1.1)}
   /* flow */
   .flow-grid{grid-template-columns:1fr 1fr;gap:4px}
   .flow-leg-item{padding:6px 7px;gap:5px}
-  .flow-leg-value{font-size:11px}.flow-leg-pct{font-size:13px;min-width:26px}
-  .flow-leg-label{font-size:9px}
+  .flow-leg-value{font-size:var(--fs-xs)}.flow-leg-pct{font-size:var(--fs-sm);min-width:26px}
+  .flow-leg-label{font-size:var(--fs-xs)}
   /* member tabs */
-  .mtab{font-size:11px;padding:3px 8px 3px 3px}
-  .mtab .mtab-av{width:18px;height:18px;font-size:9px}
+  .mtab{font-size:var(--fs-xs);padding:3px 8px 3px 3px}
+  .mtab .mtab-av{width:18px;height:18px;font-size:var(--fs-xs)}
   /* sim */
-  .sim-card-value{font-size:16px}
+  .sim-card-value{font-size:var(--fs-md)}
   .sim-card{padding:9px}
 }
 @media(min-width:641px){
@@ -535,8 +536,8 @@ input[type=range]:hover::-moz-range-thumb{transform:scale(1.1)}
 .no-data-banner{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:2.5rem 1.5rem;background:var(--surface);border:1.5px dashed var(--border);border-radius:var(--rl);text-align:center;margin-bottom:var(--sg)}
 .card .no-data-banner{border:none;background:none;margin-bottom:0}
 .no-data-icon{width:44px;height:44px;border-radius:50%;background:var(--surface2);display:flex;align-items:center;justify-content:center;color:var(--hint)}
-.no-data-title{font-size:15px;font-weight:600;color:var(--muted)}
-.no-data-sub{font-size:13px;color:var(--hint);line-height:1.5}
+.no-data-title{font-size:var(--fs-md);font-weight:600;color:var(--muted)}
+.no-data-sub{font-size:var(--fs-sm);color:var(--hint);line-height:1.5}
 
 /* ── Theme ripple (fallback) ── */
 #theme-ripple{position:fixed;border-radius:50%;pointer-events:none;z-index:9997;opacity:0;transform:translate(-50%,-50%) scale(0)}
@@ -585,7 +586,7 @@ html.light .auth-card{box-shadow:0 4px 40px rgba(0,0,0,.08)}
 window.onerror = function(msg, src, line) {
   var d = document.getElementById('js-error-banner');
   if (!d) { d = document.createElement('div'); d.id='js-error-banner';
-    d.style.cssText='position:fixed;top:0;left:0;right:0;background:#ff4444;color:#fff;padding:10px 14px;font-size:13px;z-index:9999;font-family:monospace;white-space:pre-wrap';
+    d.style.cssText='position:fixed;top:0;left:0;right:0;background:#ff4444;color:#fff;padding:10px 14px;font-size:var(--fs-sm);z-index:9999;font-family:monospace;white-space:pre-wrap';
     document.body.appendChild(d); }
   d.textContent = '⚠ Erreur JS : ' + msg + '\n  Fichier : ' + src + ' (ligne ' + line + ')';
 };
@@ -614,7 +615,7 @@ window.onerror = function(msg, src, line) {
       <button class="auth-btn" style="margin-top:1rem" onclick="doLogin()">Se connecter</button>
     </div>
     <div style="text-align:center;margin-top:.75rem">
-      <a style="color:var(--blue);cursor:pointer;font-size:14px;font-weight:500" onclick="const f=document.getElementById('login-form-toggle');f.style.display=f.style.display==='none'?'block':'none'">Se connecter avec un e-mail</a>
+      <a style="color:var(--blue);cursor:pointer;font-size:var(--fs-sm);font-weight:500" onclick="const f=document.getElementById('login-form-toggle');f.style.display=f.style.display==='none'?'block':'none'">Se connecter avec un e-mail</a>
     </div>
     <div class="auth-switch">Pas encore de compte ? <a onclick="showScreen('register')">S'inscrire</a></div>
   </div>
@@ -626,15 +627,15 @@ window.onerror = function(msg, src, line) {
     <!-- Avatar + nom -->
     <div style="display:flex;flex-direction:column;align-items:center;gap:10px;margin-bottom:1.5rem">
       <div id="pwd-modal-avatar"></div>
-      <div style="font-size:19px;font-weight:700" id="pwd-modal-name"></div>
-      <div style="font-size:14px;color:var(--muted)">Entrez votre mot de passe pour continuer</div>
+      <div style="font-size:var(--fs-lg);font-weight:700" id="pwd-modal-name"></div>
+      <div style="font-size:var(--fs-sm);color:var(--muted)">Entrez votre mot de passe pour continuer</div>
     </div>
     <!-- Champ mot de passe -->
     <div class="auth-field" style="margin-bottom:.75rem">
       <label>Mot de passe</label>
       <div style="position:relative">
         <input type="password" id="pwd-modal-input" placeholder="••••••••"
-          style="width:100%;padding:10px 40px 10px 12px;border:1px solid var(--border);border-radius:var(--r);background:var(--surface);color:var(--text);font-size:16px;font-family:inherit"
+          style="width:100%;padding:10px 40px 10px 12px;border:1px solid var(--border);border-radius:var(--r);background:var(--surface);color:var(--text);font-size:var(--fs-md);font-family:inherit"
           onkeydown="if(event.key==='Enter'){event.preventDefault();pwdModalConfirm();}">
         <!-- Toggle visibilité -->
         <button type="button" onclick="pwdModalToggleVis()" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--muted);padding:2px">
@@ -686,7 +687,7 @@ window.onerror = function(msg, src, line) {
   <div class="user-menu" id="user-menu">
     <button class="user-menu-btn" id="user-menu-btn" onclick="toggleUserMenu()">
       <div id="user-menu-avatar"></div>
-      <span id="user-menu-name" style="font-size:15px;font-weight:600;max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
+      <span id="user-menu-name" style="font-size:var(--fs-md);font-weight:600;max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
     </button>
     <div class="user-menu-dropdown" id="user-menu-dropdown">
@@ -840,70 +841,70 @@ window.onerror = function(msg, src, line) {
   <!-- Parcours en 3 étapes — horizontal pills -->
   <div id="conseils-steps" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:1.5rem">
     <div style="background:linear-gradient(135deg,#0d9e6e18,#0d9e6e08);border:1px solid #0d9e6e44;border-radius:var(--rl);padding:14px 12px;text-align:center">
-      <div style="width:36px;height:36px;border-radius:50%;background:#0d9e6e;color:#fff;font-size:18px;font-weight:800;display:flex;align-items:center;justify-content:center;margin:0 auto 10px">1</div>
-      <div style="font-size:14px;font-weight:700;margin-bottom:4px;color:var(--text)">Sécurité</div>
-      <div style="font-size:12px;color:var(--muted);line-height:1.4">Livret A / LDDS<br>3–6 mois de dépenses</div>
+      <div style="width:36px;height:36px;border-radius:50%;background:#0d9e6e;color:#fff;font-size:var(--fs-base);font-weight:800;display:flex;align-items:center;justify-content:center;margin:0 auto 10px">1</div>
+      <div style="font-size:var(--fs-sm);font-weight:700;margin-bottom:4px;color:var(--text)">Sécurité</div>
+      <div style="font-size:var(--fs-xs);color:var(--muted);line-height:1.4">Livret A / LDDS<br>3–6 mois de dépenses</div>
     </div>
     <div style="background:linear-gradient(135deg,#2979c818,#2979c808);border:1px solid #2979c844;border-radius:var(--rl);padding:14px 12px;text-align:center">
-      <div style="width:36px;height:36px;border-radius:50%;background:#2979c8;color:#fff;font-size:18px;font-weight:800;display:flex;align-items:center;justify-content:center;margin:0 auto 10px">2</div>
-      <div style="font-size:14px;font-weight:700;margin-bottom:4px;color:var(--text)">Croissance</div>
-      <div style="font-size:12px;color:var(--muted);line-height:1.4">PEA + ETF monde<br>Horizon 5–10 ans</div>
+      <div style="width:36px;height:36px;border-radius:50%;background:#2979c8;color:#fff;font-size:var(--fs-base);font-weight:800;display:flex;align-items:center;justify-content:center;margin:0 auto 10px">2</div>
+      <div style="font-size:var(--fs-sm);font-weight:700;margin-bottom:4px;color:var(--text)">Croissance</div>
+      <div style="font-size:var(--fs-xs);color:var(--muted);line-height:1.4">PEA + ETF monde<br>Horizon 5–10 ans</div>
     </div>
     <div style="background:linear-gradient(135deg,#7c52d418,#7c52d408);border:1px solid #7c52d444;border-radius:var(--rl);padding:14px 12px;text-align:center">
-      <div style="width:36px;height:36px;border-radius:50%;background:#7c52d4;color:#fff;font-size:18px;font-weight:800;display:flex;align-items:center;justify-content:center;margin:0 auto 10px">3</div>
-      <div style="font-size:14px;font-weight:700;margin-bottom:4px;color:var(--text)">Revenus</div>
-      <div style="font-size:12px;color:var(--muted);line-height:1.4">SCPI · Dividendes<br>Rentes mensuelles</div>
+      <div style="width:36px;height:36px;border-radius:50%;background:#7c52d4;color:#fff;font-size:var(--fs-base);font-weight:800;display:flex;align-items:center;justify-content:center;margin:0 auto 10px">3</div>
+      <div style="font-size:var(--fs-sm);font-weight:700;margin-bottom:4px;color:var(--text)">Revenus</div>
+      <div style="font-size:var(--fs-xs);color:var(--muted);line-height:1.4">SCPI · Dividendes<br>Rentes mensuelles</div>
     </div>
   </div>
 
   <!-- Stratégies -->
-  <div style="font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--hint);margin-bottom:.6rem">Stratégies pour votre profil</div>
+  <div style="font-size:var(--fs-sm);font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--hint);margin-bottom:.6rem">Stratégies pour votre profil</div>
   <div style="display:flex;flex-direction:column;gap:.6rem;margin-bottom:var(--sg)" id="conseil-cards"></div>
 
   <!-- Enveloppes fiscales -->
-  <div style="font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--hint);margin-bottom:.6rem">Enveloppes fiscales</div>
+  <div style="font-size:var(--fs-sm);font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--hint);margin-bottom:.6rem">Enveloppes fiscales</div>
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin-bottom:var(--sg)">
 
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:14px;display:flex;gap:12px;align-items:flex-start">
-      <div style="width:36px;height:36px;border-radius:10px;background:#0d9e6e18;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">📗</div>
+      <div style="width:36px;height:36px;border-radius:10px;background:#0d9e6e18;display:flex;align-items:center;justify-content:center;font-size:var(--fs-lg);flex-shrink:0">📗</div>
       <div>
-        <div style="font-size:15px;font-weight:700;margin-bottom:1px">Livret A</div>
-        <div style="font-size:13px;color:#0d9e6e;font-weight:600;margin-bottom:4px">3% · Sans risque</div>
-        <div style="font-size:13px;color:var(--muted);line-height:1.4">Plafond 22 950 €. Disponible immédiatement, exonéré d'impôt.</div>
+        <div style="font-size:var(--fs-md);font-weight:700;margin-bottom:1px">Livret A</div>
+        <div style="font-size:var(--fs-sm);color:#0d9e6e;font-weight:600;margin-bottom:4px">3% · Sans risque</div>
+        <div style="font-size:var(--fs-sm);color:var(--muted);line-height:1.4">Plafond 22 950 €. Disponible immédiatement, exonéré d'impôt.</div>
       </div>
     </div>
 
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:14px;display:flex;gap:12px;align-items:flex-start">
-      <div style="width:36px;height:36px;border-radius:10px;background:#2979c818;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">📘</div>
+      <div style="width:36px;height:36px;border-radius:10px;background:#2979c818;display:flex;align-items:center;justify-content:center;font-size:var(--fs-lg);flex-shrink:0">📘</div>
       <div>
-        <div style="font-size:15px;font-weight:700;margin-bottom:1px">PEA</div>
-        <div style="font-size:13px;color:#2979c8;font-weight:600;margin-bottom:4px">Exonéré IR après 5 ans</div>
-        <div style="font-size:13px;color:var(--muted);line-height:1.4">Plafond 150 000 €. ETF monde, meilleure enveloppe long terme.</div>
+        <div style="font-size:var(--fs-md);font-weight:700;margin-bottom:1px">PEA</div>
+        <div style="font-size:var(--fs-sm);color:#2979c8;font-weight:600;margin-bottom:4px">Exonéré IR après 5 ans</div>
+        <div style="font-size:var(--fs-sm);color:var(--muted);line-height:1.4">Plafond 150 000 €. ETF monde, meilleure enveloppe long terme.</div>
       </div>
     </div>
 
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:14px;display:flex;gap:12px;align-items:flex-start">
-      <div style="width:36px;height:36px;border-radius:10px;background:#7c52d418;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">📙</div>
+      <div style="width:36px;height:36px;border-radius:10px;background:#7c52d418;display:flex;align-items:center;justify-content:center;font-size:var(--fs-lg);flex-shrink:0">📙</div>
       <div>
-        <div style="font-size:15px;font-weight:700;margin-bottom:1px">Assurance-vie</div>
-        <div style="font-size:13px;color:#7c52d4;font-weight:600;margin-bottom:4px">Abattement après 8 ans</div>
-        <div style="font-size:13px;color:var(--muted);line-height:1.4">Fonds euros + ETF. Succession optimisée, 4 600 €/an exonérés.</div>
+        <div style="font-size:var(--fs-md);font-weight:700;margin-bottom:1px">Assurance-vie</div>
+        <div style="font-size:var(--fs-sm);color:#7c52d4;font-weight:600;margin-bottom:4px">Abattement après 8 ans</div>
+        <div style="font-size:var(--fs-sm);color:var(--muted);line-height:1.4">Fonds euros + ETF. Succession optimisée, 4 600 €/an exonérés.</div>
       </div>
     </div>
 
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:14px;display:flex;gap:12px;align-items:flex-start">
-      <div style="width:36px;height:36px;border-radius:10px;background:#d9353518;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">🏢</div>
+      <div style="width:36px;height:36px;border-radius:10px;background:#d9353518;display:flex;align-items:center;justify-content:center;font-size:var(--fs-lg);flex-shrink:0">🏢</div>
       <div>
-        <div style="font-size:15px;font-weight:700;margin-bottom:1px">SCPI</div>
-        <div style="font-size:13px;color:#d93535;font-weight:600;margin-bottom:4px">4–5% · Revenus mensuels</div>
-        <div style="font-size:13px;color:var(--muted);line-height:1.4">Immobilier sans gestion. Loyers chaque mois dès 1 000 €.</div>
+        <div style="font-size:var(--fs-md);font-weight:700;margin-bottom:1px">SCPI</div>
+        <div style="font-size:var(--fs-sm);color:#d93535;font-weight:600;margin-bottom:4px">4–5% · Revenus mensuels</div>
+        <div style="font-size:var(--fs-sm);color:var(--muted);line-height:1.4">Immobilier sans gestion. Loyers chaque mois dès 1 000 €.</div>
       </div>
     </div>
 
   </div>
 
   <!-- Simulateur -->
-  <div style="font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--hint);margin-bottom:.6rem">Simulateur de revenus passifs</div>
+  <div style="font-size:var(--fs-sm);font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--hint);margin-bottom:.6rem">Simulateur de revenus passifs</div>
   <div class="card" style="margin-bottom:1rem"><div id="conseils-sim"></div></div>
   </div><!-- /#conseils-content -->
 
@@ -961,7 +962,7 @@ window.onerror = function(msg, src, line) {
 
     <!-- Tab Apparence : photo + couleur -->
     <div id="settings-tab-apparence">
-      <div style="font-size:12px;font-weight:700;color:var(--hint);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px" id="settings-membres-label">Apparence des membres</div>
+      <div style="font-size:var(--fs-xs);font-weight:700;color:var(--hint);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px" id="settings-membres-label">Apparence des membres</div>
       <div id="settings-members-container"></div>
     </div>
 
@@ -970,8 +971,8 @@ window.onerror = function(msg, src, line) {
       <div style="display:flex;align-items:center;gap:14px;padding:14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);margin-bottom:1.25rem" id="set-account-preview">
         <div id="set-account-avatar" style="width:48px;height:48px;border-radius:50%;flex-shrink:0"></div>
         <div>
-          <div style="font-size:15px;font-weight:700;color:var(--text)" id="set-account-name-display"></div>
-          <div style="font-size:13px;color:var(--muted)" id="set-account-email-display"></div>
+          <div style="font-size:var(--fs-md);font-weight:700;color:var(--text)" id="set-account-name-display"></div>
+          <div style="font-size:var(--fs-sm);color:var(--muted)" id="set-account-email-display"></div>
         </div>
       </div>
       <div class="fstack">
@@ -983,7 +984,7 @@ window.onerror = function(msg, src, line) {
           <label>Adresse e-mail</label>
           <input type="email" id="set-email" placeholder="vous@exemple.fr">
         </div>
-        <div id="set-profile-msg" style="font-size:13px;min-height:18px"></div>
+        <div id="set-profile-msg" style="font-size:var(--fs-sm);min-height:18px"></div>
       </div>
       <div id="set-profile-footer" style="display:flex;gap:8px;justify-content:flex-end;margin-top:1rem">
         <button class="btn" id="modal-settings-close-compte" onclick="document.getElementById('modal-settings').classList.remove('open')">Annuler</button>
@@ -993,7 +994,7 @@ window.onerror = function(msg, src, line) {
 
     <!-- Tab Sécurité : mot de passe -->
     <div id="settings-tab-securite" style="display:none">
-      <div style="padding:12px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);margin-bottom:1.25rem;font-size:13px;color:var(--muted);line-height:1.6">
+      <div style="padding:12px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);margin-bottom:1.25rem;font-size:var(--fs-sm);color:var(--muted);line-height:1.6">
         Choisissez un mot de passe d'au moins <strong style="color:var(--text)">6 caractères</strong>. Il ne sera jamais affiché en clair.
       </div>
       <div class="fstack">
@@ -1009,7 +1010,7 @@ window.onerror = function(msg, src, line) {
           <label>Confirmer le nouveau mot de passe</label>
           <input type="password" id="set-pwd-cfm" placeholder="••••••••" autocomplete="new-password">
         </div>
-        <div id="set-pwd-msg" style="font-size:13px;min-height:18px"></div>
+        <div id="set-pwd-msg" style="font-size:var(--fs-sm);min-height:18px"></div>
       </div>
       <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:1rem">
         <button class="btn" onclick="document.getElementById('modal-settings').classList.remove('open')">Annuler</button>
@@ -1080,8 +1081,8 @@ window.onerror = function(msg, src, line) {
       <div style="width:64px;height:64px;border-radius:18px;background:var(--red-bg);border:1.5px solid var(--red);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;box-shadow:0 0 0 6px color-mix(in srgb,var(--red) 10%,transparent)">
         <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
       </div>
-      <div id="confirm-msg" style="font-size:18px;font-weight:700;margin-bottom:8px;letter-spacing:-.01em">Supprimer ?</div>
-      <div id="confirm-sub" style="font-size:14px;color:var(--muted);line-height:1.5;max-width:260px;margin:0 auto">Cette action est irréversible.</div>
+      <div id="confirm-msg" style="font-size:var(--fs-base);font-weight:700;margin-bottom:8px;letter-spacing:-.01em">Supprimer ?</div>
+      <div id="confirm-sub" style="font-size:var(--fs-sm);color:var(--muted);line-height:1.5;max-width:260px;margin:0 auto">Cette action est irréversible.</div>
     </div>
     <div class="modal-footer" style="gap:10px">
       <button class="btn" id="confirm-cancel" style="flex:1">Annuler</button>
@@ -1170,7 +1171,7 @@ function showApiError(msg){
   if(!toast){
     toast=document.createElement('div');
     toast.id='zenith-toast';
-    toast.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#341818;color:#ff7f7f;border:1px solid #ff7f7f;border-radius:10px;padding:10px 18px;font-size:14px;font-weight:600;z-index:9999;opacity:0;transition:opacity .3s;max-width:90vw;text-align:center;pointer-events:none';
+    toast.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#341818;color:#ff7f7f;border:1px solid #ff7f7f;border-radius:10px;padding:10px 18px;font-size:var(--fs-sm);font-weight:600;z-index:9999;opacity:0;transition:opacity .3s;max-width:90vw;text-align:center;pointer-events:none';
     document.body.appendChild(toast);
   }
   toast.textContent=msg;
@@ -1292,8 +1293,8 @@ const kpiHtml=(label,value,color,sub='',trend=null,tip='',badge='')=>{
   const tooltipContent=tip||sub;
   const tooltipHtml=tooltipContent?`
     <div class="kpi-tooltip">
-      <div style="font-size:13px;font-weight:600;color:var(--muted);margin-bottom:4px">${label}</div>
-      <div style="font-size:14px;color:var(--text);line-height:1.6">${tooltipContent.replace(/·/g,'<br>')}</div>
+      <div style="font-size:var(--fs-sm);font-weight:600;color:var(--muted);margin-bottom:4px">${label}</div>
+      <div style="font-size:var(--fs-sm);color:var(--text);line-height:1.6">${tooltipContent.replace(/·/g,'<br>')}</div>
     </div>`:'';
   const subLines=sub?sub.split('·').map(s=>s.trim()).filter(Boolean):[];
   return`<div class="kpi" style="position:relative;overflow:visible" ${tooltipContent?'onmouseenter="this.querySelector(\'.kpi-tooltip\')&&(this.querySelector(\'.kpi-tooltip\').style.opacity=\'1\',this.querySelector(\'.kpi-tooltip\').style.transform=\'translateX(-50%) translateY(0)\')" onmouseleave="this.querySelector(\'.kpi-tooltip\')&&(this.querySelector(\'.kpi-tooltip\').style.opacity=\'0\',this.querySelector(\'.kpi-tooltip\').style.transform=\'translateX(-50%) translateY(4px)\')"':''}>
@@ -1344,6 +1345,15 @@ function noDataBanner(){
   </div>`;
 }
 function darkVal(light,dark){return light;}
+// Converts a CSS rem variable to px for Chart.js (which requires numbers)
+function fsPx(varName){
+  const root=document.documentElement;
+  const rem=parseFloat(getComputedStyle(root).getPropertyValue(varName))||1;
+  const base=parseFloat(getComputedStyle(root).fontSize);
+  return Math.round(rem*base);
+}
+// Reads a CSS color variable
+function cssCol(varName){return getComputedStyle(document.documentElement).getPropertyValue(varName).trim();}
 function myRole(){return currentUser?.name||currentUser?.role||users[0]?.name||'?';}
 function orderedMembers(){
   const names=users.map(u=>u.name);
@@ -1475,18 +1485,18 @@ function updatePhotoSettings(){
     const photo=profilePhotos[u.name];
     return`<div id="settings-member-${key}" style="background:var(--surface2);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:12px;margin-bottom:8px">
       <div style="display:flex;align-items:center;gap:12px">
-        <div id="photo-prev-${key}" class="avatar" style="width:48px;height:48px;font-size:20px;flex-shrink:0;background:${photo?'none':color+'22'};color:${color}">${photo?`<img src="${photo}" alt="${u.name}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`:u.name.charAt(0)}</div>
+        <div id="photo-prev-${key}" class="avatar" style="width:48px;height:48px;font-size:var(--fs-lg);flex-shrink:0;background:${photo?'none':color+'22'};color:${color}">${photo?`<img src="${photo}" alt="${u.name}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`:u.name.charAt(0)}</div>
         <div style="flex:1">
-          <div style="font-size:16px;font-weight:600;margin-bottom:2px">${u.name}</div>
+          <div style="font-size:var(--fs-md);font-weight:600;margin-bottom:2px">${u.name}</div>
           <div style="display:flex;align-items:center;gap:8px">
-            <label style="cursor:pointer;font-size:14px;color:var(--blue);font-weight:500">Choisir une photo<input type="file" accept="image/*" id="photo-${key}" style="display:none" onchange="handlePhotoUpload('${u.name}',this)"></label>
-            <span id="photo-${key}-clear" style="font-size:14px;color:var(--red);cursor:pointer;display:${photo?'inline':'none'}" onclick="clearPhoto('${u.name}')">· Supprimer</span>
+            <label style="cursor:pointer;font-size:var(--fs-sm);color:var(--blue);font-weight:500">Choisir une photo<input type="file" accept="image/*" id="photo-${key}" style="display:none" onchange="handlePhotoUpload('${u.name}',this)"></label>
+            <span id="photo-${key}-clear" style="font-size:var(--fs-sm);color:var(--red);cursor:pointer;display:${photo?'inline':'none'}" onclick="clearPhoto('${u.name}')">· Supprimer</span>
           </div>
         </div>
         <span id="prev-${key}" style="width:22px;height:22px;border-radius:50%;border:2px solid var(--border);display:inline-block;flex-shrink:0;background:${color}"></span>
       </div>
       <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-        <span style="font-size:13px;color:var(--muted);margin-right:2px">Couleur</span>
+        <span style="font-size:var(--fs-sm);color:var(--muted);margin-right:2px">Couleur</span>
         ${PRESET_COLORS.map(c=>`<button class="cswatch${c===color?' sel':''}" data-m="${key}" data-name="${u.name}" data-c="${c}" style="background:${c}" onclick="applyMemberColor('${u.name}','${c}')"></button>`).join('')}
         <input type="color" id="custom-${key}" value="${color}" style="width:24px;height:24px;border:2px solid var(--border);border-radius:50%;cursor:pointer;padding:0;overflow:hidden;background:none" oninput="applyMemberColor('${u.name}',this.value)">
       </div>
@@ -1545,7 +1555,7 @@ function updateTopbarAvatar(){
     if(photo){
       av.innerHTML=`<img src="${photo}" alt="${currentUser.name}" style="width:30px;height:30px;border-radius:50%;object-fit:cover;border:2px solid ${color}44">`;
     } else {
-      av.innerHTML=`<div style="width:30px;height:30px;border-radius:50%;background:${color}22;color:${color};font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;border:2px solid ${color}33">${currentUser.name.charAt(0)}</div>`;
+      av.innerHTML=`<div style="width:30px;height:30px;border-radius:50%;background:${color}22;color:${color};font-size:var(--fs-sm);font-weight:700;display:flex;align-items:center;justify-content:center;border:2px solid ${color}33">${currentUser.name.charAt(0)}</div>`;
     }
   }
   const nm=document.getElementById('user-menu-name');
@@ -1753,8 +1763,8 @@ function debouncedDashRefresh(){
     if(currentTab==='projection')renderProjection();
   },600);
 }
-function prow(label,val,color){return`<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border)"><span style="font-size:15px;color:var(--muted)">${label}</span><span style="font-size:15px;font-weight:600;color:${color}">${val}</span></div>`;}
-function prowBold(label,val,color){return`<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:2px solid var(--border)"><span style="font-size:15px;font-weight:700">${label}</span><span style="font-size:16px;font-weight:700;color:${color}">${val}</span></div>`;}
+function prow(label,val,color){return`<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border)"><span style="font-size:var(--fs-md);color:var(--muted)">${label}</span><span style="font-size:var(--fs-md);font-weight:600;color:${color}">${val}</span></div>`;}
+function prowBold(label,val,color){return`<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:2px solid var(--border)"><span style="font-size:var(--fs-md);font-weight:700">${label}</span><span style="font-size:var(--fs-md);font-weight:700;color:${color}">${val}</span></div>`;}
 function setSavingMode(name, mode, btn){
   const mc=getMC(name);
   // Toggle button styles
@@ -1830,10 +1840,10 @@ function renderDashboard(){
   const depRate=revNetScoped>0?Math.round(depContrainte/revNetScoped*100):0;
   const ravRate=revNetScoped>0?Math.round(ravScoped/revNetScoped*100):0;
   const epBadge=epRate>=20
-    ?`<span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;background:var(--green-bg);color:var(--green)">✓ Bon taux</span>`
+    ?`<span style="font-size:var(--fs-xs);font-weight:700;padding:2px 8px;border-radius:20px;background:var(--green-bg);color:var(--green)">✓ Bon taux</span>`
     :epRate>=10
-    ?`<span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;background:var(--amber-bg);color:var(--amber)">Correct — viser 20%</span>`
-    :`<span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;background:var(--red-bg);color:var(--red)">⚠ Taux bas</span>`;
+    ?`<span style="font-size:var(--fs-xs);font-weight:700;padding:2px 8px;border-radius:20px;background:var(--amber-bg);color:var(--amber)">Correct — viser 20%</span>`
+    :`<span style="font-size:var(--fs-xs);font-weight:700;padding:2px 8px;border-radius:20px;background:var(--red-bg);color:var(--red)">⚠ Taux bas</span>`;
   document.getElementById('dash-kpis').innerHTML=
     kpiHtml('Revenus nets',eur(revNetScoped),'var(--green)',
       dashboardMember==='all'?`Brut ${eur(s.rev)} · Impôts ${eur(s.tax)}`:`Brut ${eur(revNetScoped+smScoped.tax)} · Impôts ${eur(smScoped.tax)}`)+
@@ -1850,8 +1860,8 @@ function renderDashboard(){
     const msg=pct<=50?'✓ Dépenses maîtrisées':pct<=70?'⚠ Essayez de passer sous 50%':'⚠ Peu de marge pour épargner';
     return`<div style="margin-top:10px;padding-top:12px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-        <span style="font-size:12px;font-weight:700;color:var(--hint);text-transform:uppercase;letter-spacing:.07em">Dépenses / Revenu</span>
-        <span style="font-size:16px;font-weight:800;color:${c}">${pct}%</span>
+        <span style="font-size:var(--fs-xs);font-weight:700;color:var(--hint);text-transform:uppercase;letter-spacing:.07em">Dépenses / Revenu</span>
+        <span style="font-size:var(--fs-md);font-weight:800;color:${c}">${pct}%</span>
       </div>
       <div style="position:relative;height:9px;border-radius:5px;background:var(--surface2);border:1px solid var(--border);overflow:hidden">
         <div style="position:absolute;inset:0;background:linear-gradient(to right,#0d9e6e18 0%,#0d9e6e18 50%,#c49a0018 50%,#c49a0018 70%,#d9353518 70%,#d9353518 100%)"></div>
@@ -1859,13 +1869,13 @@ function renderDashboard(){
         <div style="position:absolute;left:70%;top:0;bottom:0;width:1px;background:var(--border);opacity:.6"></div>
         <div style="position:absolute;left:0;top:0;bottom:0;width:${Math.min(pct,100)}%;background:${grad};border-radius:5px;transition:width .5s cubic-bezier(.4,0,.2,1)"></div>
       </div>
-      <div style="display:flex;font-size:11px;color:var(--hint);margin-top:4px;position:relative;height:13px">
+      <div style="display:flex;font-size:var(--fs-xs);color:var(--hint);margin-top:4px;position:relative;height:13px">
         <span style="position:absolute;left:0">0%</span>
         <span style="position:absolute;left:50%;transform:translateX(-50%);color:#0d9e6e;font-weight:700">50%</span>
         <span style="position:absolute;left:70%;transform:translateX(-50%);color:#c49a00;font-weight:700">70%</span>
         <span style="position:absolute;right:0">100%</span>
       </div>
-      <div style="margin-top:6px;font-size:12px;font-weight:600;color:${c}">${msg}</div>
+      <div style="margin-top:6px;font-size:var(--fs-xs);font-weight:600;color:${c}">${msg}</div>
     </div>`;
   };
 
@@ -1884,27 +1894,27 @@ function renderDashboard(){
     const d=document.createElement('div');d.className='card';
     d.innerHTML=`
       
-      <div style="font-size:12px;font-weight:700;color:var(--hint);text-transform:uppercase;letter-spacing:.08em;padding:4px 0;margin-bottom:2px">Revenus</div>
+      <div style="font-size:var(--fs-xs);font-weight:700;color:var(--hint);text-transform:uppercase;letter-spacing:.08em;padding:4px 0;margin-bottom:2px">Revenus</div>
       <div class="prow"><span class="prow-lbl">Revenus bruts</span><span class="prow-val" style="color:var(--green)">${eur(ps.rev)}</span></div>
       <div class="prow"><span class="prow-lbl">Impôts</span><span class="prow-val" style="color:var(--amber)">− ${eur(ps.tax)}</span></div>
       <div class="prow" style="border-bottom:2px solid var(--border)"><span class="prow-lbl" style="font-weight:600">Revenus nets</span><span class="prow-val" style="color:var(--green)">${eur(ps.revNet)}</span></div>
-      <div style="font-size:12px;font-weight:700;color:var(--hint);text-transform:uppercase;letter-spacing:.08em;padding:4px 0;margin-top:8px;margin-bottom:2px">Dépenses</div>
+      <div style="font-size:var(--fs-xs);font-weight:700;color:var(--hint);text-transform:uppercase;letter-spacing:.08em;padding:4px 0;margin-top:8px;margin-bottom:2px">Dépenses</div>
       <div class="prow"><span class="prow-lbl">Dépenses fixes</span><span class="prow-val" style="color:var(--red)">− ${eur(ps.fix)}</span></div>
       <div class="prow"><span class="prow-lbl">Dépenses variables</span><span class="prow-val" style="color:var(--red)">− ${eur(ps.vari)}</span></div>
       <div class="prow"><span class="prow-lbl">Dépenses totales</span><span class="prow-val" style="color:var(--red)">− ${eur(ps.fix+ps.vari)}</span></div>
       <div class="prow" style="border-bottom:2px solid var(--border)"><span class="prow-lbl" style="font-weight:600">Reste à vivre</span><span class="prow-val" style="color:${ps.rav>=0?'var(--green)':'var(--red)'}">${eur(ps.rav)}</span></div>
       ${depRevGauge(usedPct)}
-      <div style="font-size:12px;font-weight:700;color:var(--hint);text-transform:uppercase;letter-spacing:.08em;padding:4px 0;margin-top:8px;margin-bottom:2px">Répartition</div>
+      <div style="font-size:var(--fs-xs);font-weight:700;color:var(--hint);text-transform:uppercase;letter-spacing:.08em;padding:4px 0;margin-top:8px;margin-bottom:2px">Répartition</div>
       <div style="margin:12px 0 6px">
         <!-- Toggle % / € -->
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
           <div style="display:flex;gap:0;border:1px solid var(--border);border-radius:8px;overflow:hidden">
             <button id="mode-pct-${name}" onclick="setSavingMode('${name}','pct',this)"
-              style="padding:3px 10px;font-size:13px;font-weight:600;border:none;cursor:pointer;font-family:inherit;transition:background .12s;background:${getMC(name)};color:#fff">%</button>
+              style="padding:3px 10px;font-size:var(--fs-sm);font-weight:600;border:none;cursor:pointer;font-family:inherit;transition:background .12s;background:${getMC(name)};color:#fff">%</button>
             <button id="mode-eur-${name}" onclick="setSavingMode('${name}','eur',this)"
-              style="padding:3px 10px;font-size:13px;font-weight:600;border:none;cursor:pointer;font-family:inherit;transition:background .12s;background:var(--surface);color:var(--muted)">€</button>
+              style="padding:3px 10px;font-size:var(--fs-sm);font-weight:600;border:none;cursor:pointer;font-family:inherit;transition:background .12s;background:var(--surface);color:var(--muted)">€</button>
           </div>
-          <span id="pctv-${name}" style="font-size:16px;font-weight:700;color:${getMC(name)}">${pct}%</span>
+          <span id="pctv-${name}" style="font-size:var(--fs-md);font-weight:700;color:${getMC(name)}">${pct}%</span>
         </div>
 
         <!-- Slider % mode -->
@@ -1912,7 +1922,7 @@ function renderDashboard(){
           <input type="range" min="0" max="100" step="1" value="${pct}" id="pct-${name}"
             style="width:100%;accent-color:${getMC(name)};--accent-c:${getMC(name)}"
             oninput="savingPct['${name}']=+this.value;document.getElementById('pctv-${name}').textContent=this.value+'%';saveData();updateSavingCalc('${name}');debouncedDashRefresh();">
-          <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--hint);margin-top:2px"><span>0%</span><span>100%</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:var(--fs-xs);color:var(--hint);margin-top:2px"><span>0%</span><span>100%</span></div>
         </div>
 
         <!-- Slider € mode -->
@@ -1920,7 +1930,7 @@ function renderDashboard(){
           <input type="range" min="0" max="${Math.round(ps.rav)}" step="10" value="${epC}" id="eur-${name}"
             style="width:100%;accent-color:${getMC(name)};--accent-c:${getMC(name)}"
             oninput="const pctVal=+this.max>0?Math.round(+this.value/+this.max*100):0;savingPct['${name}']=pctVal;document.getElementById('pct-${name}').value=pctVal;document.getElementById('pctv-${name}').textContent=parseInt(this.value).toLocaleString('fr-FR')+' €';saveData();updateSavingCalc('${name}');debouncedDashRefresh();">
-          <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--hint);margin-top:2px"><span>0 €</span><span>${eur(Math.round(ps.rav))}</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:var(--fs-xs);color:var(--hint);margin-top:2px"><span>0 €</span><span>${eur(Math.round(ps.rav))}</span></div>
         </div>
       </div>
       <div class="prow"><span class="prow-lbl" style="color:var(--blue)">→ Épargne calculée</span><span class="prow-val" style="color:var(--blue)" data-ep="${name}">${eur(epC)}</span></div>
@@ -1941,25 +1951,25 @@ function renderDashboard(){
       combinedEl.innerHTML=`<div class="card">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
           <div style="display:flex;align-items:center;gap:6px">
-            <span style="font-size:15px;font-weight:700;color:var(--text)">Commun</span>
+            <span style="font-size:var(--fs-md);font-weight:700;color:var(--text)">Commun</span>
           </div>
         </div>
         <div style="display:flex;flex-direction:column;gap:0">
-          <div style="font-size:12px;font-weight:700;color:var(--hint);text-transform:uppercase;letter-spacing:.08em;padding:4px 0 4px;margin-bottom:2px">Revenus</div>
+          <div style="font-size:var(--fs-xs);font-weight:700;color:var(--hint);text-transform:uppercase;letter-spacing:.08em;padding:4px 0 4px;margin-bottom:2px">Revenus</div>
           ${prow('Revenus bruts',eur(sAll.rev),'var(--green)')}
           ${prow('Impôts',`− ${eur(sAll.tax)}`,'var(--amber)')}
           ${prowBold('Revenus nets',eur(sAll.revNet),'var(--green)')}
-          <div style="font-size:12px;font-weight:700;color:var(--hint);text-transform:uppercase;letter-spacing:.08em;padding:4px 0 4px;margin-top:8px;margin-bottom:2px">Dépenses</div>
+          <div style="font-size:var(--fs-xs);font-weight:700;color:var(--hint);text-transform:uppercase;letter-spacing:.08em;padding:4px 0 4px;margin-top:8px;margin-bottom:2px">Dépenses</div>
           ${prow('Dépenses fixes',`− ${eur(sAll.fix)}`,'var(--red)')}
           ${prow('Dépenses variables',`− ${eur(sAll.vari)}`,'var(--red)')}
           ${prow('Dépenses totales',`− ${eur(sAll.fix+sAll.vari)}`,'var(--red)')}
           ${prowBold('Reste à vivre',eur(sAll.rav),sAll.rav>=0?'var(--blue)':'var(--red)')}
           ${depRevGauge(usedPctAll)}
-          <div style="font-size:12px;font-weight:700;color:var(--hint);text-transform:uppercase;letter-spacing:.08em;padding:4px 0 4px;margin-top:8px;margin-bottom:2px">Répartition</div>
+          <div style="font-size:var(--fs-xs);font-weight:700;color:var(--hint);text-transform:uppercase;letter-spacing:.08em;padding:4px 0 4px;margin-top:8px;margin-bottom:2px">Répartition</div>
           ${(()=>{const epRateAll=sAll.rav>0?Math.round(epAll/sAll.rav*100):0;const epCol=epRateAll>=20?'var(--green)':epRateAll>=10?'var(--amber)':'var(--red)';const epLabel=epRateAll>=20?'✓ Objectif atteint':epRateAll>=10?'En progression':'En dessous de l\'objectif';return`<div style="background:var(--surface2);border:1px solid var(--border);border-left:3px solid ${epCol};border-radius:var(--r);padding:10px 14px;margin:8px 0 6px">
-            <div style="font-size:11px;font-weight:700;color:var(--hint);text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px">Taux d'épargne commun</div>
-            <div style="font-size:28px;font-weight:800;color:${epCol};line-height:1">${epRateAll}%</div>
-            <div style="font-size:12px;color:var(--muted);margin-top:4px">${epLabel} · du reste à vivre</div>
+            <div style="font-size:var(--fs-xs);font-weight:700;color:var(--hint);text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px">Taux d'épargne commun</div>
+            <div style="font-size:var(--fs-xl);font-weight:800;color:${epCol};line-height:1">${epRateAll}%</div>
+            <div style="font-size:var(--fs-xs);color:var(--muted);margin-top:4px">${epLabel} · du reste à vivre</div>
           </div>`;})()}
           ${prow('→ Épargne calculée',eur(epAll),'var(--blue)')}
           ${prow('→ Budget loisir',eur(loiAll),'var(--amber)')}
@@ -2022,9 +2032,9 @@ function renderDashboard(){
           backgroundColor:darkVal('rgba(255,255,255,1)','rgba(28,28,32,1)'),
           borderColor:darkVal('rgba(0,0,0,.15)','rgba(255,255,255,.2)'),
           borderWidth:1,
-          titleColor:darkVal('#18181a','#eae9e4'),
-          bodyColor:darkVal('#78776e','#8c8a84'),
-          titleFont:{size:12,weight:'700'}, bodyFont:{size:12},
+          titleColor:cssCol('--text'),
+          bodyColor:cssCol('--muted'),
+          titleFont:{size:fsPx('--fs-sm'),weight:'700'}, bodyFont:{size:fsPx('--fs-xs')},
           padding:10, cornerRadius:10,
           callbacks:{
             label:ctx=>{
@@ -2042,11 +2052,11 @@ function renderDashboard(){
         const cx=(left+right)/2,cy=(top+bottom)/2;
         ctx.save();
         ctx.textAlign='center';ctx.textBaseline='middle';
-        ctx.fillStyle=darkVal('#18181a','#eae9e4');
-        ctx.font='800 22px Inter,system-ui,sans-serif';
+        ctx.fillStyle=cssCol('--text');
+        ctx.font=`800 ${fsPx('--fs-lg')}px Inter,system-ui,sans-serif`;
         ctx.fillText(eur(donutTotal),cx,cy-11);
-        ctx.fillStyle=darkVal('#78776e','#8c8a84');
-        ctx.font='500 10px Inter,system-ui,sans-serif';
+        ctx.fillStyle=cssCol('--muted');
+        ctx.font=`500 ${fsPx('--fs-xs')}px Inter,system-ui,sans-serif`;
         ctx.fillText('Total dépenses',cx,cy+11);
         ctx.restore();
       }},
@@ -2060,7 +2070,7 @@ function renderDashboard(){
           const txt=Math.round(pct*100)+'%';
           ctx.save();
           ctx.textAlign='center';ctx.textBaseline='middle';
-          ctx.font='700 11px Inter,system-ui,sans-serif';
+          ctx.font=`700 ${fsPx('--fs-xs')}px Inter,system-ui,sans-serif`;
           ctx.fillStyle='rgba(255,255,255,.95)';
           ctx.fillText(txt,x,y);
           ctx.restore();
@@ -2080,13 +2090,13 @@ function renderDashboard(){
         return`<div style="display:grid;grid-template-columns:10px 1fr auto auto;align-items:center;gap:8px">
           <span style="width:10px;height:10px;border-radius:3px;background:${d.color};flex-shrink:0;display:block"></span>
           <div style="min-width:0">
-            <div style="font-size:14px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:4px">${d.label}</div>
+            <div style="font-size:var(--fs-sm);font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:4px">${d.label}</div>
             <div style="height:5px;background:var(--surface2);border-radius:3px;overflow:hidden;border:1px solid var(--border)">
               <div style="width:${barW}%;height:100%;background:${d.color};border-radius:3px;transition:width .4s ease"></div>
             </div>
           </div>
-          <span style="font-size:13px;font-weight:600;color:var(--muted);white-space:nowrap;padding-left:4px">${eur(d.value)}</span>
-          <span style="font-size:14px;font-weight:700;color:${d.color};min-width:30px;text-align:right">${pct}%</span>
+          <span style="font-size:var(--fs-sm);font-weight:600;color:var(--muted);white-space:nowrap;padding-left:4px">${eur(d.value)}</span>
+          <span style="font-size:var(--fs-sm);font-weight:700;color:${d.color};min-width:30px;text-align:right">${pct}%</span>
         </div>`;
       }).join('')}
     </div>`;
@@ -2133,10 +2143,10 @@ function renderDashboard(){
       :`<div style="width:${barW}%;height:100%;background:${col1};transition:width .6s cubic-bezier(.4,0,.2,1)"></div>`;
     const memberBreakdown=isShared?`
       <div style="display:flex;gap:10px;margin-top:5px">
-        <span style="display:flex;align-items:center;gap:3px;font-size:12px;color:${col1};font-weight:600">
+        <span style="display:flex;align-items:center;gap:3px;font-size:var(--fs-xs);color:${col1};font-weight:600">
           <span style="width:6px;height:6px;border-radius:50%;background:${col1};flex-shrink:0"></span>${m1} ${eur(a1)}
         </span>
-        <span style="display:flex;align-items:center;gap:3px;font-size:12px;color:${col2};font-weight:600">
+        <span style="display:flex;align-items:center;gap:3px;font-size:var(--fs-xs);color:${col2};font-weight:600">
           <span style="width:6px;height:6px;border-radius:50%;background:${col2};flex-shrink:0"></span>${m2} ${eur(a2)}
         </span>
       </div>`:'';
@@ -2154,16 +2164,16 @@ function renderDashboard(){
         padding:9px 13px;white-space:normal;pointer-events:none;
         opacity:0;transition:opacity .15s,transform .15s;z-index:50;
         box-shadow:0 8px 24px rgba(0,0,0,.15);min-width:160px;max-width:min(220px,70vw)">
-        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px">${e.name}</div>
-        <div style="font-size:13px;color:var(--muted);line-height:1.7">${tooltipLines}</div>
+        <div style="font-size:var(--fs-sm);font-weight:700;color:var(--text);margin-bottom:4px">${e.name}</div>
+        <div style="font-size:var(--fs-sm);color:var(--muted);line-height:1.7">${tooltipLines}</div>
       </div>
       ${avatars}
       <div style="flex:1;min-width:0">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-          <span style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px">${e.name}</span>
+          <span style="font-size:var(--fs-sm);font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px">${e.name}</span>
           <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
-            <span style="font-size:13px;font-weight:600;color:var(--muted)">${eur(e.amount)}</span>
-            <span style="font-size:12px;font-weight:700;color:${col1};background:${col1}18;padding:1px 6px;border-radius:20px">${pct}%</span>
+            <span style="font-size:var(--fs-sm);font-weight:600;color:var(--muted)">${eur(e.amount)}</span>
+            <span style="font-size:var(--fs-xs);font-weight:700;color:${col1};background:${col1}18;padding:1px 6px;border-radius:20px">${pct}%</span>
           </div>
         </div>
         <div style="height:4px;background:var(--border);border-radius:2px;overflow:hidden;display:flex">${barInner}</div>
@@ -2268,9 +2278,9 @@ function memberTableHtml(rows,isMobile,memberName){
       ${gRows.map(e=>{const c=CATS[e.cat];return`<div class="entry-card" draggable="${canEdit(e.member)}" data-id="${e.id}">
         <div class="entry-card-top">
           ${canEdit(e.member)?DRAG_HANDLE:''}
-          <span style="font-weight:600;font-size:16px;flex:1">${e.name}</span>
+          <span style="font-weight:600;font-size:var(--fs-md);flex:1">${e.name}</span>
           <div style="display:flex;align-items:center;gap:4px;flex-shrink:0">
-            <span style="font-size:17px;font-weight:600;color:${['revenu'].includes(e.cat)?'var(--green)':['impot'].includes(e.cat)?'var(--amber)':'var(--red)'};margin-right:6px">${eur(Math.abs(e.amount))}</span>
+            <span style="font-size:var(--fs-base);font-weight:600;color:${['revenu'].includes(e.cat)?'var(--green)':['impot'].includes(e.cat)?'var(--amber)':'var(--red)'};margin-right:6px">${eur(Math.abs(e.amount))}</span>
             ${canEdit(e.member)?`<button class="btn-act" onclick="openEditEntry(${e.id})"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="btn-act btn-act-danger" onclick="deleteEntry(${e.id})"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg></button>`:'<span style="width:52px"></span>'}
           </div>
         </div>
@@ -2282,8 +2292,9 @@ function memberTableHtml(rows,isMobile,memberName){
     }
     const uid=`drag-${memberName}-${g.key}`;
     return`<div style="margin-bottom:var(--sg)">
-      <div class="tbl-wrap"><table>
-        <thead><tr><th style="width:24px"></th><th>Désignation</th><th>Catégorie</th><th style="text-align:right">Montant</th><th></th></tr></thead>
+      <div class="tbl-wrap"><table style="width:100%;table-layout:fixed">
+        <colgroup><col style="width:3%"><col style="width:37%"><col style="width:25%"><col style="width:20%"><col style="width:15%"></colgroup>
+        <thead><tr><th></th><th>Désignation</th><th>Catégorie</th><th style="text-align:right">Montant</th><th></th></tr></thead>
         <tbody id="${uid}">
           ${gRows.map(e=>{const c=CATS[e.cat];const ac=['revenu'].includes(e.cat)?'var(--green)':['impot'].includes(e.cat)?'var(--amber)':'var(--red)';return`<tr draggable="${canEdit(e.member)}" data-id="${e.id}">
             <td style="padding:8px 6px 8px 10px">${canEdit(e.member)?DRAG_HANDLE:''}</td>
@@ -2294,7 +2305,7 @@ function memberTableHtml(rows,isMobile,memberName){
               ${canEdit(e.member)?`<button class="btn-act" onclick="openEditEntry(${e.id})"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="btn-act btn-act-danger" onclick="deleteEntry(${e.id})"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg></button>`:'<span style="display:inline-block;width:52px"></span>'}
             </div></td>
           </tr>`}).join('')}
-          <tr style="background:var(--surface2)"><td></td><td colspan="2" style="font-size:14px;font-weight:600;color:var(--muted)">Total ${g.label.toLowerCase()}</td><td style="text-align:right;font-weight:700;color:${totColor}">${eur(tot)}</td><td></td></tr>
+          <tr style="background:var(--surface2)"><td></td><td colspan="2" style="font-size:var(--fs-sm);font-weight:600;color:var(--muted)">Total ${g.label.toLowerCase()}</td><td style="text-align:right;font-weight:700;color:${totColor}">${eur(tot)}</td><td></td></tr>
         </tbody>
       </table></div>
     </div>`;
@@ -2319,10 +2330,10 @@ function renderEntries(){
           </svg>
         </div>
         <div>
-          <div style="font-size:17px;font-weight:700;margin-bottom:6px">Aucune ligne budgétaire</div>
-          <div style="font-size:14px;color:var(--muted);line-height:1.5">Commencez par ajouter vos revenus<br>et vos dépenses mensuelles.</div>
+          <div style="font-size:var(--fs-base);font-weight:700;margin-bottom:6px">Aucune ligne budgétaire</div>
+          <div style="font-size:var(--fs-sm);color:var(--muted);line-height:1.5">Commencez par ajouter vos revenus<br>et vos dépenses mensuelles.</div>
         </div>
-        ${entriesMember!=='Commun'?`<a onclick="document.getElementById('btn-add-entry').click()" style="display:inline-flex;align-items:center;gap:6px;padding:9px 22px;background:linear-gradient(135deg,#3B8BD4,#e06fa0);color:#fff;border-radius:24px;font-size:14px;font-weight:600;cursor:pointer;letter-spacing:.02em;box-shadow:0 4px 16px rgba(59,139,212,.25)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Ajouter une ligne</a>`:''}
+        ${entriesMember!=='Commun'?`<a onclick="document.getElementById('btn-add-entry').click()" style="display:inline-flex;align-items:center;gap:6px;padding:9px 22px;background:linear-gradient(135deg,#3B8BD4,#e06fa0);color:#fff;border-radius:24px;font-size:var(--fs-sm);font-weight:600;cursor:pointer;letter-spacing:.02em;box-shadow:0 4px 16px rgba(59,139,212,.25)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Ajouter une ligne</a>`:''}
       </div>`;
     return;
   }
@@ -2368,20 +2379,21 @@ function renderEntries(){
             const tot=(Math.abs(ea?.amount||0)+Math.abs(eb?.amount||0));
             return`<div class="entry-card">
               <div class="entry-card-top">
-                <span style="font-weight:600;font-size:15px;flex:1">${name}</span>
-                <span style="font-size:16px;font-weight:700;color:${g.totColor}">${eur(tot)}</span>
+                <span style="font-weight:600;font-size:var(--fs-md);flex:1">${name}</span>
+                <span style="font-size:var(--fs-md);font-weight:700;color:${g.totColor}">${eur(tot)}</span>
               </div>
               <div class="entry-card-meta" style="display:flex;gap:12px;flex-wrap:wrap">
                 <span class="badge" style="background:${c.bg};color:${c.text};border:${c.border}">${c.label}</span>
-                ${ea?`<span style="font-size:13px;color:${mc1}">${eur(Math.abs(ea.amount))}</span>`:''}
-                ${eb?`<span style="font-size:13px;color:${mc2}">${eur(Math.abs(eb.amount))}</span>`:''}
+                ${ea?`<span style="font-size:var(--fs-sm);color:${mc1}">${eur(Math.abs(ea.amount))}</span>`:''}
+                ${eb?`<span style="font-size:var(--fs-sm);color:${mc2}">${eur(Math.abs(eb.amount))}</span>`:''}
               </div>
             </div>`;
           }).join('')}
         </div>`;
       }
       return`<div style="margin-bottom:var(--sg)">
-        <div class="tbl-wrap"><table>
+        <div class="tbl-wrap"><table style="width:100%;table-layout:fixed">
+          <colgroup><col style="width:35%"><col style="width:15%"><col style="width:17%"><col style="width:17%"><col style="width:16%"></colgroup>
           <thead><tr>
             <th>Désignation</th><th>Catégorie</th>
             <th style="text-align:right;color:${mc1}">${m1}</th>
@@ -2403,7 +2415,7 @@ function renderEntries(){
               </tr>`;
             }).join('')}
 <tr style="background:var(--surface2)">
-              <td colspan="2" style="font-size:14px;font-weight:600;color:var(--muted)">Total ${g.label.toLowerCase()}</td>
+              <td colspan="2" style="font-size:var(--fs-sm);font-weight:600;color:var(--muted)">Total ${g.label.toLowerCase()}</td>
               <td style="text-align:right;font-weight:600;color:${mc1}">${eur(tot1)}</td>
               <td style="text-align:right;font-weight:600;color:${mc2}">${eur(tot2)}</td>
               <td style="text-align:right;font-weight:700;color:${g.totColor}">${eur(tot1+tot2)}</td>
@@ -2528,10 +2540,10 @@ function renderSavings(){
           </svg>
         </div>
         <div>
-          <div style="font-size:17px;font-weight:700;margin-bottom:6px">Aucune donnée d'épargne</div>
-          <div style="font-size:14px;color:var(--muted);line-height:1.5">Enregistrez vos fonds épargnés<br>mois par mois pour suivre votre progression.</div>
+          <div style="font-size:var(--fs-base);font-weight:700;margin-bottom:6px">Aucune donnée d'épargne</div>
+          <div style="font-size:var(--fs-sm);color:var(--muted);line-height:1.5">Enregistrez vos fonds épargnés<br>mois par mois pour suivre votre progression.</div>
         </div>
-        <a onclick="document.getElementById('btn-add-saving').click()" style="display:inline-flex;align-items:center;gap:6px;padding:9px 22px;background:linear-gradient(135deg,#3B8BD4,#e06fa0);color:#fff;border-radius:24px;font-size:14px;font-weight:600;cursor:pointer;letter-spacing:.02em;box-shadow:0 4px 16px rgba(59,139,212,.25)">
+        <a onclick="document.getElementById('btn-add-saving').click()" style="display:inline-flex;align-items:center;gap:6px;padding:9px 22px;background:linear-gradient(135deg,#3B8BD4,#e06fa0);color:#fff;border-radius:24px;font-size:var(--fs-sm);font-weight:600;cursor:pointer;letter-spacing:.02em;box-shadow:0 4px 16px rgba(59,139,212,.25)">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           Ajouter une entrée
         </a>
@@ -2645,7 +2657,7 @@ function renderSavings(){
           backgroundColor:darkVal('rgba(255,255,255,1)','rgba(28,28,32,1)'),
           borderColor:darkVal('rgba(0,0,0,.15)','rgba(255,255,255,.2)'),
           borderWidth:1,titleColor:textColor,bodyColor:textColor,
-          titleFont:{size:12,weight:'700'},bodyFont:{size:12},
+          titleFont:{size:fsPx('--fs-sm'),weight:'700'},bodyFont:{size:fsPx('--fs-xs')},
           padding:12,cornerRadius:10,
           callbacks:{label:ctx=>` ${ctx.dataset.label} : ${(ctx.raw||0).toLocaleString('fr-FR')} €`}
         },
@@ -2654,7 +2666,7 @@ function renderSavings(){
           anchor:'end',align:'top',
           formatter:(v)=>v!=null?(v/1000).toFixed(1)+'k€':'',
           color:(ctx)=>datasets[ctx.datasetIndex]?.backgroundColor||textColor,
-          font:{size:10,weight:'800'},
+          font:{size:fsPx('--fs-xs'),weight:'800'},
           backgroundColor:darkVal('#fff','#1a1a18'),
           borderRadius:4,padding:{top:3,bottom:3,left:6,right:6},
           borderWidth:1,
@@ -2663,8 +2675,8 @@ function renderSavings(){
         }
       },
       scales:{
-        x:{grid:{display:false},ticks:{color:textColor,font:{size:10}},border:{display:false}},
-        y:{beginAtZero:true,ticks:{callback:v=>(v/1000).toFixed(0)+'k€',font:{size:10},color:textColor,maxTicksLimit:5},grid:{color:darkVal('rgba(0,0,0,.04)','rgba(255,255,255,.04)')},border:{display:false}}
+        x:{grid:{display:false},ticks:{color:textColor,font:{size:fsPx('--fs-xs')}},border:{display:false}},
+        y:{beginAtZero:true,ticks:{callback:v=>(v/1000).toFixed(0)+'k€',font:{size:fsPx('--fs-xs')},color:textColor,maxTicksLimit:5},grid:{color:darkVal('rgba(0,0,0,.04)','rgba(255,255,255,.04)')},border:{display:false}}
       }
     }
   });
@@ -2682,7 +2694,7 @@ function renderSavings(){
       const prefix=isTotal
         ?`<div style="display:flex;align-items:center"><div style="z-index:1">${avatarHtml(m1,28,12)}</div><div style="margin-left:-8px">${avatarHtml(m2,28,12)}</div></div>`
         :avatarHtml(name,28,12);
-      return`<div style="display:flex;align-items:center;gap:6px">${prefix}<span style="font-size:11px;font-weight:600;color:${col}">${name}</span></div>`;
+      return`<div style="display:flex;align-items:center;gap:6px">${prefix}<span style="font-size:var(--fs-xs);font-weight:600;color:${col}">${name}</span></div>`;
     }).join('');
   }
   const container=document.getElementById('savings-tables');container.innerHTML='';
@@ -2704,12 +2716,12 @@ function renderSavings(){
         return{yr,total,a1,a2,delta,pctV};
       });
       if(isMobile){
-        wrap.innerHTML=rows.map(r=>{const col=r.delta==null?'var(--hint)':r.delta>=0?'var(--green)':'var(--red)';const bg=r.delta==null?'':'border-left:3px solid '+col+';background:'+( r.delta>=0?'var(--green-bg)':'var(--red-bg)');return`<div class="scard" style="${bg}"><div class="scard-left"><div style="font-weight:600;font-size:14px">${r.yr}</div></div><div class="scard-right"><div class="scard-amount"><div style="font-size:15px;font-weight:700;color:var(--green)">${eur(r.total)}</div><div style="font-size:12px;color:var(--muted)">${eur(r.a1)} · ${eur(r.a2)}</div><div style="font-size:12px;color:${col}">${dlt(r.delta)}${r.pctV!=null?' ('+fmtPct(r.pctV)+')':''}</div></div></div></div>`;}).join('');
+        wrap.innerHTML=rows.map(r=>{const col=r.delta==null?'var(--hint)':r.delta>=0?'var(--green)':'var(--red)';const bg=r.delta==null?'':'border-left:3px solid '+col+';background:'+( r.delta>=0?'var(--green-bg)':'var(--red-bg)');return`<div class="scard" style="${bg}"><div class="scard-left"><div style="font-weight:600;font-size:var(--fs-sm)">${r.yr}</div></div><div class="scard-right"><div class="scard-amount"><div style="font-size:var(--fs-md);font-weight:700;color:var(--green)">${eur(r.total)}</div><div style="font-size:var(--fs-xs);color:var(--muted)">${eur(r.a1)} · ${eur(r.a2)}</div><div style="font-size:var(--fs-xs);color:${col}">${dlt(r.delta)}${r.pctV!=null?' ('+fmtPct(r.pctV)+')':''}</div></div></div></div>`;}).join('');
       } else {
         const revN=calcStats(entries.filter(e=>e.member===m1)).revNet*12||1;
       const revC=calcStats(entries.filter(e=>e.member===m2)).revNet*12||1;
       const revCouple=revN+revC;
-      wrap.innerHTML=`<div class="tbl-wrap"><table><thead><tr><th>Année</th><th style="text-align:right;color:${memberColors[m1]}">${avatarHtml(m1,30,12)}</th><th style="display:none">% rev.</th><th style="text-align:right;color:${memberColors[m2]}">${avatarHtml(m2,30,12)}</th><th style="display:none">% rev.</th><th style="text-align:right;color:var(--green)"><div style="display:inline-flex;align-items:center;justify-content:flex-end"><div style="z-index:1">${avatarHtml(m1,30,12)}</div><div style="margin-left:-10px">${avatarHtml(m2,30,12)}</div></div></th><th style="display:none">% rev.</th><th style="text-align:right">Évol.</th><th style="text-align:right">%</th></tr></thead><tbody>${rows.map(r=>{const col=r.delta==null?'var(--hint)':r.delta>=0?'var(--green)':'var(--red)';const bg=r.delta==null?'':r.delta>=0?'background:var(--green-bg)':'background:var(--red-bg)';return`<tr style="${bg}"><td style="font-weight:600">${r.yr}</td><td style="text-align:right;color:${memberColors[m1]}">${eur(r.a1)}</td><td style="display:none"></td><td style="text-align:right;color:${memberColors[m2]}">${eur(r.a2)}</td><td style="display:none"></td><td style="text-align:right;font-weight:700;color:var(--green)">${eur(r.total)}</td><td style="display:none"></td><td style="text-align:right;color:${col}">${dlt(r.delta)}</td><td style="text-align:right;font-size:14px;color:${col}">${fmtPct(r.pctV)}</td></tr>`;}).join('')}</tbody></table></div>`;
+      wrap.innerHTML=`<div class="tbl-wrap"><table><thead><tr><th>Année</th><th style="text-align:right;color:${memberColors[m1]}">${avatarHtml(m1,30,12)}</th><th style="display:none">% rev.</th><th style="text-align:right;color:${memberColors[m2]}">${avatarHtml(m2,30,12)}</th><th style="display:none">% rev.</th><th style="text-align:right;color:var(--green)"><div style="display:inline-flex;align-items:center;justify-content:flex-end"><div style="z-index:1">${avatarHtml(m1,30,12)}</div><div style="margin-left:-10px">${avatarHtml(m2,30,12)}</div></div></th><th style="display:none">% rev.</th><th style="text-align:right">Évol.</th><th style="text-align:right">%</th></tr></thead><tbody>${rows.map(r=>{const col=r.delta==null?'var(--hint)':r.delta>=0?'var(--green)':'var(--red)';const bg=r.delta==null?'':r.delta>=0?'background:var(--green-bg)':'background:var(--red-bg)';return`<tr style="${bg}"><td style="font-weight:600">${r.yr}</td><td style="text-align:right;color:${memberColors[m1]}">${eur(r.a1)}</td><td style="display:none"></td><td style="text-align:right;color:${memberColors[m2]}">${eur(r.a2)}</td><td style="display:none"></td><td style="text-align:right;font-weight:700;color:var(--green)">${eur(r.total)}</td><td style="display:none"></td><td style="text-align:right;color:${col}">${dlt(r.delta)}</td><td style="text-align:right;font-size:var(--fs-sm);color:${col}">${fmtPct(r.pctV)}</td></tr>`;}).join('')}</tbody></table></div>`;
       }
     } else {
       const allLabels=[...new Set(savings.filter(s=>[m1,m2].includes(s.member)).map(s=>`${s.month} ${s.year}`))];
@@ -2728,12 +2740,12 @@ function renderSavings(){
         return{month,year,total,a1,a2,delta,pctV};
       });
       if(isMobile){
-        wrap.innerHTML=rows.map(r=>{const col=r.delta==null?'var(--hint)':r.delta>=0?'var(--green)':'var(--red)';const bg=r.delta==null?'':'border-left:3px solid '+col+';background:'+( r.delta>=0?'var(--green-bg)':'var(--red-bg)');return`<div class="scard" style="${bg}"><div class="scard-left"><div style="font-weight:600;font-size:13px">${r.month}</div><div style="font-size:11px;color:var(--muted)">${r.year}</div></div><div class="scard-right"><div class="scard-amount"><div style="font-size:15px;font-weight:700;color:var(--green)">${eur(r.total)}</div><div style="font-size:11px;color:var(--muted);display:flex;align-items:center;gap:4px;justify-content:flex-end">${avatarHtml(m1,14,6)} ${eur(r.a1)} · ${avatarHtml(m2,14,6)} ${eur(r.a2)}</div><div style="font-size:12px;color:${col}">${dlt(r.delta)}${r.pctV!=null?' ('+fmtPct(r.pctV)+')':''}</div></div></div></div>`;}).join('');
+        wrap.innerHTML=rows.map(r=>{const col=r.delta==null?'var(--hint)':r.delta>=0?'var(--green)':'var(--red)';const bg=r.delta==null?'':'border-left:3px solid '+col+';background:'+( r.delta>=0?'var(--green-bg)':'var(--red-bg)');return`<div class="scard" style="${bg}"><div class="scard-left"><div style="font-weight:600;font-size:var(--fs-sm)">${r.month}</div><div style="font-size:var(--fs-xs);color:var(--muted)">${r.year}</div></div><div class="scard-right"><div class="scard-amount"><div style="font-size:var(--fs-md);font-weight:700;color:var(--green)">${eur(r.total)}</div><div style="font-size:var(--fs-xs);color:var(--muted);display:flex;align-items:center;gap:4px;justify-content:flex-end">${avatarHtml(m1,14,6)} ${eur(r.a1)} · ${avatarHtml(m2,14,6)} ${eur(r.a2)}</div><div style="font-size:var(--fs-xs);color:${col}">${dlt(r.delta)}${r.pctV!=null?' ('+fmtPct(r.pctV)+')':''}</div></div></div></div>`;}).join('');
       } else {
         const revNm=calcStats(entries.filter(e=>e.member===m1)).revNet||1;
       const revCm=calcStats(entries.filter(e=>e.member===m2)).revNet||1;
       const revTotm=revNm+revCm;
-      wrap.innerHTML=`<div class="tbl-wrap"><table><thead><tr><th>Année</th><th>Mois</th><th style="text-align:right;color:${memberColors[m1]}">${avatarHtml(m1,30,12)}</th><th style="display:none">% rev.</th><th style="text-align:right;color:${memberColors[m2]}">${avatarHtml(m2,30,12)}</th><th style="display:none">% rev.</th><th style="text-align:right;color:var(--green)"><div style="display:inline-flex;align-items:center;justify-content:flex-end"><div style="z-index:1">${avatarHtml(m1,30,12)}</div><div style="margin-left:-10px">${avatarHtml(m2,30,12)}</div></div></th><th style="display:none">% rev.</th><th style="text-align:right">Évol.</th><th style="text-align:right">%</th></tr></thead><tbody>${rows.map(r=>{const col=r.delta==null?'var(--hint)':r.delta>=0?'var(--green)':'var(--red)';const bg=r.delta==null?'':r.delta>=0?'background:var(--green-bg)':'background:var(--red-bg)';const p1=r.a1?Math.round(r.a1/revNm*100):null;const p2=r.a2?Math.round(r.a2/revCm*100):null;const pT=r.total?Math.round(r.total/revTotm*100):null;return`<tr style="${bg}"><td style="color:var(--muted)">${r.year}</td><td>${r.month}</td><td style="text-align:right;color:${memberColors[m1]}">${r.a1?eur(r.a1):'—'}</td><td style="display:none"></td><td style="text-align:right;color:${memberColors[m2]}">${r.a2?eur(r.a2):'—'}</td><td style="display:none"></td><td style="text-align:right;font-weight:700;color:var(--green)">${eur(r.total)}</td><td style="display:none"></td><td style="text-align:right;color:${col}">${dlt(r.delta)}</td><td style="text-align:right;font-size:14px;color:${col}">${fmtPct(r.pctV)}</td></tr>`;}).join('')}</tbody></table></div>`;
+      wrap.innerHTML=`<div class="tbl-wrap"><table><thead><tr><th>Année</th><th>Mois</th><th style="text-align:right;color:${memberColors[m1]}">${avatarHtml(m1,30,12)}</th><th style="display:none">% rev.</th><th style="text-align:right;color:${memberColors[m2]}">${avatarHtml(m2,30,12)}</th><th style="display:none">% rev.</th><th style="text-align:right;color:var(--green)"><div style="display:inline-flex;align-items:center;justify-content:flex-end"><div style="z-index:1">${avatarHtml(m1,30,12)}</div><div style="margin-left:-10px">${avatarHtml(m2,30,12)}</div></div></th><th style="display:none">% rev.</th><th style="text-align:right">Évol.</th><th style="text-align:right">%</th></tr></thead><tbody>${rows.map(r=>{const col=r.delta==null?'var(--hint)':r.delta>=0?'var(--green)':'var(--red)';const bg=r.delta==null?'':r.delta>=0?'background:var(--green-bg)':'background:var(--red-bg)';const p1=r.a1?Math.round(r.a1/revNm*100):null;const p2=r.a2?Math.round(r.a2/revCm*100):null;const pT=r.total?Math.round(r.total/revTotm*100):null;return`<tr style="${bg}"><td style="color:var(--muted)">${r.year}</td><td>${r.month}</td><td style="text-align:right;color:${memberColors[m1]}">${r.a1?eur(r.a1):'—'}</td><td style="display:none"></td><td style="text-align:right;color:${memberColors[m2]}">${r.a2?eur(r.a2):'—'}</td><td style="display:none"></td><td style="text-align:right;font-weight:700;color:var(--green)">${eur(r.total)}</td><td style="display:none"></td><td style="text-align:right;color:${col}">${dlt(r.delta)}</td><td style="text-align:right;font-size:var(--fs-sm);color:${col}">${fmtPct(r.pctV)}</td></tr>`;}).join('')}</tbody></table></div>`;
       }
     }
     container.appendChild(wrap);
@@ -2749,12 +2761,12 @@ function renderSavings(){
           const delta=i>0&&rows[i-1]?s.amount-rows[i-1].amount:null;const p=pct(s,i);const col=delta==null?'var(--hint)':delta>=0?'var(--green)':'var(--red)';const bg=delta==null?'':'border-left:3px solid '+col+';background:'+(delta>=0?'var(--green-bg)':'var(--red-bg)');
           const lbl=isYear?String(s.year):`${s.month} ${s.year}`;
           const[lMonth,lYear]=isYear?[null,lbl]:lbl.split(' ');
-          return`<div class="scard" style="${bg}"><div class="scard-left">${isYear?`<div style="font-weight:600;font-size:14px">${lbl}</div>`:`<div style="font-weight:600;font-size:13px">${lMonth}</div><div style="font-size:11px;color:var(--muted)">${lYear}</div>`}</div><div class="scard-right"><div class="scard-amount"><div style="font-size:15px;font-weight:600">${eur(s.amount)}</div><div style="font-size:12px;color:${col}">${dlt(delta)}${p!=null?' ('+fmtPct(p)+')':''}</div></div>${!isYear?`<button class="btn-act" onclick="openEditSaving(${s.id})"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="btn-act btn-act-danger" onclick="deleteSaving(${s.id})"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg></button>`:''}</div></div>`;
+          return`<div class="scard" style="${bg}"><div class="scard-left">${isYear?`<div style="font-weight:600;font-size:var(--fs-sm)">${lbl}</div>`:`<div style="font-weight:600;font-size:var(--fs-sm)">${lMonth}</div><div style="font-size:var(--fs-xs);color:var(--muted)">${lYear}</div>`}</div><div class="scard-right"><div class="scard-amount"><div style="font-size:var(--fs-md);font-weight:600">${eur(s.amount)}</div><div style="font-size:var(--fs-xs);color:${col}">${dlt(delta)}${p!=null?' ('+fmtPct(p)+')':''}</div></div>${!isYear?`<button class="btn-act" onclick="openEditSaving(${s.id})"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="btn-act btn-act-danger" onclick="deleteSaving(${s.id})"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg></button>`:''}</div></div>`;
         }).join('');
       } else if(isYear){
-        wrap.innerHTML=`<div class="tbl-wrap"><table><thead><tr><th>Année</th><th style="text-align:right">Fonds fin d'année</th><th style="text-align:right">Évolution vs N-1</th><th style="text-align:right">%</th></tr></thead><tbody>${rows.length===0?'<tr><td colspan="4" class="tbl-empty">Aucune donnée</td></tr>':rows.map((s,i)=>{const p=pct(s,i);const delta=i>0&&rows[i-1]?s.amount-rows[i-1].amount:null;const col=delta==null?'var(--hint)':delta>=0?'var(--green)':'var(--red)';const bg=delta==null?'':delta>=0?'background:var(--green-bg)':'background:var(--red-bg)';return`<tr style="${bg}"><td style="color:var(--muted)">${s.year}</td><td style="text-align:right;font-weight:700;color:${memberColors[name]}">${eur(s.amount)}</td><td style="text-align:right;color:${col}">${dlt(delta)}</td><td style="text-align:right;font-size:14px;color:${col}">${fmtPct(p)}</td></tr>`;}).join('')}</tbody></table></div>`;
+        wrap.innerHTML=`<div class="tbl-wrap"><table><thead><tr><th>Année</th><th style="text-align:right">Fonds fin d'année</th><th style="text-align:right">Évolution vs N-1</th><th style="text-align:right">%</th></tr></thead><tbody>${rows.length===0?'<tr><td colspan="4" class="tbl-empty">Aucune donnée</td></tr>':rows.map((s,i)=>{const p=pct(s,i);const delta=i>0&&rows[i-1]?s.amount-rows[i-1].amount:null;const col=delta==null?'var(--hint)':delta>=0?'var(--green)':'var(--red)';const bg=delta==null?'':delta>=0?'background:var(--green-bg)':'background:var(--red-bg)';return`<tr style="${bg}"><td style="color:var(--muted)">${s.year}</td><td style="text-align:right;font-weight:700;color:${memberColors[name]}">${eur(s.amount)}</td><td style="text-align:right;color:${col}">${dlt(delta)}</td><td style="text-align:right;font-size:var(--fs-sm);color:${col}">${fmtPct(p)}</td></tr>`;}).join('')}</tbody></table></div>`;
       } else {
-        wrap.innerHTML=`<div class="tbl-wrap"><table><thead><tr><th>Année</th><th>Mois</th><th style="text-align:right">Fonds</th><th style="text-align:right">Évolution</th><th style="text-align:right">%</th><th></th></tr></thead><tbody>${rows.length===0?'<tr><td colspan="6" class="tbl-empty">Aucune donnée</td></tr>':rows.map((s,i)=>{const p=pct(s,i);const delta=i>0&&rows[i-1]?s.amount-rows[i-1].amount:null;const col=delta==null?'var(--hint)':delta>=0?'var(--green)':'var(--red)';const bg=delta==null?'':delta>=0?'background:var(--green-bg)':'background:var(--red-bg)';return`<tr style="${bg}"><td style="color:var(--muted)">${s.year}</td><td>${s.month}</td><td style="text-align:right;font-weight:700;color:${memberColors[name]}">${eur(s.amount)}</td><td style="text-align:right;color:${col}">${dlt(delta)}</td><td style="text-align:right;font-size:14px;color:${col}">${fmtPct(p)}</td><td style="width:80px"><div class="btn-act-group"><button class="btn-act" onclick="openEditSaving(${s.id})"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="btn-act btn-act-danger" onclick="deleteSaving(${s.id})"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg></button></div></td></tr>`;}).join('')}</tbody></table></div>`;
+        wrap.innerHTML=`<div class="tbl-wrap"><table><thead><tr><th>Année</th><th>Mois</th><th style="text-align:right">Fonds</th><th style="text-align:right">Évolution</th><th style="text-align:right">%</th><th></th></tr></thead><tbody>${rows.length===0?'<tr><td colspan="6" class="tbl-empty">Aucune donnée</td></tr>':rows.map((s,i)=>{const p=pct(s,i);const delta=i>0&&rows[i-1]?s.amount-rows[i-1].amount:null;const col=delta==null?'var(--hint)':delta>=0?'var(--green)':'var(--red)';const bg=delta==null?'':delta>=0?'background:var(--green-bg)':'background:var(--red-bg)';return`<tr style="${bg}"><td style="color:var(--muted)">${s.year}</td><td>${s.month}</td><td style="text-align:right;font-weight:700;color:${memberColors[name]}">${eur(s.amount)}</td><td style="text-align:right;color:${col}">${dlt(delta)}</td><td style="text-align:right;font-size:var(--fs-sm);color:${col}">${fmtPct(p)}</td><td style="width:80px"><div class="btn-act-group"><button class="btn-act" onclick="openEditSaving(${s.id})"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="btn-act btn-act-danger" onclick="deleteSaving(${s.id})"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg></button></div></td></tr>`;}).join('')}</tbody></table></div>`;
       }
       container.appendChild(wrap);
     });
@@ -2915,7 +2927,7 @@ function renderAnalysis(){
   const scoreTip=`Épargne (${scoreSav}/40 pts) : taux d'épargne actuel ${epRateCalc}% — objectif ≥ 20% · Flexibilité (${scoreRig}/30 pts) : charges fixes ${fixRate}% du revenu net — objectif ≤ 30% · Dépenses (${scoreDep}/30 pts) : solde après dépenses et épargne — positif = bonne gestion · Score global : ≥ 75 excellent · ≥ 50 à surveiller · < 50 situation tendue`;
 
   // ── Badges ──
-  const mkBadge=(txt,ok,warn)=>`<span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;background:${ok?'var(--green-bg)':warn?'var(--amber-bg)':'var(--red-bg)'};color:${ok?'var(--green)':warn?'var(--amber)':'var(--red)'}">${txt}</span>`;
+  const mkBadge=(txt,ok,warn)=>`<span style="font-size:var(--fs-xs);font-weight:700;padding:2px 8px;border-radius:20px;background:${ok?'var(--green-bg)':warn?'var(--amber-bg)':'var(--red-bg)'};color:${ok?'var(--green)':warn?'var(--amber)':'var(--red)'}">${txt}</span>`;
   const scoreBadge=mkBadge(scoreLabel,healthScore>=80,healthScore>=40);
   const epBadge=mkBadge(epRateCalc>=20?'✓ Objectif atteint':epRateCalc>=10?'Viser 20%':'⚠ Taux bas',epRateCalc>=20,epRateCalc>=10);
   const fixRigidLabel=fixRate<=30?'Flexible':fixRate<=50?'Modérée':'Rigide';
@@ -2964,15 +2976,15 @@ function renderAnalysis(){
   }).join('');
   const baseDesc=s.rev>0?`${eur(s.rev)} brut`:`${eur(s.revNet)} net`;
   document.getElementById('analysis-flow').innerHTML=`
-    <div style="font-size:13px;color:var(--muted);margin-bottom:14px">Répartition sur <strong style="color:var(--text)">${baseDesc}</strong>${analysisMember!=='all'?' · '+analysisMember:' · groupe'}.</div>
+    <div style="font-size:var(--fs-sm);color:var(--muted);margin-bottom:14px">Répartition sur <strong style="color:var(--text)">${baseDesc}</strong>${analysisMember!=='all'?' · '+analysisMember:' · groupe'}.</div>
     <div class="flow-bar-wrap" style="position:relative;margin-bottom:16px">
       <div class="flow-bar" onmousemove="zenFlowBarMove(event)" onmouseleave="zenFlowBarOut(event)">${flowBar}</div>
       <div class="flow-bar-tooltip" style="position:absolute;bottom:calc(100% + 10px);left:50%;transform:translateX(-50%);pointer-events:none;opacity:0;transition:opacity .15s;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:8px 14px;box-shadow:0 8px 24px rgba(0,0,0,.18);z-index:20;white-space:nowrap;max-width:min(200px,80vw)">
         <div style="display:flex;align-items:center;gap:8px">
           <span class="ftt-dot" style="width:10px;height:10px;border-radius:3px;display:inline-block;flex-shrink:0"></span>
-          <span class="ftt-label" style="font-size:13px;font-weight:700;color:var(--text)"></span>
-          <span class="ftt-val" style="font-size:13px;color:var(--muted)"></span>
-          <span class="ftt-pct" style="font-size:14px;font-weight:800"></span>
+          <span class="ftt-label" style="font-size:var(--fs-sm);font-weight:700;color:var(--text)"></span>
+          <span class="ftt-val" style="font-size:var(--fs-sm);color:var(--muted)"></span>
+          <span class="ftt-pct" style="font-size:var(--fs-sm);font-weight:800"></span>
         </div>
       </div>
     </div>
@@ -2993,18 +3005,18 @@ function renderAnalysis(){
         <div style="display:flex;align-items:center;gap:9px;min-width:0">
           <span style="width:10px;height:10px;border-radius:3px;background:${color};flex-shrink:0;display:block"></span>
           <div style="min-width:0">
-            <div style="font-size:13px;font-weight:700;color:var(--text)">${label}</div>
-            <div style="font-size:11px;color:var(--muted);margin-top:1px">${eur(amount)} <span style="color:var(--hint)">· objectif ≤ ${ideal}% (${eur(idealAmt)})</span></div>
+            <div style="font-size:var(--fs-sm);font-weight:700;color:var(--text)">${label}</div>
+            <div style="font-size:var(--fs-xs);color:var(--muted);margin-top:1px">${eur(amount)} <span style="color:var(--hint)">· objectif ≤ ${ideal}% (${eur(idealAmt)})</span></div>
           </div>
         </div>
         <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
-          <div style="font-size:22px;font-weight:800;color:${over?'var(--red)':ok?'var(--green)':'var(--hint)'};line-height:1">${val>0?val+'%':'—'}</div>
-          <span style="font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;background:${statusBg};color:${statusColor};white-space:nowrap">${statusText}</span>
+          <div style="font-size:var(--fs-lg);font-weight:800;color:${over?'var(--red)':ok?'var(--green)':'var(--hint)'};line-height:1">${val>0?val+'%':'—'}</div>
+          <span style="font-size:var(--fs-xs);font-weight:600;padding:3px 9px;border-radius:20px;background:${statusBg};color:${statusColor};white-space:nowrap">${statusText}</span>
         </div>
       </div>
       <div style="position:relative;padding-top:24px">
         <div style="position:absolute;top:0;left:${Math.min(ideal,100)}%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:0;z-index:2">
-          <span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;background:var(--surface);border:1.5px solid ${over?'var(--red)':color};color:${over?'var(--red)':color};white-space:nowrap;line-height:1.4">≤&nbsp;${ideal}%</span>
+          <span style="font-size:var(--fs-xs);font-weight:700;padding:2px 8px;border-radius:20px;background:var(--surface);border:1.5px solid ${over?'var(--red)':color};color:${over?'var(--red)':color};white-space:nowrap;line-height:1.4">≤&nbsp;${ideal}%</span>
           <div style="width:2px;height:8px;background:${over?'var(--red)':color};flex-shrink:0"></div>
         </div>
         <div style="height:10px;background:var(--border);border-radius:5px;overflow:hidden">
@@ -3025,9 +3037,9 @@ function renderAnalysis(){
     const rr=(i===0?'border-radius:6px 0 0 6px;':'')+(i===nA-1?'border-radius:0 6px 6px 0;':'');
     return`<div title="${d.label} — ${d.val}%" style="flex:${d.val};background:${d.color};height:100%;min-width:3px;${rr}"></div>`;
   }).join('');
-  const allocLegend=allocSegs.map(d=>`<span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--muted)"><span style="width:8px;height:8px;border-radius:2px;background:${d.color};display:inline-block"></span>${d.label} <strong style="color:var(--text)">${d.val}%</strong></span>`).join('');
+  const allocLegend=allocSegs.map(d=>`<span style="display:inline-flex;align-items:center;gap:5px;font-size:var(--fs-xs);color:var(--muted)"><span style="width:8px;height:8px;border-radius:2px;background:${d.color};display:inline-block"></span>${d.label} <strong style="color:var(--text)">${d.val}%</strong></span>`).join('');
   document.getElementById('rule-5030').innerHTML=`
-    <div style="font-size:13px;color:var(--muted);margin-bottom:14px">Répartition de vos <strong style="color:var(--text)">revenus nets ${eur(s.revNet)}</strong>${analysisMember!=='all'?' · '+analysisMember:''} selon la règle 50/30/20.</div>
+    <div style="font-size:var(--fs-sm);color:var(--muted);margin-bottom:14px">Répartition de vos <strong style="color:var(--text)">revenus nets ${eur(s.revNet)}</strong>${analysisMember!=='all'?' · '+analysisMember:''} selon la règle 50/30/20.</div>
     <div style="margin-bottom:var(--sg)">
       <div style="display:flex;height:28px;border-radius:6px;overflow:hidden;margin-bottom:8px">${allocBar}</div>
       <div style="display:flex;flex-wrap:wrap;gap:10px">${allocLegend}</div>
@@ -3035,7 +3047,7 @@ function renderAnalysis(){
     ${barRule(rNeeds,50,'Besoins (fixes + variables)','#d93535',depStrict,Math.round(base*0.5))}
     ${barRule(rWants,30,'Envies (loisir calculé)','#f59e0b',loiScoped,Math.round(base*0.3))}
     ${barRule(rSaves,20,'Épargne calculée','#2979c8',epScoped,Math.round(base*0.2))}
-    ${rUnalloc>0?`<div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--green-bg);border:1px solid var(--green);border-radius:var(--r);margin-top:4px"><div><div style="font-size:14px;font-weight:700;color:var(--green)">Non alloué : ${rUnalloc}%</div><div style="font-size:13px;color:var(--muted);margin-top:2px">${eur(Math.round(s.revNet*rUnalloc/100))} disponibles pour optimiser votre budget</div></div></div>`:''}
+    ${rUnalloc>0?`<div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--green-bg);border:1px solid var(--green);border-radius:var(--r);margin-top:4px"><div><div style="font-size:var(--fs-sm);font-weight:700;color:var(--green)">Non alloué : ${rUnalloc}%</div><div style="font-size:var(--fs-sm);color:var(--muted);margin-top:2px">${eur(Math.round(s.revNet*rUnalloc/100))} disponibles pour optimiser votre budget</div></div></div>`:''}
   `;
 
   // ── Donut répartition dépenses ──
@@ -3063,17 +3075,17 @@ function renderAnalysis(){
         {data:aDonutData.map(d=>d.value),backgroundColor:aDonutData.map(d=>d.color+'44'),hoverBackgroundColor:aDonutData.map(d=>d.color+'66'),borderWidth:0,hoverOffset:0,weight:0.6}
       ]},
       options:{responsive:true,maintainAspectRatio:false,cutout:'62%',animation:{animateRotate:true,animateScale:true,duration:900,easing:'easeInOutQuart'},
-        plugins:{legend:{display:false},tooltip:{backgroundColor:darkVal('rgba(255,255,255,1)','rgba(28,28,32,1)'),borderColor:darkVal('rgba(0,0,0,.15)','rgba(255,255,255,.2)'),borderWidth:1,titleColor:darkVal('#18181a','#eae9e4'),bodyColor:darkVal('#78776e','#8c8a84'),titleFont:{size:12,weight:'700'},bodyFont:{size:12},padding:10,cornerRadius:10,
+        plugins:{legend:{display:false},tooltip:{backgroundColor:darkVal('rgba(255,255,255,1)','rgba(28,28,32,1)'),borderColor:darkVal('rgba(0,0,0,.15)','rgba(255,255,255,.2)'),borderWidth:1,titleColor:cssCol('--text'),bodyColor:cssCol('--muted'),titleFont:{size:fsPx('--fs-sm'),weight:'700'},bodyFont:{size:fsPx('--fs-xs')},padding:10,cornerRadius:10,
           callbacks:{label:ctx=>{if(ctx.datasetIndex!==0)return null;const pct=Math.round(ctx.raw/aDonutTotal*100);return` ${ctx.raw.toLocaleString('fr-FR')} € — ${pct}%`;}}}}},
       plugins:[
-        {id:'centerText',beforeDraw(chart){const{ctx,chartArea:{left,right,top,bottom}}=chart;const cx=(left+right)/2,cy=(top+bottom)/2;ctx.save();ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle=darkVal('#18181a','#eae9e4');ctx.font='800 22px Inter,system-ui,sans-serif';ctx.fillText(eur(aDonutTotal),cx,cy-11);ctx.fillStyle=darkVal('#78776e','#8c8a84');ctx.font='500 10px Inter,system-ui,sans-serif';ctx.fillText('Total dépenses',cx,cy+11);ctx.restore();}},
-        {id:'pctLabels',afterDraw(chart){const ctx=chart.ctx,meta=chart.getDatasetMeta(0);meta.data.forEach((arc,i)=>{const pct=aDonutData[i].value/aDonutTotal;if(pct<0.05)return;const angle=(arc.startAngle+arc.endAngle)/2,r=(arc.outerRadius+arc.innerRadius)/2,x=arc.x+Math.cos(angle)*r,y=arc.y+Math.sin(angle)*r;ctx.save();ctx.textAlign='center';ctx.textBaseline='middle';ctx.font='700 11px Inter,system-ui,sans-serif';ctx.fillStyle='rgba(255,255,255,.95)';ctx.fillText(Math.round(pct*100)+'%',x,y);ctx.restore();});}}
+        {id:'centerText',beforeDraw(chart){const{ctx,chartArea:{left,right,top,bottom}}=chart;const cx=(left+right)/2,cy=(top+bottom)/2;ctx.save();ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle=cssCol('--text');ctx.font=`800 ${fsPx('--fs-lg')}px Inter,system-ui,sans-serif`;ctx.fillText(eur(aDonutTotal),cx,cy-11);ctx.fillStyle=cssCol('--muted');ctx.font=`500 ${fsPx('--fs-xs')}px Inter,system-ui,sans-serif`;ctx.fillText('Total dépenses',cx,cy+11);ctx.restore();}},
+        {id:'pctLabels',afterDraw(chart){const ctx=chart.ctx,meta=chart.getDatasetMeta(0);meta.data.forEach((arc,i)=>{const pct=aDonutData[i].value/aDonutTotal;if(pct<0.05)return;const angle=(arc.startAngle+arc.endAngle)/2,r=(arc.outerRadius+arc.innerRadius)/2,x=arc.x+Math.cos(angle)*r,y=arc.y+Math.sin(angle)*r;ctx.save();ctx.textAlign='center';ctx.textBaseline='middle';ctx.font=`700 ${fsPx('--fs-xs')}px Inter,system-ui,sans-serif`;ctx.fillStyle='rgba(255,255,255,.95)';ctx.fillText(Math.round(pct*100)+'%',x,y);ctx.restore();});}}
       ]
     });
     const aLegendEl=document.getElementById('analysis-donut-legend');
     if(aLegendEl){
       const sorted=[...aDonutData].sort((a,b)=>b.value-a.value);
-      aLegendEl.innerHTML=`<div style="display:flex;flex-direction:column;gap:8px">${sorted.map(d=>{const pct=Math.round(d.value/aDonutTotal*100);return`<div style="display:grid;grid-template-columns:10px 1fr auto auto;align-items:center;gap:8px"><span style="width:10px;height:10px;border-radius:3px;background:${d.color};display:block"></span><div style="min-width:0"><div style="font-size:14px;font-weight:500;color:var(--text);margin-bottom:4px">${d.label}</div><div style="height:5px;background:var(--surface2);border-radius:3px;overflow:hidden;border:1px solid var(--border)"><div style="width:${pct}%;height:100%;background:${d.color};border-radius:3px;transition:width .4s ease"></div></div></div><span style="font-size:13px;font-weight:600;color:var(--muted);white-space:nowrap;padding-left:4px">${eur(d.value)}</span><span style="font-size:14px;font-weight:700;color:${d.color};min-width:30px;text-align:right">${pct}%</span></div>`;}).join('')}</div>`;
+      aLegendEl.innerHTML=`<div style="display:flex;flex-direction:column;gap:8px">${sorted.map(d=>{const pct=Math.round(d.value/aDonutTotal*100);return`<div style="display:grid;grid-template-columns:10px 1fr auto auto;align-items:center;gap:8px"><span style="width:10px;height:10px;border-radius:3px;background:${d.color};display:block"></span><div style="min-width:0"><div style="font-size:var(--fs-sm);font-weight:500;color:var(--text);margin-bottom:4px">${d.label}</div><div style="height:5px;background:var(--surface2);border-radius:3px;overflow:hidden;border:1px solid var(--border)"><div style="width:${pct}%;height:100%;background:${d.color};border-radius:3px;transition:width .4s ease"></div></div></div><span style="font-size:var(--fs-sm);font-weight:600;color:var(--muted);white-space:nowrap;padding-left:4px">${eur(d.value)}</span><span style="font-size:var(--fs-sm);font-weight:700;color:${d.color};min-width:30px;text-align:right">${pct}%</span></div>`;}).join('')}</div>`;
     }
   }
 
@@ -3115,18 +3127,18 @@ function renderAnalysis(){
         <div style="display:flex;gap:10px;margin-top:6px">
           <div style="display:flex;align-items:center;gap:5px;flex:1;min-width:0">
             ${avatarHtml(em1,18,7)}
-            <span style="font-size:12px;font-weight:600;color:${col1};white-space:nowrap">${eur(a1)}</span>
-            <span style="font-size:11px;color:var(--hint)">${pct1}%</span>
+            <span style="font-size:var(--fs-xs);font-weight:600;color:${col1};white-space:nowrap">${eur(a1)}</span>
+            <span style="font-size:var(--fs-xs);color:var(--hint)">${pct1}%</span>
           </div>
           <div style="display:flex;align-items:center;gap:5px;flex:1;min-width:0;justify-content:flex-end">
-            <span style="font-size:11px;color:var(--hint)">${pct2}%</span>
-            <span style="font-size:12px;font-weight:600;color:${col2};white-space:nowrap">${eur(a2)}</span>
+            <span style="font-size:var(--fs-xs);color:var(--hint)">${pct2}%</span>
+            <span style="font-size:var(--fs-xs);font-weight:600;color:${col2};white-space:nowrap">${eur(a2)}</span>
             ${avatarHtml(em2,18,7)}
           </div>
         </div>`
         :`<div style="display:flex;align-items:center;gap:5px;margin-top:5px">
           ${avatarHtml(em1,16,6)}
-          <span style="font-size:12px;color:var(--hint)">${em1} · 100%</span>
+          <span style="font-size:var(--fs-xs);color:var(--hint)">${em1} · 100%</span>
         </div>`;
       const tooltipLines=isShared
         ?`${em1} : ${eur(a1)} (${pct1}%) · ${em2} : ${eur(a2)} (${pct2}%)<br>${e.cat==='fixe'?'Dépense fixe':'Dépense variable'} · ${pct}% du total`
@@ -3135,17 +3147,17 @@ function renderAnalysis(){
         onmouseenter="this.style.background='var(--hover)';this.style.boxShadow='0 2px 12px rgba(0,0,0,.08)';this.querySelector('.bar-tip').style.opacity='1';this.querySelector('.bar-tip').style.transform='translateX(-50%) translateY(0)'"
         onmouseleave="this.style.background='var(--surface2)';this.style.boxShadow='none';this.querySelector('.bar-tip').style.opacity='0';this.querySelector('.bar-tip').style.transform='translateX(-50%) translateY(-4px)'">
         <div class="bar-tip" style="position:absolute;top:calc(100% + 6px);left:50%;transform:translateX(-50%) translateY(-4px);background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:9px 13px;white-space:normal;pointer-events:none;opacity:0;transition:opacity .15s,transform .15s;z-index:50;box-shadow:0 8px 24px rgba(0,0,0,.15);min-width:160px;max-width:min(220px,70vw)">
-          <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px">${e.name}</div>
-          <div style="font-size:13px;color:var(--muted);line-height:1.7">${tooltipLines}</div>
+          <div style="font-size:var(--fs-sm);font-weight:700;color:var(--text);margin-bottom:4px">${e.name}</div>
+          <div style="font-size:var(--fs-sm);color:var(--muted);line-height:1.7">${tooltipLines}</div>
         </div>
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
           ${avatars}
           <div style="flex:1;min-width:0">
             <div style="display:flex;justify-content:space-between;align-items:center">
-              <span style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:130px">${e.name}</span>
+              <span style="font-size:var(--fs-sm);font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:130px">${e.name}</span>
               <div style="display:flex;align-items:center;gap:5px;flex-shrink:0">
-                <span style="font-size:13px;font-weight:600;color:var(--muted)">${eur(e.amount)}</span>
-                <span style="font-size:11px;font-weight:700;color:${isShared?'var(--hint)':col1};background:${isShared?'var(--surface)':col1+'18'};border:1px solid var(--border);padding:1px 6px;border-radius:20px">${pct}%</span>
+                <span style="font-size:var(--fs-sm);font-weight:600;color:var(--muted)">${eur(e.amount)}</span>
+                <span style="font-size:var(--fs-xs);font-weight:700;color:${isShared?'var(--hint)':col1};background:${isShared?'var(--surface)':col1+'18'};border:1px solid var(--border);padding:1px 6px;border-radius:20px">${pct}%</span>
               </div>
             </div>
           </div>
@@ -3160,10 +3172,10 @@ function renderAnalysis(){
         ${dot}
         <div style="flex:1;min-width:0">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-            <span style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px">${e.name}</span>
+            <span style="font-size:var(--fs-sm);font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px">${e.name}</span>
             <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
-              <span style="font-size:13px;font-weight:600;color:var(--muted)">${eur(e.amount)}</span>
-              <span style="font-size:12px;font-weight:700;color:${col1};background:${col1}18;padding:1px 6px;border-radius:20px">${pct}%</span>
+              <span style="font-size:var(--fs-sm);font-weight:600;color:var(--muted)">${eur(e.amount)}</span>
+              <span style="font-size:var(--fs-xs);font-weight:700;color:${col1};background:${col1}18;padding:1px 6px;border-radius:20px">${pct}%</span>
             </div>
           </div>
           <div style="height:4px;background:var(--border);border-radius:2px;overflow:hidden">
@@ -3244,14 +3256,14 @@ function renderProjection(){
       plugins:{
         legend:{
           display:true,position:'bottom',
-          labels:{font:{size:11,weight:'600'},boxWidth:12,boxHeight:4,padding:16,color:textColor,usePointStyle:true,pointStyle:'line'}
+          labels:{font:{size:fsPx('--fs-xs'),weight:'600'},boxWidth:12,boxHeight:4,padding:16,color:textColor,usePointStyle:true,pointStyle:'line'}
         },
         tooltip:{
           backgroundColor:darkVal('rgba(255,255,255,1)','rgba(28,28,32,1)'),
           borderColor:darkVal('rgba(0,0,0,.15)','rgba(255,255,255,.2)'),
           borderWidth:1,
           titleColor:textColor,bodyColor:textColor,
-          titleFont:{size:12,weight:'700'},bodyFont:{size:12},
+          titleFont:{size:fsPx('--fs-sm'),weight:'700'},bodyFont:{size:fsPx('--fs-xs')},
           padding:12,cornerRadius:10,
           callbacks:{
             title:([ctx])=>ctx.label,
@@ -3265,8 +3277,8 @@ function renderProjection(){
           display:(ctx)=>ctx.dataIndex===ctx.dataset.data.length-1,
           anchor:'end',align:'top',
           formatter:(v)=>`${(v/1000).toFixed(0)}k€`,
-          color:(ctx)=>ctx.datasetIndex===0?'#d93535':lineColor2,
-          font:{size:11,weight:'800'},
+          color:(ctx)=>ctx.datasetIndex===0?cssCol('--red'):lineColor2,
+          font:{size:fsPx('--fs-xs'),weight:'800'},
           backgroundColor:(ctx)=>darkVal('#fff','#1a1a18'),
           borderRadius:4,
           padding:{top:3,bottom:3,left:6,right:6},
@@ -3277,12 +3289,12 @@ function renderProjection(){
       scales:{
         x:{
           grid:{display:false},
-          ticks:{color:textColor,font:{size:10}},
+          ticks:{color:textColor,font:{size:fsPx('--fs-xs')}},
           border:{display:false}
         },
         y:{
           beginAtZero:true,
-          ticks:{callback:v=>v===0?'':((v/1000).toFixed(0)+'k€'),font:{size:10},color:textColor,maxTicksLimit:6},
+          ticks:{callback:v=>v===0?'':((v/1000).toFixed(0)+'k€'),font:{size:fsPx('--fs-xs')},color:textColor,maxTicksLimit:6},
           grid:{color:darkVal('rgba(0,0,0,.04)','rgba(255,255,255,.04)'),drawBorder:false},
           border:{display:false}
         }
@@ -3314,9 +3326,9 @@ function renderProjection(){
           class="goal-btn${active?' goal-btn-active':''}"
           style="padding:8px 4px;border-radius:10px;border:1.5px solid ${active?'#0d9e6e':'var(--border)'};
           background:${active?'#0d9e6e':'var(--surface)'};
-          color:${active?'#fff':'var(--muted)'};font-size:13px;font-weight:600;
+          color:${active?'#fff':'var(--muted)'};font-size:var(--fs-sm);font-weight:600;
           cursor:pointer;font-family:inherit;transition:all .15s;text-align:center">
-          <div style="font-size:15px;font-weight:800;line-height:1">${label}</div>
+          <div style="font-size:var(--fs-md);font-weight:800;line-height:1">${label}</div>
         </button>`;
       }).join('')}
     </div>
@@ -3325,36 +3337,36 @@ function renderProjection(){
   document.getElementById('proj-sim').innerHTML=`
     <div style="margin-bottom:var(--sg)">
       <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px">
-        <span style="font-size:14px;color:var(--muted);font-weight:500">Épargne mensuelle</span>
-        <span id="sim-val" style="font-size:16px;font-weight:700;color:var(--blue)">${simMonthlyOverride??monthly}&nbsp;€/mois</span>
+        <span style="font-size:var(--fs-sm);color:var(--muted);font-weight:500">Épargne mensuelle</span>
+        <span id="sim-val" style="font-size:var(--fs-md);font-weight:700;color:var(--blue)">${simMonthlyOverride??monthly}&nbsp;€/mois</span>
       </div>
       <input type="range" min="100" max="3000" step="50" value="${simMonthlyOverride??monthly}" id="sim-slider"
         style="width:100%;accent-color:var(--blue);--accent-c:var(--blue)"
         oninput="simMonthlyOverride=+this.value;document.getElementById('sim-val').textContent=this.value+'\u00a0€/mois';updateSim();fillTrack(this)">
-      <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--hint);margin-top:2px"><span>100 €</span><span>3 000 €</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:var(--fs-xs);color:var(--hint);margin-top:2px"><span>100 €</span><span>3 000 €</span></div>
     </div>
     <div style="margin-bottom:var(--sg)">
       <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px">
-        <span style="font-size:14px;color:var(--muted);font-weight:500">Rendement annuel</span>
-        <span id="sim-rate-val" style="font-size:16px;font-weight:700;color:#0d9e6e">${(projAnnualRate*100).toFixed(0)}%/an</span>
+        <span style="font-size:var(--fs-sm);color:var(--muted);font-weight:500">Rendement annuel</span>
+        <span id="sim-rate-val" style="font-size:var(--fs-md);font-weight:700;color:#0d9e6e">${(projAnnualRate*100).toFixed(0)}%/an</span>
       </div>
       <input type="range" min="1" max="12" step="0.1" value="${(projAnnualRate*100).toFixed(1)}" id="sim-rate"
         style="width:100%;accent-color:#0d9e6e;--accent-c:#0d9e6e"
         oninput="projAnnualRate=this.value/100;document.getElementById('sim-rate-val').textContent=parseFloat(this.value).toFixed(1)+'%/an';debouncedProjRefresh();">
-      <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--hint);margin-top:2px"><span>1%</span><span style="color:#0d9e6e">↑ ETF ~7%</span><span>12%</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:var(--fs-xs);color:var(--hint);margin-top:2px"><span>1%</span><span style="color:#0d9e6e">↑ ETF ~7%</span><span>12%</span></div>
     </div>
     <div style="margin-bottom:var(--sg)">
-      <div style="font-size:14px;color:var(--muted);font-weight:500;margin-bottom:10px">Horizon de projection</div>
+      <div style="font-size:var(--fs-sm);color:var(--muted);font-weight:500;margin-bottom:10px">Horizon de projection</div>
       <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px" id="horizon-btns">
         ${[1,2,3,5,10,15,20,30].map(y=>`
           <button onclick="selectHorizon(${y},this)" data-horizon="${y}"
             class="horizon-btn${y===10?' horizon-btn-active':''}"
             style="padding:8px 4px;border-radius:10px;border:1.5px solid ${y===10?'#2979c8':'var(--border)'};
             background:${y===10?'#2979c8':'var(--surface)'};
-            color:${y===10?'#fff':'var(--muted)'};font-size:14px;font-weight:600;
+            color:${y===10?'#fff':'var(--muted)'};font-size:var(--fs-sm);font-weight:600;
             cursor:pointer;font-family:inherit;transition:all .15s;text-align:center">
-            <div style="font-size:18px;font-weight:800;line-height:1">${y}</div>
-            <div style="font-size:12px;font-weight:500;opacity:.8;margin-top:2px">an${y>1?'s':''}</div>
+            <div style="font-size:var(--fs-base);font-weight:800;line-height:1">${y}</div>
+            <div style="font-size:var(--fs-xs);font-weight:500;opacity:.8;margin-top:2px">an${y>1?'s':''}</div>
           </button>`).join('')}
       </div>
     </div>
@@ -3390,8 +3402,8 @@ function updateGoal(){
     <div style="margin-top:.75rem">
       <!-- Progress bar header -->
       <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px">
-        <span style="font-size:14px;font-weight:600;color:var(--muted)">Progression</span>
-        <span style="font-size:15px;font-weight:700;color:${color}">${pctDone}%</span>
+        <span style="font-size:var(--fs-sm);font-weight:600;color:var(--muted)">Progression</span>
+        <span style="font-size:var(--fs-md);font-weight:700;color:${color}">${pctDone}%</span>
       </div>
       <!-- Progress bar -->
       <div style="height:8px;background:var(--surface2);border-radius:4px;margin-bottom:12px;overflow:hidden;border:1px solid var(--border)">
@@ -3400,25 +3412,25 @@ function updateGoal(){
       <!-- 3 stats -->
       <div id="goal-result-stats" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">
         <div style="background:var(--surface2);border-radius:var(--r);padding:10px;text-align:center;border:1px solid var(--border)">
-          <div style="font-size:12px;color:var(--hint);font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px">Atteint</div>
-          <div style="font-size:15px;font-weight:700;color:#0d9e6e">${eur(curSav)}</div>
+          <div style="font-size:var(--fs-xs);color:var(--hint);font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px">Atteint</div>
+          <div style="font-size:var(--fs-md);font-weight:700;color:#0d9e6e">${eur(curSav)}</div>
         </div>
         <div style="background:var(--surface2);border-radius:var(--r);padding:10px;text-align:center;border:1px solid var(--border)">
-          <div style="font-size:12px;color:var(--hint);font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px">Restant</div>
-          <div style="font-size:15px;font-weight:700;color:var(--muted)">${eur(remaining)}</div>
+          <div style="font-size:var(--fs-xs);color:var(--hint);font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px">Restant</div>
+          <div style="font-size:var(--fs-md);font-weight:700;color:var(--muted)">${eur(remaining)}</div>
         </div>
         <div style="background:var(--surface2);border-radius:var(--r);padding:10px;text-align:center;border:1px solid var(--border)">
-          <div style="font-size:12px;color:var(--hint);font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px">Mensuel</div>
-          <div style="font-size:15px;font-weight:700;color:#2979c8">${eur(monthly)}</div>
+          <div style="font-size:var(--fs-xs);color:var(--hint);font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px">Mensuel</div>
+          <div style="font-size:var(--fs-md);font-weight:700;color:#2979c8">${eur(monthly)}</div>
         </div>
       </div>
       <!-- Time estimate -->
       <div style="background:${color}12;border:1.5px solid ${color}44;border-radius:var(--r);padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:8px">
         <div>
-          <div style="font-size:13px;font-weight:600;color:var(--muted);margin-bottom:2px">Temps estimé</div>
-          <div style="font-size:22px;font-weight:800;color:${color};letter-spacing:-.02em">${timeLabel}</div>
+          <div style="font-size:var(--fs-sm);font-weight:600;color:var(--muted);margin-bottom:2px">Temps estimé</div>
+          <div style="font-size:var(--fs-lg);font-weight:800;color:${color};letter-spacing:-.02em">${timeLabel}</div>
         </div>
-        <div style="font-size:28px;line-height:1">${months<=0?'🎉':months<=60?'🚀':months<=120?'⏳':'📅'}</div>
+        <div style="font-size:var(--fs-xl);line-height:1">${months<=0?'🎉':months<=60?'🚀':months<=120?'⏳':'📅'}</div>
       </div>
     </div>`;
 }
@@ -3535,14 +3547,14 @@ function renderConseils(){
 
   document.getElementById('conseil-cards').innerHTML=strategies.map(s=>`
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:14px;display:flex;gap:12px;align-items:flex-start">
-      <div style="width:38px;height:38px;border-radius:10px;background:${s.color}18;border:1px solid ${s.color}30;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">${s.icon}</div>
+      <div style="width:38px;height:38px;border-radius:10px;background:${s.color}18;border:1px solid ${s.color}30;display:flex;align-items:center;justify-content:center;font-size:var(--fs-lg);flex-shrink:0">${s.icon}</div>
       <div style="flex:1;min-width:0">
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:5px">
-          <span style="font-size:15px;font-weight:700">${s.title}</span>
-          <span style="font-size:12px;font-weight:600;padding:2px 7px;border-radius:20px;background:${s.color}18;color:${s.color}">${s.badge}</span>
+          <span style="font-size:var(--fs-md);font-weight:700">${s.title}</span>
+          <span style="font-size:var(--fs-xs);font-weight:600;padding:2px 7px;border-radius:20px;background:${s.color}18;color:${s.color}">${s.badge}</span>
         </div>
-        <div style="font-size:14px;color:var(--muted);line-height:1.55;margin-bottom:8px">${s.desc}</div>
-        <div style="font-size:13px;font-weight:600;color:${s.color};display:flex;align-items:center;gap:5px;padding:5px 9px;background:${s.color}10;border-radius:7px;width:fit-content">
+        <div style="font-size:var(--fs-sm);color:var(--muted);line-height:1.55;margin-bottom:8px">${s.desc}</div>
+        <div style="font-size:var(--fs-sm);font-weight:600;color:${s.color};display:flex;align-items:center;gap:5px;padding:5px 9px;background:${s.color}10;border-radius:7px;width:fit-content">
           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>${s.action}
         </div>
       </div>
@@ -3552,13 +3564,13 @@ function renderConseils(){
   document.getElementById('conseils-sim').innerHTML=`
     <div style="margin-bottom:var(--sg)">
       <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px">
-        <span style="font-size:14px;color:var(--muted);font-weight:500">Capital investi</span>
-        <span id="sim-cap-val" style="font-size:16px;font-weight:700;color:#2979c8">${(curSav).toLocaleString('fr-FR')} €</span>
+        <span style="font-size:var(--fs-sm);color:var(--muted);font-weight:500">Capital investi</span>
+        <span id="sim-cap-val" style="font-size:var(--fs-md);font-weight:700;color:#2979c8">${(curSav).toLocaleString('fr-FR')} €</span>
       </div>
       <input type="range" min="1000" max="200000" step="1000" value="${Math.min(curSav,200000)}" id="sim-cap"
         style="width:100%;accent-color:#2979c8"
         oninput="document.getElementById('sim-cap-val').textContent=parseInt(this.value).toLocaleString('fr-FR')+' €';updateConseilsSim();fillTrack(this)">
-      <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--hint);margin-top:2px"><span>1 000 €</span><span style="color:#2979c8">↑ capital actuel</span><span>200 000 €</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:var(--fs-xs);color:var(--hint);margin-top:2px"><span>1 000 €</span><span style="color:#2979c8">↑ capital actuel</span><span>200 000 €</span></div>
     </div>
     <div id="conseils-sim-result"></div>`;
   updateConseilsSim();
@@ -3579,11 +3591,11 @@ function updateConseilsSim(){
         <div style="background:var(--surface2);border-radius:var(--r);padding:14px;border:1px solid var(--border);position:relative;overflow:hidden">
           <div style="position:absolute;top:0;left:0;right:0;height:2px;background:${r.color}"></div>
           <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
-            <span style="font-size:13px;font-weight:600;color:var(--muted)">${r.label}</span>
-            <span style="font-size:12px;font-weight:700;padding:1px 6px;border-radius:20px;background:${r.color}18;color:${r.color}">${r.rate}</span>
+            <span style="font-size:var(--fs-sm);font-weight:600;color:var(--muted)">${r.label}</span>
+            <span style="font-size:var(--fs-xs);font-weight:700;padding:1px 6px;border-radius:20px;background:${r.color}18;color:${r.color}">${r.rate}</span>
           </div>
-          <div style="font-size:24px;font-weight:800;color:${r.color};letter-spacing:-.02em">${eur(r.monthly)}</div>
-          <div style="font-size:12px;color:var(--hint);margin-top:2px">par mois</div>
+          <div style="font-size:var(--fs-xl);font-weight:800;color:${r.color};letter-spacing:-.02em">${eur(r.monthly)}</div>
+          <div style="font-size:var(--fs-xs);color:var(--hint);margin-top:2px">par mois</div>
         </div>`).join('')}
     </div>`;
 }
@@ -3705,7 +3717,7 @@ function showScreen(id){
  */
 async function renderQuickUsers(){
   const list=document.getElementById('quick-users');
-  list.innerHTML='<div style="text-align:center;color:var(--hint);padding:12px;font-size:14px">Chargement des profils…</div>';
+  list.innerHTML='<div style="text-align:center;color:var(--hint);padding:12px;font-size:var(--fs-sm)">Chargement des profils…</div>';
   try{
     users = await API.auth.getUsers();
     // Update local photo/color cache from API data
@@ -3720,11 +3732,11 @@ async function renderQuickUsers(){
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--hint)" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
       </div>`).join('');
     if(users.length===0){
-      list.innerHTML='<div style="text-align:center;color:var(--hint);padding:12px;font-size:14px">Aucun profil · <a style="color:var(--blue);cursor:pointer" onclick="showScreen(\'register\')">Créer un compte</a></div>';
+      list.innerHTML='<div style="text-align:center;color:var(--hint);padding:12px;font-size:var(--fs-sm)">Aucun profil · <a style="color:var(--blue);cursor:pointer" onclick="showScreen(\'register\')">Créer un compte</a></div>';
     }
   }catch(err){
     console.warn('renderQuickUsers error',err);
-    list.innerHTML=`<div style="text-align:center;color:var(--red);padding:12px;font-size:13px">
+    list.innerHTML=`<div style="text-align:center;color:var(--red);padding:12px;font-size:var(--fs-sm)">
       Impossible de contacter le serveur.<br>
       <small style="color:var(--hint)">Vérifiez que le backend est démarré sur le port 3001.</small>
     </div>`;
@@ -3747,7 +3759,7 @@ function quickLogin(userId){
   document.getElementById('pwd-modal-name').textContent = u.name;
   document.getElementById('pwd-modal-avatar').innerHTML = photo
     ? `<img src="${photo}" style="width:56px;height:56px;border-radius:50%;object-fit:cover;border:3px solid ${color}44">`
-    : `<div style="width:56px;height:56px;border-radius:50%;background:${color}22;color:${color};font-size:22px;font-weight:700;display:flex;align-items:center;justify-content:center;border:2px solid ${color}44">${u.name.charAt(0).toUpperCase()}</div>`;
+    : `<div style="width:56px;height:56px;border-radius:50%;background:${color}22;color:${color};font-size:var(--fs-lg);font-weight:700;display:flex;align-items:center;justify-content:center;border:2px solid ${color}44">${u.name.charAt(0).toUpperCase()}</div>`;
 
   // Réinitialiser le champ et l'erreur
   const inp = document.getElementById('pwd-modal-input');
@@ -3972,7 +3984,7 @@ async function renderBanque(){
 function showBanqueLoading(msg){
   document.getElementById('banque-summary').innerHTML = '';
   document.getElementById('banque-accounts').innerHTML =
-    `<div style="color:var(--muted);padding:1.5rem;text-align:center;font-size:14px">${msg}</div>`;
+    `<div style="color:var(--muted);padding:1.5rem;text-align:center;font-size:var(--fs-sm)">${msg}</div>`;
   document.getElementById('banque-transactions').innerHTML = '';
 }
 
@@ -3980,7 +3992,7 @@ function bankInitialAvatar(name){
   const initial = (name||'?')[0].toUpperCase();
   const colors = ['#3B8BD4','#e06fa0','#0d9e6e','#f59e0b','#8b5cf6','#ef4444'];
   const idx = initial.charCodeAt(0) % colors.length;
-  return `<div style="width:42px;height:42px;border-radius:12px;background:${colors[idx]};display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#fff;flex-shrink:0">${initial}</div>`;
+  return `<div style="width:42px;height:42px;border-radius:12px;background:${colors[idx]};display:flex;align-items:center;justify-content:center;font-size:var(--fs-base);font-weight:800;color:#fff;flex-shrink:0">${initial}</div>`;
 }
 
 function accTypeIcon(type){
@@ -4006,9 +4018,9 @@ function renderBanqueAccounts(banks){
         <div style="width:64px;height:64px;border-radius:18px;background:var(--surface2);display:flex;align-items:center;justify-content:center;margin:0 auto 1.2rem">
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--hint)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
         </div>
-        <div style="font-size:17px;font-weight:700;color:var(--text);margin-bottom:6px">Aucun compte lié</div>
-        <div style="font-size:13px;color:var(--muted);margin-bottom:1.5rem;max-width:280px;margin-left:auto;margin-right:auto">Connectez votre banque pour suivre vos soldes et transactions en temps réel.</div>
-        <button onclick="addBankAccount()" class="btn-add" style="font-size:14px;padding:10px 24px;border-radius:10px">
+        <div style="font-size:var(--fs-base);font-weight:700;color:var(--text);margin-bottom:6px">Aucun compte lié</div>
+        <div style="font-size:var(--fs-sm);color:var(--muted);margin-bottom:1.5rem;max-width:280px;margin-left:auto;margin-right:auto">Connectez votre banque pour suivre vos soldes et transactions en temps réel.</div>
+        <button onclick="addBankAccount()" class="btn-add" style="font-size:var(--fs-sm);padding:10px 24px;border-radius:10px">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           Lier ma première banque
         </button>
@@ -4026,19 +4038,19 @@ function renderBanqueAccounts(banks){
   summaryEl.innerHTML = `
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px">
       <div class="card" style="padding:14px 16px;border-left:3px solid ${totalBal>=0?'var(--green)':'var(--red)'}">
-        <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Solde total</div>
-        <div style="font-size:22px;font-weight:800;color:${totalBal>=0?'var(--green)':'var(--red)'}">${fmtBalance(totalBal)}</div>
-        <div style="font-size:11px;color:var(--hint);margin-top:2px">${allAccounts.length} compte${allAccounts.length>1?'s':''} · ${nBanks} banque${nBanks>1?'s':''}</div>
+        <div style="font-size:var(--fs-xs);font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Solde total</div>
+        <div style="font-size:var(--fs-lg);font-weight:800;color:${totalBal>=0?'var(--green)':'var(--red)'}">${fmtBalance(totalBal)}</div>
+        <div style="font-size:var(--fs-xs);color:var(--hint);margin-top:2px">${allAccounts.length} compte${allAccounts.length>1?'s':''} · ${nBanks} banque${nBanks>1?'s':''}</div>
       </div>
       ${totalPos>0?`<div class="card" style="padding:14px 16px;border-left:3px solid var(--green)">
-        <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Avoirs</div>
-        <div style="font-size:22px;font-weight:800;color:var(--green)">${fmtBalance(totalPos)}</div>
-        <div style="font-size:11px;color:var(--hint);margin-top:2px">comptes positifs</div>
+        <div style="font-size:var(--fs-xs);font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Avoirs</div>
+        <div style="font-size:var(--fs-lg);font-weight:800;color:var(--green)">${fmtBalance(totalPos)}</div>
+        <div style="font-size:var(--fs-xs);color:var(--hint);margin-top:2px">comptes positifs</div>
       </div>`:''}
       ${totalNeg<0?`<div class="card" style="padding:14px 16px;border-left:3px solid var(--red)">
-        <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Dettes</div>
-        <div style="font-size:22px;font-weight:800;color:var(--red)">${fmtBalance(Math.abs(totalNeg))}</div>
-        <div style="font-size:11px;color:var(--hint);margin-top:2px">cartes &amp; prêts</div>
+        <div style="font-size:var(--fs-xs);font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Dettes</div>
+        <div style="font-size:var(--fs-lg);font-weight:800;color:var(--red)">${fmtBalance(Math.abs(totalNeg))}</div>
+        <div style="font-size:var(--fs-xs);color:var(--hint);margin-top:2px">cartes &amp; prêts</div>
       </div>`:''}
     </div>`;
 
@@ -4062,15 +4074,15 @@ function renderBanqueAccounts(banks){
               ${accTypeIcon(acc.type)}
             </div>
             <div>
-              <div style="font-size:13px;font-weight:600;color:var(--text)">${acc.name}</div>
-              <div style="font-size:11px;color:var(--muted);display:flex;align-items:center;gap:4px">
-                <span style="background:var(--surface2);border-radius:4px;padding:1px 5px;font-size:10px;font-weight:600;color:${typeColor}">${typeLabel}</span>
+              <div style="font-size:var(--fs-sm);font-weight:600;color:var(--text)">${acc.name}</div>
+              <div style="font-size:var(--fs-xs);color:var(--muted);display:flex;align-items:center;gap:4px">
+                <span style="background:var(--surface2);border-radius:4px;padding:1px 5px;font-size:var(--fs-xs);font-weight:600;color:${typeColor}">${typeLabel}</span>
                 ${acc.iban?`<span>${maskIban(acc.iban)}</span>`:''}
               </div>
             </div>
           </div>
           <div style="text-align:right">
-            <div style="font-size:15px;font-weight:700;color:${balColor}">${fmtBalance(acc.balance, acc.currency_code||'EUR')}</div>
+            <div style="font-size:var(--fs-md);font-weight:700;color:${balColor}">${fmtBalance(acc.balance, acc.currency_code||'EUR')}</div>
           </div>
         </div>`;
     }).join('');
@@ -4081,24 +4093,24 @@ function renderBanqueAccounts(banks){
           <div style="display:flex;align-items:center;gap:12px">
             ${bankInitialAvatar(bank.institution_name)}
             <div>
-              <div style="font-size:15px;font-weight:700;color:var(--text)">${bank.institution_name}</div>
+              <div style="font-size:var(--fs-md);font-weight:700;color:var(--text)">${bank.institution_name}</div>
               <div style="display:flex;align-items:center;gap:6px;margin-top:2px">
                 ${statusOk
-                  ? `<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;background:var(--green-bg);color:var(--green)">● Connecté</span>`
-                  : `<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;background:var(--red-bg);color:var(--red)">⚠ Action requise</span>`}
-                ${syncedAt?`<span style="font-size:11px;color:var(--hint)">· ${syncedAt}</span>`:''}
+                  ? `<span style="font-size:var(--fs-xs);font-weight:700;padding:2px 7px;border-radius:20px;background:var(--green-bg);color:var(--green)">● Connecté</span>`
+                  : `<span style="font-size:var(--fs-xs);font-weight:700;padding:2px 7px;border-radius:20px;background:var(--red-bg);color:var(--red)">⚠ Action requise</span>`}
+                ${syncedAt?`<span style="font-size:var(--fs-xs);color:var(--hint)">· ${syncedAt}</span>`:''}
               </div>
             </div>
           </div>
-          <div style="font-size:20px;font-weight:800;color:${bankTotal>=0?'var(--green)':'var(--red)'}">${fmtBalance(bankTotal)}</div>
+          <div style="font-size:var(--fs-lg);font-weight:800;color:${bankTotal>=0?'var(--green)':'var(--red)'}">${fmtBalance(bankTotal)}</div>
         </div>
         ${accountRows}
         <div style="display:flex;gap:6px;margin-top:14px;padding-top:12px;border-top:1px solid var(--border);flex-wrap:wrap">
-          <button class="btn-act" onclick="loadBankTransactions('${bank.requisition_id}')" style="font-size:12px;padding:6px 12px;border-radius:8px;display:flex;align-items:center;gap:4px">
+          <button class="btn-act" onclick="loadBankTransactions('${bank.requisition_id}')" style="font-size:var(--fs-xs);padding:6px 12px;border-radius:8px;display:flex;align-items:center;gap:4px">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
             Transactions
           </button>
-          <button class="btn-act btn-act-danger" onclick="disconnectBank('${bank.requisition_id}','${bank.institution_name}')" style="font-size:12px;padding:6px 12px;border-radius:8px;margin-left:auto">Déconnecter</button>
+          <button class="btn-act btn-act-danger" onclick="disconnectBank('${bank.requisition_id}','${bank.institution_name}')" style="font-size:var(--fs-xs);padding:6px 12px;border-radius:8px;margin-left:auto">Déconnecter</button>
         </div>
       </div>`;
   }).join('');
@@ -4118,21 +4130,21 @@ function txDateLabel(dateStr){
 async function renderBanqueTransactions(accountId){
   const el = document.getElementById('banque-transactions');
   if(!el) return;
-  el.innerHTML = `<div style="color:var(--muted);font-size:13px;padding:1rem 0;text-align:center">Chargement des transactions…</div>`;
+  el.innerHTML = `<div style="color:var(--muted);font-size:var(--fs-sm);padding:1rem 0;text-align:center">Chargement des transactions…</div>`;
   try {
     const params = {limit:100};
     if(accountId) params.accountId = accountId;
     const txs = await API.bridge.getTransactions(params);
 
     if(!txs || txs.length === 0){
-      el.innerHTML = `<div class="card" style="text-align:center;padding:2rem;color:var(--muted);font-size:14px">Aucune transaction trouvée.</div>`;
+      el.innerHTML = `<div class="card" style="text-align:center;padding:2rem;color:var(--muted);font-size:var(--fs-sm)">Aucune transaction trouvée.</div>`;
       return;
     }
 
     // Build account filter options from tx list
     const accounts = [...new Map(txs.map(t=>[t.account_name, {id:t.account_id,name:t.account_name,bank:t.bank_name}])).values()];
     const filterOpts = accounts.length > 1
-      ? `<select id="tx-account-filter" onchange="filterBanqueTransactions()" style="font-size:12px;padding:5px 8px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);cursor:pointer">
+      ? `<select id="tx-account-filter" onchange="filterBanqueTransactions()" style="font-size:var(--fs-xs);padding:5px 8px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);cursor:pointer">
           <option value="">Tous les comptes</option>
           ${accounts.map(a=>`<option value="${a.id}">${a.name} — ${a.bank||''}</option>`).join('')}
         </select>` : '';
@@ -4143,7 +4155,7 @@ async function renderBanqueTransactions(accountId){
     el.innerHTML = `
       <div class="card" style="padding:0">
         <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;padding:14px 16px;border-bottom:1px solid var(--border)">
-          <div style="font-size:14px;font-weight:700;color:var(--text)">Transactions récentes</div>
+          <div style="font-size:var(--fs-sm);font-weight:700;color:var(--text)">Transactions récentes</div>
           ${filterOpts}
         </div>
         <div id="tx-list" style="padding:0 4px"></div>
@@ -4151,7 +4163,7 @@ async function renderBanqueTransactions(accountId){
 
     renderTxList(txs);
   } catch(e) {
-    el.innerHTML = `<div style="color:var(--red);font-size:13px;padding:1rem">${e.message}</div>`;
+    el.innerHTML = `<div style="color:var(--red);font-size:var(--fs-sm);padding:1rem">${e.message}</div>`;
   }
 }
 
@@ -4194,16 +4206,16 @@ function renderTxList(txs){
               </svg>
             </div>
             <div style="min-width:0">
-              <div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px">${label}</div>
-              <div style="font-size:11px;color:var(--muted)">${tx.account_name||''}</div>
+              <div style="font-size:var(--fs-sm);font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px">${label}</div>
+              <div style="font-size:var(--fs-xs);color:var(--muted)">${tx.account_name||''}</div>
             </div>
           </div>
-          <div style="font-size:14px;font-weight:700;color:${col};white-space:nowrap;padding-left:12px">${prefix}${fmtBalance(Math.abs(amt))}</div>
+          <div style="font-size:var(--fs-sm);font-weight:700;color:${col};white-space:nowrap;padding-left:12px">${prefix}${fmtBalance(Math.abs(amt))}</div>
         </div>`;
     }).join('');
 
     return `
-      <div style="padding:10px 12px 4px;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">${txDateLabel(g.date)}</div>
+      <div style="padding:10px 12px 4px;font-size:var(--fs-xs);font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">${txDateLabel(g.date)}</div>
       ${rows}`;
   }).join('');
 }
@@ -4221,11 +4233,11 @@ async function addBankAccount(){
     modal.innerHTML = `
       <div style="background:var(--surface);border-radius:18px;width:100%;max-width:480px;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 24px 64px rgba(0,0,0,.35);overflow:hidden">
         <div style="padding:18px 20px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
-          <div style="font-size:16px;font-weight:700;color:var(--text)">Choisir votre banque</div>
-          <button onclick="document.getElementById('modal-bank-picker').remove()" style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:20px;line-height:1;padding:0 4px">×</button>
+          <div style="font-size:var(--fs-md);font-weight:700;color:var(--text)">Choisir votre banque</div>
+          <button onclick="document.getElementById('modal-bank-picker').remove()" style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:var(--fs-lg);line-height:1;padding:0 4px">×</button>
         </div>
         <div style="padding:12px 16px;border-bottom:1px solid var(--border)">
-          <input id="bank-search" type="text" placeholder="Rechercher une banque…" oninput="filterBanks()" style="width:100%;padding:9px 12px;border-radius:10px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:14px;box-sizing:border-box">
+          <input id="bank-search" type="text" placeholder="Rechercher une banque…" oninput="filterBanks()" style="width:100%;padding:9px 12px;border-radius:10px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:var(--fs-sm);box-sizing:border-box">
         </div>
         <div id="bank-list" style="overflow-y:auto;flex:1;padding:8px"></div>
       </div>`;
@@ -4234,7 +4246,7 @@ async function addBankAccount(){
   }
 
   const listEl = document.getElementById('bank-list');
-  listEl.innerHTML = `<div style="text-align:center;padding:2rem;color:var(--muted);font-size:13px">Chargement des banques…</div>`;
+  listEl.innerHTML = `<div style="text-align:center;padding:2rem;color:var(--muted);font-size:var(--fs-sm)">Chargement des banques…</div>`;
 
   try {
     if(!_institutions){
@@ -4242,7 +4254,7 @@ async function addBankAccount(){
     }
     renderBankList(_institutions);
   } catch(e) {
-    listEl.innerHTML = `<div style="color:var(--red);padding:1rem;font-size:13px">${e.message}</div>`;
+    listEl.innerHTML = `<div style="color:var(--red);padding:1rem;font-size:var(--fs-sm)">${e.message}</div>`;
   }
 }
 
@@ -4250,7 +4262,7 @@ function renderBankList(list){
   const listEl = document.getElementById('bank-list');
   if(!listEl) return;
   if(!list || list.length===0){
-    listEl.innerHTML = `<div style="text-align:center;padding:2rem;color:var(--muted);font-size:13px">Aucun résultat</div>`;
+    listEl.innerHTML = `<div style="text-align:center;padding:2rem;color:var(--muted);font-size:var(--fs-sm)">Aucun résultat</div>`;
     return;
   }
   listEl.innerHTML = list.map(inst => `
@@ -4259,10 +4271,10 @@ function renderBankList(list){
       onmouseover="this.style.background='var(--hover)'" onmouseout="this.style.background=''">
       ${inst.logo
         ? `<img src="${inst.logo}" style="width:36px;height:36px;border-radius:8px;object-fit:contain;background:#fff;padding:2px;flex-shrink:0" onerror="this.style.display='none'">`
-        : `<div style="width:36px;height:36px;border-radius:8px;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:var(--muted);flex-shrink:0">${(inst.name||'?')[0]}</div>`}
+        : `<div style="width:36px;height:36px;border-radius:8px;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:var(--fs-sm);font-weight:700;color:var(--muted);flex-shrink:0">${(inst.name||'?')[0]}</div>`}
       <div>
-        <div style="font-size:14px;font-weight:600;color:var(--text)">${inst.name||inst.id}</div>
-        ${inst.transaction_total_days?`<div style="font-size:11px;color:var(--muted)">${inst.transaction_total_days} jours d'historique</div>`:''}
+        <div style="font-size:var(--fs-sm);font-weight:600;color:var(--text)">${inst.name||inst.id}</div>
+        ${inst.transaction_total_days?`<div style="font-size:var(--fs-xs);color:var(--muted)">${inst.transaction_total_days} jours d'historique</div>`:''}
       </div>
       <svg style="margin-left:auto;flex-shrink:0" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--hint)" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
     </div>`).join('');
