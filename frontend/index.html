@@ -324,7 +324,7 @@ html.dark .mtab-all.active{background:var(--mc-all-bg,linear-gradient(90deg,rgba
 .btn-add:hover{opacity:.9;box-shadow:0 6px 20px rgba(59,139,212,.38)}
 
 /* ── FAB ── */
-.fab{position:fixed;bottom:calc(120px + env(safe-area-inset-bottom,0px));right:max(16px,env(safe-area-inset-right));z-index:50;width:48px;height:48px;border-radius:50%;font-size:var(--fs-xl);padding:0;display:none;align-items:center;justify-content:center;background:linear-gradient(135deg,#3B8BD4,#e06fa0)!important;color:#fff!important;border:none!important;box-shadow:0 4px 16px rgba(59,139,212,.35)!important}
+.fab{position:fixed;bottom:calc(80px + env(safe-area-inset-bottom,0px));right:max(16px,env(safe-area-inset-right));z-index:50;width:48px;height:48px;border-radius:50%;font-size:var(--fs-xl);padding:0;display:none;align-items:center;justify-content:center;background:linear-gradient(135deg,#3B8BD4,#e06fa0)!important;color:#fff!important;border:none!important;box-shadow:0 4px 16px rgba(59,139,212,.35)!important}
 .fab:hover{opacity:.9;box-shadow:0 6px 20px rgba(59,139,212,.48)!important}
 
 /* ── Modal ── */
@@ -438,7 +438,7 @@ input[type=range]:hover::-moz-range-thumb{transform:scale(1.1)}
 /* ══ 640px — mise en page uniquement (zéro changement de taille) ══ */
 @media(max-width:640px){
   :root{--sg:.75rem}
-  .topbar{padding-top:env(safe-area-inset-top,0px);padding-left:1rem;padding-right:1rem;gap:.5rem}
+  .topbar{padding-top:env(safe-area-inset-top,0px);padding-left:1rem;padding-right:1rem;gap:.5rem;box-shadow:none}
   .topbar-sub{display:none}
   .topbar-page-title{display:flex}
   #user-menu-name{display:none}
