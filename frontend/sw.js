@@ -4,7 +4,11 @@ const STATIC = ['/', '/favicon.svg', '/manifest.json'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(STATIC)));
-  self.skipWaiting();
+  // Ne prend pas le contrôle immédiatement — attend le message SKIP_WAITING
+});
+
+self.addEventListener('message', e => {
+  if (e.data?.type === 'SKIP_WAITING') self.skipWaiting();
 });
 
 self.addEventListener('activate', e => {

@@ -4625,9 +4625,26 @@ async function initApp(){
 // Start the app
 initApp();
 
-// Register service worker (PWA)
+// Register service worker (PWA) — reload automatique quand une nouvelle version est prête
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js').catch(() => {});
+  navigator.serviceWorker.register('/sw.js').then(reg => {
+    reg.addEventListener('updatefound', () => {
+      const next = reg.installing;
+      if (!next) return;
+      next.addEventListener('statechange', () => {
+        // Nouveau SW installé et en attente : recharge dès que la page est prête
+        if (next.state === 'installed' && navigator.serviceWorker.controller) {
+          next.postMessage({ type: 'SKIP_WAITING' });
+        }
+      });
+    });
+  }).catch(() => {});
+
+  // Quand le nouveau SW prend le contrôle, on recharge silencieusement
+  let refreshing = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!refreshing) { refreshing = true; location.reload(); }
+  });
 }
 </script>
 </body>
