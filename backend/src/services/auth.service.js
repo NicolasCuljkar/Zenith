@@ -32,6 +32,11 @@ function getUsers() {
   return db.prepare('SELECT id, name, email, role, color, photo, created_at FROM users ORDER BY id ASC').all();
 }
 
+// Version publique sans email (profile picker)
+function getPublicUsers() {
+  return db.prepare('SELECT id, name, role, color, photo FROM users ORDER BY id ASC').all();
+}
+
 function login(email, password) {
   if (!email || !password) throw httpError('Email et mot de passe requis.', 400);
 
@@ -110,4 +115,4 @@ function changePassword(userId, { currentPassword, newPassword } = {}) {
   return { success: true };
 }
 
-module.exports = { getUsers, login, register, updateSettings, updateProfile, changePassword, sanitizeUser };
+module.exports = { getUsers, getPublicUsers, login, register, updateSettings, updateProfile, changePassword, sanitizeUser };

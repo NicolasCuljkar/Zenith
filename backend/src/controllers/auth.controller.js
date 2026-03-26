@@ -4,7 +4,7 @@ const authService = require('../services/auth.service');
 
 async function listUsers(req, res, next) {
   try {
-    res.json({ success: true, data: authService.getUsers() });
+    res.json({ success: true, data: authService.getPublicUsers() });
   } catch (err) {
     next(err);
   }

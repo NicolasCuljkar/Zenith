@@ -1253,6 +1253,7 @@ function getCat(key){
 }
 // Proxy for legacy CATS access
 const CATS=new Proxy({},{get:(_,key)=>getCat(key)});
+// Doit rester identique à VALID_MONTHS dans backend/src/services/savings.service.js
 const MONTHS=['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
 
 // ── Persistence — replaced by API calls ──────────────────────────
@@ -1413,10 +1414,9 @@ function orderedMembers(){
 }
 // Returns true if current user can edit entries for the given member
 function canEdit(member){
-  const name=myRole();
-  const userNames=users.map(u=>u.name);
-  if(!userNames.includes(name))return true; // unknown / Autre = can edit all
-  return name===member;
+  if(!currentUser)return false;
+  if(currentUser.role==='Autre')return true;
+  return currentUser.name===member;
 }
 
 // ── Update member tab colors dynamically ──
@@ -1707,6 +1707,7 @@ async function saveSettingsProfile(){
     msg.style.color='var(--muted)';msg.textContent='Enregistrement…';
     await API.users.updateProfile({name,email});
     if(currentUser){currentUser.name=name;currentUser.email=email;}
+    document.title=`ZÉNITH — ${name}`;
     updateTopbarAvatar();
     const nameEl=document.getElementById('set-account-name-display');
     const emailEl=document.getElementById('set-account-email-display');
@@ -1884,7 +1885,7 @@ function renderDashboard(){
   // Compute scoped épargne/rate based on active tab
   let epScoped, revNetScoped, epRate, alertName;
   if(dashboardMember==='all'){
-    epScoped=memberList.reduce((sum,m)=>sum+Math.round((statsByMember[m]?.rav||0)*(savingPct[m]??60)/100),0);
+    epScoped=Math.round(memberList.reduce((sum,m)=>sum+(statsByMember[m]?.rav||0)*(savingPct[m]??60)/100,0));
     revNetScoped=s.revNet;
     alertName='du groupe';
   } else {
@@ -1893,7 +1894,7 @@ function renderDashboard(){
     revNetScoped=sm.revNet;
     alertName='de '+dashboardMember;
   }
-  const epCouple=memberList.reduce((sum,m)=>sum+Math.round((statsByMember[m]?.rav||0)*(savingPct[m]??60)/100),0);
+  const epCouple=Math.round(memberList.reduce((sum,m)=>sum+(statsByMember[m]?.rav||0)*(savingPct[m]??60)/100,0));
   epRate=revNetScoped>0?Math.round(epScoped/revNetScoped*100):0;
 
   document.getElementById('dash-alert').innerHTML='';
@@ -2010,8 +2011,8 @@ function renderDashboard(){
     if(dashboardMember==='all'){
       combinedEl.style.display='';
       const sAll=calcStats(entries);
-      const epAll=memberList.reduce((sum,m)=>sum+Math.round((statsByMember[m]?.rav||0)*(savingPct[m]??60)/100),0);
-      const loiAll=memberList.reduce((sum,m)=>sum+Math.round((statsByMember[m]?.rav||0)*(100-(savingPct[m]??60))/100),0);
+      const epAll=Math.round(memberList.reduce((sum,m)=>sum+(statsByMember[m]?.rav||0)*(savingPct[m]??60)/100,0));
+      const loiAll=Math.round(memberList.reduce((sum,m)=>sum+(statsByMember[m]?.rav||0)*(100-(savingPct[m]??60))/100,0));
       const usedPctAll=sAll.revNet>0?Math.round((sAll.fix+sAll.vari)/sAll.revNet*100):0;
       const bcAll=usedPctAll<=50?'#0d9e6e':usedPctAll<=70?'#c49a00':'#d93535';
       combinedEl.innerHTML=`<div class="card">
@@ -2051,7 +2052,7 @@ function renderDashboard(){
   const ds=calcStats(dEntries);
   const donutMembers=df==='all'?memberList:[df];
   let dsEp=0,dsLoi=0;
-  donutMembers.forEach(m=>{const sm=calcStats(entries.filter(e=>e.member===m));const p=savingPct[m]??60;dsEp+=Math.round(sm.rav*p/100);dsLoi+=Math.round(sm.rav*(100-p)/100);});
+  donutMembers.forEach(m=>{const sm=calcStats(entries.filter(e=>e.member===m));const p=savingPct[m]??60;dsEp+=sm.rav*p/100;dsLoi+=sm.rav*(100-p)/100;});
   const donutData=[
     {label:'Impôts', value:ds.tax,  color:'#c49a00'},
     {label:'Fixes',  value:ds.fix,  color:'#d93535'},
@@ -2507,8 +2508,10 @@ function renderEntries(){
 ['search-input','filter-cat'].forEach(id=>{const el=document.getElementById(id);el.addEventListener('input',renderEntries);el.addEventListener('change',renderEntries);});
 function openAddEntry(){
   editEntryId=null;
+  impotMode='montant';
+  setImpotMode('montant');
   document.getElementById('modal-entry-title').textContent='Ajouter une ligne';
-  ['f-name','f-amount'].forEach(id=>document.getElementById(id).value='');
+  ['f-name','f-amount','f-impot-brut','f-impot-taux'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   document.getElementById('f-sign').value='neg';
   document.getElementById('f-member').value=myRole();
   onEntrySignChange('neg');
@@ -2610,12 +2613,14 @@ function deleteEntry(id){
 document.getElementById('modal-entry-cancel').onclick=()=>document.getElementById('modal-entry').classList.remove('open');
 document.getElementById('modal-entry').addEventListener('click',e=>{if(e.target.id==='modal-entry')document.getElementById('modal-entry').classList.remove('open');});
 document.getElementById('modal-entry-save').onclick=async ()=>{
+  const btn=document.getElementById('modal-entry-save');
+  if(btn.disabled)return;
   const name=document.getElementById('f-name').value.trim(),amt=parseFloat(document.getElementById('f-amount').value);
   const sign=document.getElementById('f-sign').value==='pos'?1:-1,cat=document.getElementById('f-cat').value,member=document.getElementById('f-member').value;
   if(!name||isNaN(amt))return alert('Remplissez tous les champs.');
   const amount=sign*Math.abs(amt);
   document.getElementById('modal-entry').classList.remove('open');
-  showLoading();
+  btn.disabled=true;showLoading();
   try{
     if(editEntryId){
       const updated=await API.entries.update(editEntryId,{name,amount,cat,member});
@@ -2627,9 +2632,8 @@ document.getElementById('modal-entry-save').onclick=async ()=>{
     renderEntries();renderDashboard();
   }catch(err){
     showApiError('Erreur lors de la sauvegarde : '+err.message);
-    // Re-open modal so user doesn't lose data
     document.getElementById('modal-entry').classList.add('open');
-  }finally{hideLoading();}
+  }finally{hideLoading();btn.disabled=false;}
 };
 
 // ══════════════════════════════════════════════
@@ -2965,6 +2969,8 @@ function deleteSaving(id){
 document.getElementById('modal-saving-cancel').onclick=()=>document.getElementById('modal-saving').classList.remove('open');
 document.getElementById('modal-saving').addEventListener('click',e=>{if(e.target.id==='modal-saving')document.getElementById('modal-saving').classList.remove('open');});
 document.getElementById('modal-saving-save').onclick=async ()=>{
+  const btn=document.getElementById('modal-saving-save');
+  if(btn.disabled)return;
   const member=document.getElementById('fs-member').value,year=parseInt(document.getElementById('fs-year').value);
   const month=document.getElementById('fs-month').value;
   let amount=parseFloat(document.getElementById('fs-amount').value);
@@ -2974,7 +2980,7 @@ document.getElementById('modal-saving-save').onclick=async ()=>{
     amount=(prev?.amount||0)+amount;
   }
   document.getElementById('modal-saving').classList.remove('open');
-  showLoading();
+  btn.disabled=true;showLoading();
   try{
     if(editSavingId){
       const updated=await API.savings.update(editSavingId,{member,year,month,amount});
@@ -2987,7 +2993,7 @@ document.getElementById('modal-saving-save').onclick=async ()=>{
   }catch(err){
     showApiError('Erreur lors de la sauvegarde : '+err.message);
     document.getElementById('modal-saving').classList.add('open');
-  }finally{hideLoading();}
+  }finally{hideLoading();btn.disabled=false;}
 };
 
 // ══════════════════════════════════════════════
@@ -3061,11 +3067,11 @@ function renderAnalysis(){
   const statsByM={};
   memberList.forEach(m=>{statsByM[m]=calcStats(entries.filter(e=>e.member===m));});
   const epByM={},loiByM={};
-  memberList.forEach(m=>{const sm=statsByM[m];const pct=savingPct[m]??60;epByM[m]=Math.round(sm.rav*pct/100);loiByM[m]=Math.round(sm.rav*(100-pct)/100);});
+  memberList.forEach(m=>{const sm=statsByM[m];const pct=savingPct[m]??60;epByM[m]=sm.rav*pct/100;loiByM[m]=sm.rav*(100-pct)/100;});
   let epScoped,loiScoped;
   if(analysisMember==='all'){
-    epScoped=memberList.reduce((acc,m)=>acc+epByM[m],0);
-    loiScoped=memberList.reduce((acc,m)=>acc+loiByM[m],0);
+    epScoped=Math.round(memberList.reduce((acc,m)=>acc+epByM[m],0));
+    loiScoped=Math.round(memberList.reduce((acc,m)=>acc+loiByM[m],0));
   } else {
     const pctS=savingPct[analysisMember]??60;epScoped=Math.round(s.rav*pctS/100);loiScoped=Math.round(s.rav*(100-pctS)/100);
   }
@@ -3225,7 +3231,7 @@ function renderAnalysis(){
   const aStats=calcStats(aEntries);
   const aMembers=aMember==='all'?orderedMembers():[aMember];
   let aDsEp=0,aDsLoi=0;
-  aMembers.forEach(m=>{const sm=calcStats(entries.filter(e=>e.member===m));const p=savingPct[m]??60;aDsEp+=Math.round(sm.rav*p/100);aDsLoi+=Math.round(sm.rav*(100-p)/100);});
+  aMembers.forEach(m=>{const sm=calcStats(entries.filter(e=>e.member===m));const p=savingPct[m]??60;aDsEp+=sm.rav*p/100;aDsLoi+=sm.rav*(100-p)/100;});
   const aDonutData=[
     {label:'Impôts',value:aStats.tax,color:'#c49a00'},
     {label:'Fixes',value:aStats.fix,color:'#d93535'},
@@ -3372,7 +3378,7 @@ function renderProjection(){
   if(!document.getElementById('proj-chart')) document.getElementById('proj-chart-wrap').innerHTML='<canvas id="proj-chart"></canvas>';
   const scopedMembers=projectionMember==='all'?orderedMembers():[projectionMember];
   const curSav=scopedMembers.reduce((sum,m)=>sum+(savings.filter(r=>r.member===m).slice(-1)[0]?.amount||0),0);
-  const monthly=scopedMembers.reduce((sum,m)=>{const sm=calcStats(entries.filter(e=>e.member===m));return sum+Math.round(sm.rav*(savingPct[m]??60)/100);},0);
+  const monthly=Math.round(scopedMembers.reduce((sum,m)=>{const sm=calcStats(entries.filter(e=>e.member===m));return sum+sm.rav*(savingPct[m]??60)/100;},0));
   const revScoped=scopedMembers.reduce((sum,m)=>sum+calcStats(entries.filter(e=>e.member===m)).revNet,0);
   const annualRate=projAnnualRate,years=10;
   const projLabels=Array.from({length:years+1},(_,i)=>i===0?'Auj.':`+${i}a`);
@@ -3558,7 +3564,7 @@ function updateGoal(){
   const activeBtn=document.querySelector('.goal-btn-active');
   const goal=parseInt(activeBtn?.dataset.goal||100000);
   const scopedMembers=projectionMember==='all'?orderedMembers():[projectionMember];
-  const monthly=scopedMembers.reduce((sum,m)=>{const sm=calcStats(entries.filter(e=>e.member===m));return sum+Math.round(sm.rav*(savingPct[m]??60)/100);},0);
+  const monthly=Math.round(scopedMembers.reduce((sum,m)=>{const sm=calcStats(entries.filter(e=>e.member===m));return sum+sm.rav*(savingPct[m]??60)/100;},0));
   const curSav=scopedMembers.reduce((sum,m)=>sum+(savings.filter(r=>r.member===m).slice(-1)[0]?.amount||0),0);
   if(monthly<=0){document.getElementById('goal-result').innerHTML=`<div class="alert alert-warn">Aucune épargne mensuelle détectée.</div>`;return;}
   const needed=goal-curSav,months=needed>0?Math.ceil(needed/monthly):0;
@@ -3669,7 +3675,7 @@ function renderConseils(){
   document.getElementById('conseils-nodata').style.display='none';
   document.getElementById('conseils-content').style.display='';
   const scopedMembers=conseilsMember==='all'?orderedMembers():[conseilsMember];
-  const epMonthly=scopedMembers.reduce((sum,m)=>{const sm=calcStats(entries.filter(e=>e.member===m));return sum+Math.round(sm.rav*(savingPct[m]??60)/100);},0);
+  const epMonthly=Math.round(scopedMembers.reduce((sum,m)=>{const sm=calcStats(entries.filter(e=>e.member===m));return sum+sm.rav*(savingPct[m]??60)/100;},0));
   const curSav=scopedMembers.reduce((sum,m)=>sum+(savings.filter(r=>r.member===m).slice(-1)[0]?.amount||0),0);
   const revNet=calcStats(entries).revNet;
   // Projections revenus passifs

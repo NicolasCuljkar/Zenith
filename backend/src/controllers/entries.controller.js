@@ -50,7 +50,7 @@ async function deleteEntry(req, res, next) {
 async function updateOrder(req, res, next) {
   try {
     const { member, groupKey, orderedIds } = req.body;
-    res.json({ success: true, data: entriesService.updateOrder(member, groupKey, orderedIds) });
+    res.json({ success: true, data: entriesService.updateOrder(member, groupKey, orderedIds, req.user.id) });
   } catch (err) { next(err); }
 }
 

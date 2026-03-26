@@ -124,7 +124,19 @@ function remove(id, userId) {
   return { deleted: true };
 }
 
-function updateOrder(memberName, groupKey, orderedIds) {
+function updateOrder(memberName, groupKey, orderedIds, userId) {
+  if (!Array.isArray(orderedIds) || orderedIds.length === 0) return { updated: true };
+
+  // Vérifie que chaque ID appartient à l'utilisateur ou est une entrée Commun
+  const placeholders = orderedIds.map(() => '?').join(',');
+  const owned = db.prepare(
+    `SELECT id FROM entries WHERE id IN (${placeholders}) AND (user_id = ? OR member = 'Commun')`
+  ).all(...orderedIds, userId);
+
+  if (owned.length !== orderedIds.length) {
+    throw httpError('Non autorisé à réordonner ces lignes.', 403);
+  }
+
   const updateStmt = db.prepare('UPDATE entries SET sort_order = ? WHERE id = ?');
   db.exec('BEGIN');
   try {

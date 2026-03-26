@@ -2,6 +2,7 @@
 
 const db = require('../config/database');
 
+// Doit rester identique à MONTHS dans frontend/index.html
 const VALID_MONTHS = [
   'Janvier','Février','Mars','Avril','Mai','Juin',
   'Juillet','Août','Septembre','Octobre','Novembre','Décembre',
