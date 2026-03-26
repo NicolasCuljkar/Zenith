@@ -316,9 +316,9 @@ html.dark .mtab.active{background:#2e2e2c;border-color:var(--muted);color:var(--
 .mtab-carla.active{background:rgba(224,111,160,.12);border-color:var(--mc-carla,#e06fa0);color:var(--mc-carla,#e06fa0)}
 html.dark .mtab-nicolas.active{background:rgba(59,139,212,.2);border-color:var(--mc-nicolas,#3B8BD4);color:var(--mc-nicolas,#3B8BD4)}
 html.dark .mtab-carla.active{background:rgba(224,111,160,.2);border-color:var(--mc-carla,#e06fa0);color:var(--mc-carla,#e06fa0)}
-.mtab-all.active{background:var(--mc-all-bg,linear-gradient(90deg,rgba(59,139,212,.18),rgba(224,111,160,.18)));border-color:transparent;box-shadow:0 0 0 1.5px var(--mc-all-border,#9e7bca);color:var(--text)}
-html.dark .mtab-all.active{background:var(--mc-all-bg,linear-gradient(90deg,rgba(59,139,212,.28),rgba(224,111,160,.28)));border-color:transparent;box-shadow:0 0 0 1.5px var(--mc-all-border,#9e7bca)}
-html.light .mtab-all.active{background:var(--mc-all-bg,linear-gradient(90deg,rgba(59,139,212,.18),rgba(224,111,160,.18)));border-color:transparent;box-shadow:0 0 0 1.5px var(--mc-all-border,#9e7bca)}
+.mtab-all.active{background:var(--mc-all-bg,linear-gradient(90deg,rgba(59,139,212,.18),rgba(224,111,160,.18)));border-color:var(--mc-all-border,#9e7bca);color:var(--text)}
+html.dark .mtab-all.active{background:var(--mc-all-bg,linear-gradient(90deg,rgba(59,139,212,.28),rgba(224,111,160,.28)));border-color:var(--mc-all-border,#9e7bca)}
+html.light .mtab-all.active{background:var(--mc-all-bg,linear-gradient(90deg,rgba(59,139,212,.18),rgba(224,111,160,.18)));border-color:var(--mc-all-border,#9e7bca)}
 
 /* ── Bouton Ajouter gradient ── */
 .btn-add{display:inline-flex;align-items:center;gap:6px;padding:9px 20px;background:linear-gradient(135deg,#3B8BD4,#e06fa0);color:#fff!important;border:none!important;border-radius:10px;font-size:var(--fs-sm);font-weight:600;cursor:pointer;letter-spacing:.02em;box-shadow:0 4px 16px rgba(59,139,212,.25);transition:opacity .15s,box-shadow .15s;font-family:inherit;white-space:nowrap}
@@ -1445,8 +1445,8 @@ function updateMtabColors(){
     const c1=getMC(users[0].name), c2=getMC(users[1].name);
     const mid=blendHex(c1,c2,0.5);
     document.documentElement.style.setProperty('--mc-all-border',mid);
-    document.querySelectorAll('.mtab-all.active').forEach(b=>{b.style.boxShadow=`0 0 0 1.5px ${mid}`;});
-    document.querySelectorAll('.mtab-all:not(.active)').forEach(b=>{b.style.boxShadow='';});
+    document.querySelectorAll('.mtab-all.active').forEach(b=>{b.style.borderColor=mid;});
+    document.querySelectorAll('.mtab-all:not(.active)').forEach(b=>{b.style.borderColor='';});
   }
 }
 function blendHex(a,b,t){
@@ -1776,7 +1776,7 @@ function renderMemberTabsFor(containerId, currentValue, setter, forSavings){
     const dualAv=userList.length>=2
       ?`<span style="display:inline-flex;align-items:center">${av(userList[0].name)}<span style="margin-left:-6px">${av(userList[1].name)}</span></span>`
       :'';
-    const activeStyle=activeAll?`background:linear-gradient(90deg,${c1}22,${c2}22);border-color:transparent;box-shadow:0 0 0 1.5px ${mid};color:var(--text)`:'';
+    const activeStyle=activeAll?`background:linear-gradient(90deg,${c1}22,${c2}22);border-color:${mid};color:var(--text)`:'';
     html+=`<button class="mtab mtab-all${activeAll?' active':''}" data-tab-value="all" style="${activeStyle}" onclick="${setter}('all')">${dualAv}Commun</button>`;
   }
   el.innerHTML=html;
