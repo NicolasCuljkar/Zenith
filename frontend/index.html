@@ -147,6 +147,7 @@ html.light .topbar{background:rgba(255,255,255,.88);box-shadow:0 1px 0 rgba(0,0,
 .topbar-title span{background:linear-gradient(135deg,#3B8BD4,#e06fa0);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 
 .topbar-sub{font-size:var(--fs-sm);color:var(--hint);flex:1}
+.topbar-page-title{display:none;font-size:var(--fs-base);font-weight:700;letter-spacing:-.02em;pointer-events:none;white-space:nowrap;position:absolute;left:50%;transform:translateX(-50%);top:env(safe-area-inset-top,0px);bottom:0;align-items:center}
 .icon-btn{border:none;background:none;cursor:pointer;color:var(--muted);padding:5px;display:flex;align-items:center;border-radius:7px}
 .icon-btn:hover{background:var(--hover);color:var(--text)}
 .icon-btn svg{width:18px;height:18px;stroke-width:1.8;fill:none;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round}
@@ -439,6 +440,9 @@ input[type=range]:hover::-moz-range-thumb{transform:scale(1.1)}
   :root{--sg:.75rem}
   .topbar{padding-top:env(safe-area-inset-top,0px);padding-left:1rem;padding-right:1rem;gap:.5rem}
   .topbar-sub{display:none}
+  .topbar-page-title{display:flex}
+  #user-menu-name{display:none}
+  .topbar-title span{display:none}
   .tabs-row{display:none}.bottom-nav{display:flex}
   .main{padding:1rem .75rem calc(80px + env(safe-area-inset-bottom,0px))}
   .kpi-grid{grid-template-columns:1fr 1fr;gap:8px}
@@ -693,10 +697,12 @@ window.onerror = function(msg, src, line) {
 <div id="screen-app" style="display:none">
 <div class="shell">
 
-<header class="topbar">
+<header class="topbar" style="position:relative">
   <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0">
     <div class="topbar-title"><svg width="28" height="28" viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="grad-top" x1="0" y1="0" x2="60" y2="60" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#3B8BD4"/><stop offset="100%" stop-color="#e06fa0"/></linearGradient></defs><rect width="60" height="60" rx="14" fill="url(#grad-top)"/><path d="M14 42 L24 28 L32 35 L46 14" stroke="white" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/><circle cx="46" cy="14" r="4" fill="white"/></svg><span>ZÉNITH</span></div>
   </div>
+
+  <span id="topbar-page-title" class="topbar-page-title"></span>
 
   <!-- User menu button + dropdown -->
   <div class="user-menu" id="user-menu">
@@ -1557,6 +1563,8 @@ function applyMemberColor(name, color){
   if(currentTab==='entries')renderEntries();
   if(currentTab==='savings')renderSavings();
   renderDashboard();
+  const pt=document.getElementById('topbar-page-title');
+  if(pt) pt.textContent=PAGE_NAMES[currentTab]||'';
 }
 // ── Theme ──────────────────────────────────────────────────────
 function initTheme(){
@@ -1618,9 +1626,12 @@ function updateNavForDataState(){
   });
   if(noData && currentTab!=='entries') switchTab('entries');
 }
+const PAGE_NAMES={dashboard:'Résumé',entries:'Lignes',savings:'Épargne',analysis:'Analyse',projection:'Projection',conseils:'Conseils'};
 function switchTab(id){
   if(hasNoData() && DATA_TABS.includes(id)) id='entries';
   currentTab=id;
+  const pt=document.getElementById('topbar-page-title');
+  if(pt) pt.textContent=PAGE_NAMES[id]||'';
   document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
   // also hide/show conseils and banque panels (display:none by default for these)
   const cp=document.getElementById('tab-conseils');
