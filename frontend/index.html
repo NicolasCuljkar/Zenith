@@ -140,7 +140,7 @@ html.light body::before{background:radial-gradient(ellipse 80% 50% at 50% -10%,r
 *{transition:background-color .25s,border-color .25s,color .2s,box-shadow .2s}
 body{overscroll-behavior-y:none}
 
-.shell{display:flex;flex-direction:column;min-height:100vh;overflow-x:hidden;position:relative}
+.shell{display:flex;flex-direction:column;min-height:100vh;min-height:100dvh;overflow-x:hidden;position:relative}
 .topbar{position:sticky;top:0;z-index:100;height:calc(var(--nav) + env(safe-area-inset-top,0px));padding-top:env(safe-area-inset-top,0px);background:rgba(28,28,42,.88);border-bottom:1px solid var(--border);display:flex;align-items:center;padding-left:max(1.25rem,env(safe-area-inset-left));padding-right:max(1.25rem,env(safe-area-inset-right));gap:.75rem;backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);box-shadow:0 1px 0 rgba(255,255,255,.04)}
 html.light .topbar{background:rgba(255,255,255,.88);box-shadow:0 1px 0 rgba(0,0,0,.06),0 2px 12px rgba(0,0,0,.04)}
 .topbar-title{font-size:var(--fs-title);font-weight:800;letter-spacing:-.04em;display:flex;align-items:center;gap:7px;flex-shrink:0}
@@ -323,7 +323,7 @@ html.dark .mtab-all.active{background:var(--mc-all-bg,linear-gradient(90deg,rgba
 .btn-add:hover{opacity:.9;box-shadow:0 6px 20px rgba(59,139,212,.38)}
 
 /* ── FAB ── */
-.fab{position:fixed;bottom:70px;right:16px;z-index:50;width:48px;height:48px;border-radius:50%;font-size:var(--fs-xl);padding:0;display:none;align-items:center;justify-content:center;background:linear-gradient(135deg,#3B8BD4,#e06fa0)!important;color:#fff!important;border:none!important;box-shadow:0 4px 16px rgba(59,139,212,.35)!important}
+.fab{position:fixed;bottom:calc(70px + env(safe-area-inset-bottom,0px));right:max(16px,env(safe-area-inset-right));z-index:50;width:48px;height:48px;border-radius:50%;font-size:var(--fs-xl);padding:0;display:none;align-items:center;justify-content:center;background:linear-gradient(135deg,#3B8BD4,#e06fa0)!important;color:#fff!important;border:none!important;box-shadow:0 4px 16px rgba(59,139,212,.35)!important}
 .fab:hover{opacity:.9;box-shadow:0 6px 20px rgba(59,139,212,.48)!important}
 
 /* ── Modal ── */
