@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>ZÉNITH</title>
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link rel="manifest" href="manifest.json">
@@ -13,6 +13,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Zénith">
+<link rel="apple-touch-icon" href="favicon.svg">
 <!-- ── Zénith API client (must be loaded before the main script) ── -->
 <script src="js/api.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js">
@@ -140,7 +141,7 @@ html.light body::before{background:radial-gradient(ellipse 80% 50% at 50% -10%,r
 body{overscroll-behavior-y:none}
 
 .shell{display:flex;flex-direction:column;min-height:100vh;overflow-x:hidden;position:relative}
-.topbar{position:sticky;top:0;z-index:100;height:var(--nav);background:rgba(28,28,42,.88);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 max(1.25rem,env(safe-area-inset-left)) 0 max(1.25rem,env(safe-area-inset-right));gap:.75rem;backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);box-shadow:0 1px 0 rgba(255,255,255,.04)}
+.topbar{position:sticky;top:0;z-index:100;height:calc(var(--nav) + env(safe-area-inset-top,0px));padding-top:env(safe-area-inset-top,0px);background:rgba(28,28,42,.88);border-bottom:1px solid var(--border);display:flex;align-items:center;padding-left:max(1.25rem,env(safe-area-inset-left));padding-right:max(1.25rem,env(safe-area-inset-right));gap:.75rem;backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);box-shadow:0 1px 0 rgba(255,255,255,.04)}
 html.light .topbar{background:rgba(255,255,255,.88);box-shadow:0 1px 0 rgba(0,0,0,.06),0 2px 12px rgba(0,0,0,.04)}
 .topbar-title{font-size:var(--fs-title);font-weight:800;letter-spacing:-.04em;display:flex;align-items:center;gap:7px;flex-shrink:0}
 .topbar-title span{background:linear-gradient(135deg,#3B8BD4,#e06fa0);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
@@ -447,7 +448,7 @@ input[type=range]:hover::-moz-range-thumb{transform:scale(1.1)}
   .search-inp{min-width:unset;width:100%}
   .inp{width:100%;padding:10px 12px}
   .btn-add-desktop{display:none!important}.fab{display:flex}
-  .member-tabs{position:sticky;top:var(--nav);z-index:90;background:var(--bg);padding:.5rem 0 .4rem;margin-bottom:.5rem;flex-wrap:nowrap;overflow-x:auto}
+  .member-tabs{position:sticky;top:calc(var(--nav) + env(safe-area-inset-top,0px));z-index:90;background:var(--bg);padding:.5rem 0 .4rem;margin-bottom:.5rem;flex-wrap:nowrap;overflow-x:auto}
   .frow{grid-template-columns:1fr;gap:10px}
   .flow-bar{height:34px}
   .flow-grid{grid-template-columns:1fr 1fr;gap:6px}
