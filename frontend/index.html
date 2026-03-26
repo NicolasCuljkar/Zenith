@@ -440,18 +440,23 @@ input[type=range]:hover::-moz-range-thumb{transform:scale(1.1)}
   .topbar{padding-top:env(safe-area-inset-top,0px);padding-left:1rem;padding-right:1rem;gap:.5rem}
   .topbar-sub{display:none}
   .tabs-row{display:none}.bottom-nav{display:flex}
-  .main{padding:1rem .75rem 5.5rem}
+  .main{padding:1rem .75rem calc(80px + env(safe-area-inset-bottom,0px))}
   .kpi-grid{grid-template-columns:1fr 1fr;gap:8px}
   .g2,.g3,.grid-chart{grid-template-columns:1fr;gap:.75rem}
   .tbl-wrap{display:none}.entry-cards{display:block}
   .toolbar{flex-direction:column;gap:6px}.toolbar-inputs{flex-direction:column;width:100%}
   .search-inp{min-width:unset;width:100%}
-  .inp{width:100%;padding:10px 12px}
+  .inp{width:100%;padding:10px 12px;min-height:44px}
   .btn-add-desktop{display:none!important}.fab{display:flex}
   .member-tabs{position:sticky;top:calc(var(--nav) + env(safe-area-inset-top,0px));z-index:90;background:var(--bg);padding:.5rem 0 .4rem;margin-bottom:.5rem;flex-wrap:nowrap;overflow-x:auto}
   .frow{grid-template-columns:1fr;gap:10px}
   .flow-bar{height:34px}
   .flow-grid{grid-template-columns:1fr 1fr;gap:6px}
+  /* touch targets */
+  .btn-act{width:34px;height:34px;border-radius:8px}
+  .mtab{min-height:36px}
+  .scard{padding:12px}
+  input[type=range]::-webkit-slider-thumb{width:26px;height:26px;margin-top:-10px}
   /* modales */
   .modal{padding-bottom:calc(1.5rem + env(safe-area-inset-bottom,0px))}
   .fgrp input,.fgrp select{min-height:44px;font-size:1rem}
@@ -465,7 +470,7 @@ input[type=range]:hover::-moz-range-thumb{transform:scale(1.1)}
   :root{--nav:48px;--fs-xs:0.625rem;--fs-sm:0.75rem;--fs-md:0.875rem;--fs-base:0.9375rem;--fs-title:0.9375rem;--fs-lg:1.25rem;--fs-xl:1.5rem}
   html,body{font-size:15px}
   /* layout */
-  .main{padding:.625rem .625rem 5rem}
+  .main{padding:.625rem .625rem calc(76px + env(safe-area-inset-bottom,0px))}
   /* kpi */
   .kpi{padding:9px 10px 10px}
   .kpi-tooltip{min-width:140px}
@@ -498,7 +503,7 @@ input[type=range]:hover::-moz-range-thumb{transform:scale(1.1)}
   :root{--nav:46px;--fs-xs:0.5625rem;--fs-sm:0.6875rem;--fs-md:0.8125rem;--fs-base:0.875rem;--fs-title:0.875rem;--fs-lg:1.125rem;--fs-xl:1.375rem}
   html,body{font-size:14px}
   /* layout */
-  .main{padding:.5rem .5rem 5rem}
+  .main{padding:.5rem .5rem calc(62px + env(safe-area-inset-bottom,0px))}
   .topbar{padding-top:env(safe-area-inset-top,0px);padding-left:max(.75rem,env(safe-area-inset-left));padding-right:max(.75rem,env(safe-area-inset-right))}
   /* kpi */
   .kpi-grid{grid-template-columns:1fr 1fr;gap:5px}
@@ -816,7 +821,7 @@ window.onerror = function(msg, src, line) {
     <div id="analysis-nodata" style="display:none"></div>
     <div id="analysis-content">
     <div class="member-tabs" id="analysis-mtabs"></div>
-    <div class="kpi-grid" id="analysis-kpis" style="grid-template-columns:repeat(3,1fr)"></div>
+    <div class="kpi-grid" id="analysis-kpis"></div>
     <div class="card"><div class="card-head">Où va chaque euro ?</div><div id="analysis-flow"></div></div>
     <div class="card"><div class="card-head">Top dépenses fixes &amp; variables</div><div id="analysis-top-bars"></div></div>
     <div style="display:none"><div id="analysis-donut-wrap" style="position:relative;height:0"><canvas id="analysis-donut-chart"></canvas></div><div id="analysis-donut-legend"></div></div>
@@ -3086,7 +3091,7 @@ function renderAnalysis(){
   const jColA=joursAna==null?'var(--muted)':joursAna>=90?'var(--green)':joursAna>=30?'var(--amber)':'var(--red)';
   const jBadgeA=joursAna==null?'':mkBadge(joursAna>=90?'✓ Matelas solide':joursAna>=30?'Objectif : 3 mois':'⚠ Constituez un matelas',joursAna>=90,joursAna>=30);
 
-  document.getElementById('analysis-kpis').style.gridTemplateColumns='repeat(4,1fr)';
+  document.getElementById('analysis-kpis').style.gridTemplateColumns='';
   document.getElementById('analysis-kpis').innerHTML=
     kpiHtml('Score santé',healthScore+' / 100',scoreColor,`Épargne ${scoreSav}pt · Flexibilité ${scoreRig}pt · Dépenses ${scoreDep}pt`,null,scoreTip,scoreBadge)+
     kpiHtml("Taux d'épargne",epRateCalc+'%',epRateCalc>=20?'var(--green)':epRateCalc>=10?'var(--amber)':'var(--red)',epSub,epRateCalc-20,`Épargne mensuelle : ${eur(epScoped)} · En 10 ans avec intérêts : ${eur(Math.round(epScoped*12*10*1.04))} estimé`,epBadge)+
