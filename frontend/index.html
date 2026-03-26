@@ -438,7 +438,8 @@ input[type=range]:hover::-moz-range-thumb{transform:scale(1.1)}
 /* ══ 640px — mise en page uniquement (zéro changement de taille) ══ */
 @media(max-width:640px){
   :root{--sg:.75rem}
-  .topbar{padding-top:env(safe-area-inset-top,0px);padding-left:1rem;padding-right:1rem;gap:.5rem;box-shadow:none;border-bottom-color:transparent}
+  .topbar{padding-top:env(safe-area-inset-top,0px);padding-left:1rem;padding-right:1rem;gap:.5rem;box-shadow:none!important;border-bottom-color:transparent}
+  .tab-panel{padding-top:0}
   .topbar-sub{display:none}
   .topbar-page-title{display:flex}
   #user-menu-name{display:none}
@@ -1296,6 +1297,7 @@ async function loadData(){
     users = apiUsers || [];
     apiUsers.forEach(u => {
       if(u.photo) profilePhotos[u.name] = u.photo;
+      else delete profilePhotos[u.name];
       if(u.color) memberColors[u.name]  = u.color;
     });
     // Persist photo cache locally for speed
@@ -3877,6 +3879,7 @@ function showScreen(id){
   if(splash) splash.style.display='none';
   ['login','register','app'].forEach(s=>{document.getElementById('screen-'+s).style.display=s===id?(s==='app'?'block':'flex'):'none';});
   if(id==='login') renderQuickUsers();
+  if(id==='register'){['reg-name','reg-email','reg-pwd','reg-pwd2'].forEach(i=>{const el=document.getElementById(i);if(el)el.value='';});const err=document.getElementById('reg-error');if(err)err.textContent='';}
   if(id==='app'){updateTopbarAvatar();document.getElementById('btn-logout').style.display='';}
   if(id==='login'||id==='register') document.getElementById('btn-logout').style.display='none';
 }
