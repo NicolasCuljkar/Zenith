@@ -438,7 +438,7 @@ input[type=range]:hover::-moz-range-thumb{transform:scale(1.1)}
 /* ══ 640px — mise en page uniquement (zéro changement de taille) ══ */
 @media(max-width:640px){
   :root{--sg:.75rem}
-  .topbar{padding-top:env(safe-area-inset-top,0px);padding-left:1rem;padding-right:1rem;gap:.5rem;box-shadow:none;border-bottom-color:transparent}
+  .topbar{padding-top:env(safe-area-inset-top,0px);padding-left:1rem;padding-right:1rem;gap:.5rem;box-shadow:none;border-bottom-color:transparent;backdrop-filter:none;-webkit-backdrop-filter:none;background:var(--surface)}
   .topbar-sub{display:none}
   .topbar-page-title{display:flex}
   #user-menu-name{display:none}
