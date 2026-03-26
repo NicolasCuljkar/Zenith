@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-<meta name="theme-color" content="#1a1a2e">
+<meta name="theme-color" content="#f0f2f8">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Zénith">
@@ -599,6 +599,7 @@ html.light input[type=range]{background:var(--border)}
 html.light .auth-screen{background:radial-gradient(ellipse at 30% 20%,rgba(59,139,212,.06),transparent 60%),radial-gradient(ellipse at 70% 80%,rgba(224,111,160,.06),transparent 60%),var(--bg)}
 html.light .auth-card{box-shadow:0 4px 40px rgba(0,0,0,.08)}
 </style>
+<script>(function(){if(localStorage.getItem('zenith_theme')!=='dark')document.documentElement.classList.add('light');})();</script>
 </head>
 <body>
 <!-- Diagnostic : affiche les erreurs JS en rouge sur la page -->
@@ -1570,8 +1571,8 @@ function applyMemberColor(name, color){
 }
 // ── Theme ──────────────────────────────────────────────────────
 function initTheme(){
-  const saved=localStorage.getItem('zenith_theme');
-  if(saved==='light') document.documentElement.classList.add('light');
+  // Classe déjà appliquée par le script inline head (évite le FOUC)
+  // Par défaut : mode clair ; mode sombre uniquement si explicitement choisi
   updateThemeLabel();
 }
 function updateThemeLabel(){
@@ -1581,7 +1582,10 @@ function updateThemeLabel(){
 }
 function toggleTheme(){
   document.documentElement.classList.toggle('light');
-  localStorage.setItem('zenith_theme',document.documentElement.classList.contains('light')?'light':'dark');
+  const isLight=document.documentElement.classList.contains('light');
+  localStorage.setItem('zenith_theme',isLight?'light':'dark');
+  const meta=document.querySelector('meta[name="theme-color"]');
+  if(meta) meta.setAttribute('content',isLight?'#f0f2f8':'#1a1a2e');
   updateThemeLabel();
   if(currentTab==='entries')renderEntries();
 }
