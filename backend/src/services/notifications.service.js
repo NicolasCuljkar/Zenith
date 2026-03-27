@@ -35,6 +35,8 @@ function init() {
   webpush.setVapidDetails('mailto:no-reply@zenith.app', publicKey, privateKey);
   vapidPublicKey = publicKey;
   console.log('[Push] VAPID initialisé');
+  console.log(`[Push] VAPID_PUBLIC_KEY="${publicKey}"`);
+  console.log(`[Push] VAPID_PRIVATE_KEY="${privateKey}"`);
 }
 
 function getPublicKey() { return vapidPublicKey; }
