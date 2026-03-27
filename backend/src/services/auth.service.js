@@ -126,4 +126,4 @@ function changePassword(userId, { currentPassword, newPassword } = {}) {
   return { success: true };
 }
 
-module.exports = { getUsers, getPublicUsers, login, register, updateSettings, updateProfile, changePassword, sanitizeUser };
+module.exports = { getUsers, getPublicUsers, login, loginById, register, updateSettings, updateProfile, changePassword, sanitizeUser };
