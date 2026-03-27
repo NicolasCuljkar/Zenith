@@ -24,6 +24,7 @@ notifService.startScheduler();
 const app  = express();
 const PORT = process.env.PORT || 3001;
 
+app.set('trust proxy', 1); // Railway passe par un reverse proxy
 app.set('json replacer', (key, value) =>
   typeof value === 'bigint' ? Number(value) : value
 );

@@ -4684,7 +4684,7 @@ async function registerPushSubscription() {
 
   try {
     // Récupère la clé VAPID publique
-    const res  = await fetch('/api/notifications/vapid-key');
+    const res  = await fetch('/api/notifications/vapid-key', { cache: 'no-store' });
     const json = await res.json();
     if (!json.success || !json.data?.publicKey) return;
 
@@ -4693,6 +4693,13 @@ async function registerPushSubscription() {
 
     // Vérifie si une subscription existe déjà
     let sub = await swReg.pushManager.getSubscription();
+
+    // Si la clé VAPID a changé depuis la dernière subscription, on resouscrit
+    const storedKey = localStorage.getItem('zenith_vapid_key');
+    if (sub && storedKey !== vapidKey) {
+      await sub.unsubscribe();
+      sub = null;
+    }
 
     if (!sub) {
       // Demande la permission si pas encore accordée
@@ -4706,6 +4713,8 @@ async function registerPushSubscription() {
         applicationServerKey: urlBase64ToUint8Array(vapidKey),
       });
     }
+
+    localStorage.setItem('zenith_vapid_key', vapidKey);
 
     // Enregistre la subscription côté serveur
     const token = API.getToken();
