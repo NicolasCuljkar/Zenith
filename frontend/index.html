@@ -4045,7 +4045,7 @@ async function pwdModalConfirm(){
   const btn = document.querySelector('#modal-quick-pwd .auth-btn');
   btn.disabled = true; btn.textContent = 'Connexion…';
   try{
-    await _doLoginWithCredentials(u.email, pwd);
+    await _doLoginWithCredentials(u.id, pwd);
     pwdModalClose();
   }catch(e){
     const errEl = document.getElementById('pwd-modal-error');
@@ -4060,10 +4060,13 @@ async function pwdModalConfirm(){
 /**
  * _doLoginWithCredentials — Internal helper to call login API and update app state.
  */
-async function _doLoginWithCredentials(email,password){
+async function _doLoginWithCredentials(userIdOrEmail,password){
   showLoading();
   try{
-    const result=await API.auth.login(email,password);
+    const isId = typeof userIdOrEmail === 'number';
+    const result = isId
+      ? await API.auth.loginById(userIdOrEmail, password)
+      : await API.auth.login(userIdOrEmail, password);
     currentUser=result.user;
     // Update local color/photo cache from user record
     if(result.user.color) memberColors[result.user.name]=result.user.color;

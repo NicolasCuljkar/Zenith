@@ -173,6 +173,16 @@ const _auth = {
     return result;
   },
 
+  async loginById(userId, password) {
+    const result = await request('/auth/login-by-id', {
+      method : 'POST',
+      body   : { userId, password },
+    }, true /* skipAuth */);
+    setToken(result.token);
+    setStoredUser(result.user);
+    return result;
+  },
+
   /**
    * Register a new user.
    * Stores JWT and user object on success.

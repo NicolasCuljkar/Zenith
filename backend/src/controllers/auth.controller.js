@@ -19,6 +19,15 @@ async function login(req, res, next) {
   }
 }
 
+async function loginById(req, res, next) {
+  try {
+    const { userId, password } = req.body;
+    res.json({ success: true, data: authService.loginById(userId, password) });
+  } catch (err) {
+    next(err);
+  }
+}
+
 async function register(req, res, next) {
   try {
     const { name, email, password, role } = req.body;
@@ -65,4 +74,4 @@ async function changePassword(req, res, next) {
   }
 }
 
-module.exports = { listUsers, login, register, getMe, updateSettings, updateProfile, changePassword };
+module.exports = { listUsers, login, loginById, register, getMe, updateSettings, updateProfile, changePassword };

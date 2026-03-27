@@ -48,6 +48,17 @@ function login(email, password) {
   return { token: createToken(user), user: sanitizeUser(user) };
 }
 
+function loginById(userId, password) {
+  if (!userId || !password) throw httpError('Identifiants requis.', 400);
+
+  const user = db.prepare('SELECT * FROM users WHERE id = ?').get(userId);
+  if (!user || !bcrypt.compareSync(password, user.password_hash)) {
+    throw httpError('Mot de passe incorrect.', 401);
+  }
+
+  return { token: createToken(user), user: sanitizeUser(user) };
+}
+
 function register(name, email, password, role = 'Autre') {
   if (!name || !email || !password) throw httpError('Tous les champs sont requis.', 400);
   if (password.length < 6)          throw httpError('Le mot de passe doit faire au moins 6 caractères.', 400);
