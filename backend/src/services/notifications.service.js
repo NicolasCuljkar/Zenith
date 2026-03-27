@@ -26,7 +26,9 @@ function init() {
       privateKey = keys.privateKey;
       db.prepare("INSERT OR REPLACE INTO config (key, value) VALUES ('vapid_public',  ?)").run(publicKey);
       db.prepare("INSERT OR REPLACE INTO config (key, value) VALUES ('vapid_private', ?)").run(privateKey);
-      console.log('[Push] Nouvelles clés VAPID générées');
+      console.log('[Push] Nouvelles clés VAPID générées — copiez ces valeurs dans Railway :');
+      console.log(`[Push] VAPID_PUBLIC_KEY="${publicKey}"`);
+      console.log(`[Push] VAPID_PRIVATE_KEY="${privateKey}"`);
     }
   }
 
