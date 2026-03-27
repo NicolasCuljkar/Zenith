@@ -4378,6 +4378,8 @@ function quickLogin(userId){
 }
 
 function pwdModalClose(){
+  // En mode verrou : fermer sans s'authentifier = déconnexion
+  if(_lockMode){ _lockMode=false; doLogout(); return; }
   document.getElementById('modal-quick-pwd').style.display = 'none';
   _quickLoginUser = null;
 }
@@ -4403,12 +4405,21 @@ async function pwdModalConfirm(){
     errEl.classList.add('show');
     return;
   }
-  // Désactiver le bouton pendant la requête
   const btn = document.querySelector('#modal-quick-pwd .auth-btn');
-  btn.disabled = true; btn.textContent = 'Connexion…';
+  btn.disabled = true; btn.textContent = _lockMode ? 'Vérification…' : 'Connexion…';
   try{
-    await _doLoginWithCredentials(u.id, pwd);
-    pwdModalClose();
+    if(_lockMode){
+      // Mode verrou : juste vérifier le mot de passe, ne pas recharger les données
+      const result = await API.auth.loginById(u.id, pwd);
+      currentUser = result.user;
+      _lockMode = false;
+      document.getElementById('modal-quick-pwd').style.display = 'none';
+      _quickLoginUser = null;
+      startInactivityTimer();
+    } else {
+      await _doLoginWithCredentials(u.id, pwd);
+      pwdModalClose();
+    }
   }catch(e){
     const errEl = document.getElementById('pwd-modal-error');
     errEl.textContent = e.message || 'Mot de passe incorrect.';
@@ -4523,43 +4534,74 @@ window.addEventListener('zenith:unauthorized',()=>{
 });
 
 // ── Auto-logout : inactivité 10 min + retour d'arrière-plan ─────────────
-const INACTIVITY_MS = 10 * 60 * 1000;
+// ── Verrou session ────────────────────────────────────────────────────────
+// Délai de grâce : si l'app revient en moins de GRACE_MS, pas de verrou.
+// Sinon, le mot de passe est requis (sans full logout — données conservées).
+const GRACE_MS        = 30 * 1000;   // 30 secondes de grâce
+const IDLE_LOGOUT_MS  = 20 * 60 * 1000; // 20 min sans interaction → logout complet
+
 let _inactivityTimer = null;
-let _hiddenAt = null;
+let _hiddenAt        = null;
+let _lockMode        = false; // true = verrou actif (mot de passe requis)
 
 function startInactivityTimer(){
   clearTimeout(_inactivityTimer);
   localStorage.setItem('zenith_last_activity', Date.now());
-  _inactivityTimer = setTimeout(()=>{ if(currentUser) doLogout(); }, INACTIVITY_MS);
+  _inactivityTimer = setTimeout(()=>{ if(currentUser) doLogout(); }, IDLE_LOGOUT_MS);
 }
 function checkColdStartExpiry(){
   const last = parseInt(localStorage.getItem('zenith_last_activity') || '0', 10);
-  return last > 0 && (Date.now() - last) >= INACTIVITY_MS;
+  return last > 0 && (Date.now() - last) >= IDLE_LOGOUT_MS;
 }
 function stopInactivityTimer(){
   clearTimeout(_inactivityTimer);
   _inactivityTimer = null;
 }
 
-['click','touchstart','keydown','scroll','mousemove'].forEach(evt=>
-  document.addEventListener(evt, ()=>{ if(currentUser) startInactivityTimer(); }, {passive:true})
+// Réinitialise le timer sur toute interaction
+['click','touchstart','keydown','scroll'].forEach(evt=>
+  document.addEventListener(evt, ()=>{ if(currentUser && !_lockMode) startInactivityTimer(); }, {passive:true})
 );
 
+// Verrou quand l'appli revient au premier plan après GRACE_MS
 document.addEventListener('visibilitychange', ()=>{
   if(document.hidden){
     _hiddenAt = Date.now();
-    if(currentUser) localStorage.setItem('zenith_last_activity', _hiddenAt);
+    localStorage.setItem('zenith_last_activity', _hiddenAt);
     stopInactivityTimer();
   } else {
-    if(currentUser && _hiddenAt && (Date.now()-_hiddenAt) >= INACTIVITY_MS){
-      doLogout();
-    } else if(currentUser){
+    const elapsed = _hiddenAt ? Date.now() - _hiddenAt : 0;
+    _hiddenAt = null;
+    if(!currentUser){ return; }
+    if(elapsed >= GRACE_MS){
+      // Afficher le verrou (mot de passe requis, données conservées)
+      _lockMode = true;
+      _showLockScreen();
+    } else {
       startInactivityTimer();
     }
-    _hiddenAt = null;
   }
 });
-// ── Fin auto-logout ──────────────────────────────────────────────────────
+
+function _showLockScreen(){
+  // Réutilise le modal de connexion rapide
+  const u = currentUser;
+  if(!u){ doLogout(); return; }
+  const color = getMC(u.name);
+  const photo = profilePhotos[u.name];
+  document.getElementById('pwd-modal-name').textContent = u.name;
+  document.getElementById('pwd-modal-avatar').innerHTML = photo
+    ? `<img src="${photo}" style="width:56px;height:56px;border-radius:50%;object-fit:cover;border:3px solid ${color}44">`
+    : `<div style="width:56px;height:56px;border-radius:50%;background:${color}22;color:${color};font-size:var(--fs-lg);font-weight:700;display:flex;align-items:center;justify-content:center;border:2px solid ${color}44">${u.name.charAt(0).toUpperCase()}</div>`;
+  _quickLoginUser = u;
+  const inp = document.getElementById('pwd-modal-input');
+  inp.value = '';
+  inp.type = 'password';
+  document.getElementById('pwd-modal-error').classList.remove('show');
+  document.getElementById('modal-quick-pwd').style.display = 'flex';
+  setTimeout(() => inp.focus(), 80);
+}
+// ── Fin verrou session ────────────────────────────────────────────────────
 document.getElementById('reg-pwd2').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();doRegister();}});
 
 function initUserContext(){
