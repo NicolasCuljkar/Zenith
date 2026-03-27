@@ -13,7 +13,8 @@ self.addEventListener('message', e => {
 
 // ── Push notifications ────────────────────────────────────────────────────────
 self.addEventListener('push', e => {
-  const data = e.data?.json() || {};
+  let data = {};
+  try { data = e.data?.json() || {}; } catch(_) { data = { title: e.data?.text() || 'Zénith', body: '' }; }
   e.waitUntil(
     self.registration.showNotification(data.title || 'Zénith', {
       body:  data.body  || '',
