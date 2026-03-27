@@ -13,6 +13,7 @@ const entriesRoutes       = require('./routes/entries.routes');
 const savingsRoutes       = require('./routes/savings.routes');
 const usersRoutes         = require('./routes/users.routes');
 const notificationsRoutes = require('./routes/notifications.routes');
+const importRoutes        = require('./routes/import.routes');
 const notifService        = require('./services/notifications.service');
 
 const { errorHandler, notFoundHandler } = require('./middleware/error.middleware');
@@ -56,6 +57,7 @@ app.use('/api/entries',       entriesRoutes);
 app.use('/api/savings',       savingsRoutes);
 app.use('/api/users',         usersRoutes);
 app.use('/api/notifications', notificationsRoutes);
+app.use('/api/import',        importRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({ success: true, status: 'ok', env: process.env.NODE_ENV || 'development' });
