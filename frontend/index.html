@@ -758,6 +758,10 @@ window.onerror = function(msg, src, line) {
           </div>
         </div>
       </div>
+      <div class="user-menu-item" onclick="closeUserMenu();openFoyerModal()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        <span>Mon foyer</span>
+      </div>
       <div class="user-menu-item" onclick="closeUserMenu();openImportModal()">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
         <span>Importer des données</span>
@@ -1010,7 +1014,6 @@ window.onerror = function(msg, src, line) {
       <button class="stab active" id="stab-apparence" onclick="switchSettingsTab('apparence')">Apparence</button>
       <button class="stab" id="stab-compte" onclick="switchSettingsTab('compte')">Compte</button>
       <button class="stab" id="stab-securite" onclick="switchSettingsTab('securite')">Sécurité</button>
-      <button class="stab" id="stab-foyer" onclick="switchSettingsTab('foyer')">Foyer</button>
     </div>
 
     <!-- Tab Apparence : photo + couleur -->
@@ -1069,53 +1072,62 @@ window.onerror = function(msg, src, line) {
       </div>
     </div>
 
-    <!-- Tab Foyer -->
-    <div id="settings-tab-foyer" style="display:none">
-      <div id="foyer-msg" style="font-size:var(--fs-sm);min-height:16px;margin-bottom:10px"></div>
+    <div id="set-apparence-footer" style="display:flex;gap:8px;justify-content:flex-end;border-top:1px solid var(--border);margin-top:.75rem;padding-top:.75rem">
+      <button class="btn" id="modal-settings-close">Fermer</button>
+    </div>
+  </div>
+</div>
 
-      <!-- Solo state -->
-      <div id="foyer-solo">
-        <div style="padding:14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);margin-bottom:1rem;font-size:var(--fs-sm);color:var(--muted);line-height:1.6">
-          Vous êtes en mode <strong style="color:var(--text)">solo</strong>. Créez ou rejoignez un foyer pour partager les données avec un autre utilisateur et activer l'onglet <strong style="color:var(--text)">Commun</strong>.
-        </div>
-        <div style="display:flex;flex-direction:column;gap:8px">
-          <button class="btn-add" onclick="createFoyer()">Créer un foyer</button>
-          <button class="btn" onclick="showFoyerJoin()">Rejoindre avec un code</button>
-        </div>
+<!-- FOYER MODAL -->
+<div class="overlay" id="modal-foyer">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-drag"></div>
+    <h3 style="margin-bottom:1.1rem">Mon foyer</h3>
+    <div id="foyer-msg" style="font-size:var(--fs-sm);min-height:16px;margin-bottom:10px"></div>
+
+    <!-- Solo state -->
+    <div id="foyer-solo">
+      <div style="padding:14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);margin-bottom:1rem;font-size:var(--fs-sm);color:var(--muted);line-height:1.6">
+        Vous êtes en mode <strong style="color:var(--text)">solo</strong>. Créez ou rejoignez un foyer pour partager les données avec un autre utilisateur et activer l'onglet <strong style="color:var(--text)">Commun</strong>.
       </div>
-
-      <!-- Join form -->
-      <div id="foyer-join-form" style="display:none;margin-top:10px">
-        <div class="fgrp">
-          <label>Code d'invitation (6 caractères)</label>
-          <input type="text" id="foyer-code-input" placeholder="ex: ABC123" maxlength="6" style="text-transform:uppercase;letter-spacing:.15em;font-size:var(--fs-title);text-align:center"
-            oninput="this.value=this.value.toUpperCase()">
-        </div>
-        <div style="display:flex;gap:8px;margin-top:8px">
-          <button class="btn-add" onclick="confirmJoinFoyer()">Rejoindre</button>
-          <button class="btn" onclick="hideFoyerJoin()">Annuler</button>
-        </div>
-      </div>
-
-      <!-- Active household state -->
-      <div id="foyer-active" style="display:none">
-        <div id="foyer-members-list" style="margin-bottom:1rem"></div>
-        <div style="display:flex;flex-direction:column;gap:8px">
-          <button class="btn-add" onclick="generateFoyerInvite()">Générer un QR code d'invitation</button>
-          <button class="btn btn-danger" onclick="leaveFoyer()" style="border-color:var(--red);color:var(--red)">Quitter le foyer</button>
-        </div>
-        <!-- QR section -->
-        <div id="foyer-qr-section" style="display:none;margin-top:1rem;text-align:center">
-          <div id="foyer-qr-code" style="display:inline-block;padding:12px;background:#fff;border-radius:var(--r);margin-bottom:10px"></div>
-          <div style="font-size:var(--fs-sm);color:var(--muted);margin-bottom:4px">Code manuel :</div>
-          <div id="foyer-invite-code" style="font-size:var(--fs-lg);font-weight:700;letter-spacing:.2em;color:var(--text);font-variant-numeric:tabular-nums"></div>
-          <div id="foyer-invite-expiry" style="font-size:var(--fs-xs);color:var(--hint);margin-top:4px"></div>
-        </div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <button class="btn-add" onclick="createFoyer()">Créer un foyer</button>
+        <button class="btn" onclick="showFoyerJoin()">Rejoindre avec un code</button>
       </div>
     </div>
 
-    <div id="set-apparence-footer" style="display:flex;gap:8px;justify-content:flex-end;border-top:1px solid var(--border);margin-top:.75rem;padding-top:.75rem">
-      <button class="btn" id="modal-settings-close">Fermer</button>
+    <!-- Join form -->
+    <div id="foyer-join-form" style="display:none;margin-top:10px">
+      <div class="fgrp">
+        <label>Code d'invitation (6 caractères)</label>
+        <input type="text" id="foyer-code-input" placeholder="ex: ABC123" maxlength="6"
+          style="text-transform:uppercase;letter-spacing:.15em;font-size:var(--fs-title);text-align:center"
+          oninput="this.value=this.value.toUpperCase()">
+      </div>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <button class="btn-add" onclick="confirmJoinFoyer()">Rejoindre</button>
+        <button class="btn" onclick="hideFoyerJoin()">Annuler</button>
+      </div>
+    </div>
+
+    <!-- Active household state -->
+    <div id="foyer-active" style="display:none">
+      <div id="foyer-members-list" style="margin-bottom:1rem"></div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <button class="btn-add" onclick="generateFoyerInvite()">Générer un QR code d'invitation</button>
+        <button class="btn" onclick="leaveFoyer()" style="border-color:var(--red);color:var(--red)">Quitter le foyer</button>
+      </div>
+      <!-- QR section -->
+      <div id="foyer-qr-section" style="display:none;margin-top:1rem;text-align:center">
+        <div id="foyer-qr-code" style="display:inline-block;padding:12px;background:#fff;border-radius:var(--r);margin-bottom:10px"></div>
+        <div style="font-size:var(--fs-sm);color:var(--muted);margin-bottom:4px">Code manuel :</div>
+        <div id="foyer-invite-code" style="font-size:var(--fs-lg);font-weight:700;letter-spacing:.2em;color:var(--text)"></div>
+        <div id="foyer-invite-expiry" style="font-size:var(--fs-xs);color:var(--hint);margin-top:4px"></div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:8px;justify-content:flex-end;border-top:1px solid var(--border);margin-top:1rem;padding-top:.75rem">
+      <button class="btn" onclick="document.getElementById('modal-foyer').classList.remove('open')">Fermer</button>
     </div>
   </div>
 </div>
@@ -1804,14 +1816,14 @@ function updatePreviews(){
 // Settings opened via user menu dropdown
 document.getElementById('modal-settings-close').onclick=()=>document.getElementById('modal-settings').classList.remove('open');
 document.getElementById('modal-settings').addEventListener('click',e=>{if(e.target.id==='modal-settings')document.getElementById('modal-settings').classList.remove('open');});
+document.getElementById('modal-foyer').addEventListener('click',e=>{if(e.target.id==='modal-foyer')document.getElementById('modal-foyer').classList.remove('open');});
 
 function switchSettingsTab(tab){
-  ['apparence','compte','securite','foyer'].forEach(t=>{
+  ['apparence','compte','securite'].forEach(t=>{
     document.getElementById('settings-tab-'+t).style.display=t===tab?'':'none';
     const btn=document.getElementById('stab-'+t);
     if(btn) btn.classList.toggle('active',t===tab);
   });
-  if(tab==='foyer') loadFoyerTab();
   if(tab==='compte'&&currentUser){
     document.getElementById('set-name').value=currentUser.name||'';
     document.getElementById('set-email').value=currentUser.email||'';
@@ -1835,6 +1847,11 @@ function switchSettingsTab(tab){
 function _foyerMsg(msg,color='var(--red)'){
   const el=document.getElementById('foyer-msg');
   if(el){el.textContent=msg;el.style.color=color;}
+}
+
+function openFoyerModal(){
+  document.getElementById('modal-foyer').classList.add('open');
+  loadFoyerTab();
 }
 
 function loadFoyerTab(){
@@ -1923,11 +1940,10 @@ async function leaveFoyer(){
   try{
     await API.household.leave();
     currentHousehold=null;
+    document.getElementById('modal-foyer').classList.remove('open');
     renderMemberTabs();
     initUserContext();
-    loadFoyerTab();
     renderDashboard();renderEntries();
-    _foyerMsg('Vous avez quitté le foyer.','var(--hint)');
   }catch(e){_foyerMsg(e.message||'Erreur');}
 }
 
