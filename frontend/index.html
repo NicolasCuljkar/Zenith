@@ -646,14 +646,14 @@ window.onerror = function(msg, src, line) {
     <div class="auth-logo">
       <svg width="96" height="96" viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="grad-auth" x1="0" y1="0" x2="60" y2="60" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#3B8BD4"/><stop offset="100%" stop-color="#e06fa0"/></linearGradient><filter id="glow" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="3" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><rect width="60" height="60" rx="16" fill="url(#grad-auth)"/><polyline points="10,42 20,28 29,35 45,14" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" filter="url(#glow)"/><circle cx="45" cy="14" r="4" fill="white" filter="url(#glow)"/><line x1="10" y1="48" x2="50" y2="48" stroke="white" stroke-width="1.5" stroke-opacity="0.3" stroke-linecap="round"/></svg>
       <div class="auth-title">ZÉNITH</div>
-      <div class="auth-sub">Choisissez votre profil</div>
+      <div class="auth-sub" id="login-sub">Bon retour !</div>
     </div>
     <div id="join-banner" style="display:none;padding:10px 14px;background:var(--blue)15;border:1px solid var(--blue)44;border-radius:var(--r);font-size:var(--fs-sm);color:var(--text);margin-bottom:12px;text-align:center">
       Invitation reçue — connectez-vous pour rejoindre le foyer.
     </div>
     <div class="auth-users-list" id="quick-users"></div>
     <!-- Divider + email login option -->
-    <div class="auth-divider" style="margin-top:1.25rem">ou</div>
+    <div class="auth-divider" id="login-divider" style="display:none;margin-top:1.25rem">ou</div>
     <div id="login-form-toggle" style="display:none;margin-top:.5rem" class="auth-form">
       <div class="auth-field"><label>E-mail</label><input type="email" id="login-email" placeholder="vous@exemple.fr" onkeydown="if(event.key==='Enter')doLogin()"></div>
       <div class="auth-field"><label>Mot de passe</label><input type="password" id="login-pwd" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"></div>
@@ -661,7 +661,7 @@ window.onerror = function(msg, src, line) {
       <button class="auth-btn" style="margin-top:1rem" onclick="doLogin()">Se connecter</button>
     </div>
     <div style="text-align:center;margin-top:.75rem">
-      <a style="color:var(--blue);cursor:pointer;font-size:var(--fs-sm);font-weight:500" onclick="const f=document.getElementById('login-form-toggle');f.style.display=f.style.display==='none'?'block':'none'">Se connecter avec un e-mail</a>
+      <a class="auth-switch-email" style="color:var(--blue);cursor:pointer;font-size:var(--fs-sm);font-weight:500" onclick="_showEmailLogin()">Se connecter avec un e-mail</a>
     </div>
     <div class="auth-switch">Pas encore de compte ? <a onclick="showScreen('register')">S'inscrire</a></div>
   </div>
@@ -4291,34 +4291,63 @@ function showScreen(id){
 }
 
 /**
- * renderQuickUsers() — Populate the profile picker from the backend API.
+ * renderQuickUsers() — Affiche uniquement le profil mémorisé sur cet appareil.
+ * Si aucun utilisateur mémorisé → formulaire email directement.
  */
 async function renderQuickUsers(){
   const list=document.getElementById('quick-users');
-  list.innerHTML='<div style="text-align:center;color:var(--hint);padding:12px;font-size:var(--fs-sm)">Chargement des profils…</div>';
+  const stored=API.auth.getLocalUser();
+
+  // Aucun utilisateur mémorisé sur cet appareil → email login direct
+  if(!stored){
+    list.innerHTML='';
+    _showEmailLogin();
+    return;
+  }
+
+  list.innerHTML='<div style="text-align:center;color:var(--hint);padding:12px;font-size:var(--fs-sm)">Chargement…</div>';
   try{
     users = await API.auth.getUsers();
-    // Update local photo/color cache from API data
     users.forEach(u=>{
-      if(u.photo)  profilePhotos[u.name]=u.photo;
-      if(u.color)  memberColors[u.name] =u.color;
+      if(u.photo) profilePhotos[u.name]=u.photo;
+      if(u.color) memberColors[u.name]=u.color;
     });
-    list.innerHTML=users.map(u=>`
-      <div class="auth-user-item" onclick="quickLogin(${u.id})">
-        ${avatarHtml(u.name,40,16)}
-        <div class="auth-user-name">${u.name}</div>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--hint)" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
-      </div>`).join('');
-    if(users.length===0){
-      list.innerHTML='<div style="text-align:center;color:var(--hint);padding:12px;font-size:var(--fs-sm)">Aucun profil · <a style="color:var(--blue);cursor:pointer" onclick="showScreen(\'register\')">Créer un compte</a></div>';
+    // Afficher uniquement l'utilisateur mémorisé
+    const me=users.find(u=>u.id===stored.id);
+    if(me){
+      const sub=document.getElementById('login-sub');
+      if(sub) sub.textContent=`Bon retour, ${me.name} !`;
+      list.innerHTML=`
+        <div class="auth-user-item" onclick="quickLogin(${me.id})" style="border:1.5px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:8px">
+          ${avatarHtml(me.name,44,17)}
+          <div class="auth-user-name" style="font-size:var(--fs-base);font-weight:600">${me.name}</div>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--hint)" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+        <div style="text-align:center;margin-top:4px">
+          <a style="font-size:var(--fs-xs);color:var(--hint);cursor:pointer;text-decoration:underline;text-underline-offset:2px" onclick="_showEmailLogin()">Ce n'est pas vous ?</a>
+        </div>`;
+    } else {
+      // Le compte mémorisé n'existe plus sur ce serveur
+      API.auth.logout();
+      list.innerHTML='';
+      _showEmailLogin();
     }
   }catch(err){
     console.warn('renderQuickUsers error',err);
-    list.innerHTML=`<div style="text-align:center;color:var(--red);padding:12px;font-size:var(--fs-sm)">
-      Impossible de contacter le serveur.<br>
-      <small style="color:var(--hint)">Vérifiez que le backend est démarré sur le port 3001.</small>
-    </div>`;
+    list.innerHTML=`<div style="text-align:center;color:var(--red);padding:12px;font-size:var(--fs-sm)">Impossible de contacter le serveur.</div>`;
   }
+}
+
+function _showEmailLogin(){
+  const formToggle=document.getElementById('login-form-toggle');
+  const divider=document.getElementById('login-divider');
+  const sub=document.getElementById('login-sub');
+  const emailLink=document.querySelector('#screen-login .auth-switch-email');
+  if(formToggle) formToggle.style.display='';
+  if(divider) divider.style.display='none';
+  if(sub) sub.textContent='Connectez-vous';
+  if(emailLink) emailLink.style.display='none';
+  setTimeout(()=>document.getElementById('login-email')?.focus(),80);
 }
 
 /**
