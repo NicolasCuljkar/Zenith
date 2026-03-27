@@ -47,4 +47,4 @@ async function test(req, res, next) {
   } catch (err) { next(err); }
 }
 
-module.exports = { getVapidKey, subscribe, unsubscribe, test };
+module.exports = { getVapidKey, subscribe, unsubscribe, test, debug };
