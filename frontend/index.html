@@ -275,12 +275,12 @@ tbody tr:hover td{background:var(--hover)}
 
 /* ── Mobile cards ── */
 .entry-cards{display:none}
-.entry-card{background:var(--surface);border:1px solid var(--border);border-left-width:3px;border-radius:var(--r);padding:12px 12px 10px 14px;margin-bottom:7px;transition:box-shadow .15s,transform .12s}
+.entry-card{background:var(--surface);border:1px solid var(--border);border-left-width:3px;border-radius:var(--r);padding:9px 10px 8px 12px;margin-bottom:5px;transition:box-shadow .15s,transform .12s}
 .entry-card:active{transform:scale(.99);box-shadow:var(--card-shadow)}
-.entry-card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:8px}
-.entry-card-meta{display:flex;gap:6px;align-items:center;flex-wrap:nowrap}
-.entry-card-actions{display:flex;gap:6px;margin-top:10px}
-.entry-group-hdr{display:flex;align-items:center;justify-content:space-between;padding:7px 12px;border-radius:8px;margin-bottom:8px;border:1px solid transparent}
+.entry-card-top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:5px}
+.entry-card-meta{display:flex;gap:5px;align-items:center;flex-wrap:nowrap}
+.entry-card-actions{display:flex;gap:6px;margin-top:8px}
+.entry-group-hdr{display:flex;align-items:center;justify-content:space-between;padding:5px 10px;border-radius:7px;margin-bottom:6px;border:1px solid transparent}
 
 /* ── Toolbar ── */
 .toolbar{display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap;align-items:center}
@@ -453,8 +453,9 @@ input[type=range]:hover::-moz-range-thumb{transform:scale(1.1)}
   .g2,.g3,.grid-chart{grid-template-columns:1fr;gap:.75rem}
   .tbl-wrap{display:none}.entry-cards{display:block}
   .toolbar{flex-direction:column;gap:6px}.toolbar-inputs{flex-direction:column;width:100%}
-  .search-inp{min-width:unset;width:100%}
-  .inp{width:100%;padding:10px 12px;min-height:44px}
+  .search-inp{min-width:unset}
+  .inp{padding:9px 10px;min-height:40px}
+  #entries-search .inp{width:auto}
   .btn-add-desktop{display:none!important}.fab{display:flex}
   .member-tabs{position:sticky;top:calc(var(--nav) + env(safe-area-inset-top,0px));z-index:90;background:var(--bg);padding:.3rem 0;margin-top:0;margin-bottom:.3rem;flex-wrap:nowrap;overflow-x:auto;box-shadow:none}
   .frow{grid-template-columns:1fr;gap:10px}
@@ -485,7 +486,7 @@ input[type=range]:hover::-moz-range-thumb{transform:scale(1.1)}
   /* cards */
   .card{padding:.75rem}
   /* entry card */
-  .entry-card{padding:9px}
+  .entry-card{padding:7px 8px 6px 10px}
   /* user menu */
   .user-menu-dropdown{min-width:160px;max-width:calc(100vw - 20px)}
   /* member tabs */
@@ -809,10 +810,10 @@ window.onerror = function(msg, src, line) {
     <div class="member-tabs" id="entries-mtabs"></div>
     <div id="entries-nodata" style="display:none"></div>
     <div class="kpi-grid" id="entries-summary" style="margin-bottom:1rem"></div>
-    <div id="entries-toolbar" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem">
-      <div id="entries-search" class="toolbar-inputs" style="flex:1;margin-right:8px">
-        <input type="text" id="search-input" class="inp search-inp" placeholder="Rechercher…">
-        <select id="filter-cat" class="inp">
+    <div id="entries-toolbar" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem;gap:8px">
+      <div id="entries-search" style="flex:1;display:flex;flex-direction:row;gap:6px;min-width:0">
+        <input type="text" id="search-input" class="inp search-inp" placeholder="Rechercher…" style="flex:1;min-width:0">
+        <select id="filter-cat" class="inp" style="flex-shrink:0;width:auto;max-width:140px">
           <option value="">Toutes catégories</option>
           <option value="revenu">Revenu</option><option value="impot">Impôt</option>
           <option value="fixe">Dépense fixe</option><option value="variable">Dépense variable</option>
@@ -2487,7 +2488,7 @@ function memberTableHtml(rows,isMobile,memberName){
           </div>
         </div>
         <div class="entry-card-meta">
-          <span class="badge" style="background:${c.bg};color:${c.text};border:${c.border};line-height:1.8">${c.label}</span>
+          <span class="badge" style="background:${c.bg};color:${c.text};border:${c.border};line-height:1.4">${c.label}</span>
         </div>
       </div>`}).join('')}
       </div></div>`;
@@ -2585,7 +2586,7 @@ function renderEntries(){
                 <span style="font-size:var(--fs-base);font-weight:700;color:${g.totColor}">${eur(tot)}</span>
               </div>
               <div class="entry-card-meta" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-                <span class="badge" style="background:${c.bg};color:${c.text};border:${c.border};line-height:1.8">${c.label}</span>
+                <span class="badge" style="background:${c.bg};color:${c.text};border:${c.border};line-height:1.4">${c.label}</span>
                 ${ea?`<span style="font-size:var(--fs-xs);color:${mc1};font-weight:600">${eur(Math.abs(ea.amount))}</span>`:''}
                 ${eb?`<span style="font-size:var(--fs-xs);color:${mc2};font-weight:600">${eur(Math.abs(eb.amount))}</span>`:''}
               </div>
