@@ -4131,6 +4131,7 @@ async function doRegister(){
  */
 async function doLogout(){
   API.auth.logout(); // clears localStorage token + user
+  localStorage.removeItem('zenith_last_activity');
   currentUser=null;
   entries=[];
   savings=[];
@@ -4150,7 +4151,12 @@ let _hiddenAt = null;
 
 function startInactivityTimer(){
   clearTimeout(_inactivityTimer);
+  localStorage.setItem('zenith_last_activity', Date.now());
   _inactivityTimer = setTimeout(()=>{ if(currentUser) doLogout(); }, INACTIVITY_MS);
+}
+function checkColdStartExpiry(){
+  const last = parseInt(localStorage.getItem('zenith_last_activity') || '0', 10);
+  return last > 0 && (Date.now() - last) >= INACTIVITY_MS;
 }
 function stopInactivityTimer(){
   clearTimeout(_inactivityTimer);
@@ -4164,6 +4170,7 @@ function stopInactivityTimer(){
 document.addEventListener('visibilitychange', ()=>{
   if(document.hidden){
     _hiddenAt = Date.now();
+    if(currentUser) localStorage.setItem('zenith_last_activity', _hiddenAt);
     stopInactivityTimer();
   } else {
     if(currentUser && _hiddenAt && (Date.now()-_hiddenAt) >= INACTIVITY_MS){
@@ -4615,6 +4622,14 @@ async function loadBankTransactions(requisitionId){
 async function initApp(){
   initTheme();
   updateMtabColors();
+
+  // Si l'app a été fermée depuis >=10 min, on invalide la session
+  if(API.auth.isLoggedIn() && checkColdStartExpiry()){
+    API.auth.logout();
+    localStorage.removeItem('zenith_last_activity');
+    showScreen('login');
+    return;
+  }
 
   // If a JWT is stored, try to resume the session
   if(API.auth.isLoggedIn()){
