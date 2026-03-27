@@ -405,7 +405,18 @@ const _bridge = {
  *   clearAuth: typeof clearAuth,
  * }}
  */
-const API = { auth: _auth, entries: _entries, savings: _savings, users: _users, bridge: _bridge, getToken, clearAuth };
+/**
+ * household — Foyer (household) management
+ */
+const _household = {
+  get:    ()     => get('/household'),
+  create: ()     => post('/household/create'),
+  invite: ()     => post('/household/invite'),
+  join:   (code) => post('/household/join', { code }),
+  leave:  ()     => request('/household/leave', { method: 'DELETE' }),
+};
+
+const API = { auth: _auth, entries: _entries, savings: _savings, users: _users, bridge: _bridge, household: _household, getToken, clearAuth };
 
 // Attach to window for global access in inline scripts
 if (typeof window !== 'undefined') {

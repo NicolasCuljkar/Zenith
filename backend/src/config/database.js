@@ -81,6 +81,29 @@ const migrations = [
   );
   CREATE INDEX IF NOT EXISTS idx_push_user ON push_subscriptions(user_id);`,
 
+  // v3 — système foyer (households)
+  `CREATE TABLE IF NOT EXISTS households (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    created_at TEXT    NOT NULL DEFAULT (datetime('now'))
+  );
+  CREATE TABLE IF NOT EXISTS household_members (
+    id           INTEGER PRIMARY KEY AUTOINCREMENT,
+    household_id INTEGER NOT NULL REFERENCES households(id) ON DELETE CASCADE,
+    user_id      INTEGER NOT NULL REFERENCES users(id)      ON DELETE CASCADE,
+    joined_at    TEXT    NOT NULL DEFAULT (datetime('now')),
+    UNIQUE(household_id, user_id)
+  );
+  CREATE TABLE IF NOT EXISTS household_invites (
+    id           INTEGER PRIMARY KEY AUTOINCREMENT,
+    household_id INTEGER NOT NULL REFERENCES households(id) ON DELETE CASCADE,
+    code         TEXT    NOT NULL UNIQUE,
+    expires_at   TEXT    NOT NULL,
+    created_at   TEXT    NOT NULL DEFAULT (datetime('now'))
+  );
+  CREATE INDEX IF NOT EXISTS idx_hm_household ON household_members(household_id);
+  CREATE INDEX IF NOT EXISTS idx_hm_user      ON household_members(user_id);
+  CREATE INDEX IF NOT EXISTS idx_hi_code      ON household_invites(code);`,
+
 ];
 
 // ── Apply pending migrations ──────────────────────────────────────────────────

@@ -30,7 +30,6 @@ function checkSavingsNotifications(saving, userId) {
         body:  `Félicitations ! Vous franchissez les ${fmt(milestone)} d'épargne !`,
         url:   '/index.html#savings',
       });
-      break;
     }
   }
 }

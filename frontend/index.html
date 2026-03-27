@@ -621,6 +621,7 @@ select.import-cell{cursor:pointer}
 </style>
 <script>(function(){if(localStorage.getItem('zenith_theme')!=='dark')document.documentElement.classList.add('light');})();</script>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
 <body>
 <!-- Diagnostic : affiche les erreurs JS en rouge sur la page -->
@@ -646,6 +647,9 @@ window.onerror = function(msg, src, line) {
       <svg width="96" height="96" viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="grad-auth" x1="0" y1="0" x2="60" y2="60" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#3B8BD4"/><stop offset="100%" stop-color="#e06fa0"/></linearGradient><filter id="glow" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="3" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><rect width="60" height="60" rx="16" fill="url(#grad-auth)"/><polyline points="10,42 20,28 29,35 45,14" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" filter="url(#glow)"/><circle cx="45" cy="14" r="4" fill="white" filter="url(#glow)"/><line x1="10" y1="48" x2="50" y2="48" stroke="white" stroke-width="1.5" stroke-opacity="0.3" stroke-linecap="round"/></svg>
       <div class="auth-title">ZÉNITH</div>
       <div class="auth-sub">Choisissez votre profil</div>
+    </div>
+    <div id="join-banner" style="display:none;padding:10px 14px;background:var(--blue)15;border:1px solid var(--blue)44;border-radius:var(--r);font-size:var(--fs-sm);color:var(--text);margin-bottom:12px;text-align:center">
+      Invitation reçue — connectez-vous pour rejoindre le foyer.
     </div>
     <div class="auth-users-list" id="quick-users"></div>
     <!-- Divider + email login option -->
@@ -1006,6 +1010,7 @@ window.onerror = function(msg, src, line) {
       <button class="stab active" id="stab-apparence" onclick="switchSettingsTab('apparence')">Apparence</button>
       <button class="stab" id="stab-compte" onclick="switchSettingsTab('compte')">Compte</button>
       <button class="stab" id="stab-securite" onclick="switchSettingsTab('securite')">Sécurité</button>
+      <button class="stab" id="stab-foyer" onclick="switchSettingsTab('foyer')">Foyer</button>
     </div>
 
     <!-- Tab Apparence : photo + couleur -->
@@ -1061,6 +1066,51 @@ window.onerror = function(msg, src, line) {
       </div>
       <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:1rem">
         <button class="btn-add" onclick="saveSettingsPassword()">Changer le mot de passe</button>
+      </div>
+    </div>
+
+    <!-- Tab Foyer -->
+    <div id="settings-tab-foyer" style="display:none">
+      <div id="foyer-msg" style="font-size:var(--fs-sm);min-height:16px;margin-bottom:10px"></div>
+
+      <!-- Solo state -->
+      <div id="foyer-solo">
+        <div style="padding:14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);margin-bottom:1rem;font-size:var(--fs-sm);color:var(--muted);line-height:1.6">
+          Vous êtes en mode <strong style="color:var(--text)">solo</strong>. Créez ou rejoignez un foyer pour partager les données avec un autre utilisateur et activer l'onglet <strong style="color:var(--text)">Commun</strong>.
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <button class="btn-add" onclick="createFoyer()">Créer un foyer</button>
+          <button class="btn" onclick="showFoyerJoin()">Rejoindre avec un code</button>
+        </div>
+      </div>
+
+      <!-- Join form -->
+      <div id="foyer-join-form" style="display:none;margin-top:10px">
+        <div class="fgrp">
+          <label>Code d'invitation (6 caractères)</label>
+          <input type="text" id="foyer-code-input" placeholder="ex: ABC123" maxlength="6" style="text-transform:uppercase;letter-spacing:.15em;font-size:var(--fs-title);text-align:center"
+            oninput="this.value=this.value.toUpperCase()">
+        </div>
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <button class="btn-add" onclick="confirmJoinFoyer()">Rejoindre</button>
+          <button class="btn" onclick="hideFoyerJoin()">Annuler</button>
+        </div>
+      </div>
+
+      <!-- Active household state -->
+      <div id="foyer-active" style="display:none">
+        <div id="foyer-members-list" style="margin-bottom:1rem"></div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <button class="btn-add" onclick="generateFoyerInvite()">Générer un QR code d'invitation</button>
+          <button class="btn btn-danger" onclick="leaveFoyer()" style="border-color:var(--red);color:var(--red)">Quitter le foyer</button>
+        </div>
+        <!-- QR section -->
+        <div id="foyer-qr-section" style="display:none;margin-top:1rem;text-align:center">
+          <div id="foyer-qr-code" style="display:inline-block;padding:12px;background:#fff;border-radius:var(--r);margin-bottom:10px"></div>
+          <div style="font-size:var(--fs-sm);color:var(--muted);margin-bottom:4px">Code manuel :</div>
+          <div id="foyer-invite-code" style="font-size:var(--fs-lg);font-weight:700;letter-spacing:.2em;color:var(--text);font-variant-numeric:tabular-nums"></div>
+          <div id="foyer-invite-expiry" style="font-size:var(--fs-xs);color:var(--hint);margin-top:4px"></div>
+        </div>
       </div>
     </div>
 
@@ -1357,12 +1407,14 @@ async function loadData(){
 
   showLoading();
   try{
-    const [apiEntries, apiSavings] = await Promise.all([
+    const [apiEntries, apiSavings, apiHousehold] = await Promise.all([
       API.entries.getAll(),
       API.savings.getAll(),
+      API.household.get().catch(() => null),
     ]);
     entries = apiEntries || [];
     savings = apiSavings || [];
+    currentHousehold = apiHousehold || null;
 
     // Sync profilePhotos from user objects (photo stored in DB)
     const apiUsers = await API.auth.getUsers();
@@ -1479,9 +1531,12 @@ function fsPx(varName){
 function cssCol(varName){return getComputedStyle(document.documentElement).getPropertyValue(varName).trim();}
 function myRole(){return currentUser?.name||currentUser?.role||users[0]?.name||'?';}
 function orderedMembers(){
-  const names=users.map(u=>u.name);
   const me=myRole();
-  return[me,...names.filter(n=>n!==me)];
+  if(currentHousehold&&currentHousehold.members&&currentHousehold.members.length>=2){
+    const names=currentHousehold.members.map(m=>m.name);
+    return[me,...names.filter(n=>n!==me)];
+  }
+  return[me];
 }
 // Returns true if current user can edit entries for the given member
 function canEdit(member){
@@ -1751,11 +1806,12 @@ document.getElementById('modal-settings-close').onclick=()=>document.getElementB
 document.getElementById('modal-settings').addEventListener('click',e=>{if(e.target.id==='modal-settings')document.getElementById('modal-settings').classList.remove('open');});
 
 function switchSettingsTab(tab){
-  ['apparence','compte','securite'].forEach(t=>{
+  ['apparence','compte','securite','foyer'].forEach(t=>{
     document.getElementById('settings-tab-'+t).style.display=t===tab?'':'none';
     const btn=document.getElementById('stab-'+t);
     if(btn) btn.classList.toggle('active',t===tab);
   });
+  if(tab==='foyer') loadFoyerTab();
   if(tab==='compte'&&currentUser){
     document.getElementById('set-name').value=currentUser.name||'';
     document.getElementById('set-email').value=currentUser.email||'';
@@ -1772,6 +1828,125 @@ function switchSettingsTab(tab){
     document.getElementById('set-pwd-msg').textContent='';
   }
 }
+// ══════════════════════════════════════════════
+// FOYER (HOUSEHOLD)
+// ══════════════════════════════════════════════
+
+function _foyerMsg(msg,color='var(--red)'){
+  const el=document.getElementById('foyer-msg');
+  if(el){el.textContent=msg;el.style.color=color;}
+}
+
+function loadFoyerTab(){
+  _foyerMsg('');
+  document.getElementById('foyer-qr-section').style.display='none';
+  document.getElementById('foyer-join-form').style.display='none';
+  if(currentHousehold&&currentHousehold.members){
+    document.getElementById('foyer-solo').style.display='none';
+    document.getElementById('foyer-active').style.display='';
+    // Render members list
+    const list=document.getElementById('foyer-members-list');
+    list.innerHTML=currentHousehold.members.map(m=>{
+      const color=getMC(m.name);
+      return `<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);margin-bottom:6px">
+        ${avatarHtml(m.name,36,13)}
+        <span style="font-weight:600;font-size:var(--fs-sm);color:var(--text)">${m.name}</span>
+        ${m.id===currentUser?.id?'<span style="margin-left:auto;font-size:var(--fs-xs);color:var(--hint)">Vous</span>':''}
+      </div>`;
+    }).join('');
+  } else {
+    document.getElementById('foyer-solo').style.display='';
+    document.getElementById('foyer-active').style.display='none';
+  }
+}
+
+async function createFoyer(){
+  _foyerMsg('');
+  try{
+    currentHousehold=await API.household.create();
+    renderMemberTabs();
+    initUserContext();
+    loadFoyerTab();
+    _foyerMsg('Foyer créé !','var(--green)');
+  }catch(e){_foyerMsg(e.message||'Erreur');}
+}
+
+function showFoyerJoin(){
+  document.getElementById('foyer-join-form').style.display='';
+  document.getElementById('foyer-code-input').value='';
+  setTimeout(()=>document.getElementById('foyer-code-input').focus(),80);
+}
+function hideFoyerJoin(){document.getElementById('foyer-join-form').style.display='none';}
+
+async function confirmJoinFoyer(){
+  const code=document.getElementById('foyer-code-input').value.trim().toUpperCase();
+  if(code.length!==6){_foyerMsg('Le code doit faire 6 caractères.');return;}
+  try{
+    currentHousehold=await API.household.join(code);
+    renderMemberTabs();
+    initUserContext();
+    loadFoyerTab();
+    _foyerMsg('Vous avez rejoint le foyer !','var(--green)');
+    // Reload data to see household members' entries
+    await loadData();
+    renderDashboard();renderEntries();
+  }catch(e){_foyerMsg(e.message||'Code invalide.');}
+}
+
+let _foyerQrInstance=null;
+async function generateFoyerInvite(){
+  _foyerMsg('');
+  try{
+    const inv=await API.household.invite();
+    document.getElementById('foyer-invite-code').textContent=inv.code;
+    const expiry=new Date(inv.expires_at);
+    const mins=Math.round((expiry-Date.now())/60000);
+    document.getElementById('foyer-invite-expiry').textContent=`Expire dans ${mins} min`;
+
+    // Build join URL
+    const joinUrl=`${window.location.origin}${window.location.pathname}?join=${inv.code}`;
+
+    // Generate QR
+    const qrEl=document.getElementById('foyer-qr-code');
+    qrEl.innerHTML='';
+    if(typeof QRCode!=='undefined'){
+      new QRCode(qrEl,{text:joinUrl,width:160,height:160,correctLevel:QRCode.CorrectLevel.M});
+    } else {
+      qrEl.textContent=joinUrl;
+    }
+    document.getElementById('foyer-qr-section').style.display='';
+  }catch(e){_foyerMsg(e.message||'Erreur');}
+}
+
+async function leaveFoyer(){
+  if(!confirm('Quitter le foyer ? L\'onglet Commun sera masqué.')) return;
+  try{
+    await API.household.leave();
+    currentHousehold=null;
+    renderMemberTabs();
+    initUserContext();
+    loadFoyerTab();
+    renderDashboard();renderEntries();
+    _foyerMsg('Vous avez quitté le foyer.','var(--hint)');
+  }catch(e){_foyerMsg(e.message||'Erreur');}
+}
+
+// Auto-join via URL ?join=CODE
+(function checkJoinParam(){
+  const params=new URLSearchParams(window.location.search);
+  const code=params.get('join');
+  if(!code) return;
+  const url=new URL(window.location.href);
+  url.searchParams.delete('join');
+  window.history.replaceState({},'',url.toString());
+  window._pendingJoinCode=code;
+  // Show banner on login screen (DOM may not be ready yet — defer)
+  setTimeout(()=>{
+    const b=document.getElementById('join-banner');
+    if(b) b.style.display='';
+  },0);
+})();
+
 async function saveSettingsProfile(){
   const name=document.getElementById('set-name').value.trim();
   const email=document.getElementById('set-email').value.trim();
@@ -1821,9 +1996,11 @@ async function saveSettingsPassword(){
 function renderMemberTabsFor(containerId, currentValue, setter, forSavings){
   const el=document.getElementById(containerId);
   if(!el) return;
-  const userList=users.length>0?users:[];
+  const userList=currentHousehold&&currentHousehold.members&&currentHousehold.members.length>=2
+    ?currentHousehold.members
+    :[];
   if(userList.length<=1){el.innerHTML='';return;}
-  const showCommun=!forSavings&&userList.length>=2;
+  const showCommun=!forSavings&&currentHousehold&&currentHousehold.members.length>=2;
   const av=(name)=>{
     const photo=profilePhotos[name], color=getMC(name);
     return photo
@@ -4024,6 +4201,8 @@ renderProjection=function(){_origRenderProjection.apply(this,arguments);setTimeo
 let currentUser = API.auth.getLocalUser();
 // Cached list of users for the profile picker
 let users = [];
+// Household (foyer) state: null = solo, object = { id, members: [...] }
+let currentHousehold = null;
 
 function showScreen(id){
   const splash=document.getElementById('screen-splash');
@@ -4151,6 +4330,15 @@ async function _doLoginWithCredentials(userIdOrEmail,password){
     if(result.user.photo) profilePhotos[result.user.name]=result.user.photo;
     showScreen('app');
     await loadData(); // fetch entries + savings from API
+    // Handle pending join code from ?join=CODE URL param
+    if(window._pendingJoinCode){
+      const code=window._pendingJoinCode;
+      window._pendingJoinCode=null;
+      try{
+        currentHousehold=await API.household.join(code);
+        await loadData();
+      }catch(e){console.warn('Auto-join failed:',e.message);}
+    }
     initUserContext();renderMemberTabs();updateNavForDataState();renderDashboard();renderEntries();
     registerPushSubscription();
   }catch(err){
@@ -4217,6 +4405,7 @@ async function doLogout(){
   API.auth.logout(); // clears localStorage token + user
   localStorage.removeItem('zenith_last_activity');
   currentUser=null;
+  currentHousehold=null;
   entries=[];
   savings=[];
   showScreen('login');
@@ -4272,12 +4461,13 @@ function initUserContext(){
   const myName=myRole();
   const userNames=users.map(u=>u.name);
   const isKnownUser=userNames.includes(myName);
-  // If only 1 user, default to that user; otherwise default to 'all' (Commun)
-  const defaultMember=users.length===1?users[0].name:(isKnownUser?myName:'all');
-  const defaultEntries=users.length===1?users[0].name:(isKnownUser?myName:'Commun');
+  const inHousehold=currentHousehold&&currentHousehold.members&&currentHousehold.members.length>=2;
+  // In household: default to 'all' (Commun); solo: default to own name
+  const defaultMember=inHousehold?(isKnownUser?myName:'all'):myName;
+  const defaultEntries=inHousehold?(isKnownUser?myName:'Commun'):myName;
   dashboardMember=defaultMember;
   entriesMember=defaultEntries;
-  savingsMember=users.length===1?users[0].name:(isKnownUser?myName:'all');
+  savingsMember=myName;
   analysisMember=defaultMember;
   projectionMember=defaultMember;
   conseilsMember=defaultMember;
@@ -4286,9 +4476,9 @@ function initUserContext(){
   // Populate entry modal member select
   const fm2=document.getElementById('f-member');
   if(fm2){
-    fm2.innerHTML=userNames.map(n=>`<option value="${n}">${n}</option>`).join('');
+    const communOpt=inHousehold?'<option value="Commun">Commun</option>':'';
+    fm2.innerHTML=userNames.map(n=>`<option value="${n}">${n}</option>`).join('')+communOpt;
     fm2.value=isKnownUser?myName:userNames[0]||'';
-    // Hide options user can't access
     if(isKnownUser){
       [...fm2.options].forEach(o=>{o.hidden=o.value!==myName&&o.value!=='Commun';});
     }
@@ -4732,7 +4922,13 @@ async function initApp(){
       // Show app screen and load data
       showScreen('app');
       try{
-        await loadData(); // fetches from API
+        await loadData(); // fetches from API (includes household)
+        if(window._pendingJoinCode){
+          const code=window._pendingJoinCode;
+          window._pendingJoinCode=null;
+          try{currentHousehold=await API.household.join(code);await loadData();}
+          catch(e){console.warn('Auto-join failed:',e.message);}
+        }
       }catch(err){
         console.warn('Session restore failed, forcing login',err);
         API.auth.logout();
