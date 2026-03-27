@@ -3953,8 +3953,8 @@ function showScreen(id){
   ['login','register','app'].forEach(s=>{document.getElementById('screen-'+s).style.display=s===id?(s==='app'?'block':'flex'):'none';});
   if(id==='login') renderQuickUsers();
   if(id==='register'){['reg-name','reg-email','reg-pwd','reg-pwd2'].forEach(i=>{const el=document.getElementById(i);if(el)el.value='';});const err=document.getElementById('reg-error');if(err)err.textContent='';}
-  if(id==='app'){updateTopbarAvatar();document.getElementById('btn-logout').style.display='';}
-  if(id==='login'||id==='register') document.getElementById('btn-logout').style.display='none';
+  if(id==='app'){updateTopbarAvatar();document.getElementById('btn-logout').style.display='';startInactivityTimer();}
+  if(id==='login'||id==='register'){document.getElementById('btn-logout').style.display='none';stopInactivityTimer();}
 }
 
 /**
@@ -4142,6 +4142,39 @@ window.addEventListener('zenith:unauthorized',()=>{
   currentUser=null;
   showScreen('login');
 });
+
+// ── Auto-logout : inactivité 10 min + retour d'arrière-plan ─────────────
+const INACTIVITY_MS = 10 * 60 * 1000;
+let _inactivityTimer = null;
+let _hiddenAt = null;
+
+function startInactivityTimer(){
+  clearTimeout(_inactivityTimer);
+  _inactivityTimer = setTimeout(()=>{ if(currentUser) doLogout(); }, INACTIVITY_MS);
+}
+function stopInactivityTimer(){
+  clearTimeout(_inactivityTimer);
+  _inactivityTimer = null;
+}
+
+['click','touchstart','keydown','scroll','mousemove'].forEach(evt=>
+  document.addEventListener(evt, ()=>{ if(currentUser) startInactivityTimer(); }, {passive:true})
+);
+
+document.addEventListener('visibilitychange', ()=>{
+  if(document.hidden){
+    _hiddenAt = Date.now();
+    stopInactivityTimer();
+  } else {
+    if(currentUser && _hiddenAt && (Date.now()-_hiddenAt) >= INACTIVITY_MS){
+      doLogout();
+    } else if(currentUser){
+      startInactivityTimer();
+    }
+    _hiddenAt = null;
+  }
+});
+// ── Fin auto-logout ──────────────────────────────────────────────────────
 document.getElementById('reg-pwd2').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();doRegister();}});
 
 function initUserContext(){
