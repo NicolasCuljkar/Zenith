@@ -652,16 +652,17 @@ window.onerror = function(msg, src, line) {
       Invitation reçue — connectez-vous pour rejoindre le foyer.
     </div>
     <div class="auth-users-list" id="quick-users"></div>
-    <!-- Divider + email login option -->
+    <!-- Lien "Ce n'est pas vous ?" affiché sous le profil mémorisé -->
+    <div id="login-not-you" style="display:none;text-align:center;margin-top:8px">
+      <a style="font-size:var(--fs-xs);color:var(--hint);cursor:pointer;text-decoration:underline;text-underline-offset:2px" onclick="_showEmailLogin()">Ce n'est pas vous ?</a>
+    </div>
+    <!-- Formulaire e-mail -->
     <div class="auth-divider" id="login-divider" style="display:none;margin-top:1.25rem">ou</div>
     <div id="login-form-toggle" style="display:none;margin-top:.5rem" class="auth-form">
       <div class="auth-field"><label>E-mail</label><input type="email" id="login-email" placeholder="vous@exemple.fr" onkeydown="if(event.key==='Enter')doLogin()"></div>
       <div class="auth-field"><label>Mot de passe</label><input type="password" id="login-pwd" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"></div>
       <div class="auth-error" id="login-error">Identifiants incorrects.</div>
       <button class="auth-btn" style="margin-top:1rem" onclick="doLogin()">Se connecter</button>
-    </div>
-    <div style="text-align:center;margin-top:.75rem">
-      <a class="auth-switch-email" style="color:var(--blue);cursor:pointer;font-size:var(--fs-sm);font-weight:500" onclick="_showEmailLogin()">Se connecter avec un e-mail</a>
     </div>
     <div class="auth-switch">Pas encore de compte ? <a onclick="showScreen('register')">S'inscrire</a></div>
   </div>
@@ -4324,14 +4325,13 @@ async function renderQuickUsers(){
       const sub=document.getElementById('login-sub');
       if(sub) sub.textContent=`Bon retour, ${me.name} !`;
       list.innerHTML=`
-        <div class="auth-user-item" onclick="quickLogin(${me.id})" style="border:1.5px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:8px">
+        <div class="auth-user-item" onclick="quickLogin(${me.id})" style="border:1.5px solid var(--border);border-radius:14px;padding:14px 16px">
           ${avatarHtml(me.name,44,17)}
           <div class="auth-user-name" style="font-size:var(--fs-base);font-weight:600">${me.name}</div>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--hint)" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
-        </div>
-        <div style="text-align:center;margin-top:4px">
-          <a style="font-size:var(--fs-xs);color:var(--hint);cursor:pointer;text-decoration:underline;text-underline-offset:2px" onclick="_showEmailLogin()">Ce n'est pas vous ?</a>
         </div>`;
+      const notYou=document.getElementById('login-not-you');
+      if(notYou) notYou.style.display='';
     } else {
       // Le compte mémorisé n'existe plus sur ce serveur
       API.auth.logout();
@@ -4345,14 +4345,14 @@ async function renderQuickUsers(){
 }
 
 function _showEmailLogin(){
+  const list=document.getElementById('quick-users');
+  const notYou=document.getElementById('login-not-you');
   const formToggle=document.getElementById('login-form-toggle');
-  const divider=document.getElementById('login-divider');
   const sub=document.getElementById('login-sub');
-  const emailLink=document.querySelector('#screen-login .auth-switch-email');
+  if(list) list.innerHTML='';
+  if(notYou) notYou.style.display='none';
   if(formToggle) formToggle.style.display='';
-  if(divider) divider.style.display='none';
-  if(sub) sub.textContent='Connectez-vous';
-  if(emailLink) emailLink.style.display='none';
+  if(sub) sub.textContent='Connexion';
   setTimeout(()=>document.getElementById('login-email')?.focus(),80);
 }
 
