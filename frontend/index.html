@@ -246,6 +246,15 @@ html.dark .kpi-tooltip{box-shadow:0 8px 24px rgba(0,0,0,.4)}
 .flow-leg-bar{height:3px;background:var(--border);border-radius:2px;overflow:hidden}
 .flow-leg-bar-fill{height:100%;border-radius:2px;transition:width .4s}
 .flow-leg-pct{font-size:var(--fs-base);font-weight:800;min-width:38px;text-align:right;flex-shrink:0}
+@media(max-width:639px){
+  .flow-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+  .flow-leg-item{flex-direction:column;align-items:flex-start;gap:0;padding:11px 12px 10px}
+  .flow-leg-accent{width:28px;height:4px;border-radius:2px;margin-bottom:9px}
+  .flow-leg-label{margin-bottom:5px;font-size:9px;letter-spacing:.07em}
+  .flow-leg-value{font-size:var(--fs-title);font-weight:800;margin-bottom:3px;white-space:nowrap}
+  .flow-leg-bar{display:none}
+  .flow-leg-pct{font-size:var(--fs-sm);font-weight:700;text-align:left;min-width:0}
+}
 
 /* ── Cards ── */
 .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:1.25rem;margin-bottom:var(--sg);box-shadow:var(--card-shadow)}
