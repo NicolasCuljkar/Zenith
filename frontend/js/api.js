@@ -19,8 +19,9 @@ const API_BASE = (window.location.hostname === 'localhost' || window.location.ho
   : '/api';
 
 // LocalStorage keys
-const TOKEN_KEY = 'zenith_token';
-const USER_KEY  = 'zenith_user';
+const TOKEN_KEY   = 'zenith_token';
+const USER_KEY    = 'zenith_user';
+const PROFILE_KEY = 'zenith_last_profile'; // survit à la déconnexion
 
 // ── Token helpers ──────────────────────────────────────────────────────────────
 
@@ -37,8 +38,13 @@ function getToken() {
 
 /** Store user object in localStorage */
 function setStoredUser(user) {
-  if (user) localStorage.setItem(USER_KEY, JSON.stringify(user));
-  else      localStorage.removeItem(USER_KEY);
+  if (user) {
+    localStorage.setItem(USER_KEY, JSON.stringify(user));
+    // Profil minimal persisté même après déconnexion (pour l'accès rapide)
+    localStorage.setItem(PROFILE_KEY, JSON.stringify({ id: user.id, name: user.name, color: user.color, photo: user.photo }));
+  } else {
+    localStorage.removeItem(USER_KEY);
+  }
 }
 
 /** Retrieve stored user object */
@@ -50,10 +56,11 @@ function getStoredUser() {
   }
 }
 
-/** Clear auth data from localStorage */
+/** Clear auth data from localStorage (conserve zenith_last_profile pour l'accès rapide) */
 function clearAuth() {
   localStorage.removeItem(TOKEN_KEY);
   localStorage.removeItem(USER_KEY);
+  // PROFILE_KEY intentionnellement conservé
 }
 
 // ── Core fetch wrapper ─────────────────────────────────────────────────────────

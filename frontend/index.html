@@ -4296,7 +4296,9 @@ function showScreen(id){
  */
 async function renderQuickUsers(){
   const list=document.getElementById('quick-users');
-  const stored=API.auth.getLocalUser();
+  // Utilise le profil persistant (survit à la déconnexion)
+  let stored;
+  try{ stored=JSON.parse(localStorage.getItem('zenith_last_profile')||'null'); }catch(_){ stored=null; }
 
   // Aucun utilisateur mémorisé sur cet appareil → email login direct
   if(!stored){
