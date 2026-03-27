@@ -64,6 +64,7 @@ async function sendToUser(userId, payload) {
         body
       );
     } catch (err) {
+      console.error(`[Push] Erreur envoi sub ${sub.id}:`, err.statusCode, err.message);
       // Subscription expirée ou invalide → on la supprime
       if (err.statusCode === 410 || err.statusCode === 404) {
         db.prepare('DELETE FROM push_subscriptions WHERE id = ?').run(sub.id);

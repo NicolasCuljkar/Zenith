@@ -28,6 +28,14 @@ async function unsubscribe(req, res, next) {
   } catch (err) { next(err); }
 }
 
+async function debug(req, res, next) {
+  try {
+    const db = require('../config/database');
+    const subs = db.prepare('SELECT id, endpoint FROM push_subscriptions WHERE user_id = ?').all(req.user.id);
+    res.json({ success: true, data: { count: subs.length, endpoints: subs.map(s => s.endpoint.slice(0, 60) + '...') } });
+  } catch (err) { next(err); }
+}
+
 async function test(req, res, next) {
   try {
     await notifService.sendToUser(req.user.id, {

@@ -10,5 +10,6 @@ router.get('/vapid-key',    ctrl.getVapidKey);
 router.post('/subscribe',   requireAuth, ctrl.subscribe);
 router.delete('/subscribe', requireAuth, ctrl.unsubscribe);
 router.post('/test',        requireAuth, ctrl.test);
+router.get('/debug',        requireAuth, ctrl.debug);
 
 module.exports = router;
