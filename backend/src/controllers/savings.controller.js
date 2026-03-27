@@ -23,14 +23,13 @@ function checkSavingsNotifications(saving, userId) {
     });
   }
 
-  for (const milestone of MILESTONES) {
-    if (prevAmount < milestone && amount >= milestone) {
-      notifService.sendToUser(userId, {
-        title: `🎯 Palier atteint — ${member}`,
-        body:  `Félicitations ! Vous franchissez les ${fmt(milestone)} d'épargne !`,
-        url:   '/index.html#savings',
-      });
-    }
+  const topMilestone = MILESTONES.filter(m => prevAmount < m && amount >= m).pop();
+  if (topMilestone) {
+    notifService.sendToUser(userId, {
+      title: `🎯 Palier atteint — ${member}`,
+      body:  `Félicitations ! Vous franchissez les ${fmt(topMilestone)} d'épargne !`,
+      url:   '/index.html#savings',
+    });
   }
 }
 
