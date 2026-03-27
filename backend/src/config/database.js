@@ -66,8 +66,20 @@ const migrations = [
   CREATE INDEX IF NOT EXISTS idx_savings_member ON savings(member);
   CREATE INDEX IF NOT EXISTS idx_savings_year   ON savings(year);`,
 
-  // ── Ajouter vos futures migrations ici, par exemple :
-  // v2 — ALTER TABLE entries ADD COLUMN notes TEXT;
+  // v2 — config (clés VAPID) + push_subscriptions
+  `CREATE TABLE IF NOT EXISTS config (
+    key   TEXT PRIMARY KEY,
+    value TEXT NOT NULL
+  );
+  CREATE TABLE IF NOT EXISTS push_subscriptions (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    endpoint   TEXT    NOT NULL UNIQUE,
+    p256dh     TEXT    NOT NULL,
+    auth       TEXT    NOT NULL,
+    created_at TEXT    NOT NULL DEFAULT (datetime('now'))
+  );
+  CREATE INDEX IF NOT EXISTS idx_push_user ON push_subscriptions(user_id);`,
 
 ];
 

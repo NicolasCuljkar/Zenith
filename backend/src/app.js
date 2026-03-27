@@ -8,14 +8,18 @@ const path      = require('path');
 const fs        = require('fs');
 const rateLimit = require('express-rate-limit');
 
-const authRoutes    = require('./routes/auth.routes');
-const entriesRoutes = require('./routes/entries.routes');
-const savingsRoutes = require('./routes/savings.routes');
-const usersRoutes   = require('./routes/users.routes');
+const authRoutes          = require('./routes/auth.routes');
+const entriesRoutes       = require('./routes/entries.routes');
+const savingsRoutes       = require('./routes/savings.routes');
+const usersRoutes         = require('./routes/users.routes');
+const notificationsRoutes = require('./routes/notifications.routes');
+const notifService        = require('./services/notifications.service');
 
 const { errorHandler, notFoundHandler } = require('./middleware/error.middleware');
 
 require('./config/database');
+notifService.init();
+notifService.startScheduler();
 
 const app  = express();
 const PORT = process.env.PORT || 3001;
@@ -46,10 +50,11 @@ const loginLimiter = rateLimit({
 
 app.use('/api/auth/login',    loginLimiter);
 app.use('/api/auth/register', loginLimiter);
-app.use('/api/auth',    authRoutes);
-app.use('/api/entries', entriesRoutes);
-app.use('/api/savings', savingsRoutes);
-app.use('/api/users',   usersRoutes);
+app.use('/api/auth',          authRoutes);
+app.use('/api/entries',       entriesRoutes);
+app.use('/api/savings',       savingsRoutes);
+app.use('/api/users',         usersRoutes);
+app.use('/api/notifications', notificationsRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({ success: true, status: 'ok', env: process.env.NODE_ENV || 'development' });
