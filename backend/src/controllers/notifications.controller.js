@@ -28,4 +28,15 @@ async function unsubscribe(req, res, next) {
   } catch (err) { next(err); }
 }
 
-module.exports = { getVapidKey, subscribe, unsubscribe };
+async function test(req, res, next) {
+  try {
+    await notifService.sendToUser(req.user.id, {
+      title: '🔔 Test — Zénith',
+      body:  'Les notifications fonctionnent correctement !',
+      url:   '/',
+    });
+    res.json({ success: true });
+  } catch (err) { next(err); }
+}
+
+module.exports = { getVapidKey, subscribe, unsubscribe, test };
