@@ -29,4 +29,9 @@ async function leaveHousehold(req, res, next) {
   catch (err) { next(err); }
 }
 
-module.exports = { getHousehold, createHousehold, generateInvite, joinHousehold, leaveHousehold };
+async function deleteHousehold(req, res, next) {
+  try { res.json({ success: true, data: svc.deleteHousehold(req.user.id) }); }
+  catch (err) { next(err); }
+}
+
+module.exports = { getHousehold, createHousehold, generateInvite, joinHousehold, leaveHousehold, deleteHousehold };

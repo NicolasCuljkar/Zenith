@@ -631,6 +631,7 @@ select.import-cell{cursor:pointer}
 <script>(function(){if(localStorage.getItem('zenith_theme')!=='dark')document.documentElement.classList.add('light');})();</script>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
 </head>
 <body>
 <!-- Diagnostic : affiche les erreurs JS en rouge sur la page -->
@@ -1127,7 +1128,7 @@ window.onerror = function(msg, src, line) {
           </div>
         </div>
         <div style="font-size:var(--fs-sm);color:var(--muted);line-height:1.55;max-width:260px;margin:0 auto">
-          Invitez un proche pour partager vos budgets et activer l'onglet <strong style="color:var(--text)">Commun</strong>.
+          Invitez un proche pour partager vos budgets et activer l'onglet <strong style="color:var(--text)">Foyer</strong>.
         </div>
       </div>
       <div style="display:flex;flex-direction:column;gap:10px;margin-top:4px">
@@ -1139,6 +1140,25 @@ window.onerror = function(msg, src, line) {
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
           Rejoindre avec un code
         </button>
+        <button onclick="openQRScanner()" style="width:100%;padding:12px 20px;border-radius:12px;border:1.5px solid var(--border);background:var(--surface2);color:var(--text);font-size:var(--fs-base);font-weight:500;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;transition:border-color .15s,background .12s" onmouseover="this.style.borderColor='var(--green)'" onmouseout="this.style.borderColor='var(--border)'">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 7 23 1 17 1"/><polyline points="1 17 1 23 7 23"/><polyline points="23 17 23 23 17 23"/><polyline points="1 7 1 1 7 1"/><rect x="7" y="7" width="10" height="10" rx="1"/></svg>
+          Scanner un QR code
+        </button>
+      </div>
+
+      <!-- QR Scanner panel -->
+      <div id="foyer-scanner-container" style="display:none;margin-top:12px">
+        <div style="position:relative;border-radius:14px;overflow:hidden;background:#000;aspect-ratio:1/1;max-height:280px">
+          <video id="foyer-scanner-video" style="width:100%;height:100%;object-fit:cover" muted playsinline autoplay></video>
+          <canvas id="foyer-scanner-canvas" style="display:none"></canvas>
+          <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none">
+            <div style="width:60%;aspect-ratio:1/1;border:2.5px solid rgba(255,255,255,.7);border-radius:12px;box-shadow:0 0 0 9999px rgba(0,0,0,.35)"></div>
+          </div>
+          <div style="position:absolute;bottom:0;left:0;right:0;padding:10px;text-align:center">
+            <span style="font-size:var(--fs-xs);color:rgba(255,255,255,.8);font-weight:500">Pointez vers le QR code</span>
+          </div>
+        </div>
+        <button onclick="closeQRScanner()" style="width:100%;margin-top:8px;padding:10px 16px;border-radius:10px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-size:var(--fs-sm);font-weight:500;cursor:pointer;font-family:inherit;transition:background .12s" onmouseover="this.style.background='var(--hover)'" onmouseout="this.style.background='var(--surface2)'">Annuler le scan</button>
       </div>
     </div>
 
@@ -1177,9 +1197,13 @@ window.onerror = function(msg, src, line) {
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
           Générer un QR code d'invitation
         </button>
-        <button onclick="leaveFoyer()" style="width:100%;padding:11px 20px;border-radius:12px;border:1.5px solid var(--red-bg,#fdf0f0);background:transparent;color:var(--red);font-size:var(--fs-sm);font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;transition:background .12s" onmouseover="this.style.background='var(--red-bg,#fdf0f0)'" onmouseout="this.style.background='transparent'">
+        <button id="foyer-btn-leave" onclick="leaveFoyer()" style="width:100%;padding:11px 20px;border-radius:12px;border:1.5px solid var(--red-bg,#fdf0f0);background:transparent;color:var(--red);font-size:var(--fs-sm);font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;transition:background .12s" onmouseover="this.style.background='var(--red-bg,#fdf0f0)'" onmouseout="this.style.background='transparent'">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
           Quitter le foyer
+        </button>
+        <button id="foyer-btn-delete" onclick="deleteFoyer()" style="display:none;width:100%;padding:11px 20px;border-radius:12px;border:1.5px solid var(--red);background:var(--red);color:#fff;font-size:var(--fs-sm);font-weight:600;cursor:pointer;font-family:inherit;display:none;align-items:center;justify-content:center;gap:8px;transition:opacity .12s" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+          Supprimer le foyer
         </button>
       </div>
     </div>
@@ -1874,7 +1898,7 @@ function updatePreviews(){
 // Settings opened via user menu dropdown
 document.getElementById('modal-settings-close').onclick=()=>document.getElementById('modal-settings').classList.remove('open');
 document.getElementById('modal-settings').addEventListener('click',e=>{if(e.target.id==='modal-settings')document.getElementById('modal-settings').classList.remove('open');});
-document.getElementById('modal-foyer').addEventListener('click',e=>{if(e.target.id==='modal-foyer')document.getElementById('modal-foyer').classList.remove('open');});
+document.getElementById('modal-foyer').addEventListener('click',e=>{if(e.target.id==='modal-foyer'){closeQRScanner();document.getElementById('modal-foyer').classList.remove('open');}});
 
 function switchSettingsTab(tab){
   ['apparence','compte','securite'].forEach(t=>{
@@ -1918,6 +1942,7 @@ function _foyerMsg(msg,color='var(--red)'){
 }
 
 function openFoyerModal(){
+  closeQRScanner();
   document.getElementById('modal-foyer').classList.add('open');
   loadFoyerTab();
 }
@@ -1935,15 +1960,23 @@ function loadFoyerTab(){
     list.innerHTML=currentHousehold.members.map((m,i)=>{
       const color=getMC(m.name);
       const isMe=m.id===currentUser?.id;
+      const isCreator=m.id===currentHousehold.creator_id;
       return `<div style="display:flex;align-items:center;gap:12px;padding:11px 14px;background:var(--surface2);border:1px solid ${isMe?color+'44':'var(--border)'};border-radius:12px;margin-bottom:7px${i===0?';border-left:3px solid '+color:''}">
         ${avatarHtml(m.name,38,14)}
         <div>
           <div style="font-weight:600;font-size:var(--fs-base);color:var(--text)">${m.name}</div>
-          ${isMe?`<div style="font-size:var(--fs-xs);color:var(--hint)">Vous</div>`:''}
+          ${isMe?`<div style="font-size:var(--fs-xs);color:var(--hint)">Vous${isCreator?' · Créateur':''}</div>`:''}
+          ${!isMe&&isCreator?`<div style="font-size:var(--fs-xs);color:var(--hint)">Créateur</div>`:''}
         </div>
         ${isMe?`<div style="margin-left:auto;width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green)55"></div>`:''}
       </div>`;
     }).join('');
+    // Show delete button only for creator, leave button only for non-creators
+    const amCreator = currentHousehold.creator_id === currentUser?.id;
+    const btnLeave  = document.getElementById('foyer-btn-leave');
+    const btnDelete = document.getElementById('foyer-btn-delete');
+    if(btnLeave)  { btnLeave.style.display  = amCreator ? 'none' : 'flex'; }
+    if(btnDelete) { btnDelete.style.display = amCreator ? 'flex' : 'none'; }
   } else {
     document.getElementById('foyer-solo').style.display='';
     document.getElementById('foyer-active').style.display='none';
@@ -2010,7 +2043,7 @@ async function generateFoyerInvite(){
 }
 
 async function leaveFoyer(){
-  if(!confirm('Quitter le foyer ? L\'onglet Commun sera masqué.')) return;
+  if(!confirm('Quitter le foyer ? L\'onglet Foyer sera masqué.')) return;
   try{
     await API.household.leave();
     currentHousehold=null;
@@ -2019,6 +2052,98 @@ async function leaveFoyer(){
     initUserContext();
     renderDashboard();renderEntries();
   }catch(e){_foyerMsg(e.message||'Erreur');}
+}
+
+async function deleteFoyer(){
+  if(!confirm('Supprimer définitivement le foyer ? Tous les membres seront exclus. Cette action est irréversible.')) return;
+  try{
+    await API.household.delete();
+    currentHousehold=null;
+    document.getElementById('modal-foyer').classList.remove('open');
+    renderMemberTabs();
+    initUserContext();
+    renderDashboard();renderEntries();
+  }catch(e){_foyerMsg(e.message||'Erreur');}
+}
+
+let _scannerStream=null,_scanInterval=null;
+
+async function openQRScanner(){
+  closeQRScanner();
+  hideFoyerJoin();
+  const container=document.getElementById('foyer-scanner-container');
+  if(!navigator.mediaDevices?.getUserMedia){
+    _foyerMsg('Caméra non disponible. Saisissez le code manuellement.');
+    showFoyerJoin();return;
+  }
+  try{
+    _scannerStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment',width:{ideal:640},height:{ideal:640}}});
+    const video=document.getElementById('foyer-scanner-video');
+    video.srcObject=_scannerStream;
+    await video.play();
+    container.style.display='';
+    const canvas=document.getElementById('foyer-scanner-canvas');
+    const ctx=canvas.getContext('2d');
+    const tryDecode=()=>{
+      if(!_scannerStream)return;
+      try{
+        canvas.width=video.videoWidth||320;
+        canvas.height=video.videoHeight||320;
+        ctx.drawImage(video,0,0,canvas.width,canvas.height);
+        const imgData=ctx.getImageData(0,0,canvas.width,canvas.height);
+        if(typeof jsQR==='function'){
+          const result=jsQR(imgData.data,imgData.width,imgData.height,{inversionAttempts:'dontInvert'});
+          if(result){handleQRResult(result.data);return;}
+        }
+      }catch(_){}
+      _scanInterval=setTimeout(tryDecode,300);
+    };
+    if(typeof BarcodeDetector!=='undefined'){
+      const detector=new BarcodeDetector({formats:['qr_code']});
+      const bdLoop=async()=>{
+        if(!_scannerStream)return;
+        try{const codes=await detector.detect(video);if(codes.length){handleQRResult(codes[0].rawValue);return;}}catch(_){}
+        _scanInterval=setTimeout(bdLoop,300);
+      };
+      video.addEventListener('playing',()=>bdLoop(),{once:true});
+    } else {
+      video.addEventListener('playing',()=>tryDecode(),{once:true});
+    }
+  }catch(err){
+    _foyerMsg('Impossible d\'accéder à la caméra. Saisissez le code manuellement.');
+    showFoyerJoin();
+  }
+}
+
+function closeQRScanner(){
+  clearTimeout(_scanInterval);_scanInterval=null;
+  if(_scannerStream){_scannerStream.getTracks().forEach(t=>t.stop());_scannerStream=null;}
+  const video=document.getElementById('foyer-scanner-video');
+  if(video)video.srcObject=null;
+  const c=document.getElementById('foyer-scanner-container');
+  if(c)c.style.display='none';
+}
+
+function handleQRResult(value){
+  closeQRScanner();
+  try{
+    const url=new URL(value);
+    const code=url.searchParams.get('join');
+    if(code&&code.length===6){
+      document.getElementById('foyer-code-input').value=code.toUpperCase();
+      showFoyerJoin();
+      confirmJoinFoyer();return;
+    }
+  }catch(_){}
+  const raw=value.trim().toUpperCase();
+  if(/^[A-Z0-9]{6}$/.test(raw)){
+    document.getElementById('foyer-code-input').value=raw;
+    showFoyerJoin();
+    confirmJoinFoyer();
+  }else{
+    _foyerMsg('QR code non reconnu. Saisissez le code manuellement.');
+    showFoyerJoin();
+  }
 }
 
 // Auto-join via URL ?join=CODE
@@ -2113,7 +2238,7 @@ function renderMemberTabsFor(containerId, currentValue, setter, forSavings){
       ?`<span style="display:inline-flex;align-items:center">${av(userList[0].name)}<span style="margin-left:-6px">${av(userList[1].name)}</span></span>`
       :'';
     const activeStyle=activeAll?`background:linear-gradient(90deg,${c1}22,${c2}22);border-color:${mid};color:var(--text)`:'';
-    html+=`<button class="mtab mtab-all${activeAll?' active':''}" data-tab-value="all" style="${activeStyle}" onclick="${setter}('all')">${dualAv}Commun</button>`;
+    html+=`<button class="mtab mtab-all${activeAll?' active':''}" data-tab-value="all" style="${activeStyle}" onclick="${setter}('all')">${dualAv}Foyer</button>`;
   }
   el.innerHTML=html;
 }
@@ -2746,16 +2871,14 @@ function memberTableHtml(rows,isMobile,memberName){
       </div>
       <div id="${uid}">
       ${gRows.map(e=>{const c=CATS[e.cat];const amtColor=['revenu'].includes(e.cat)?'var(--green)':['impot'].includes(e.cat)?'var(--amber)':'var(--red)';return`<div class="entry-card" draggable="${canEdit(e.member)}" data-id="${e.id}" style="border-left-color:${c.hex}">
-        <div class="entry-card-top">
+        <div class="entry-card-top" style="margin-bottom:0">
           ${canEdit(e.member)?DRAG_HANDLE:''}
+          <span class="badge" style="background:${c.bg};color:${c.text};border:${c.border};line-height:1.4;flex-shrink:0">${c.label}</span>
           <span style="font-weight:600;font-size:var(--fs-md);flex:1;line-height:1.35;padding-top:1px">${e.name}</span>
           <div style="display:flex;align-items:center;gap:5px;flex-shrink:0">
             <span style="font-size:var(--fs-base);font-weight:700;color:${amtColor}">${eur(Math.abs(e.amount))}</span>
             ${canEdit(e.member)?`<button class="btn-act" onclick="openEditEntry(${e.id})"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="btn-act btn-act-danger" onclick="deleteEntry(${e.id})"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg></button>`:'<span style="width:52px"></span>'}
           </div>
-        </div>
-        <div class="entry-card-meta">
-          <span class="badge" style="background:${c.bg};color:${c.text};border:${c.border};line-height:1.4">${c.label}</span>
         </div>
       </div>`}).join('')}
       </div></div>`;
@@ -2848,15 +2971,15 @@ function renderEntries(){
             const c=CATS[(ea||eb)?.cat];
             const tot=(Math.abs(ea?.amount||0)+Math.abs(eb?.amount||0));
             return`<div class="entry-card" style="border-left-color:${c.hex}">
-              <div class="entry-card-top">
+              <div class="entry-card-top" style="margin-bottom:${ea||eb?'4px':'0'}">
+                <span class="badge" style="background:${c.bg};color:${c.text};border:${c.border};line-height:1.4;flex-shrink:0">${c.label}</span>
                 <span style="font-weight:600;font-size:var(--fs-md);flex:1;line-height:1.35">${name}</span>
                 <span style="font-size:var(--fs-base);font-weight:700;color:${g.totColor}">${eur(tot)}</span>
               </div>
-              <div class="entry-card-meta" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-                <span class="badge" style="background:${c.bg};color:${c.text};border:${c.border};line-height:1.4">${c.label}</span>
+              ${(ea||eb)?`<div class="entry-card-meta" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
                 ${ea?`<span style="font-size:var(--fs-xs);color:${mc1};font-weight:600">${eur(Math.abs(ea.amount))}</span>`:''}
                 ${eb?`<span style="font-size:var(--fs-xs);color:${mc2};font-weight:600">${eur(Math.abs(eb.amount))}</span>`:''}
-              </div>
+              </div>`:''}
             </div>`;
           }).join('')}
         </div>`;
@@ -3051,10 +3174,10 @@ document.getElementById('modal-entry-save').onclick=async ()=>{
 // ══════════════════════════════════════════════
 // SAVINGS
 // ══════════════════════════════════════════════
-document.querySelectorAll('.stab').forEach(btn=>{
+document.querySelectorAll('#tab-savings .stab').forEach(btn=>{
   btn.addEventListener('click',()=>{
     savingsStabActive=btn.dataset.stab;
-    document.querySelectorAll('.stab').forEach(b=>b.classList.remove('active'));btn.classList.add('active');
+    document.querySelectorAll('#tab-savings .stab').forEach(b=>b.classList.remove('active'));btn.classList.add('active');
     const isYear=savingsStabActive==='year';
     document.getElementById('btn-add-saving').style.display=isYear?'none':'';
     document.getElementById('fab-saving').style.display=isYear?'none':(currentTab==='savings'?'':'none');
@@ -4552,8 +4675,8 @@ window.addEventListener('zenith:unauthorized',()=>{
 // ── Verrou session ────────────────────────────────────────────────────────
 // Délai de grâce : si l'app revient en moins de GRACE_MS, pas de verrou.
 // Sinon, le mot de passe est requis (sans full logout — données conservées).
-const GRACE_MS        = 30 * 1000;   // 30 secondes de grâce
-const IDLE_LOGOUT_MS  = 20 * 60 * 1000; // 20 min sans interaction → logout complet
+const GRACE_MS        = 10 * 60 * 1000; // 10 minutes de grâce
+const IDLE_LOGOUT_MS  = 30 * 60 * 1000; // 30 min sans interaction → logout complet
 
 let _inactivityTimer = null;
 let _hiddenAt        = null;

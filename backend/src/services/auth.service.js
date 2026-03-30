@@ -17,7 +17,7 @@ function httpError(message, statusCode) {
 
 function createToken(user) {
   return jwt.sign(
-    { id: user.id, name: user.name, email: user.email, role: user.role },
+    { id: user.id, name: user.name, email: user.email, role: user.role, is_admin: user.is_admin || 0 },
     JWT_SECRET,
     { expiresIn: JWT_EXPIRES_IN }
   );

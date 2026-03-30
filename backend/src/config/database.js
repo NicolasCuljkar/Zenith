@@ -104,6 +104,18 @@ const migrations = [
   CREATE INDEX IF NOT EXISTS idx_hm_user      ON household_members(user_id);
   CREATE INDEX IF NOT EXISTS idx_hi_code      ON household_invites(code);`,
 
+  // v4 — ajout creator_id aux foyers
+  `ALTER TABLE households ADD COLUMN creator_id INTEGER REFERENCES users(id);
+UPDATE households SET creator_id = (
+  SELECT user_id FROM household_members
+  WHERE household_id = households.id
+  ORDER BY joined_at ASC
+  LIMIT 1
+) WHERE creator_id IS NULL;`,
+
+  // v5 — colonne is_admin
+  `ALTER TABLE users ADD COLUMN is_admin INTEGER NOT NULL DEFAULT 0;`,
+
 ];
 
 // ── Apply pending migrations ──────────────────────────────────────────────────

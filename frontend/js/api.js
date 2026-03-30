@@ -420,7 +420,8 @@ const _household = {
   create: ()     => post('/household/create'),
   invite: ()     => post('/household/invite'),
   join:   (code) => post('/household/join', { code }),
-  leave:  ()     => request('/household/leave', { method: 'DELETE' }),
+  leave:  ()     => request('/household/leave',  { method: 'DELETE' }),
+  delete: ()     => request('/household/delete', { method: 'DELETE' }),
 };
 
 const API = { auth: _auth, entries: _entries, savings: _savings, users: _users, bridge: _bridge, household: _household, getToken, clearAuth };

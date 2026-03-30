@@ -4,9 +4,19 @@ const db = require('../config/database');
 
 const VALID_CATS = ['revenu', 'impot', 'fixe', 'variable', 'epargne', 'loisir'];
 
-// Membres valides = utilisateurs enregistrés + 'Commun'
-function getValidMembers() {
-  return [...db.prepare('SELECT name FROM users').all().map(r => r.name), 'Commun'];
+// Membres valides pour un utilisateur = lui-même + membres du foyer + 'Commun'
+function getValidMembers(userId) {
+  const user = db.prepare('SELECT name FROM users WHERE id = ?').get(userId);
+  if (!user) return ['Commun'];
+  const householdRow = db.prepare(`
+    SELECT hm2.user_id FROM household_members hm1
+    JOIN household_members hm2 ON hm2.household_id = hm1.household_id
+    WHERE hm1.user_id = ?
+  `).all(userId);
+  const names = householdRow.length
+    ? [...new Set(householdRow.map(r => db.prepare('SELECT name FROM users WHERE id = ?').get(r.user_id)?.name).filter(Boolean))]
+    : [user.name];
+  return [...names, 'Commun'];
 }
 
 function httpError(message, statusCode) {
@@ -21,11 +31,18 @@ function getAll(filters = {}) {
   const conditions = [];
   const params     = [];
 
-  // Filtre par membre (affichage) — 'Commun' retourne toutes les entrées tous membres
-  if (filters.member && filters.member !== 'all' && filters.member !== 'Commun') {
-    conditions.push('member = ?');
-    params.push(filters.member);
+  // Isolation par user_id — clé du fix : on ne filtre plus par nom (member)
+  if (filters.userIds && filters.userIds.length > 0) {
+    // Vue Commun foyer : entrées de tous les membres du foyer
+    const placeholders = filters.userIds.map(() => '?').join(',');
+    conditions.push(`user_id IN (${placeholders})`);
+    params.push(...filters.userIds);
+  } else if (filters.userId) {
+    // Vue personnelle : uniquement les entrées de cet utilisateur
+    conditions.push('user_id = ?');
+    params.push(filters.userId);
   }
+
   if (filters.cat) {
     conditions.push('cat = ?');
     params.push(filters.cat);
@@ -67,10 +84,10 @@ function getStats(filters = {}) {
 // ── Écriture ─────────────────────────────────────────────────────
 
 function create({ name, amount, cat, member }, userId) {
-  if (!name || !name.trim())               throw httpError('La désignation est requise.', 400);
-  if (isNaN(Number(amount)))               throw httpError('Le montant doit être un nombre.', 400);
-  if (!VALID_CATS.includes(cat))           throw httpError(`Catégorie invalide : ${cat}`, 400);
-  if (!getValidMembers().includes(member)) throw httpError(`Membre invalide : ${member}`, 400);
+  if (!name || !name.trim())                        throw httpError('La désignation est requise.', 400);
+  if (isNaN(Number(amount)))                        throw httpError('Le montant doit être un nombre.', 400);
+  if (!VALID_CATS.includes(cat))                    throw httpError(`Catégorie invalide : ${cat}`, 400);
+  if (!getValidMembers(userId).includes(member))    throw httpError(`Membre invalide : ${member}`, 400);
 
   const maxOrder = db.prepare(
     'SELECT COALESCE(MAX(sort_order), 0) AS m FROM entries WHERE member = ?'
@@ -93,8 +110,8 @@ function update(id, { name, amount, cat, member }, userId) {
     throw httpError('Non autorisé à modifier cette ligne.', 403);
   }
 
-  if (cat    !== undefined && !VALID_CATS.includes(cat))           throw httpError(`Catégorie invalide : ${cat}`, 400);
-  if (member !== undefined && !getValidMembers().includes(member)) throw httpError(`Membre invalide : ${member}`, 400);
+  if (cat    !== undefined && !VALID_CATS.includes(cat))                    throw httpError(`Catégorie invalide : ${cat}`, 400);
+  if (member !== undefined && !getValidMembers(userId).includes(member))   throw httpError(`Membre invalide : ${member}`, 400);
   if (amount !== undefined && isNaN(Number(amount)))               throw httpError('Le montant doit être un nombre.', 400);
 
   const updatedName   = name   !== undefined ? name.trim()    : existing.name;

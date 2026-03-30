@@ -29,4 +29,10 @@ function optionalAuth(req, res, next) {
   next();
 }
 
-module.exports = { requireAuth, optionalAuth };
+function requireAdmin(req, res, next) {
+  if (!req.user) return res.status(401).json({ success: false, error: 'Non authentifié.' });
+  if (!req.user.is_admin) return res.status(403).json({ success: false, error: 'Accès réservé à l\'administrateur.' });
+  next();
+}
+
+module.exports = { requireAuth, optionalAuth, requireAdmin };

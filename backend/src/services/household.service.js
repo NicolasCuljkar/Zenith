@@ -28,7 +28,7 @@ function getMembers(householdId) {
 
 function getForUser(userId) {
   const row = db.prepare(`
-    SELECT h.id, h.created_at
+    SELECT h.id, h.creator_id, h.created_at
     FROM households h
     JOIN household_members hm ON hm.household_id = h.id
     WHERE hm.user_id = ?
@@ -40,7 +40,7 @@ function getForUser(userId) {
 function create(userId) {
   if (getForUser(userId)) throw httpError('Vous faites déjà partie d\'un foyer.', 409);
 
-  const result = db.prepare('INSERT INTO households DEFAULT VALUES').run();
+  const result = db.prepare('INSERT INTO households (creator_id) VALUES (?)').run(userId);
   const householdId = result.lastInsertRowid;
   db.prepare('INSERT INTO household_members (household_id, user_id) VALUES (?, ?)').run(householdId, userId);
 
@@ -89,6 +89,7 @@ function join(userId, code) {
 function leave(userId) {
   const household = getForUser(userId);
   if (!household) throw httpError('Vous ne faites pas partie d\'un foyer.', 404);
+  if (household.creator_id === userId) throw httpError('Le créateur ne peut pas quitter le foyer. Supprimez-le à la place.', 403);
 
   db.prepare('DELETE FROM household_members WHERE household_id = ? AND user_id = ?').run(household.id, userId);
 
@@ -100,4 +101,15 @@ function leave(userId) {
   return { left: true };
 }
 
-module.exports = { getForUser, create, generateInvite, join, leave };
+function deleteHousehold(userId) {
+  const household = getForUser(userId);
+  if (!household) throw httpError('Vous ne faites pas partie d\'un foyer.', 404);
+  if (household.creator_id !== userId) throw httpError('Seul le créateur du foyer peut le supprimer.', 403);
+
+  // CASCADE supprime household_members et household_invites via ON DELETE CASCADE
+  db.prepare('DELETE FROM households WHERE id = ?').run(household.id);
+
+  return { deleted: true };
+}
+
+module.exports = { getForUser, create, generateInvite, join, leave, deleteHousehold };

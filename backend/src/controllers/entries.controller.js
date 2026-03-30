@@ -1,18 +1,33 @@
 'use strict';
 
-const entriesService = require('../services/entries.service');
+const entriesService  = require('../services/entries.service');
+const householdService = require('../services/household.service');
+
+function resolveUserScope(userId, member) {
+  // Vue Commun (foyer) : renvoie tous les userIds du foyer
+  if (!member || member === 'all' || member === 'Commun') {
+    const household = householdService.getForUser(userId);
+    if (household && household.members.length > 0) {
+      return { userIds: household.members.map(m => m.id) };
+    }
+  }
+  // Vue personnelle (ou solo sans foyer)
+  return { userId };
+}
 
 async function listEntries(req, res, next) {
   try {
     const { member, cat, search } = req.query;
-    res.json({ success: true, data: entriesService.getAll({ member, cat, search }) });
+    const scope = resolveUserScope(req.user.id, member);
+    res.json({ success: true, data: entriesService.getAll({ ...scope, cat, search }) });
   } catch (err) { next(err); }
 }
 
 async function getStats(req, res, next) {
   try {
     const { member } = req.query;
-    res.json({ success: true, data: entriesService.getStats({ member }) });
+    const scope = resolveUserScope(req.user.id, member);
+    res.json({ success: true, data: entriesService.getStats(scope) });
   } catch (err) { next(err); }
 }
 

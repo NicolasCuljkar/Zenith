@@ -40,8 +40,8 @@ function checkSavingsNotifications(saving, userId) {
  */
 async function listSavings(req, res, next) {
   try {
-    const { member, year } = req.query;
-    const savings = savingsService.getAll({ member, year: year ? Number(year) : undefined });
+    const { year } = req.query;
+    const savings = savingsService.getAll({ userId: req.user.id, year: year ? Number(year) : undefined });
     res.json({ success: true, data: savings });
   } catch (err) {
     next(err);

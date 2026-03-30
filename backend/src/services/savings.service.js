@@ -60,10 +60,12 @@ function getAll(filters = {}) {
   const conditions = [];
   const params     = [];
 
-  if (filters.member && filters.member !== 'all') {
-    conditions.push('member = ?');
-    params.push(filters.member);
+  // Isolation par user_id — empêche le partage de données entre utilisateurs homonymes
+  if (filters.userId) {
+    conditions.push('user_id = ?');
+    params.push(filters.userId);
   }
+
   if (filters.year) {
     conditions.push('year = ?');
     params.push(Number(filters.year));
