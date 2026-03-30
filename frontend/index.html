@@ -344,6 +344,14 @@ html.light .mtab-all.active{background:var(--mc-all-bg,linear-gradient(90deg,rgb
 .overlay.open{display:flex}
 .modal{background:var(--surface);width:100%;max-width:480px;border-radius:var(--rl) var(--rl) 0 0;padding:1.5rem 1.25rem 2rem;border:1px solid var(--border);max-height:92vh;overflow-y:auto}
 .modal-drag{width:36px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 1.25rem}
+/* ── Foyer modal desktop ── */
+@media(min-width:640px){
+  #modal-foyer{align-items:center}
+  #modal-foyer .modal{border-radius:var(--rl);max-width:680px;padding:2rem}
+  #modal-foyer .modal-drag{display:none}
+  .foyer-cols{display:grid;grid-template-columns:1fr 1fr;gap:28px;align-items:start}
+  .foyer-cols-center{display:grid;grid-template-columns:1fr 1fr;gap:28px;align-items:center}
+}
 .modal h3{font-size:var(--fs-title);font-weight:700;letter-spacing:-.02em;margin-bottom:1.25rem}
 .fstack{display:flex;flex-direction:column;gap:13px}
 .frow{display:grid;grid-template-columns:1fr 1fr;gap:11px}
@@ -1117,38 +1125,42 @@ window.onerror = function(msg, src, line) {
 
     <!-- Solo state -->
     <div id="foyer-solo">
-      <!-- Illustration -->
-      <div style="text-align:center;padding:20px 0 16px">
-        <div style="display:inline-flex;align-items:center;justify-content:center;gap:-8px;margin-bottom:12px">
-          <div style="width:52px;height:52px;border-radius:50%;background:var(--surface2);border:2px dashed var(--border);display:flex;align-items:center;justify-content:center">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--hint)" stroke-width="1.6" stroke-linecap="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      <div class="foyer-cols-center" style="margin-top:4px">
+        <!-- Left : illustration -->
+        <div style="text-align:center;padding:16px 0">
+          <div style="display:inline-flex;align-items:center;justify-content:center;margin-bottom:16px">
+            <div style="width:56px;height:56px;border-radius:50%;background:var(--surface2);border:2px dashed var(--border);display:flex;align-items:center;justify-content:center">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--hint)" stroke-width="1.6" stroke-linecap="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            </div>
+            <div style="width:32px;height:2px;background:var(--border);margin:0 6px"></div>
+            <div style="width:56px;height:56px;border-radius:50%;background:var(--surface2);border:2px dashed var(--border);display:flex;align-items:center;justify-content:center">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--border)" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </div>
           </div>
-          <div style="width:28px;height:2px;background:var(--border);margin:0 4px"></div>
-          <div style="width:52px;height:52px;border-radius:50%;background:var(--surface2);border:2px dashed var(--border);display:flex;align-items:center;justify-content:center">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--border)" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          <div style="font-size:var(--fs-base);font-weight:700;color:var(--text);margin-bottom:8px">Vous êtes seul</div>
+          <div style="font-size:var(--fs-sm);color:var(--muted);line-height:1.6;max-width:240px;margin:0 auto">
+            Invitez un proche pour partager vos budgets et activer l'onglet <strong style="color:var(--text)">Foyer</strong>.
           </div>
         </div>
-        <div style="font-size:var(--fs-sm);color:var(--muted);line-height:1.55;max-width:260px;margin:0 auto">
-          Invitez un proche pour partager vos budgets et activer l'onglet <strong style="color:var(--text)">Foyer</strong>.
+        <!-- Right : actions -->
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <button class="btn-add" style="width:100%;justify-content:center;padding:13px 20px;font-size:var(--fs-base);border-radius:12px" onclick="createFoyer()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+            Créer un foyer
+          </button>
+          <button onclick="showFoyerJoin()" style="width:100%;padding:12px 20px;border-radius:12px;border:1.5px solid var(--border);background:var(--surface2);color:var(--text);font-size:var(--fs-base);font-weight:500;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;transition:border-color .15s,background .12s" onmouseover="this.style.borderColor='var(--blue)'" onmouseout="this.style.borderColor='var(--border)'">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+            Rejoindre avec un code
+          </button>
+          <button onclick="openQRScanner()" style="width:100%;padding:12px 20px;border-radius:12px;border:1.5px solid var(--border);background:var(--surface2);color:var(--text);font-size:var(--fs-base);font-weight:500;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;transition:border-color .15s,background .12s" onmouseover="this.style.borderColor='var(--green)'" onmouseout="this.style.borderColor='var(--border)'">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 7 23 1 17 1"/><polyline points="1 17 1 23 7 23"/><polyline points="23 17 23 23 17 23"/><polyline points="1 7 1 1 7 1"/><rect x="7" y="7" width="10" height="10" rx="1"/></svg>
+            Scanner un QR code
+          </button>
         </div>
-      </div>
-      <div style="display:flex;flex-direction:column;gap:10px;margin-top:4px">
-        <button class="btn-add" style="width:100%;justify-content:center;padding:13px 20px;font-size:var(--fs-base);border-radius:12px" onclick="createFoyer()">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
-          Créer un foyer
-        </button>
-        <button onclick="showFoyerJoin()" style="width:100%;padding:12px 20px;border-radius:12px;border:1.5px solid var(--border);background:var(--surface2);color:var(--text);font-size:var(--fs-base);font-weight:500;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;transition:border-color .15s,background .12s" onmouseover="this.style.borderColor='var(--blue)'" onmouseout="this.style.borderColor='var(--border)'">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
-          Rejoindre avec un code
-        </button>
-        <button onclick="openQRScanner()" style="width:100%;padding:12px 20px;border-radius:12px;border:1.5px solid var(--border);background:var(--surface2);color:var(--text);font-size:var(--fs-base);font-weight:500;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;transition:border-color .15s,background .12s" onmouseover="this.style.borderColor='var(--green)'" onmouseout="this.style.borderColor='var(--border)'">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 7 23 1 17 1"/><polyline points="1 17 1 23 7 23"/><polyline points="23 17 23 23 17 23"/><polyline points="1 7 1 1 7 1"/><rect x="7" y="7" width="10" height="10" rx="1"/></svg>
-          Scanner un QR code
-        </button>
       </div>
 
       <!-- QR Scanner panel -->
-      <div id="foyer-scanner-container" style="display:none;margin:12px auto 0;max-width:280px">
+      <div id="foyer-scanner-container" style="display:none;margin:16px auto 0;max-width:280px">
         <div style="position:relative;border-radius:14px;overflow:hidden;background:#000;aspect-ratio:1/1">
           <video id="foyer-scanner-video" style="width:100%;height:100%;object-fit:cover" muted playsinline autoplay></video>
           <canvas id="foyer-scanner-canvas" style="display:none"></canvas>
@@ -1178,38 +1190,44 @@ window.onerror = function(msg, src, line) {
 
     <!-- Active household state -->
     <div id="foyer-active" style="display:none">
-      <div id="foyer-members-list" style="margin-bottom:1rem"></div>
-
-      <!-- QR section (inside active, shown on demand) -->
-      <div id="foyer-qr-section" style="display:none;margin-bottom:1rem">
-        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:20px;text-align:center">
-          <div style="font-size:var(--fs-xs);font-weight:700;color:var(--hint);text-transform:uppercase;letter-spacing:.06em;margin-bottom:14px">Scanner pour rejoindre</div>
-          <div id="foyer-qr-code" style="display:inline-block;padding:10px;background:#fff;border-radius:12px;margin-bottom:14px;box-shadow:0 2px 12px rgba(0,0,0,.08)"></div>
-          <div style="display:flex;align-items:center;justify-content:center;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 16px;margin-bottom:8px">
-            <span style="font-size:var(--fs-xs);color:var(--hint);font-weight:600;text-transform:uppercase;letter-spacing:.05em">Code</span>
-            <span id="foyer-invite-code" style="font-size:1.2rem;font-weight:800;letter-spacing:.2em;color:var(--text);font-variant-numeric:tabular-nums"></span>
-          </div>
-          <div id="foyer-invite-expiry" style="font-size:var(--fs-xs);color:var(--hint)"></div>
+      <div class="foyer-cols" style="margin-top:4px">
+        <!-- Left : membres -->
+        <div>
+          <div style="font-size:var(--fs-xs);font-weight:700;color:var(--hint);text-transform:uppercase;letter-spacing:.07em;margin-bottom:12px">Membres</div>
+          <div id="foyer-members-list"></div>
         </div>
-      </div>
-
-      <div style="display:flex;flex-direction:column;gap:8px">
-        <button class="btn-add" style="width:100%;justify-content:center;padding:12px 20px;font-size:var(--fs-base);border-radius:12px" onclick="generateFoyerInvite()">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
-          Générer un QR code d'invitation
-        </button>
-        <button id="foyer-btn-leave" onclick="leaveFoyer()" style="width:100%;padding:11px 20px;border-radius:12px;border:1.5px solid var(--red-bg,#fdf0f0);background:transparent;color:var(--red);font-size:var(--fs-sm);font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;transition:background .12s" onmouseover="this.style.background='var(--red-bg,#fdf0f0)'" onmouseout="this.style.background='transparent'">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-          Quitter le foyer
-        </button>
-        <button id="foyer-btn-delete" onclick="deleteFoyer()" style="display:none;width:100%;padding:11px 20px;border-radius:12px;border:1.5px solid var(--red);background:var(--red);color:#fff;font-size:var(--fs-sm);font-weight:600;cursor:pointer;font-family:inherit;display:none;align-items:center;justify-content:center;gap:8px;transition:opacity .12s" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
-          Supprimer le foyer
-        </button>
+        <!-- Right : QR + actions -->
+        <div>
+          <div id="foyer-qr-section" style="display:none;margin-bottom:12px">
+            <div style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:16px;text-align:center">
+              <div style="font-size:var(--fs-xs);font-weight:700;color:var(--hint);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px">Scanner pour rejoindre</div>
+              <div id="foyer-qr-code" style="display:inline-block;padding:10px;background:#fff;border-radius:12px;margin-bottom:12px;box-shadow:0 2px 12px rgba(0,0,0,.08)"></div>
+              <div style="display:flex;align-items:center;justify-content:center;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:8px 14px;margin-bottom:6px">
+                <span style="font-size:var(--fs-xs);color:var(--hint);font-weight:600;text-transform:uppercase;letter-spacing:.05em">Code</span>
+                <span id="foyer-invite-code" style="font-size:1.1rem;font-weight:800;letter-spacing:.2em;color:var(--text);font-variant-numeric:tabular-nums"></span>
+              </div>
+              <div id="foyer-invite-expiry" style="font-size:var(--fs-xs);color:var(--hint)"></div>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <button class="btn-add" style="width:100%;justify-content:center;padding:12px 20px;font-size:var(--fs-base);border-radius:12px" onclick="generateFoyerInvite()">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+              Générer un QR code d'invitation
+            </button>
+            <button id="foyer-btn-leave" onclick="leaveFoyer()" style="width:100%;padding:11px 20px;border-radius:12px;border:1.5px solid var(--red-bg,#fdf0f0);background:transparent;color:var(--red);font-size:var(--fs-sm);font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;transition:background .12s" onmouseover="this.style.background='var(--red-bg,#fdf0f0)'" onmouseout="this.style.background='transparent'">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+              Quitter le foyer
+            </button>
+            <button id="foyer-btn-delete" onclick="deleteFoyer()" style="display:none;width:100%;padding:11px 20px;border-radius:12px;border:1.5px solid var(--red);background:var(--red);color:#fff;font-size:var(--fs-sm);font-weight:600;cursor:pointer;font-family:inherit;display:none;align-items:center;justify-content:center;gap:8px;transition:opacity .12s" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+              Supprimer le foyer
+            </button>
+          </div>
+        </div>
       </div>
     </div>
 
-    <div style="display:flex;justify-content:flex-end;border-top:1px solid var(--border);margin-top:1.25rem;padding-top:.75rem">
+    <div style="display:flex;justify-content:flex-end;border-top:1px solid var(--border);margin-top:1.5rem;padding-top:.75rem">
       <button onclick="document.getElementById('modal-foyer').classList.remove('open')" style="padding:8px 18px;border-radius:10px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-size:var(--fs-sm);font-weight:500;cursor:pointer;font-family:inherit;transition:background .12s" onmouseover="this.style.background='var(--hover)'" onmouseout="this.style.background='var(--surface2)'">Fermer</button>
     </div>
   </div>
