@@ -4525,7 +4525,7 @@ function quickLogin(userId){
 
 function pwdModalClose(){
   // En mode verrou : fermer sans s'authentifier = déconnexion
-  if(_lockMode){ _lockMode=false; sessionStorage.removeItem('zenith_locked'); doLogout(); return; }
+  if(_lockMode){ _lockMode=false; sessionStorage.removeItem('zenith_locked'); document.getElementById('modal-quick-pwd').style.display='none'; _quickLoginUser=null; doLogout(); return; }
   document.getElementById('modal-quick-pwd').style.display = 'none';
   _quickLoginUser = null;
 }
