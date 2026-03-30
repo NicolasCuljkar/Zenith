@@ -2878,11 +2878,10 @@ function memberTableHtml(rows,isMobile,memberName){
         <span style="font-size:var(--fs-sm);font-weight:700;color:${totColor}">${eur(Math.abs(tot))}</span>
       </div>
       <div id="${uid}">
-      ${gRows.map(e=>{const c=CATS[e.cat];const amtColor=['revenu'].includes(e.cat)?'var(--green)':['impot'].includes(e.cat)?'var(--amber)':'var(--red)';return`<div class="entry-card" draggable="${canEdit(e.member)}" data-id="${e.id}" style="border-left-color:${c.hex}">
+      ${gRows.map(e=>{const c=CATS[e.cat];const amtColor=['revenu'].includes(e.cat)?'var(--green)':['impot'].includes(e.cat)?'var(--amber)':'var(--red)';return`<div class="entry-card" data-id="${e.id}" style="border-left-color:${c.hex}">
         <div class="entry-card-top" style="margin-bottom:0">
-          ${canEdit(e.member)?DRAG_HANDLE:''}
-          <span class="badge" style="background:${c.bg};color:${c.text};border:${c.border};line-height:1.4;flex-shrink:0">${c.label}</span>
           <span style="font-weight:600;font-size:var(--fs-md);flex:1;line-height:1.35;padding-top:1px">${e.name}</span>
+          <span class="badge" style="background:${c.bg};color:${c.text};border:${c.border};line-height:1.4;flex-shrink:0;margin-right:6px">${c.label}</span>
           <div style="display:flex;align-items:center;gap:5px;flex-shrink:0">
             <span style="font-size:var(--fs-base);font-weight:700;color:${amtColor}">${eur(Math.abs(e.amount))}</span>
             ${canEdit(e.member)?`<button class="btn-act" onclick="openEditEntry(${e.id})"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="btn-act btn-act-danger" onclick="deleteEntry(${e.id})"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg></button>`:'<span style="width:52px"></span>'}
@@ -2894,19 +2893,17 @@ function memberTableHtml(rows,isMobile,memberName){
     const uid=`drag-${memberName}-${g.key}`;
     return`<div style="margin-bottom:var(--sg)">
       <div class="tbl-wrap"><table style="width:100%;table-layout:fixed">
-        <colgroup><col style="width:3%"><col style="width:37%"><col style="width:25%"><col style="width:20%"><col style="width:15%"></colgroup>
-        <thead><tr><th></th><th>Désignation</th><th>Catégorie</th><th style="text-align:right">Montant</th><th></th></tr></thead>
+        <colgroup><col style="width:60%"><col style="width:22%"><col style="width:18%"></colgroup>
+        <thead><tr><th>Désignation</th><th style="text-align:right">Montant</th><th></th></tr></thead>
         <tbody id="${uid}">
-          ${gRows.map(e=>{const c=CATS[e.cat];const ac=['revenu'].includes(e.cat)?'var(--green)':['impot'].includes(e.cat)?'var(--amber)':'var(--red)';return`<tr draggable="${canEdit(e.member)}" data-id="${e.id}">
-            <td style="padding:8px 6px 8px 10px">${canEdit(e.member)?DRAG_HANDLE:''}</td>
-            <td style="font-weight:500">${e.name}</td>
-            <td><span class="badge" style="background:${c.bg};color:${c.text};border:${c.border}">${c.label}</span></td>
+          ${gRows.map(e=>{const c=CATS[e.cat];const ac=['revenu'].includes(e.cat)?'var(--green)':['impot'].includes(e.cat)?'var(--amber)':'var(--red)';return`<tr data-id="${e.id}">
+            <td style="font-weight:500">${e.name} <span class="badge" style="background:${c.bg};color:${c.text};border:${c.border};margin-left:4px">${c.label}</span></td>
             <td style="text-align:right;font-weight:600;color:${ac}">${eur(Math.abs(e.amount))}</td>
             <td style="width:80px"><div style="display:flex;gap:4px">
               ${canEdit(e.member)?`<button class="btn-act" onclick="openEditEntry(${e.id})"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="btn-act btn-act-danger" onclick="deleteEntry(${e.id})"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg></button>`:'<span style="display:inline-block;width:52px"></span>'}
             </div></td>
           </tr>`}).join('')}
-          <tr style="background:var(--surface2)"><td></td><td colspan="2" style="font-size:var(--fs-sm);font-weight:600;color:var(--muted)">Total ${g.label.toLowerCase()}</td><td style="text-align:right;font-weight:700;color:${totColor}">${eur(tot)}</td><td></td></tr>
+          <tr style="background:var(--surface2)"><td style="font-size:var(--fs-sm);font-weight:600;color:var(--muted)">Total ${g.label.toLowerCase()}</td><td style="text-align:right;font-weight:700;color:${totColor}">${eur(tot)}</td><td></td></tr>
         </tbody>
       </table></div>
     </div>`;
@@ -3038,15 +3035,6 @@ function renderEntries(){
     kpiHtml('Revenus nets',eur(s.revNet),'var(--green)',`Brut ${eur(s.rev)} · Impôts ${eur(s.tax)}`,null,`Taux d'imposition : ${s.rev>0?Math.round(s.tax/s.rev*100):0}% · Revenu net mensuel disponible`)+
     kpiHtml('Dépenses',eur(s.fix+s.vari),'var(--red)',`${depRate}% du revenu · Fixes ${eur(s.fix)} · Var. ${eur(s.vari)}`,-(depRate-50),`Objectif : rester sous 50% · Économies possibles : ${eur(Math.max(0,Math.round(s.revNet*0.5-(s.fix+s.vari))))} · Fixes ${Math.round(s.fix/(s.fix+s.vari)*100)||0}% du total`)+
     kpiHtml('Reste à vivre',eur(s.rav),s.rav>=0?'var(--blue)':'var(--red)',`${ravRate}% du revenu net`,null,`Après toutes dépenses · Réparti en épargne + loisir · ${ravRate}% du revenu net disponible librement`);
-  // Init drag-and-drop on all rendered groups
-  const GROUPS_KEYS=['revenus','depenses'];
-  const members=entriesMember==='Commun'?orderedMembers():[entriesMember];
-  members.forEach(name=>{
-    GROUPS_KEYS.forEach(gk=>{
-      const container=document.getElementById(`drag-${name}-${gk}`);
-      if(container) initDragDrop(container,name,gk);
-    });
-  });
 }
 ['search-input','filter-cat'].forEach(id=>{const el=document.getElementById(id);el.addEventListener('input',renderEntries);el.addEventListener('change',renderEntries);});
 function openAddEntry(){
