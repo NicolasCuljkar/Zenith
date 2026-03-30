@@ -2081,15 +2081,21 @@ async function openQRScanner(){
     _scannerStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment',width:{ideal:640},height:{ideal:640}}});
     const video=document.getElementById('foyer-scanner-video');
     video.srcObject=_scannerStream;
-    await video.play();
+    await new Promise(res=>{
+      if(video.readyState>=2){res();return;}
+      video.onloadeddata=()=>{video.onloadeddata=null;res();};
+      setTimeout(res,3000);
+    });
+    await video.play().catch(()=>{});
     container.style.display='';
     const canvas=document.getElementById('foyer-scanner-canvas');
     const ctx=canvas.getContext('2d');
     const tryDecode=()=>{
       if(!_scannerStream)return;
+      if(video.videoWidth===0){_scanInterval=setTimeout(tryDecode,200);return;}
       try{
-        canvas.width=video.videoWidth||320;
-        canvas.height=video.videoHeight||320;
+        canvas.width=video.videoWidth;
+        canvas.height=video.videoHeight;
         ctx.drawImage(video,0,0,canvas.width,canvas.height);
         const imgData=ctx.getImageData(0,0,canvas.width,canvas.height);
         if(typeof jsQR==='function'){
@@ -2103,6 +2109,7 @@ async function openQRScanner(){
       const detector=new BarcodeDetector({formats:['qr_code']});
       const bdLoop=async()=>{
         if(!_scannerStream)return;
+        if(video.readyState<2){_scanInterval=setTimeout(bdLoop,200);return;}
         try{const codes=await detector.detect(video);if(codes.length){handleQRResult(codes[0].rawValue);return;}}catch(_){}
         _scanInterval=setTimeout(bdLoop,300);
       };
@@ -3725,35 +3732,39 @@ function renderAnalysis(){
   const base=s.revNet||1;
   const rNeeds=Math.round(depStrict/base*100),rWants=Math.round(loiScoped/base*100),rSaves=Math.round(epScoped/base*100);
   const rUnalloc=Math.max(0,100-rNeeds-rWants-rSaves);
-  const barRule=(val,ideal,label,color,amount,idealAmt)=>{
+  const ruleCard=(val,ideal,label,sublabel,color,amount,idealAmt)=>{
     const over=val>ideal,ok=val<=ideal&&val>0;
     const diff=amount-idealAmt;
-    const statusBg=over?'var(--red-bg)':ok?'var(--green-bg)':'var(--surface2)';
+    const statusBg=over?'var(--red-bg)':ok?'var(--green-bg)':'var(--surface)';
     const statusColor=over?'var(--red)':ok?'var(--green)':'var(--hint)';
-    const statusText=over?`▲ +${eur(Math.abs(diff))} vs objectif`:ok?`✓ Dans l'objectif`:'– Non renseigné';
-    return`<div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:11px 14px;margin-bottom:8px">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:12px">
-        <div style="display:flex;align-items:center;gap:9px;min-width:0">
-          <span style="width:10px;height:10px;border-radius:3px;background:${color};flex-shrink:0;display:block"></span>
-          <div style="min-width:0">
-            <div style="font-size:var(--fs-sm);font-weight:700;color:var(--text)">${label}</div>
-            <div style="font-size:var(--fs-xs);color:var(--muted);margin-top:1px">${eur(amount)} <span style="color:var(--hint)">· objectif ≤ ${ideal}% (${eur(idealAmt)})</span></div>
-          </div>
-        </div>
-        <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
-          <div style="font-size:var(--fs-lg);font-weight:800;color:${over?'var(--red)':ok?'var(--green)':'var(--hint)'};line-height:1">${val>0?val+'%':'—'}</div>
-          <span style="font-size:var(--fs-xs);font-weight:600;padding:3px 9px;border-radius:20px;background:${statusBg};color:${statusColor};white-space:nowrap">${statusText}</span>
-        </div>
+    const statusText=over?`▲ +${eur(Math.abs(diff))}`:(ok?`✓ Dans l'objectif`:'– Aucune donnée');
+    const pctColor=over?'var(--red)':ok?color:'var(--hint)';
+    const tipAdvice=over
+      ?`Dépassement de <strong style="color:var(--red)">${eur(Math.abs(diff))}</strong>. Cherchez des postes à réduire.`
+      :ok?`Il vous reste <strong style="color:var(--green)">${eur(Math.abs(diff))}</strong> de marge.`
+      :`Aucune donnée pour cette catégorie.`;
+    return`<div style="flex:1;min-width:160px;background:var(--surface2);border:1px solid var(--border);border-radius:14px;overflow:hidden;position:relative;transition:box-shadow .15s;cursor:default"
+      onmouseenter="this.style.boxShadow='0 4px 20px rgba(0,0,0,.1)';this.querySelector('.rule-tip').style.opacity='1';this.querySelector('.rule-tip').style.transform='translateX(-50%) translateY(0)'"
+      onmouseleave="this.style.boxShadow='none';this.querySelector('.rule-tip').style.opacity='0';this.querySelector('.rule-tip').style.transform='translateX(-50%) translateY(-4px)'">
+      <div style="height:4px;background:${color}"></div>
+      <div class="rule-tip" style="position:absolute;top:calc(100% + 6px);left:50%;transform:translateX(-50%) translateY(-4px);background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 14px;pointer-events:none;opacity:0;transition:opacity .15s,transform .15s;z-index:50;box-shadow:0 8px 24px rgba(0,0,0,.15);min-width:180px;max-width:min(260px,80vw)">
+        <div style="font-size:var(--fs-sm);font-weight:700;color:var(--text);margin-bottom:4px">${label}</div>
+        <div style="font-size:var(--fs-xs);color:var(--hint);margin-bottom:8px;line-height:1.5">${sublabel}</div>
+        <div style="font-size:var(--fs-xs);color:var(--muted);line-height:1.6">${tipAdvice}</div>
       </div>
-      <div style="position:relative;padding-top:24px">
-        <div style="position:absolute;top:0;left:${Math.min(ideal,100)}%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:0;z-index:2">
-          <span style="font-size:var(--fs-xs);font-weight:700;padding:2px 8px;border-radius:20px;background:var(--surface);border:1.5px solid ${over?'var(--red)':color};color:${over?'var(--red)':color};white-space:nowrap;line-height:1.4">≤&nbsp;${ideal}%</span>
-          <div style="width:2px;height:8px;background:${over?'var(--red)':color};flex-shrink:0"></div>
+      <div style="padding:14px 16px 16px">
+        <div style="font-size:var(--fs-xs);font-weight:700;color:var(--hint);text-transform:uppercase;letter-spacing:.07em;margin-bottom:2px">${label}</div>
+        <div style="font-size:var(--fs-xs);color:var(--hint);margin-bottom:14px;line-height:1.4">${sublabel}</div>
+        <div style="display:flex;align-items:baseline;gap:5px;margin-bottom:4px">
+          <span style="font-size:2rem;font-weight:800;line-height:1;color:${pctColor};font-variant-numeric:tabular-nums">${val>0?val+'%':'—'}</span>
+          <span style="font-size:var(--fs-sm);color:var(--hint);font-weight:500">/ ${ideal}%</span>
         </div>
-        <div style="height:10px;background:var(--border);border-radius:5px;overflow:hidden">
-          <div style="width:${Math.min(val,100)}%;height:100%;background:${over?'var(--red)':color};border-radius:5px;transition:width .5s ease"></div>
+        <div style="font-size:var(--fs-xs);color:var(--muted);margin-bottom:14px">${amount>0?eur(amount):'–'}<span style="color:var(--hint)"> · obj. ${eur(idealAmt)}</span></div>
+        <div style="position:relative;height:6px;background:var(--border);border-radius:3px;margin-bottom:12px">
+          <div style="position:absolute;inset:0;width:${Math.min(val,100)}%;background:${over?'var(--red)':color};border-radius:3px;transition:width .5s ease"></div>
+          <div style="position:absolute;top:-3px;left:${Math.min(ideal,100)}%;transform:translateX(-50%);width:2px;height:12px;background:var(--text);opacity:.25;border-radius:1px"></div>
         </div>
-        <div style="position:absolute;top:26px;left:${Math.min(ideal,100)}%;transform:translateX(-50%);width:2px;height:10px;background:rgba(255,255,255,.75);z-index:2;pointer-events:none"></div>
+        <span style="font-size:var(--fs-xs);font-weight:600;padding:3px 10px;border-radius:20px;background:${statusBg};color:${statusColor};display:inline-block">${statusText}</span>
       </div>
     </div>`;
   };
@@ -3761,24 +3772,26 @@ function renderAnalysis(){
     {label:'Besoins',val:rNeeds,color:'#d93535'},
     {label:'Envies',val:rWants,color:'#f59e0b'},
     {label:'Épargne',val:rSaves,color:'#2979c8'},
-    ...(rUnalloc>0?[{label:'Non alloué',val:rUnalloc,color:'rgba(160,160,160,.25)'}]:[])
+    ...(rUnalloc>0?[{label:'Non alloué',val:rUnalloc,color:'var(--border)'}]:[])
   ].filter(d=>d.val>0);
   const nA=allocSegs.length;
   const allocBar=allocSegs.map((d,i)=>{
-    const rr=(i===0?'border-radius:6px 0 0 6px;':'')+(i===nA-1?'border-radius:0 6px 6px 0;':'');
+    const rr=(i===0?'border-radius:8px 0 0 8px;':'')+(i===nA-1?'border-radius:0 8px 8px 0;':'');
     return`<div title="${d.label} — ${d.val}%" style="flex:${d.val};background:${d.color};height:100%;min-width:3px;${rr}"></div>`;
   }).join('');
-  const allocLegend=allocSegs.map(d=>`<span style="display:inline-flex;align-items:center;gap:5px;font-size:var(--fs-xs);color:var(--muted)"><span style="width:8px;height:8px;border-radius:2px;background:${d.color};display:inline-block"></span>${d.label} <strong style="color:var(--text)">${d.val}%</strong></span>`).join('');
+  const allocLegend=allocSegs.map(d=>`<span style="display:inline-flex;align-items:center;gap:5px;font-size:var(--fs-xs);color:var(--muted)"><span style="width:8px;height:8px;border-radius:2px;background:${d.color};display:inline-block;flex-shrink:0"></span>${d.label}&nbsp;<strong style="color:var(--text)">${d.val}%</strong></span>`).join('');
   document.getElementById('rule-5030').innerHTML=`
-    <div style="font-size:var(--fs-sm);color:var(--muted);margin-bottom:14px">Répartition de vos <strong style="color:var(--text)">revenus nets ${eur(s.revNet)}</strong>${analysisMember!=='all'?' · '+analysisMember:''} selon la règle 50/30/20.</div>
-    <div style="margin-bottom:var(--sg)">
-      <div style="display:flex;height:28px;border-radius:6px;overflow:hidden;margin-bottom:8px">${allocBar}</div>
-      <div style="display:flex;flex-wrap:wrap;gap:10px">${allocLegend}</div>
+    <div style="font-size:var(--fs-sm);color:var(--muted);margin-bottom:16px">Répartition de vos <strong style="color:var(--text)">revenus nets ${eur(s.revNet)}</strong>${analysisMember!=='all'?' · '+analysisMember:''} selon la règle 50/30/20.</div>
+    <div style="margin-bottom:20px">
+      <div style="display:flex;gap:3px;height:32px;border-radius:8px;overflow:hidden;margin-bottom:10px">${allocBar}</div>
+      <div style="display:flex;flex-wrap:wrap;gap:12px">${allocLegend}</div>
     </div>
-    ${barRule(rNeeds,50,'Besoins (fixes + variables)','#d93535',depStrict,Math.round(base*0.5))}
-    ${barRule(rWants,30,'Envies (loisir calculé)','#f59e0b',loiScoped,Math.round(base*0.3))}
-    ${barRule(rSaves,20,'Épargne calculée','#2979c8',epScoped,Math.round(base*0.2))}
-    ${rUnalloc>0?`<div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--green-bg);border:1px solid var(--green);border-radius:var(--r);margin-top:4px"><div><div style="font-size:var(--fs-sm);font-weight:700;color:var(--green)">Non alloué : ${rUnalloc}%</div><div style="font-size:var(--fs-sm);color:var(--muted);margin-top:2px">${eur(Math.round(s.revNet*rUnalloc/100))} disponibles pour optimiser votre budget</div></div></div>`:''}
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      ${ruleCard(rNeeds,50,'Besoins','Loyer · alimentation · transport','#d93535',depStrict,Math.round(base*0.5))}
+      ${ruleCard(rWants,30,'Envies','Loisirs · sorties · shopping','#f59e0b',loiScoped,Math.round(base*0.3))}
+      ${ruleCard(rSaves,20,'Épargne','Livret · investissements · retraite','#2979c8',epScoped,Math.round(base*0.2))}
+    </div>
+    ${rUnalloc>0?`<div style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--green-bg);border:1px solid var(--green);border-radius:12px;margin-top:12px"><div style="width:8px;height:8px;border-radius:50%;background:var(--green);flex-shrink:0"></div><div><span style="font-size:var(--fs-sm);font-weight:700;color:var(--green)">Non alloué : ${rUnalloc}% · ${eur(Math.round(s.revNet*rUnalloc/100))}</span><span style="font-size:var(--fs-xs);color:var(--muted)"> disponibles pour optimiser votre épargne</span></div></div>`:''}
   `;
 
   // ── Donut répartition dépenses ──
