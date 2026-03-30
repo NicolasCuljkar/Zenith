@@ -3582,6 +3582,18 @@ function zenFlowGridOut(e){
 }
 
 // ══════════════════════════════════════════════
+// RULE 50/30/20 HOVER
+// ══════════════════════════════════════════════
+function _ruleHighlight(label){
+  document.querySelectorAll('.rule-seg').forEach(s=>{s.style.opacity=s.dataset.label===label?'1':'0.28';});
+  document.querySelectorAll('.rule-card').forEach(c=>{c.style.outline=c.dataset.label===label?'2px solid '+c.dataset.color:'';});
+}
+function _ruleReset(){
+  document.querySelectorAll('.rule-seg').forEach(s=>s.style.opacity='');
+  document.querySelectorAll('.rule-card').forEach(c=>c.style.outline='');
+}
+
+// ══════════════════════════════════════════════
 // ANALYSIS
 // ══════════════════════════════════════════════
 function renderAnalysis(){
@@ -3715,9 +3727,9 @@ function renderAnalysis(){
       ?`Dépassement de <strong style="color:var(--red)">${eur(Math.abs(diff))}</strong>. Cherchez des postes à réduire.`
       :ok?`Il vous reste <strong style="color:var(--green)">${eur(Math.abs(diff))}</strong> de marge.`
       :`Aucune donnée pour cette catégorie.`;
-    return`<div style="flex:1;min-width:160px;background:var(--surface2);border:1px solid var(--border);border-radius:14px;overflow:hidden;position:relative;transition:outline .12s;cursor:default"
-      onmouseenter="this.style.outline='2px solid ${color}';this.querySelector('.rule-tip').style.opacity='1';this.querySelector('.rule-tip').style.transform='translateX(-50%) translateY(0)'"
-      onmouseleave="this.style.outline='';this.querySelector('.rule-tip').style.opacity='0';this.querySelector('.rule-tip').style.transform='translateX(-50%) translateY(-4px)'">
+    return`<div class="rule-card" data-label="${label}" data-color="${color}" style="flex:1;min-width:160px;background:var(--surface2);border:1px solid var(--border);border-radius:14px;overflow:hidden;position:relative;transition:outline .12s;cursor:default"
+      onmouseenter="_ruleHighlight('${label}');this.querySelector('.rule-tip').style.opacity='1';this.querySelector('.rule-tip').style.transform='translateX(-50%) translateY(0)'"
+      onmouseleave="_ruleReset();this.querySelector('.rule-tip').style.opacity='0';this.querySelector('.rule-tip').style.transform='translateX(-50%) translateY(-4px)'">
       <div style="height:4px;background:${color}"></div>
       <div class="rule-tip" style="position:absolute;top:calc(100% + 6px);left:50%;transform:translateX(-50%) translateY(-4px);background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 14px;pointer-events:none;opacity:0;transition:opacity .15s,transform .15s;z-index:50;box-shadow:0 8px 24px rgba(0,0,0,.15);min-width:180px;max-width:min(260px,80vw)">
         <div style="font-size:var(--fs-sm);font-weight:700;color:var(--text);margin-bottom:4px">${label}</div>
@@ -3749,7 +3761,7 @@ function renderAnalysis(){
   const nA=allocSegs.length;
   const allocBar=allocSegs.map((d,i)=>{
     const rr=(i===0?'border-radius:8px 0 0 8px;':'')+(i===nA-1?'border-radius:0 8px 8px 0;':'');
-    return`<div title="${d.label} — ${d.val}%" style="flex:${d.val};background:${d.color};height:100%;min-width:3px;${rr}"></div>`;
+    return`<div class="rule-seg" data-label="${d.label}" data-color="${d.color}" title="${d.label} — ${d.val}%" style="flex:${d.val};background:${d.color};height:100%;min-width:3px;cursor:pointer;transition:opacity .15s,filter .15s;${rr}" onmouseenter="_ruleHighlight('${d.label}')" onmouseleave="_ruleReset()"></div>`;
   }).join('');
   const allocLegend=allocSegs.map(d=>`<span style="display:inline-flex;align-items:center;gap:5px;font-size:var(--fs-xs);color:var(--muted)"><span style="width:8px;height:8px;border-radius:2px;background:${d.color};display:inline-block;flex-shrink:0"></span>${d.label}&nbsp;<strong style="color:var(--text)">${d.val}%</strong></span>`).join('');
   document.getElementById('rule-5030').innerHTML=`
