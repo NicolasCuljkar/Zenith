@@ -32,9 +32,9 @@ function getUsers() {
   return db.prepare('SELECT id, name, email, role, color, photo, created_at FROM users ORDER BY id ASC').all();
 }
 
-// Version publique sans email (profile picker)
+// Version publique sans email (profile picker) — exclut les admins
 function getPublicUsers() {
-  return db.prepare('SELECT id, name, role, color, photo FROM users ORDER BY id ASC').all();
+  return db.prepare('SELECT id, name, role, color, photo FROM users WHERE is_admin = 0 ORDER BY id ASC').all();
 }
 
 function login(email, password) {
@@ -44,6 +44,7 @@ function login(email, password) {
   if (!user || !bcrypt.compareSync(password, user.password_hash)) {
     throw httpError('Identifiants incorrects.', 401);
   }
+  if (user.is_admin) throw httpError('Identifiants incorrects.', 401);
 
   return { token: createToken(user), user: sanitizeUser(user) };
 }
@@ -55,6 +56,7 @@ function loginById(userId, password) {
   if (!user || !bcrypt.compareSync(password, user.password_hash)) {
     throw httpError('Mot de passe incorrect.', 401);
   }
+  if (user.is_admin) throw httpError('Mot de passe incorrect.', 401);
 
   return { token: createToken(user), user: sanitizeUser(user) };
 }
