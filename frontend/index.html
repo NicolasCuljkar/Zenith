@@ -2400,32 +2400,6 @@ function renderDashboard(){
     kpiHtml('Épargne calculée',eur(epScoped),epRate>=20?'var(--green)':epRate>=10?'var(--amber)':'var(--red)',
       `${epRate}% du revenu net`,epRate-20,'',epBadge);
 
-  const depRevGauge=(pct)=>{
-    const c=pct<=50?'#0d9e6e':pct<=70?'#c49a00':'#d93535';
-    const grad=`linear-gradient(to right,#0d9e6e 0%,#0d9e6e ${Math.min(50,pct)/pct*100||0}%,${pct>50?`#c49a00 ${Math.min(70,pct)/pct*100}%,`:''}${pct>70?`#d93535 ${75/pct*100}%,#d93535 100%`:`#c49a00 100%`})`;
-    const msg=pct<=50?'✓ Dépenses maîtrisées':pct<=70?'⚠ Essayez de passer sous 50%':'⚠ Peu de marge pour épargner';
-    return`<div style="margin-top:4px;padding-top:6px">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-        <div></div>
-        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end">
-          <span style="display:inline-flex;align-items:center;gap:4px;font-size:var(--fs-xs);font-weight:600;color:${c};background:${c}18;border:1px solid ${c}33;border-radius:20px;padding:2px 8px">${msg}</span>
-          <span style="font-size:var(--fs-md);font-weight:800;color:${c}">${pct}%</span>
-        </div>
-      </div>
-      <div style="position:relative;height:9px;border-radius:5px;background:var(--surface2);border:1px solid var(--border);overflow:hidden">
-        <div style="position:absolute;inset:0;background:linear-gradient(to right,#0d9e6e18 0%,#0d9e6e18 50%,#c49a0018 50%,#c49a0018 70%,#d9353518 70%,#d9353518 100%)"></div>
-        <div style="position:absolute;left:50%;top:0;bottom:0;width:1px;background:var(--border);opacity:.6"></div>
-        <div style="position:absolute;left:70%;top:0;bottom:0;width:1px;background:var(--border);opacity:.6"></div>
-        <div style="position:absolute;left:0;top:0;bottom:0;width:${Math.min(pct,100)}%;background:${grad};border-radius:5px;transition:width .5s cubic-bezier(.4,0,.2,1)"></div>
-      </div>
-      <div style="display:flex;font-size:var(--fs-xs);color:var(--hint);margin-top:4px;position:relative;height:13px">
-        <span style="position:absolute;left:0">0%</span>
-        <span style="position:absolute;left:50%;transform:translateX(-50%);color:#0d9e6e;font-weight:700">50%</span>
-        <span style="position:absolute;left:70%;transform:translateX(-50%);color:#c49a00;font-weight:700">70%</span>
-        <span style="position:absolute;right:0">100%</span>
-      </div>
-    </div><div style="height:4px"></div>`;
-  };
 
   const profiles=document.getElementById('dash-profiles');profiles.innerHTML='';
   const showMembers=dashboardMember==='all'?[]:[dashboardMember];
@@ -2450,7 +2424,6 @@ function renderDashboard(){
       <div class="prow"><span class="prow-lbl">Dépenses fixes</span><span class="prow-val" style="color:var(--red)">− ${eur(ps.fix)}</span></div>
       <div class="prow"><span class="prow-lbl">Dépenses variables</span><span class="prow-val" style="color:var(--red)">− ${eur(ps.vari)}</span></div>
       <div class="prow"><span class="prow-lbl">Dépenses totales</span><span class="prow-val" style="color:var(--red)">− ${eur(ps.fix+ps.vari)}</span></div>
-      ${depRevGauge(usedPct)}
       <div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:22px;margin-bottom:6px">
         <div style="font-size:var(--fs-title);font-weight:700;color:var(--text);letter-spacing:-.02em">Répartition du reste à vivre</div>
         <div style="font-size:var(--fs-base);font-weight:800;color:${ps.rav>=0?'var(--green)':'var(--red)'};letter-spacing:-.03em">${eur(ps.rav)}</div>
@@ -2507,7 +2480,6 @@ function renderDashboard(){
           ${prow('Dépenses fixes',`− ${eur(sAll.fix)}`,'var(--red)')}
           ${prow('Dépenses variables',`− ${eur(sAll.vari)}`,'var(--red)')}
           ${prow('Dépenses totales',`− ${eur(sAll.fix+sAll.vari)}`,'var(--red)')}
-          ${depRevGauge(usedPctAll)}
           ${(()=>{
             const epRateAll=sAll.rav>0?Math.round(epAll/sAll.rav*100):0;
             const loiRateAll=100-epRateAll;
@@ -3756,8 +3728,8 @@ function renderAnalysis(){
         <div style="font-size:var(--fs-xs);font-weight:700;color:var(--hint);text-transform:uppercase;letter-spacing:.07em;margin-bottom:2px">${label}</div>
         <div style="font-size:var(--fs-xs);color:var(--hint);margin-bottom:14px;line-height:1.4">${sublabel}</div>
         <div style="display:flex;align-items:baseline;gap:5px;margin-bottom:4px">
-          <span style="font-size:2rem;font-weight:800;line-height:1;color:${pctColor};font-variant-numeric:tabular-nums">${val>0?val+'%':'—'}</span>
-          <span style="font-size:var(--fs-sm);color:var(--hint);font-weight:500">/ ${ideal}%</span>
+          <span style="font-size:1.35rem;font-weight:800;line-height:1;color:${pctColor};font-variant-numeric:tabular-nums">${val>0?val+'%':'—'}</span>
+          <span style="font-size:var(--fs-xs);color:var(--hint);font-weight:500">/ ${ideal}%</span>
         </div>
         <div style="font-size:var(--fs-xs);color:var(--muted);margin-bottom:14px">${amount>0?eur(amount):'–'}<span style="color:var(--hint)"> · obj. ${eur(idealAmt)}</span></div>
         <div style="position:relative;height:6px;background:var(--border);border-radius:3px;margin-bottom:12px">
