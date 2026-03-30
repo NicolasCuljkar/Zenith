@@ -1148,8 +1148,8 @@ window.onerror = function(msg, src, line) {
       </div>
 
       <!-- QR Scanner panel -->
-      <div id="foyer-scanner-container" style="display:none;margin-top:12px">
-        <div style="position:relative;border-radius:14px;overflow:hidden;background:#000;aspect-ratio:1/1;max-height:280px">
+      <div id="foyer-scanner-container" style="display:none;margin:12px auto 0;max-width:280px">
+        <div style="position:relative;border-radius:14px;overflow:hidden;background:#000;aspect-ratio:1/1">
           <video id="foyer-scanner-video" style="width:100%;height:100%;object-fit:cover" muted playsinline autoplay></video>
           <canvas id="foyer-scanner-canvas" style="display:none"></canvas>
           <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none">
@@ -2106,9 +2106,9 @@ async function openQRScanner(){
         try{const codes=await detector.detect(video);if(codes.length){handleQRResult(codes[0].rawValue);return;}}catch(_){}
         _scanInterval=setTimeout(bdLoop,300);
       };
-      video.addEventListener('playing',()=>bdLoop(),{once:true});
+      bdLoop();
     } else {
-      video.addEventListener('playing',()=>tryDecode(),{once:true});
+      tryDecode();
     }
   }catch(err){
     _foyerMsg('Impossible d\'accéder à la caméra. Saisissez le code manuellement.');
