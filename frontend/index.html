@@ -2131,15 +2131,15 @@ function handleQRResult(value){
     const url=new URL(value);
     const code=url.searchParams.get('join');
     if(code&&code.length===6){
-      document.getElementById('foyer-code-input').value=code.toUpperCase();
       showFoyerJoin();
+      document.getElementById('foyer-code-input').value=code.toUpperCase();
       confirmJoinFoyer();return;
     }
   }catch(_){}
   const raw=value.trim().toUpperCase();
   if(/^[A-Z0-9]{6}$/.test(raw)){
-    document.getElementById('foyer-code-input').value=raw;
     showFoyerJoin();
+    document.getElementById('foyer-code-input').value=raw;
     confirmJoinFoyer();
   }else{
     _foyerMsg('QR code non reconnu. Saisissez le code manuellement.');
