@@ -49,6 +49,18 @@ function login(email, password) {
   return { token: createToken(user), user: sanitizeUser(user) };
 }
 
+function adminLogin(identifier, password) {
+  if (!identifier || !password) throw httpError('Identifiants requis.', 400);
+
+  const user = db.prepare('SELECT * FROM users WHERE (email = ? OR name = ?) COLLATE NOCASE AND is_admin = 1')
+    .get(identifier.trim().toLowerCase(), identifier.trim());
+  if (!user || !bcrypt.compareSync(password, user.password_hash)) {
+    throw httpError('Identifiants incorrects.', 401);
+  }
+
+  return { token: createToken(user), user: sanitizeUser(user) };
+}
+
 function loginById(userId, password) {
   if (!userId || !password) throw httpError('Identifiants requis.', 400);
 
@@ -129,4 +141,4 @@ function changePassword(userId, { currentPassword, newPassword } = {}) {
   return { success: true };
 }
 
-module.exports = { getUsers, getPublicUsers, login, loginById, register, updateSettings, updateProfile, changePassword, sanitizeUser };
+module.exports = { getUsers, getPublicUsers, login, adminLogin, loginById, register, updateSettings, updateProfile, changePassword, sanitizeUser };

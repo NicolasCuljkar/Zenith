@@ -199,8 +199,7 @@ async function adminLogin() {
   const errEl = document.getElementById('a-err');
   errEl.style.display = 'none';
   try {
-    const data = await req('/auth/login', { method: 'POST', body: { email, password: pwd } });
-    if (!data.user.is_admin) throw new Error('Ce compte n\'a pas les droits administrateur.');
+    const data = await req('/auth/admin-login', { method: 'POST', body: { identifier: email, password: pwd } });
     _token = data.token;
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('admin-app').style.display = '';

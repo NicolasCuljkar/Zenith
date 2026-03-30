@@ -19,6 +19,7 @@ const router = Router();
 // Public routes
 router.get('/users',              authCtrl.listUsers);
 router.post('/login',             authCtrl.login);
+router.post('/admin-login',       authCtrl.adminLogin);
 router.post('/login-by-id',       authCtrl.loginById);
 router.post('/register',          authCtrl.register);
 

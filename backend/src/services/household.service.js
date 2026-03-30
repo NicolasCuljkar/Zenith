@@ -77,6 +77,9 @@ function join(userId, code) {
     throw httpError('Ce code a expiré. Demandez-en un nouveau.', 410);
   }
 
+  const household = db.prepare('SELECT * FROM households WHERE id = ?').get(invite.household_id);
+  if (household && household.creator_id === userId) throw httpError('Vous ne pouvez pas rejoindre un foyer que vous avez créé.', 409);
+
   const already = db.prepare('SELECT id FROM household_members WHERE household_id = ? AND user_id = ?').get(invite.household_id, userId);
   if (already) throw httpError('Vous êtes déjà membre de ce foyer.', 409);
 

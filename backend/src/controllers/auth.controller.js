@@ -19,6 +19,15 @@ async function login(req, res, next) {
   }
 }
 
+async function adminLogin(req, res, next) {
+  try {
+    const { identifier, password } = req.body;
+    res.json({ success: true, data: authService.adminLogin(identifier, password) });
+  } catch (err) {
+    next(err);
+  }
+}
+
 async function loginById(req, res, next) {
   try {
     const { userId, password } = req.body;
@@ -74,4 +83,4 @@ async function changePassword(req, res, next) {
   }
 }
 
-module.exports = { listUsers, login, loginById, register, getMe, updateSettings, updateProfile, changePassword };
+module.exports = { listUsers, login, adminLogin, loginById, register, getMe, updateSettings, updateProfile, changePassword };
