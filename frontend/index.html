@@ -2125,26 +2125,33 @@ function closeQRScanner(){
   if(c)c.style.display='none';
 }
 
-function handleQRResult(value){
+async function handleQRResult(value){
   closeQRScanner();
+  let code=null;
   try{
     const url=new URL(value);
-    const code=url.searchParams.get('join');
-    if(code&&code.length===6){
-      showFoyerJoin();
-      document.getElementById('foyer-code-input').value=code.toUpperCase();
-      confirmJoinFoyer();return;
-    }
+    const c=url.searchParams.get('join');
+    if(c&&c.length===6) code=c.toUpperCase();
   }catch(_){}
-  const raw=value.trim().toUpperCase();
-  if(/^[A-Z0-9]{6}$/.test(raw)){
-    showFoyerJoin();
-    document.getElementById('foyer-code-input').value=raw;
-    confirmJoinFoyer();
-  }else{
+  if(!code){
+    const raw=value.trim().toUpperCase();
+    if(/^[A-Z0-9]{6}$/.test(raw)) code=raw;
+  }
+  if(!code){
     _foyerMsg('QR code non reconnu. Saisissez le code manuellement.');
     showFoyerJoin();
+    return;
   }
+  _foyerMsg('Connexion au foyer…','var(--muted)');
+  try{
+    currentHousehold=await API.household.join(code);
+    renderMemberTabs();
+    initUserContext();
+    loadFoyerTab();
+    _foyerMsg('Vous avez rejoint le foyer !','var(--green)');
+    await loadData();
+    renderDashboard();renderEntries();
+  }catch(e){_foyerMsg(e.message||'Code invalide.');}
 }
 
 // Auto-join via URL ?join=CODE
