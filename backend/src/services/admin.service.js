@@ -36,6 +36,8 @@ function deleteUser(userId, adminId) {
   const user = db.prepare('SELECT id, is_admin FROM users WHERE id = ?').get(userId);
   if (!user) throw httpError('Utilisateur introuvable.', 404);
   if (user.is_admin) throw httpError('Impossible de supprimer un compte administrateur.', 403);
+  // Supprime les foyers dont l'user est créateur (CASCADE nettoie membres et invitations)
+  db.prepare('DELETE FROM households WHERE creator_id = ?').run(userId);
   db.prepare('DELETE FROM users WHERE id = ?').run(userId);
   return { deleted: true };
 }
