@@ -120,6 +120,16 @@ UPDATE households SET creator_id = (
   `INSERT OR IGNORE INTO users (name, email, password_hash, role, color, is_admin)
    VALUES ('Admin', 'admin', '$2a$10$Cmgxu7VcJMOktNz/njXer.Q5NN2NzYoj6F0Mrl8g/R25ObcUznGRy', 'Autre', '#6366f1', 1);`,
 
+  // v7 — tokens de réinitialisation de mot de passe
+  `CREATE TABLE IF NOT EXISTS password_reset_tokens (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    token      TEXT    NOT NULL UNIQUE,
+    expires_at TEXT    NOT NULL,
+    created_at TEXT    NOT NULL DEFAULT (datetime('now'))
+  );
+  CREATE INDEX IF NOT EXISTS idx_prt_token ON password_reset_tokens(token);`,
+
 ];
 
 // ── Apply pending migrations ──────────────────────────────────────────────────

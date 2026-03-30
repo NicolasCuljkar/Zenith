@@ -1,8 +1,10 @@
 'use strict';
 
-const bcrypt = require('bcryptjs');
-const jwt    = require('jsonwebtoken');
-const db     = require('../config/database');
+const bcrypt      = require('bcryptjs');
+const jwt         = require('jsonwebtoken');
+const crypto      = require('crypto');
+const db          = require('../config/database');
+const emailSvc    = require('./email.service');
 
 const JWT_SECRET     = process.env.JWT_SECRET;
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
@@ -77,6 +79,12 @@ function register(name, email, password, role = 'Autre') {
     .run(name.trim(), email.trim().toLowerCase(), password_hash, role, color);
 
   const user = db.prepare('SELECT * FROM users WHERE id = ?').get(result.lastInsertRowid);
+
+  // Envoi email de bienvenue (non bloquant)
+  emailSvc.sendWelcome(user.email, user.name).catch(err =>
+    console.error('[email] Welcome email failed:', err.message)
+  );
+
   return { token: createToken(user), user: sanitizeUser(user) };
 }
 
@@ -128,4 +136,37 @@ function changePassword(userId, { currentPassword, newPassword } = {}) {
   return { success: true };
 }
 
-module.exports = { getUsers, getPublicUsers, login, loginById, register, updateSettings, updateProfile, changePassword, sanitizeUser };
+async function forgotPassword(email) {
+  if (!email) throw httpError('E-mail requis.', 400);
+  const user = db.prepare('SELECT * FROM users WHERE email = ? COLLATE NOCASE AND is_admin = 0').get(email.trim().toLowerCase());
+  // Réponse identique si user existe ou non (sécurité anti-énumération)
+  if (!user) return { sent: true };
+
+  // Supprime les anciens tokens de cet utilisateur
+  db.prepare('DELETE FROM password_reset_tokens WHERE user_id = ?').run(user.id);
+
+  const token     = crypto.randomBytes(32).toString('hex');
+  const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString(); // 1h
+  db.prepare('INSERT INTO password_reset_tokens (user_id, token, expires_at) VALUES (?, ?, ?)').run(user.id, token, expiresAt);
+
+  await emailSvc.sendPasswordReset(user.email, user.name, token);
+  return { sent: true };
+}
+
+function resetPassword(token, newPassword) {
+  if (!token)       throw httpError('Token requis.', 400);
+  if (!newPassword || newPassword.length < 6) throw httpError('Le mot de passe doit faire au moins 6 caractères.', 400);
+
+  const row = db.prepare('SELECT * FROM password_reset_tokens WHERE token = ?').get(token);
+  if (!row) throw httpError('Lien invalide ou déjà utilisé.', 400);
+  if (new Date(row.expires_at) < new Date()) {
+    db.prepare('DELETE FROM password_reset_tokens WHERE id = ?').run(row.id);
+    throw httpError('Ce lien a expiré. Faites une nouvelle demande.', 410);
+  }
+
+  db.prepare('UPDATE users SET password_hash = ? WHERE id = ?').run(bcrypt.hashSync(newPassword, 10), row.user_id);
+  db.prepare('DELETE FROM password_reset_tokens WHERE user_id = ?').run(row.user_id);
+  return { reset: true };
+}
+
+module.exports = { getUsers, getPublicUsers, login, loginById, register, updateSettings, updateProfile, changePassword, forgotPassword, resetPassword, sanitizeUser };
