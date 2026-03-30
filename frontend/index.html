@@ -669,7 +669,7 @@ window.onerror = function(msg, src, line) {
     <!-- Formulaire e-mail -->
     <div class="auth-divider" id="login-divider" style="display:none;margin-top:1.25rem">ou</div>
     <div id="login-form-toggle" style="display:none;margin-top:.5rem" class="auth-form">
-      <div class="auth-field"><label>E-mail</label><input type="email" id="login-email" placeholder="vous@exemple.fr" onkeydown="if(event.key==='Enter')doLogin()"></div>
+      <div class="auth-field"><label>E-mail ou identifiant</label><input type="text" id="login-email" placeholder="vous@exemple.fr" autocomplete="username" onkeydown="if(event.key==='Enter')doLogin()"></div>
       <div class="auth-field"><label>Mot de passe</label><input type="password" id="login-pwd" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"></div>
       <div class="auth-error" id="login-error">Identifiants incorrects.</div>
       <button class="auth-btn" style="margin-top:1rem" onclick="doLogin()">Se connecter</button>
@@ -4579,6 +4579,7 @@ async function _doLoginWithCredentials(userIdOrEmail,password){
       ? await API.auth.loginById(userIdOrEmail, password)
       : await API.auth.login(userIdOrEmail, password);
     currentUser=result.user;
+    if(result.user.is_admin){ window.location.href='/admin.html'; return; }
     // Update local color/photo cache from user record
     if(result.user.color) memberColors[result.user.name]=result.user.color;
     if(result.user.photo) profilePhotos[result.user.name]=result.user.photo;
@@ -4612,6 +4613,7 @@ async function doLogin(){
   try{
     const result=await API.auth.login(email,password);
     currentUser=result.user;
+    if(result.user.is_admin){ window.location.href='/admin.html'; return; }
     if(result.user.color) memberColors[result.user.name]=result.user.color;
     if(result.user.photo) profilePhotos[result.user.name]=result.user.photo;
     if(errEl) errEl.classList.remove('show');
