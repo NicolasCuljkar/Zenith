@@ -2922,50 +2922,62 @@ function renderEntries(){
     const [m1,m2]=orderedMembers();
     const mc1=memberColors[m1],mc2=memberColors[m2];
     const GROUPS=[
-      {key:'revenus',label:'Revenus & Impôts',cats:['revenu','impot'],totColor:'var(--green)'},
-      {key:'depenses',label:'Dépenses',cats:['fixe','variable','loisir'],totColor:'var(--red)'},
+      {key:'revenus', label:'Revenus & Impôts',cats:['revenu','impot'],  totColor:'var(--green)',color:'#0d9e6e'},
+      {key:'depenses',label:'Dépenses',         cats:['fixe','variable'], totColor:'var(--red)',  color:'#d93535'},
+      {key:'loisir',  label:'Loisir',            cats:['loisir'],          totColor:'var(--red)',  color:'#f59e0b'},
+      {key:'epargne', label:'Épargne',           cats:['epargne'],         totColor:'var(--blue)', color:'#2979c8'},
     ];
+    const catOrder=['revenu','impot','fixe','variable','epargne','loisir'];
     container.innerHTML=GROUPS.map(g=>{
-      // All unique entry names across both members in this group
       const e1=filtered.filter(e=>e.member===m1&&g.cats.includes(e.cat));
       const e2=filtered.filter(e=>e.member===m2&&g.cats.includes(e.cat));
       if(!e1.length&&!e2.length)return'';
-      // Sort keys: for revenus sort by cat then amount, for dépenses sort by total amount desc
-      const catOrder=['revenu','impot','fixe','variable','epargne','loisir'];
       const allNames=[...new Set([...e1,...e2].map(e=>e.name))];
       allNames.sort((a,b)=>{
         const totalA=Math.abs(e1.find(x=>x.name===a)?.amount||0)+Math.abs(e2.find(x=>x.name===a)?.amount||0);
         const totalB=Math.abs(e1.find(x=>x.name===b)?.amount||0)+Math.abs(e2.find(x=>x.name===b)?.amount||0);
-        if(g.key==='depenses')return totalB-totalA;
-        const ea=[...e1,...e2].find(x=>x.name===a);
-        const eb=[...e1,...e2].find(x=>x.name===b);
+        if(g.key!=='revenus')return totalB-totalA;
+        const ea=[...e1,...e2].find(x=>x.name===a),eb=[...e1,...e2].find(x=>x.name===b);
         const ci=catOrder.indexOf(ea?.cat||'')-catOrder.indexOf(eb?.cat||'');
-        if(ci!==0)return ci;
-        return totalB-totalA;
+        return ci!==0?ci:totalB-totalA;
       });
       const tot1=e1.reduce((s,e)=>s+Math.abs(e.amount),0);
       const tot2=e2.reduce((s,e)=>s+Math.abs(e.amount),0);
+      const tot=tot1+tot2;
+      const hdr=`<div class="entry-group-hdr" style="border-color:${g.color}28;background:color-mix(in srgb,${g.color} 7%,var(--surface))">
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="width:8px;height:8px;border-radius:50%;background:${g.color};flex-shrink:0"></div>
+          <span style="font-size:var(--fs-xs);font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:${g.color}">${g.label}</span>
+          <span style="font-size:var(--fs-xs);color:var(--hint)">${allNames.length}</span>
+        </div>
+        <span style="font-size:var(--fs-sm);font-weight:700;color:${g.totColor}">${eur(Math.abs(tot))}</span>
+      </div>`;
       if(isMobile){
-        return`<div style="margin-bottom:1rem">
+        return`<div style="margin-bottom:1.25rem">
+          ${hdr}
           ${allNames.map(name=>{
             const ea=e1.find(x=>x.name===name),eb=e2.find(x=>x.name===name);
             const c=CATS[(ea||eb)?.cat];
             const tot=(Math.abs(ea?.amount||0)+Math.abs(eb?.amount||0));
+            const amtColor=g.key==='revenus'?'var(--green)':g.key==='epargne'?'var(--blue)':'var(--red)';
             return`<div class="entry-card" style="border-left-color:${c.hex}">
-              <div class="entry-card-top" style="margin-bottom:${ea||eb?'4px':'0'}">
-                <span class="badge" style="background:${c.bg};color:${c.text};border:${c.border};line-height:1.4;flex-shrink:0">${c.label}</span>
+              <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
                 <span style="font-weight:600;font-size:var(--fs-md);flex:1;line-height:1.35">${name}</span>
-                <span style="font-size:var(--fs-base);font-weight:700;color:${g.totColor}">${eur(tot)}</span>
+                <span style="font-size:var(--fs-base);font-weight:700;color:${amtColor};flex-shrink:0">${eur(tot)}</span>
               </div>
-              ${(ea||eb)?`<div class="entry-card-meta" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-                ${ea?`<span style="font-size:var(--fs-xs);color:${mc1};font-weight:600">${eur(Math.abs(ea.amount))}</span>`:''}
-                ${eb?`<span style="font-size:var(--fs-xs);color:${mc2};font-weight:600">${eur(Math.abs(eb.amount))}</span>`:''}
-              </div>`:''}
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
+                <span class="badge" style="background:${c.bg};color:${c.text};border:${c.border};line-height:1.4">${c.label}</span>
+                <div style="display:flex;gap:8px">
+                  ${ea?`<span style="font-size:var(--fs-xs);color:${mc1};font-weight:600">${eur(Math.abs(ea.amount))}</span>`:''}
+                  ${eb?`<span style="font-size:var(--fs-xs);color:${mc2};font-weight:600">${eur(Math.abs(eb.amount))}</span>`:''}
+                </div>
+              </div>
             </div>`;
           }).join('')}
         </div>`;
       }
       return`<div style="margin-bottom:var(--sg)">
+        ${hdr}
         <div class="tbl-wrap"><table style="width:100%;table-layout:fixed">
           <colgroup><col style="width:35%"><col style="width:15%"><col style="width:17%"><col style="width:17%"><col style="width:16%"></colgroup>
           <thead><tr>
@@ -2979,20 +2991,21 @@ function renderEntries(){
               const ea=e1.find(x=>x.name===name),eb=e2.find(x=>x.name===name);
               const c=CATS[(ea||eb)?.cat];
               const a1=ea?Math.abs(ea.amount):0,a2=eb?Math.abs(eb.amount):0;
-              const tot=a1+a2;
+              const rowTot=a1+a2;
+              const ac=g.key==='revenus'?'var(--green)':g.key==='epargne'?'var(--blue)':'var(--red)';
               return`<tr>
                 <td style="font-weight:500">${name}</td>
                 <td><span class="badge" style="background:${c.bg};color:${c.text};border:${c.border}">${c.label}</span></td>
                 <td style="text-align:right;color:${mc1}">${a1?eur(a1):'—'}</td>
                 <td style="text-align:right;color:${mc2}">${a2?eur(a2):'—'}</td>
-                <td style="text-align:right;font-weight:700;color:${g.totColor}">${eur(tot)}</td>
+                <td style="text-align:right;font-weight:700;color:${ac}">${eur(rowTot)}</td>
               </tr>`;
             }).join('')}
-<tr style="background:var(--surface2)">
+            <tr style="background:var(--surface2)">
               <td colspan="2" style="font-size:var(--fs-sm);font-weight:600;color:var(--muted)">Total ${g.label.toLowerCase()}</td>
               <td style="text-align:right;font-weight:600;color:${mc1}">${eur(tot1)}</td>
               <td style="text-align:right;font-weight:600;color:${mc2}">${eur(tot2)}</td>
-              <td style="text-align:right;font-weight:700;color:${g.totColor}">${eur(tot1+tot2)}</td>
+              <td style="text-align:right;font-weight:700;color:${g.totColor}">${eur(tot)}</td>
             </tr>
           </tbody>
         </table></div>
