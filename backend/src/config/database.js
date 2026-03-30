@@ -116,6 +116,10 @@ UPDATE households SET creator_id = (
   // v5 — colonne is_admin
   `ALTER TABLE users ADD COLUMN is_admin INTEGER NOT NULL DEFAULT 0;`,
 
+  // v6 — compte admin par défaut (identifiant: admin / mdp: admin)
+  `INSERT OR IGNORE INTO users (name, email, password_hash, role, color, is_admin)
+   VALUES ('Admin', 'admin', '$2a$10$Cmgxu7VcJMOktNz/njXer.Q5NN2NzYoj6F0Mrl8g/R25ObcUznGRy', 'Autre', '#6366f1', 1);`,
+
 ];
 
 // ── Apply pending migrations ──────────────────────────────────────────────────
