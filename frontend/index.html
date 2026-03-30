@@ -671,7 +671,6 @@ window.onerror = function(msg, src, line) {
     <div id="login-form-toggle" style="display:none;margin-top:.5rem" class="auth-form">
       <div class="auth-field"><label>E-mail</label><input type="email" id="login-email" placeholder="vous@exemple.fr" onkeydown="if(event.key==='Enter')doLogin()"></div>
       <div class="auth-field"><label>Mot de passe</label><input type="password" id="login-pwd" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"></div>
-      <div style="text-align:right;margin-top:-4px;margin-bottom:4px"><a onclick="showForgotPassword()" style="font-size:var(--fs-xs);color:var(--muted);cursor:pointer">Mot de passe oublié ?</a></div>
       <div class="auth-error" id="login-error">Identifiants incorrects.</div>
       <button class="auth-btn" style="margin-top:.5rem" onclick="doLogin()">Se connecter</button>
     </div>
@@ -679,51 +678,6 @@ window.onerror = function(msg, src, line) {
   </div>
 </div>
 
-<!-- ══════ ÉCRAN MOT DE PASSE OUBLIÉ ══════ -->
-<div id="screen-forgot" class="screen" style="display:none">
-  <div class="auth-wrap">
-    <div class="auth-logo">Zé<span>nith</span></div>
-    <div id="forgot-success" style="display:none;text-align:center;padding:8px 0 4px">
-      <div style="width:52px;height:52px;border-radius:50%;background:var(--green-bg,#e6f7f2);display:flex;align-items:center;justify-content:center;margin:0 auto 16px">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
-      </div>
-      <div style="font-size:var(--fs-title);font-weight:700;margin-bottom:8px">E-mail envoyé !</div>
-      <div style="font-size:var(--fs-sm);color:var(--muted);line-height:1.6;margin-bottom:20px">Si un compte existe avec cette adresse, vous recevrez un lien de réinitialisation valable 1 heure.</div>
-      <button class="auth-btn" onclick="showScreen('login')">Retour à la connexion</button>
-    </div>
-    <div id="forgot-form">
-      <div style="font-size:var(--fs-title);font-weight:700;margin-bottom:6px">Mot de passe oublié</div>
-      <div style="font-size:var(--fs-sm);color:var(--muted);margin-bottom:20px;line-height:1.55">Saisissez votre adresse e-mail et nous vous enverrons un lien pour réinitialiser votre mot de passe.</div>
-      <div class="auth-field"><label>E-mail</label><input type="email" id="forgot-email" placeholder="vous@exemple.fr" onkeydown="if(event.key==='Enter')doForgotPassword()"></div>
-      <div class="auth-error" id="forgot-error"></div>
-      <button class="auth-btn" style="margin-top:1rem" onclick="doForgotPassword()">Envoyer le lien</button>
-      <div class="auth-switch" style="margin-top:1rem"><a onclick="showScreen('login')">← Retour à la connexion</a></div>
-    </div>
-  </div>
-</div>
-
-<!-- ══════ ÉCRAN RÉINITIALISATION MOT DE PASSE ══════ -->
-<div id="screen-reset" class="screen" style="display:none">
-  <div class="auth-wrap">
-    <div class="auth-logo">Zé<span>nith</span></div>
-    <div id="reset-success" style="display:none;text-align:center;padding:8px 0 4px">
-      <div style="width:52px;height:52px;border-radius:50%;background:var(--green-bg,#e6f7f2);display:flex;align-items:center;justify-content:center;margin:0 auto 16px">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
-      </div>
-      <div style="font-size:var(--fs-title);font-weight:700;margin-bottom:8px">Mot de passe modifié !</div>
-      <div style="font-size:var(--fs-sm);color:var(--muted);margin-bottom:20px">Vous pouvez maintenant vous connecter avec votre nouveau mot de passe.</div>
-      <button class="auth-btn" onclick="showScreen('login')">Se connecter</button>
-    </div>
-    <div id="reset-form">
-      <div style="font-size:var(--fs-title);font-weight:700;margin-bottom:6px">Nouveau mot de passe</div>
-      <div style="font-size:var(--fs-sm);color:var(--muted);margin-bottom:20px">Choisissez un mot de passe d'au moins 6 caractères.</div>
-      <div class="auth-field"><label>Nouveau mot de passe</label><input type="password" id="reset-pwd" placeholder="••••••••" onkeydown="if(event.key==='Enter')doResetPassword()"></div>
-      <div class="auth-field"><label>Confirmer</label><input type="password" id="reset-pwd2" placeholder="••••••••" onkeydown="if(event.key==='Enter')doResetPassword()"></div>
-      <div class="auth-error" id="reset-error"></div>
-      <button class="auth-btn" style="margin-top:1rem" onclick="doResetPassword()">Valider</button>
-    </div>
-  </div>
-</div>
 
 <!-- ══════ MODAL MOT DE PASSE (connexion rapide) ══════ -->
 <div id="modal-quick-pwd" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:600;align-items:center;justify-content:center;padding:1.5rem">
@@ -4699,64 +4653,6 @@ async function doRegister(){
   }finally{hideLoading();}
 }
 
-// ── Mot de passe oublié ───────────────────────────────────────────────────────
-
-function showForgotPassword(){
-  showScreen('forgot');
-  document.getElementById('forgot-form').style.display='';
-  document.getElementById('forgot-success').style.display='none';
-  document.getElementById('forgot-email').value='';
-  const e=document.getElementById('forgot-error');if(e)e.classList.remove('show');
-}
-
-async function doForgotPassword(){
-  const emailEl=document.getElementById('forgot-email');
-  const errEl=document.getElementById('forgot-error');
-  const email=emailEl.value.trim();
-  if(!email){errEl.textContent='E-mail requis.';errEl.classList.add('show');return;}
-  errEl.classList.remove('show');
-  try{
-    await fetch((window.location.hostname==='localhost'||window.location.hostname==='127.0.0.1'?'http://localhost:3001/api':'/api')+'/auth/forgot-password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email})});
-    document.getElementById('forgot-form').style.display='none';
-    document.getElementById('forgot-success').style.display='';
-  }catch(e){errEl.textContent='Erreur réseau. Réessayez.';errEl.classList.add('show');}
-}
-
-let _resetToken=null;
-
-async function doResetPassword(){
-  const pwd=document.getElementById('reset-pwd').value;
-  const pwd2=document.getElementById('reset-pwd2').value;
-  const errEl=document.getElementById('reset-error');
-  if(pwd.length<6){errEl.textContent='6 caractères minimum.';errEl.classList.add('show');return;}
-  if(pwd!==pwd2){errEl.textContent='Les mots de passe ne correspondent pas.';errEl.classList.add('show');return;}
-  errEl.classList.remove('show');
-  try{
-    const r=await fetch((window.location.hostname==='localhost'||window.location.hostname==='127.0.0.1'?'http://localhost:3001/api':'/api')+'/auth/reset-password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:_resetToken,newPassword:pwd})});
-    const j=await r.json();
-    if(!j.success)throw new Error(j.error||'Erreur');
-    document.getElementById('reset-form').style.display='none';
-    document.getElementById('reset-success').style.display='';
-    _resetToken=null;
-  }catch(e){errEl.textContent=e.message||'Lien invalide ou expiré.';errEl.classList.add('show');}
-}
-
-// Détecte ?reset=TOKEN dans l'URL au chargement
-(function checkResetParam(){
-  const params=new URLSearchParams(window.location.search);
-  const token=params.get('reset');
-  if(!token)return;
-  const url=new URL(window.location.href);
-  url.searchParams.delete('reset');
-  window.history.replaceState({},'',url.toString());
-  _resetToken=token;
-  document.getElementById('reset-form').style.display='';
-  document.getElementById('reset-success').style.display='none';
-  document.getElementById('reset-pwd').value='';
-  document.getElementById('reset-pwd2').value='';
-  // Afficher l'écran de reset dès que le DOM est prêt
-  setTimeout(()=>showScreen('reset'),0);
-})();
 
 /**
  * doLogout() — Clear session and return to login screen.

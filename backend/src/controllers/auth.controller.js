@@ -74,19 +74,4 @@ async function changePassword(req, res, next) {
   }
 }
 
-async function forgotPassword(req, res, next) {
-  try {
-    const { email } = req.body;
-    await authService.forgotPassword(email);
-    res.json({ success: true, data: { sent: true } });
-  } catch (err) { next(err); }
-}
-
-async function resetPassword(req, res, next) {
-  try {
-    const { token, newPassword } = req.body;
-    res.json({ success: true, data: authService.resetPassword(token, newPassword) });
-  } catch (err) { next(err); }
-}
-
-module.exports = { listUsers, login, loginById, register, getMe, updateSettings, updateProfile, changePassword, forgotPassword, resetPassword };
+module.exports = { listUsers, login, loginById, register, getMe, updateSettings, updateProfile, changePassword };

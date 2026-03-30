@@ -21,8 +21,6 @@ router.get('/users',              authCtrl.listUsers);
 router.post('/login',             authCtrl.login);
 router.post('/login-by-id',       authCtrl.loginById);
 router.post('/register',          authCtrl.register);
-router.post('/forgot-password',   authCtrl.forgotPassword);
-router.post('/reset-password',    authCtrl.resetPassword);
 
 // Protected route — requires valid JWT
 router.get('/me', requireAuth, authCtrl.getMe);
