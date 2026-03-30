@@ -3187,6 +3187,26 @@ function getYearRows(member){
   const sums=years.map(yr=>{const yr_rows=rows.filter(s=>s.year===yr).sort((a,b)=>MONTHS.indexOf(a.month)-MONTHS.indexOf(b.month));return{year:yr,amount:yr_rows[yr_rows.length-1].amount};});
   return sums.map((s,i)=>{const prev=i>0?sums[i-1].amount:null;return{year:s.year,amount:s.amount,delta:prev!=null?s.amount-prev:null,member};});
 }
+function projectionFinAnnee(memberList){
+  const currentYear=new Date().getFullYear();
+  const yearEntries=savings.filter(s=>memberList.includes(s.member)&&s.year===currentYear);
+  if(!yearEntries.length) return null;
+  const deltas=yearEntries.map(s=>s.delta).filter(d=>d!=null&&!isNaN(d));
+  if(!deltas.length) return null;
+  const avgDelta=deltas.reduce((a,b)=>a+b,0)/deltas.length;
+  // Agrège par mois (somme des membres si plusieurs)
+  const byMonth={};
+  yearEntries.forEach(s=>{
+    byMonth[s.month]=(byMonth[s.month]||0)+s.amount;
+  });
+  const lastMonth=[...Object.keys(byMonth)].sort((a,b)=>MONTHS.indexOf(b)-MONTHS.indexOf(a))[0];
+  if(!lastMonth) return null;
+  const latestTotal=byMonth[lastMonth];
+  const remainingMonths=11-MONTHS.indexOf(lastMonth);
+  const projected=latestTotal+(remainingMonths*avgDelta);
+  return{projected,avgDelta,remainingMonths};
+}
+
 function renderSavings(){
   const _savNoData = savingsMember==='all'
     ? savings.length===0
@@ -3254,13 +3274,17 @@ function renderSavings(){
     const trendTotal=prevTotal>0?Math.round((totalSav-prevTotal)/prevTotal*100):null;
     if(isSingle){
       const m=showMembers[0],lat=m===first?latestFirst:latestSecond,trend=m===first?trendF:trendS;
+      const proj=projectionFinAnnee([m]);
       document.getElementById('savings-kpis').innerHTML=
-        kpiHtml('Épargne',lat?eur(lat.amount):'—',getMC(m),lat?`Màj ${lat.month} ${lat.year}`:'',trend);
+        kpiHtml('Épargne',lat?eur(lat.amount):'—',getMC(m),lat?`Màj ${lat.month} ${lat.year}`:'',trend)+
+        (proj?kpiHtml('Projection fin d\'année',eur(proj.projected),'var(--blue)',`Moy. ${proj.avgDelta>=0?'+':''}${eur(proj.avgDelta)}/mois · ${proj.remainingMonths} mois restants`,null):'');
     } else {
+      const proj=projectionFinAnnee(showMembers);
       document.getElementById('savings-kpis').innerHTML=
         kpiHtml('Épargne',latestFirst?eur(latestFirst.amount):'—',getMC(first),latestFirst?`Màj ${latestFirst.month} ${latestFirst.year}`:'',trendF)+
         kpiHtml('Épargne',latestSecond?eur(latestSecond.amount):'—',getMC(second),latestSecond?`Màj ${latestSecond.month} ${latestSecond.year}`:'',trendS)+
-        kpiHtml('Total épargne',eur(totalSav),'var(--green)',(()=>{const latest=[latestFirst,latestSecond].filter(Boolean).sort((a,b)=>b.year!==a.year?b.year-a.year:MONTHS.indexOf(b.month)-MONTHS.indexOf(a.month))[0];return latest?`Màj ${latest.month} ${latest.year}`:''})(),trendTotal);
+        kpiHtml('Total épargne',eur(totalSav),'var(--green)',(()=>{const latest=[latestFirst,latestSecond].filter(Boolean).sort((a,b)=>b.year!==a.year?b.year-a.year:MONTHS.indexOf(b.month)-MONTHS.indexOf(a.month))[0];return latest?`Màj ${latest.month} ${latest.year}`:''})(),trendTotal)+
+        (proj?kpiHtml('Projection fin d\'année',eur(proj.projected),'var(--blue)',`Moy. ${proj.avgDelta>=0?'+':''}${eur(proj.avgDelta)}/mois · ${proj.remainingMonths} mois restants`,null):'');
     }
   }
   document.getElementById('savings-chart-title').textContent=isYear?'Évolution annuelle':'Évolution mensuelle';
