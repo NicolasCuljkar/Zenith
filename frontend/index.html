@@ -1065,9 +1065,7 @@ window.onerror = function(msg, src, line) {
           <input type="email" id="set-email" placeholder="vous@exemple.fr">
         </div>
         <div id="set-profile-msg" style="font-size:var(--fs-sm);min-height:18px"></div>
-      </div>
-      <div id="set-profile-footer" style="display:flex;gap:8px;justify-content:flex-end;margin-top:1rem">
-        <button class="btn-add" onclick="saveSettingsProfile()">Enregistrer</button>
+        <button class="btn-add" onclick="saveSettingsProfile()" style="width:100%;justify-content:center;margin-top:4px">Enregistrer les modifications</button>
       </div>
     </div>
 
@@ -1090,9 +1088,7 @@ window.onerror = function(msg, src, line) {
           <input type="password" id="set-pwd-cfm" placeholder="••••••••" autocomplete="new-password">
         </div>
         <div id="set-pwd-msg" style="font-size:var(--fs-sm);min-height:18px"></div>
-      </div>
-      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:1rem">
-        <button class="btn-add" onclick="saveSettingsPassword()">Changer le mot de passe</button>
+        <button class="btn-add" onclick="saveSettingsPassword()" style="width:100%;justify-content:center;margin-top:4px">Changer le mot de passe</button>
       </div>
     </div>
 
