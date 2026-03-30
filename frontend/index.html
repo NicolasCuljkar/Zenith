@@ -1568,7 +1568,7 @@ const kpiHtml=(label,value,color,sub='',trend=null,tip='',badge='')=>{
     </div>`:'';
   const subLines=sub?sub.split('·').map(s=>s.trim()).filter(Boolean):[];
   return`<div class="kpi" style="position:relative;overflow:visible;background:color-mix(in srgb,${color} 7%,var(--surface))" ${tooltipContent?'onmouseenter="this.querySelector(\'.kpi-tooltip\')&&(this.querySelector(\'.kpi-tooltip\').style.opacity=\'1\',this.querySelector(\'.kpi-tooltip\').style.transform=\'translateX(-50%) translateY(0)\')" onmouseleave="this.querySelector(\'.kpi-tooltip\')&&(this.querySelector(\'.kpi-tooltip\').style.opacity=\'0\',this.querySelector(\'.kpi-tooltip\').style.transform=\'translateX(-50%) translateY(-4px)\')"':''}>
-    <div class="kpi-accent" style="background:linear-gradient(90deg,${color},${color}99)"></div>
+    <div class="kpi-accent" style="background:${color}"></div>
     <div class="kpi-label">${label}</div>
     <div class="kpi-value" style="color:${color}">${value}</div>
     ${subLines.length?`<div class="kpi-sub">${subLines.map(s=>`<span>${s}</span>`).join('')}</div>`:''}
