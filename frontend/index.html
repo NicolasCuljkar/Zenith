@@ -4654,7 +4654,7 @@ async function _doLoginWithCredentials(userIdOrEmail,password){
         await loadData();
       }catch(e){console.warn('Auto-join failed:',e.message);}
     }
-    initUserContext();renderMemberTabs();updateNavForDataState();renderDashboard();renderEntries();
+    initUserContext();renderMemberTabs();updateNavForDataState();renderDashboard();renderEntries();document.getElementById('fab-entry').style.display='none';document.getElementById('fab-saving').style.display='none';
     registerPushSubscription();
     connectSSE(); _startPoll();
   }catch(err){
@@ -4679,7 +4679,7 @@ async function doLogin(){
     if(errEl) errEl.classList.remove('show');
     showScreen('app');
     await loadData();
-    initUserContext();renderMemberTabs();updateNavForDataState();renderDashboard();renderEntries();
+    initUserContext();renderMemberTabs();updateNavForDataState();renderDashboard();renderEntries();document.getElementById('fab-entry').style.display='none';document.getElementById('fab-saving').style.display='none';
     registerPushSubscription();
     connectSSE(); _startPoll();
   }catch(err){
@@ -4707,7 +4707,7 @@ async function doRegister(){
     currentUser=result.user;
     showScreen('app');
     await loadData();
-    initUserContext();renderMemberTabs();updateNavForDataState();renderDashboard();renderEntries();
+    initUserContext();renderMemberTabs();updateNavForDataState();renderDashboard();renderEntries();document.getElementById('fab-entry').style.display='none';document.getElementById('fab-saving').style.display='none';
     registerPushSubscription();
     connectSSE(); _startPoll();
   }catch(apiErr){
