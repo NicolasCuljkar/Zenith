@@ -32,19 +32,23 @@ function _send(res, event, data) {
 }
 
 /**
- * Notify all household members of `userId` (excluding the author)
- * that data has changed so they can refresh.
+ * Notify all SSE connections that should see the change:
+ * - All household members (including the author, for multi-device sync)
+ * - If solo, still notify the author's other devices
  */
 function broadcastToHousehold(userId) {
   const household = householdService.getForUser(userId);
-  if (!household) return; // solo user — no one else to notify
+  // Collect all userIds to notify (household members, or just the author if solo)
+  const memberIds = household
+    ? household.members.map(m => m.id)
+    : [userId];
 
-  for (const member of household.members) {
-    if (member.id === userId) continue; // skip the author
-    const set = clients.get(member.id);
+  const ts = Date.now();
+  for (const memberId of memberIds) {
+    const set = clients.get(memberId);
     if (!set || set.size === 0) continue;
     for (const res of set) {
-      _send(res, 'data_changed', { ts: Date.now() });
+      _send(res, 'data_changed', { ts });
     }
   }
 }
