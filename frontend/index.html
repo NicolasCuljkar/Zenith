@@ -2862,7 +2862,7 @@ function memberTableHtml(rows,isMobile,memberName){
     if(isMobile){
       const uid=`drag-${memberName}-${g.key}`;
       const groupColor=g.key==='revenus'?'#0d9e6e':g.key==='depenses'?'#d93535':g.key==='loisir'?'#f59e0b':'#2979c8';
-      return`<div style="margin-bottom:1.75rem">
+      return`<div style="margin-bottom:1.25rem">
       <div style="display:flex;justify-content:space-between;align-items:center;padding:0 2px 9px;margin-bottom:8px;border-bottom:2px solid ${groupColor}30">
         <div style="display:flex;align-items:center;gap:7px">
           <span style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:${groupColor}">${g.label}</span>
@@ -2971,7 +2971,7 @@ function renderEntries(){
         <span style="font-size:var(--fs-sm);font-weight:800;color:${g.totColor};letter-spacing:-.02em">${eur(Math.abs(tot))}</span>
       </div>`;
       if(isMobile){
-        return`<div style="margin-bottom:1.75rem">
+        return`<div style="margin-bottom:1.25rem">
           ${hdr}
           ${allNames.map(name=>{
             const ea=e1.find(x=>x.name===name),eb=e2.find(x=>x.name===name);
