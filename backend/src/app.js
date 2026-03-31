@@ -16,6 +16,7 @@ const notificationsRoutes = require('./routes/notifications.routes');
 const importRoutes        = require('./routes/import.routes');
 const householdRoutes     = require('./routes/household.routes');
 const adminRoutes         = require('./routes/admin.routes');
+const eventsRoutes        = require('./routes/events.routes');
 const notifService        = require('./services/notifications.service');
 
 const { errorHandler, notFoundHandler } = require('./middleware/error.middleware');
@@ -72,6 +73,7 @@ app.use('/api/notifications', notificationsRoutes);
 app.use('/api/import',        importRoutes);
 app.use('/api/household',     householdRoutes);
 app.use('/api/admin',         adminRoutes);
+app.use('/api/events',        eventsRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({ success: true, status: 'ok', env: process.env.NODE_ENV || 'development' });

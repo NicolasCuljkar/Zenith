@@ -7,6 +7,7 @@
 
 const savingsService = require('../services/savings.service');
 const notifService   = require('../services/notifications.service');
+const sseService     = require('../services/sse.service');
 
 const MILESTONES = [5000, 10000, 20000, 30000, 50000, 75000, 100000, 150000, 200000, 300000, 500000];
 const fmt = n => Math.round(n).toLocaleString('fr-FR') + ' €';
@@ -58,6 +59,7 @@ async function createSaving(req, res, next) {
     const { member, year, month, amount } = req.body;
     const saving = savingsService.create({ member, year, month, amount }, req.user.id);
     checkSavingsNotifications(saving, req.user.id);
+    sseService.broadcastToHousehold(req.user.id);
     res.status(201).json({ success: true, data: saving });
   } catch (err) {
     next(err);
@@ -88,6 +90,7 @@ async function updateSaving(req, res, next) {
     const { member, year, month, amount } = req.body;
     const saving = savingsService.update(Number(req.params.id), { member, year, month, amount }, req.user.id);
     checkSavingsNotifications(saving, req.user.id);
+    sseService.broadcastToHousehold(req.user.id);
     res.json({ success: true, data: saving });
   } catch (err) {
     next(err);
@@ -101,6 +104,7 @@ async function updateSaving(req, res, next) {
 async function deleteSaving(req, res, next) {
   try {
     const result = savingsService.remove(Number(req.params.id), req.user.id);
+    sseService.broadcastToHousehold(req.user.id);
     res.json({ success: true, data: result });
   } catch (err) {
     next(err);

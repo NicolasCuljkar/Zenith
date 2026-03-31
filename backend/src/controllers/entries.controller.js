@@ -2,6 +2,7 @@
 
 const entriesService  = require('../services/entries.service');
 const householdService = require('../services/household.service');
+const sseService       = require('../services/sse.service');
 
 function resolveUserScope(userId, member) {
   // Vue Commun (foyer) : renvoie tous les userIds du foyer
@@ -35,6 +36,7 @@ async function createEntry(req, res, next) {
   try {
     const { name, amount, cat, member } = req.body;
     const entry = entriesService.create({ name, amount, cat, member }, req.user.id);
+    sseService.broadcastToHousehold(req.user.id);
     res.status(201).json({ success: true, data: entry });
   } catch (err) { next(err); }
 }
@@ -51,6 +53,7 @@ async function updateEntry(req, res, next) {
   try {
     const { name, amount, cat, member } = req.body;
     const entry = entriesService.update(Number(req.params.id), { name, amount, cat, member }, req.user.id);
+    sseService.broadcastToHousehold(req.user.id);
     res.json({ success: true, data: entry });
   } catch (err) { next(err); }
 }
@@ -58,6 +61,7 @@ async function updateEntry(req, res, next) {
 async function deleteEntry(req, res, next) {
   try {
     const result = entriesService.remove(Number(req.params.id), req.user.id);
+    sseService.broadcastToHousehold(req.user.id);
     res.json({ success: true, data: result });
   } catch (err) { next(err); }
 }

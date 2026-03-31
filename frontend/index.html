@@ -1528,6 +1528,24 @@ async function loadData(){
 }
 
 /**
+ * loadDataSilent() — Same as loadData() but without the loading spinner.
+ * Used for SSE-triggered background refreshes.
+ */
+async function loadDataSilent(){
+  if(!API.auth.isLoggedIn()) return;
+  try{
+    const [apiEntries, apiSavings, apiHousehold] = await Promise.all([
+      API.entries.getAll(),
+      API.savings.getAll(),
+      API.household.get().catch(() => null),
+    ]);
+    entries = apiEntries || [];
+    savings = apiSavings || [];
+    currentHousehold = apiHousehold || null;
+  }catch(err){ console.warn('[SSE] silent reload error', err); }
+}
+
+/**
  * saveData() — Persist UI preferences to localStorage only.
  * Data (entries/savings) are saved via individual API calls.
  */
@@ -4630,6 +4648,7 @@ async function _doLoginWithCredentials(userIdOrEmail,password){
     }
     initUserContext();renderMemberTabs();updateNavForDataState();renderDashboard();renderEntries();
     registerPushSubscription();
+    connectSSE();
   }catch(err){
     showApiError(err.message||'Échec de la connexion.');
   }finally{hideLoading();}
@@ -4654,6 +4673,7 @@ async function doLogin(){
     await loadData();
     initUserContext();renderMemberTabs();updateNavForDataState();renderDashboard();renderEntries();
     registerPushSubscription();
+    connectSSE();
   }catch(err){
     if(errEl){errEl.textContent=err.message||'Identifiants incorrects.';errEl.classList.add('show');}
   }finally{hideLoading();}
@@ -4681,6 +4701,7 @@ async function doRegister(){
     await loadData();
     initUserContext();renderMemberTabs();updateNavForDataState();renderDashboard();renderEntries();
     registerPushSubscription();
+    connectSSE();
   }catch(apiErr){
     err.textContent=apiErr.message||'Erreur lors de la création du compte.';
     err.classList.add('show');
@@ -4688,10 +4709,64 @@ async function doRegister(){
 }
 
 
+// ── SSE — synchronisation temps réel ─────────────────────────────────────
+let _sseSource = null;
+let _sseRetryTimer = null;
+
+function connectSSE(){
+  if(_sseSource) return;
+  const token = localStorage.getItem('zenith_token');
+  if(!token) return;
+  clearTimeout(_sseRetryTimer);
+  const src = new EventSource(`/api/events?token=${encodeURIComponent(token)}`);
+  _sseSource = src;
+
+  src.addEventListener('connected', ()=>{ /* handshake OK */ });
+  src.addEventListener('ping', ()=>{ /* keep-alive, nothing to do */ });
+
+  src.addEventListener('data_changed', async ()=>{
+    await loadDataSilent();
+    renderDashboard();
+    if(currentTab==='entries')  renderEntries();
+    if(currentTab==='savings')  renderSavings();
+    if(currentTab==='analysis') renderAnalysis();
+    if(currentTab==='projection') renderProjection();
+    _showSyncToast();
+  });
+
+  src.onerror = ()=>{
+    src.close();
+    if(_sseSource===src) _sseSource=null;
+    // Retry après 15 s (évite de spammer si le backend redémarre)
+    _sseRetryTimer = setTimeout(()=>{ if(currentUser) connectSSE(); }, 15000);
+  };
+}
+
+function disconnectSSE(){
+  clearTimeout(_sseRetryTimer);
+  if(_sseSource){ _sseSource.close(); _sseSource=null; }
+}
+
+function _showSyncToast(){
+  let el = document.getElementById('zenith-sync-toast');
+  if(!el){
+    el = document.createElement('div');
+    el.id = 'zenith-sync-toast';
+    el.style.cssText = 'position:fixed;top:60px;right:16px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:7px 14px;font-size:var(--fs-xs);font-weight:600;color:var(--muted);z-index:9998;opacity:0;transition:opacity .25s;pointer-events:none;display:flex;align-items:center;gap:6px;box-shadow:0 4px 16px rgba(0,0,0,.12)';
+    el.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#3B8BD4" stroke-width="2.5" stroke-linecap="round"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>Mise à jour reçue';
+    document.body.appendChild(el);
+  }
+  el.style.opacity='1';
+  clearTimeout(el._t);
+  el._t = setTimeout(()=>{ el.style.opacity='0'; }, 2500);
+}
+// ── Fin SSE ───────────────────────────────────────────────────────────────
+
 /**
  * doLogout() — Clear session and return to login screen.
  */
 async function doLogout(){
+  disconnectSSE();
   API.auth.logout(); // clears localStorage token + user
   localStorage.removeItem('zenith_last_activity');
   currentUser=null;
@@ -5284,6 +5359,7 @@ async function initApp(){
       renderDashboard();
       renderEntries();
       registerPushSubscription(); // non-bloquant
+      connectSSE();
     } else {
       showScreen('login');
     }
