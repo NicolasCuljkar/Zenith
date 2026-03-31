@@ -2977,7 +2977,6 @@ function renderEntries(){
         </div>`;
       }
       return`<div style="margin-bottom:var(--sg)">
-        ${hdr}
         <div class="tbl-wrap"><table style="width:100%;table-layout:fixed">
           <colgroup><col style="width:35%"><col style="width:15%"><col style="width:17%"><col style="width:17%"><col style="width:16%"></colgroup>
           <thead><tr>
@@ -3905,7 +3904,14 @@ function renderAnalysis(){
     } else {
       // Vue membre individuel : couleur palette
       const dot=`<span style="width:10px;height:10px;border-radius:50%;background:${col1};flex-shrink:0;display:inline-block;box-shadow:0 0 0 2px ${col1}33"></span>`;
-      return`<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:10px;background:var(--surface2);border:1px solid var(--border)">
+      const tipTxt=`${e.cat==='fixe'?'Dépense fixe':'Dépense variable'} · ${pct}% du top 5`;
+      return`<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:10px;background:var(--surface2);border:1px solid var(--border);transition:background .15s,box-shadow .15s;position:relative;cursor:default"
+        onmouseenter="this.style.background='var(--hover)';this.style.boxShadow='0 2px 12px rgba(0,0,0,.08)';this.querySelector('.bar-tip').style.opacity='1';this.querySelector('.bar-tip').style.transform='translateX(-50%) translateY(0)'"
+        onmouseleave="this.style.background='var(--surface2)';this.style.boxShadow='none';this.querySelector('.bar-tip').style.opacity='0';this.querySelector('.bar-tip').style.transform='translateX(-50%) translateY(-4px)'">
+        <div class="bar-tip" style="position:absolute;top:calc(100% + 6px);left:50%;transform:translateX(-50%) translateY(-4px);background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:9px 13px;white-space:normal;pointer-events:none;opacity:0;transition:opacity .15s,transform .15s;z-index:50;box-shadow:0 8px 24px rgba(0,0,0,.15);min-width:160px;max-width:min(220px,70vw)">
+          <div style="font-size:var(--fs-sm);font-weight:700;color:var(--text);margin-bottom:4px">${e.name}</div>
+          <div style="font-size:var(--fs-sm);color:var(--muted);line-height:1.7">${tipTxt}</div>
+        </div>
         ${dot}
         <div style="flex:1;min-width:0">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
