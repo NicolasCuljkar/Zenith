@@ -481,6 +481,10 @@ input[type=range]:hover::-moz-range-thumb{transform:scale(1.1)}
   .modal-footer{flex-direction:column-reverse;gap:10px;margin-top:1.25rem}
   .modal-footer .btn{display:flex;align-items:center;justify-content:center;width:100%;padding:13px 20px;font-size:var(--fs-base);border-radius:10px;box-sizing:border-box}
   .modal-footer .btn-add{width:100%;justify-content:center;padding:13px 20px;font-size:var(--fs-base);border-radius:10px;box-sizing:border-box}
+  /* entry cards on mobile */
+  .entry-card{margin-bottom:8px}
+  .entry-group-hdr{padding:6px 12px;margin-bottom:8px}
+  #entries-summary{grid-template-columns:repeat(3,1fr)}
 }
 
 /* ══ 480px — mobile standard ══ */
@@ -1398,8 +1402,8 @@ let savingPct={Nicolas:60,Carla:50};
 let savingsMember='all',analysisMember='all',projectionMember='all',dashboardMember='all',entriesMember='Commun',conseilsMember='all';
 let projAnnualRate=0.04; // default 4%
 let simMonthlyOverride=null;
-let entryOrder={}; // {memberId_groupKey: [id, id, ...]} custom sort order
-try{entryOrder=JSON.parse(localStorage.getItem('bm_entry_order')||'{}');}catch(e){}
+let entryOrder={}; // kept for backward compat but no longer used for sorting
+localStorage.removeItem('bm_entry_order'); // supprime tout ordre drag-and-drop persisté
 // profilePhotos is now fetched from the API (stored in users table)
 // but we keep a local cache for fast rendering
 let profilePhotos={};
@@ -2797,15 +2801,7 @@ function saveEntryOrder(){
   // The API call is made in initDragDrop after drop completes
 }
 
-function getSortedGroupRows(gRows, memberName, groupKey){
-  const order=entryOrder[`${memberName}_${groupKey}`];
-  if(order&&order.length){
-    const remaining=[...gRows];
-    const ordered=[];
-    order.forEach(id=>{const i=remaining.findIndex(e=>e.id===id);if(i>-1)ordered.push(remaining.splice(i,1)[0]);});
-    remaining.sort((a,b)=>Math.abs(b.amount)-Math.abs(a.amount));
-    return[...ordered,...remaining];
-  }
+function getSortedGroupRows(gRows){
   return [...gRows].sort((a,b)=>Math.abs(b.amount)-Math.abs(a.amount));
 }
 
@@ -2851,7 +2847,7 @@ function memberTableHtml(rows,isMobile,memberName){
   const epCalc=Math.round(ps.rav*pct/100),loiCalc=Math.round(ps.rav*(100-pct)/100);
   const revBrut=ps.rev||1;
   return GROUPS.map(g=>{
-    const gRows=getSortedGroupRows(rows.filter(e=>g.cats.includes(e.cat)), memberName, g.key);
+    const gRows=getSortedGroupRows(rows.filter(e=>g.cats.includes(e.cat)));
     const tot=g.key==='revenus'
       ?absSumCat(gRows,'revenu')-absSumCat(gRows,'impot')
       :gRows.reduce((s,e)=>s+Math.abs(e.amount),0);
@@ -2871,12 +2867,12 @@ function memberTableHtml(rows,isMobile,memberName){
         <span style="font-size:var(--fs-sm);font-weight:700;color:${totColor}">${eur(Math.abs(tot))}</span>
       </div>
       <div id="${uid}">
-      ${gRows.map(e=>{const c=CATS[e.cat];const amtColor=['revenu'].includes(e.cat)?'var(--green)':['impot'].includes(e.cat)?'var(--amber)':'var(--red)';return`<div class="entry-card" data-id="${e.id}" style="border-left-color:${c.hex}">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+      ${gRows.map(e=>{const c=CATS[e.cat];const amtColor=['revenu'].includes(e.cat)?'var(--green)':['impot'].includes(e.cat)?'var(--amber)':'var(--red)';return`<div class="entry-card" data-id="${e.id}" style="border-left-color:${c.hex};background:color-mix(in srgb,${c.hex} 6%,var(--surface))">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
           <span style="font-weight:600;font-size:var(--fs-md);flex:1;line-height:1.35">${e.name}</span>
           <span style="font-size:var(--fs-base);font-weight:700;color:${amtColor};flex-shrink:0">${eur(Math.abs(e.amount))}</span>
         </div>
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:7px">
           <span class="badge" style="background:${c.bg};color:${c.text};border:${c.border};line-height:1.4">${c.label}</span>
           ${canEdit(e.member)?`<div style="display:flex;gap:5px"><button class="btn-act" onclick="openEditEntry(${e.id})"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="btn-act btn-act-danger" onclick="deleteEntry(${e.id})"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg></button></div>`:''}
         </div>
@@ -2978,16 +2974,16 @@ function renderEntries(){
             const c=CATS[(ea||eb)?.cat];
             const tot=(Math.abs(ea?.amount||0)+Math.abs(eb?.amount||0));
             const amtColor=g.key==='revenus'?'var(--green)':g.key==='epargne'?'var(--blue)':'var(--red)';
-            return`<div class="entry-card" style="border-left-color:${c.hex}">
-              <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+            return`<div class="entry-card" style="border-left-color:${c.hex};background:color-mix(in srgb,${c.hex} 6%,var(--surface))">
+              <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
                 <span style="font-weight:600;font-size:var(--fs-md);flex:1;line-height:1.35">${name}</span>
                 <span style="font-size:var(--fs-base);font-weight:700;color:${amtColor};flex-shrink:0">${eur(tot)}</span>
               </div>
-              <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-top:7px">
                 <span class="badge" style="background:${c.bg};color:${c.text};border:${c.border};line-height:1.4">${c.label}</span>
-                <div style="display:flex;gap:8px">
-                  ${ea?`<span style="font-size:var(--fs-xs);color:${mc1};font-weight:600">${eur(Math.abs(ea.amount))}</span>`:''}
-                  ${eb?`<span style="font-size:var(--fs-xs);color:${mc2};font-weight:600">${eur(Math.abs(eb.amount))}</span>`:''}
+                <div style="display:flex;gap:5px;align-items:center">
+                  ${ea?`<span style="display:inline-flex;align-items:center;gap:3px;font-size:var(--fs-xs);font-weight:700;color:${mc1};background:${mc1}1a;border-radius:6px;padding:2px 7px;line-height:1.4"><span style="width:5px;height:5px;border-radius:50%;background:${mc1};flex-shrink:0"></span>${eur(Math.abs(ea.amount))}</span>`:''}
+                  ${eb?`<span style="display:inline-flex;align-items:center;gap:3px;font-size:var(--fs-xs);font-weight:700;color:${mc2};background:${mc2}1a;border-radius:6px;padding:2px 7px;line-height:1.4"><span style="width:5px;height:5px;border-radius:50%;background:${mc2};flex-shrink:0"></span>${eur(Math.abs(eb.amount))}</span>`:''}
                 </div>
               </div>
             </div>`;
@@ -4648,7 +4644,7 @@ async function _doLoginWithCredentials(userIdOrEmail,password){
     }
     initUserContext();renderMemberTabs();updateNavForDataState();renderDashboard();renderEntries();
     registerPushSubscription();
-    connectSSE();
+    connectSSE(); _startPoll();
   }catch(err){
     showApiError(err.message||'Échec de la connexion.');
   }finally{hideLoading();}
@@ -4673,7 +4669,7 @@ async function doLogin(){
     await loadData();
     initUserContext();renderMemberTabs();updateNavForDataState();renderDashboard();renderEntries();
     registerPushSubscription();
-    connectSSE();
+    connectSSE(); _startPoll();
   }catch(err){
     if(errEl){errEl.textContent=err.message||'Identifiants incorrects.';errEl.classList.add('show');}
   }finally{hideLoading();}
@@ -4701,7 +4697,7 @@ async function doRegister(){
     await loadData();
     initUserContext();renderMemberTabs();updateNavForDataState();renderDashboard();renderEntries();
     registerPushSubscription();
-    connectSSE();
+    connectSSE(); _startPoll();
   }catch(apiErr){
     err.textContent=apiErr.message||'Erreur lors de la création du compte.';
     err.classList.add('show');
@@ -4709,43 +4705,68 @@ async function doRegister(){
 }
 
 
-// ── SSE — synchronisation temps réel ─────────────────────────────────────
-let _sseSource = null;
+// ── SSE + polling — synchronisation temps réel ───────────────────────────
+let _sseSource   = null;
 let _sseRetryTimer = null;
+let _pollTimer   = null;
+let _refreshing  = false; // évite les doubles rechargements simultanés
+
+async function _refreshAndRender(showToast){
+  if(_refreshing || !currentUser || _lockMode) return;
+  _refreshing = true;
+  try{
+    await loadDataSilent();
+    initUserContext();
+    renderMemberTabs();
+    updateNavForDataState();
+    renderDashboard();
+    if(currentTab==='entries')    renderEntries();
+    if(currentTab==='savings')    renderSavings();
+    if(currentTab==='analysis')   renderAnalysis();
+    if(currentTab==='projection') renderProjection();
+    if(showToast) _showSyncToast();
+  }finally{ _refreshing = false; }
+}
 
 function connectSSE(){
-  if(_sseSource) return;
+  // Ne crée pas une nouvelle connexion si une est déjà ouverte ou en cours
+  if(_sseSource && _sseSource.readyState !== EventSource.CLOSED) return;
   const token = localStorage.getItem('zenith_token');
   if(!token) return;
   clearTimeout(_sseRetryTimer);
+  if(_sseSource){ _sseSource.close(); _sseSource = null; }
+
   const src = new EventSource(`/api/events?token=${encodeURIComponent(token)}`);
   _sseSource = src;
 
-  src.addEventListener('connected', ()=>{ /* handshake OK */ });
-  src.addEventListener('ping', ()=>{ /* keep-alive, nothing to do */ });
+  // Reconnexion réussie → rafraîchir pour récupérer les événements manqués
+  src.addEventListener('connected', ()=>{ _refreshAndRender(true); });
 
-  src.addEventListener('data_changed', async ()=>{
-    await loadDataSilent();
-    renderDashboard();
-    if(currentTab==='entries')  renderEntries();
-    if(currentTab==='savings')  renderSavings();
-    if(currentTab==='analysis') renderAnalysis();
-    if(currentTab==='projection') renderProjection();
-    _showSyncToast();
-  });
+  // Événement push : rafraîchir immédiatement
+  src.addEventListener('data_changed', ()=>{ _refreshAndRender(true); });
 
   src.onerror = ()=>{
-    src.close();
-    if(_sseSource===src) _sseSource=null;
-    // Retry après 15 s (évite de spammer si le backend redémarre)
-    _sseRetryTimer = setTimeout(()=>{ if(currentUser) connectSSE(); }, 15000);
+    // Si la connexion est fermée définitivement, planifier une reconnexion
+    if(src.readyState === EventSource.CLOSED){
+      if(_sseSource === src) _sseSource = null;
+      _sseRetryTimer = setTimeout(()=>{ if(currentUser) connectSSE(); }, 5000);
+    }
+    // Si readyState === CONNECTING, EventSource tente déjà de se reconnecter
   };
 }
 
 function disconnectSSE(){
   clearTimeout(_sseRetryTimer);
-  if(_sseSource){ _sseSource.close(); _sseSource=null; }
+  _stopPoll();
+  if(_sseSource){ _sseSource.close(); _sseSource = null; }
 }
+
+function _startPoll(){
+  _stopPoll();
+  // Polling toutes les 30 s en filet de sécurité (si SSE manque un événement)
+  _pollTimer = setInterval(()=>{ _refreshAndRender(false); }, 30000);
+}
+function _stopPoll(){ clearInterval(_pollTimer); _pollTimer = null; }
 
 function _showSyncToast(){
   let el = document.getElementById('zenith-sync-toast');
@@ -4766,7 +4787,7 @@ function _showSyncToast(){
  * doLogout() — Clear session and return to login screen.
  */
 async function doLogout(){
-  disconnectSSE();
+  disconnectSSE(); // ferme SSE + poll
   API.auth.logout(); // clears localStorage token + user
   localStorage.removeItem('zenith_last_activity');
   currentUser=null;
@@ -4828,6 +4849,8 @@ document.addEventListener('visibilitychange', ()=>{
       _showLockScreen();
     } else {
       startInactivityTimer();
+      // Rafraîchir silencieusement si l'onglet était masqué plus de 5 s
+      if(elapsed > 5000) _refreshAndRender(false);
     }
   }
 });

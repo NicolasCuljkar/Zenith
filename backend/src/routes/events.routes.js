@@ -16,7 +16,7 @@ const sseService = require('../services/sse.service');
 const router = Router();
 
 const JWT_SECRET  = process.env.JWT_SECRET;
-const PING_MS     = 25000; // keep-alive every 25 s (Railway timeout is 30 s)
+const PING_MS     = 20000; // keep-alive every 20 s (Railway proxy timeout ~30 s)
 
 router.get('/', (req, res) => {
   // Auth via query param (EventSource limitation)
@@ -34,22 +34,23 @@ router.get('/', (req, res) => {
   const user = db.prepare('SELECT id FROM users WHERE id = ?').get(payload.id);
   if (!user) return res.status(401).json({ success: false, error: 'Compte introuvable.' });
 
-  // SSE headers
+  // SSE headers — no-transform important to prevent proxy buffering
   res.setHeader('Content-Type', 'text/event-stream');
-  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Cache-Control', 'no-cache, no-transform');
   res.setHeader('Connection', 'keep-alive');
-  res.setHeader('X-Accel-Buffering', 'no'); // disable Nginx buffering if present
+  res.setHeader('X-Accel-Buffering', 'no');
   res.flushHeaders();
 
   const userId = payload.id;
   sseService.subscribe(userId, res);
 
-  // Initial handshake
+  // Tell client to reconnect after 3 s if connection drops
+  res.write('retry: 3000\n');
   res.write('event: connected\ndata: {}\n\n');
 
-  // Keep-alive ping
+  // Keep-alive: SSE comment (no event name = no client listener needed)
   const ping = setInterval(() => {
-    try { res.write('event: ping\ndata: {}\n\n'); } catch (_) { cleanup(); }
+    try { res.write(': ping\n\n'); } catch (_) { cleanup(); }
   }, PING_MS);
 
   function cleanup() {
