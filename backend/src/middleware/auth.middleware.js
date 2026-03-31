@@ -1,6 +1,7 @@
 'use strict';
 
 const jwt = require('jsonwebtoken');
+const db  = require('../config/database');
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
@@ -10,15 +11,24 @@ function requireAuth(req, res, next) {
     return res.status(401).json({ success: false, error: 'Token manquant ou invalide.' });
   }
 
+  let payload;
   try {
-    req.user = jwt.verify(authHeader.slice(7), JWT_SECRET);
-    next();
+    payload = jwt.verify(authHeader.slice(7), JWT_SECRET);
   } catch (err) {
     const message = err.name === 'TokenExpiredError'
       ? 'Session expirée. Reconnectez-vous.'
       : 'Token invalide.';
-    res.status(401).json({ success: false, error: message });
+    return res.status(401).json({ success: false, error: message });
   }
+
+  // Vérifie que l'utilisateur existe toujours en base
+  const user = db.prepare('SELECT id, is_admin FROM users WHERE id = ?').get(payload.id);
+  if (!user) {
+    return res.status(401).json({ success: false, error: 'Compte introuvable. Reconnectez-vous.' });
+  }
+
+  req.user = payload;
+  next();
 }
 
 function optionalAuth(req, res, next) {

@@ -722,7 +722,7 @@ window.onerror = function(msg, src, line) {
     <div class="auth-form">
       <div class="auth-field"><label>Prénom</label><input type="text" id="reg-name" placeholder="Votre prénom"></div>
       <div class="auth-field"><label>Adresse e-mail</label><input type="email" id="reg-email" placeholder="vous@exemple.fr"></div>
-      <div class="auth-field"><label>Mot de passe</label><input type="password" id="reg-pwd" placeholder="Min. 6 caractères"></div>
+      <div class="auth-field"><label>Mot de passe</label><input type="password" id="reg-pwd" placeholder="Min. 8 caractères"></div>
       <div class="auth-field"><label>Confirmer le mot de passe</label><input type="password" id="reg-pwd2" placeholder="••••••••"></div>
       <input type="hidden" id="reg-role" value="Autre">
       <div class="auth-error" id="reg-error"></div>
@@ -1064,7 +1064,7 @@ window.onerror = function(msg, src, line) {
     <!-- Tab Sécurité : mot de passe -->
     <div id="settings-tab-securite" style="display:none">
       <div style="padding:12px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);margin-bottom:1.25rem;font-size:var(--fs-sm);color:var(--muted);line-height:1.6">
-        Choisissez un mot de passe d'au moins <strong style="color:var(--text)">6 caractères</strong>. Il ne sera jamais affiché en clair.
+        Choisissez un mot de passe d'au moins <strong style="color:var(--text)">8 caractères</strong>. Il ne sera jamais affiché en clair.
       </div>
       <div class="fstack">
         <div class="fgrp">
@@ -1073,7 +1073,7 @@ window.onerror = function(msg, src, line) {
         </div>
         <div class="fgrp">
           <label>Nouveau mot de passe</label>
-          <input type="password" id="set-pwd-new" placeholder="Min. 6 caractères" autocomplete="new-password">
+          <input type="password" id="set-pwd-new" placeholder="Min. 8 caractères" autocomplete="new-password">
         </div>
         <div class="fgrp">
           <label>Confirmer le nouveau mot de passe</label>
@@ -2200,7 +2200,7 @@ async function saveSettingsPassword(){
   const msg=document.getElementById('set-pwd-msg');
   if(!cur||!nw||!cfm){msg.style.color='var(--red)';msg.textContent='Tous les champs sont requis.';return;}
   if(nw!==cfm){msg.style.color='var(--red)';msg.textContent='Les mots de passe ne correspondent pas.';return;}
-  if(nw.length<6){msg.style.color='var(--red)';msg.textContent='Minimum 6 caractères.';return;}
+  if(nw.length<8){msg.style.color='var(--red)';msg.textContent='Minimum 8 caractères.';return;}
   try{
     msg.style.color='var(--muted)';msg.textContent='Mise à jour…';
     await API.users.changePassword({currentPassword:cur,newPassword:nw});
@@ -4544,7 +4544,7 @@ function quickLogin(userId){
 
 function pwdModalClose(){
   // En mode verrou : fermer sans s'authentifier = déconnexion
-  if(_lockMode){ _lockMode=false; sessionStorage.removeItem('zenith_locked'); document.getElementById('modal-quick-pwd').style.display='none'; _quickLoginUser=null; doLogout(); return; }
+  if(_lockMode){ _lockMode=false; sessionStorage.removeItem('zenith_locked'); document.getElementById('modal-quick-pwd').style.display='none'; _setAppInert(false); _quickLoginUser=null; doLogout(); return; }
   document.getElementById('modal-quick-pwd').style.display = 'none';
   _quickLoginUser = null;
 }
@@ -4580,6 +4580,7 @@ async function pwdModalConfirm(){
       _lockMode = false;
       sessionStorage.removeItem('zenith_locked');
       document.getElementById('modal-quick-pwd').style.display = 'none';
+      _setAppInert(false);
       _quickLoginUser = null;
       startInactivityTimer();
     } else {
@@ -4663,7 +4664,7 @@ async function doRegister(){
   const role=document.getElementById('reg-role').value;
   const err=document.getElementById('reg-error');
   if(!name||!email||!pwd){err.textContent='Tous les champs sont requis.';err.classList.add('show');return;}
-  if(pwd.length<6){err.textContent='Le mot de passe doit faire au moins 6 caractères.';err.classList.add('show');return;}
+  if(pwd.length<8){err.textContent='Le mot de passe doit faire au moins 8 caractères.';err.classList.add('show');return;}
   if(pwd!==pwd2){err.textContent='Les mots de passe ne correspondent pas.';err.classList.add('show');return;}
   err.classList.remove('show');
   showLoading();
@@ -4750,6 +4751,13 @@ document.addEventListener('visibilitychange', ()=>{
   }
 });
 
+function _setAppInert(on){
+  document.querySelectorAll('header, main').forEach(el=>{
+    if(on) el.setAttribute('inert','');
+    else   el.removeAttribute('inert');
+  });
+}
+
 function _showLockScreen(){
   sessionStorage.setItem('zenith_locked','1');
   // Réutilise le modal de connexion rapide
@@ -4767,8 +4775,15 @@ function _showLockScreen(){
   inp.type = 'password';
   document.getElementById('pwd-modal-error').classList.remove('show');
   document.getElementById('modal-quick-pwd').style.display = 'flex';
+  _setAppInert(true);
   setTimeout(() => inp.focus(), 80);
 }
+// Bloque toute interaction clavier hors du modal de verrou
+document.addEventListener('keydown', e=>{
+  if(!_lockMode) return;
+  const modal = document.getElementById('modal-quick-pwd');
+  if(!modal || !modal.contains(e.target)) { e.preventDefault(); e.stopImmediatePropagation(); }
+}, true);
 // ── Fin verrou session ────────────────────────────────────────────────────
 document.getElementById('reg-pwd2').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();doRegister();}});
 

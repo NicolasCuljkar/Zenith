@@ -5,7 +5,7 @@ const jwt         = require('jsonwebtoken');
 const db          = require('../config/database');
 
 const JWT_SECRET     = process.env.JWT_SECRET;
-const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
+const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '24h';
 
 if (!JWT_SECRET) throw new Error('JWT_SECRET environment variable is required.');
 
@@ -75,7 +75,7 @@ function loginById(userId, password) {
 
 function register(name, email, password, role = 'Autre') {
   if (!name || !email || !password) throw httpError('Tous les champs sont requis.', 400);
-  if (password.length < 6)          throw httpError('Le mot de passe doit faire au moins 6 caractères.', 400);
+  if (password.length < 8)          throw httpError('Le mot de passe doit faire au moins 8 caractères.', 400);
   if (!['Nicolas', 'Carla', 'Autre'].includes(role)) throw httpError('Rôle invalide.', 400);
 
   const existing = db.prepare('SELECT id FROM users WHERE email = ? COLLATE NOCASE').get(email.trim().toLowerCase());
@@ -135,7 +135,7 @@ function changePassword(userId, { currentPassword, newPassword } = {}) {
   const user = db.prepare('SELECT * FROM users WHERE id = ?').get(userId);
   if (!user) throw httpError('Utilisateur introuvable.', 404);
   if (!bcrypt.compareSync(currentPassword || '', user.password_hash)) throw httpError('Mot de passe actuel incorrect.', 401);
-  if (!newPassword || newPassword.length < 6) throw httpError('Le nouveau mot de passe doit faire au moins 6 caractères.', 400);
+  if (!newPassword || newPassword.length < 8) throw httpError('Le nouveau mot de passe doit faire au moins 8 caractères.', 400);
 
   db.prepare('UPDATE users SET password_hash = ? WHERE id = ?').run(bcrypt.hashSync(newPassword, 10), userId);
   return { success: true };

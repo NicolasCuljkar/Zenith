@@ -52,8 +52,18 @@ const loginLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-app.use('/api/auth/login',    loginLimiter);
-app.use('/api/auth/register', loginLimiter);
+const adminLoginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  message: { success: false, error: 'Trop de tentatives. Réessayez dans 15 minutes.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+app.use('/api/auth/login',       loginLimiter);
+app.use('/api/auth/login-by-id', loginLimiter);
+app.use('/api/auth/register',    loginLimiter);
+app.use('/api/auth/admin-login', adminLoginLimiter);
 app.use('/api/auth',          authRoutes);
 app.use('/api/entries',       entriesRoutes);
 app.use('/api/savings',       savingsRoutes);
