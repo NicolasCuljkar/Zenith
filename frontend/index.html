@@ -747,6 +747,11 @@ window.onerror = function(msg, src, line) {
 
   <span id="topbar-page-title" class="topbar-page-title"></span>
 
+  <!-- Refresh button (desktop only) -->
+  <button class="icon-btn btn-add-desktop" id="topbar-refresh-btn" onclick="_refreshAndRender(true)" title="Actualiser les données" style="flex-shrink:0">
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+  </button>
+
   <!-- User menu button + dropdown -->
   <div class="user-menu" id="user-menu">
     <button class="user-menu-btn" id="user-menu-btn" onclick="toggleUserMenu()">
@@ -844,7 +849,7 @@ window.onerror = function(msg, src, line) {
         <select id="filter-cat" class="inp" style="flex-shrink:0;width:auto">
           <option value="">Toutes catégories</option>
           <option value="revenu">Revenu</option><option value="impot">Impôt</option>
-          <option value="fixe">Dépense fixe</option><option value="variable">Dépense variable</option>
+          <option value="fixe">Fixe</option><option value="variable">Variable</option>
           <option value="epargne">Épargne</option><option value="loisir">Loisir</option>
         </select>
       </div>
@@ -1225,7 +1230,7 @@ window.onerror = function(msg, src, line) {
       <div class="frow">
         <div class="fgrp"><label>Type</label><select id="f-sign" onchange="onEntrySignChange(this.value)"><option value="neg">Dépense (−)</option><option value="pos">Revenu (+)</option></select></div>
         <div class="fgrp"><label>Catégorie</label>
-          <select id="f-cat" onchange="onEntryCatChange(this.value)"><option value="fixe">Dépense fixe</option><option value="variable">Dépense variable</option><option value="impot">Impôt</option><option value="epargne">Épargne</option><option value="loisir">Loisir</option><option value="revenu">Revenu</option></select>
+          <select id="f-cat" onchange="onEntryCatChange(this.value)"><option value="fixe">Fixe</option><option value="variable">Variable</option><option value="impot">Impôt</option><option value="epargne">Épargne</option><option value="loisir">Loisir</option><option value="revenu">Revenu</option></select>
         </div>
         <div class="fgrp" style="display:none"><select id="f-member"></select></div>
       </div>
@@ -3099,7 +3104,7 @@ function onEntrySignChange(sign){
     cat.innerHTML='<option value="revenu">Revenu</option>';
     cat.value='revenu';
   } else {
-    cat.innerHTML='<option value="fixe">Dépense fixe</option><option value="variable">Dépense variable</option><option value="impot">Impôt</option><option value="epargne">Épargne</option><option value="loisir">Loisir</option>';
+    cat.innerHTML='<option value="fixe">Fixe</option><option value="variable">Variable</option><option value="impot">Impôt</option><option value="epargne">Épargne</option><option value="loisir">Loisir</option>';
     cat.value='fixe';
   }
   onEntryCatChange(cat.value);
@@ -4775,7 +4780,7 @@ function _showSyncToast(){
   if(!el){
     el = document.createElement('div');
     el.id = 'zenith-sync-toast';
-    el.style.cssText = 'position:fixed;top:0;left:50%;transform:translateX(-50%);background:var(--surface);border:1px solid var(--border);border-top:none;border-radius:0 0 12px 12px;padding:8px 20px;font-size:var(--fs-sm);font-weight:600;color:var(--text);z-index:9999;opacity:0;transition:opacity .25s;pointer-events:none;display:flex;align-items:center;gap:8px;box-shadow:0 4px 20px rgba(0,0,0,.18)';
+    el.style.cssText = 'position:fixed;bottom:calc(64px + env(safe-area-inset-bottom,0px) + 10px);left:50%;transform:translateX(-50%);background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:8px 18px;font-size:var(--fs-sm);font-weight:600;color:var(--text);z-index:9999;opacity:0;transition:opacity .25s;pointer-events:none;display:flex;align-items:center;gap:8px;box-shadow:0 4px 20px rgba(0,0,0,.18);white-space:nowrap';
     el.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#3B8BD4" stroke-width="2.5" stroke-linecap="round"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>Mise à jour reçue';
     document.body.appendChild(el);
   }
