@@ -1455,8 +1455,8 @@ const DEFAULT_SAVINGS=[];
 const CATS_DEF={
   revenu:{label:'Revenu',hex:'#0d9e6e',light:{bg:'#d1fae5',text:'#065f46'},dark:{bg:'#0d2e22',text:'#3ee8a8'}},
   impot:{label:'Impôt',hex:'#c49a00',light:{bg:'#fef3c7',text:'#78350f'},dark:{bg:'#2a1e08',text:'#f0aa60'}},
-  fixe:{label:'Dépense fixe',hex:'#d93535',light:{bg:'#fee2e2',text:'#991b1b'},dark:{bg:'#2e1010',text:'#ff9090'}},
-  variable:{label:'Dépense variable',hex:'#e07020',light:{bg:'#ffedd5',text:'#9a3412'},dark:{bg:'#2a1808',text:'#f0a060'}},
+  fixe:{label:'Fixe',hex:'#d93535',light:{bg:'#fee2e2',text:'#991b1b'},dark:{bg:'#2e1010',text:'#ff9090'}},
+  variable:{label:'Variable',hex:'#e07020',light:{bg:'#ffedd5',text:'#9a3412'},dark:{bg:'#2a1808',text:'#f0a060'}},
   epargne:{label:'Épargne',hex:'#2979c8',light:{bg:'#dbeafe',text:'#1e3a8a'},dark:{bg:'#0c1e38',text:'#74b8f0'}},
   loisir:{label:'Loisir',hex:'#f59e0b',light:{bg:'#fef3c7',text:'#78350f'},dark:{bg:'#2a1a00',text:'#fcd34d'}},
 };
@@ -2749,7 +2749,7 @@ function renderDashboard(){
         </span>
       </div>`:'';
     const rankStr=`#${topEntries2.indexOf(e)+1} sur ${topEntries2.length} dépenses`;
-    const catLabel=e.cat==='fixe'?'Dépense fixe':e.cat==='variable'?'Dépense variable':e.cat;
+    const catLabel=e.cat==='fixe'?'Fixe':e.cat==='variable'?'Variable':e.cat;
     const tooltipLines=isShared
       ?`${catLabel} · Partagée<br>${m1} : ${eur(a1)} (${Math.round(a1/e.amount*100)}%) · ${m2} : ${eur(a2)} (${Math.round(a2/e.amount*100)}%)<br>${rankStr} · ${pct}% du total dépenses`
       :`${catLabel} · ${m1}<br>${eur(e.amount)}/mois · ${rankStr}<br>${pct}% du total dépenses`;
@@ -2867,7 +2867,7 @@ function memberTableHtml(rows,isMobile,memberName){
         <span style="font-size:var(--fs-sm);font-weight:700;color:${totColor}">${eur(Math.abs(tot))}</span>
       </div>
       <div id="${uid}">
-      ${gRows.map(e=>{const c=CATS[e.cat];const amtColor=['revenu'].includes(e.cat)?'var(--green)':['impot'].includes(e.cat)?'var(--amber)':'var(--red)';return`<div class="entry-card" data-id="${e.id}" style="border-left-color:${c.hex};background:color-mix(in srgb,${c.hex} 6%,var(--surface))">
+      ${gRows.map(e=>{const c=CATS[e.cat];const amtColor=['revenu'].includes(e.cat)?'var(--green)':['impot'].includes(e.cat)?'var(--amber)':'var(--red)';return`<div class="entry-card" data-id="${e.id}" style="border-left-color:${c.hex};background:${c.bg}">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
           <span style="font-weight:600;font-size:var(--fs-md);flex:1;line-height:1.35">${e.name}</span>
           <span style="font-size:var(--fs-base);font-weight:700;color:${amtColor};flex-shrink:0">${eur(Math.abs(e.amount))}</span>
@@ -2974,7 +2974,7 @@ function renderEntries(){
             const c=CATS[(ea||eb)?.cat];
             const tot=(Math.abs(ea?.amount||0)+Math.abs(eb?.amount||0));
             const amtColor=g.key==='revenus'?'var(--green)':g.key==='epargne'?'var(--blue)':'var(--red)';
-            return`<div class="entry-card" style="border-left-color:${c.hex};background:color-mix(in srgb,${c.hex} 6%,var(--surface))">
+            return`<div class="entry-card" style="border-left-color:${c.hex};background:${c.bg}">
               <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
                 <span style="font-weight:600;font-size:var(--fs-md);flex:1;line-height:1.35">${name}</span>
                 <span style="font-size:var(--fs-base);font-weight:700;color:${amtColor};flex-shrink:0">${eur(tot)}</span>
@@ -3891,8 +3891,8 @@ function renderAnalysis(){
           <span style="font-size:var(--fs-xs);color:var(--hint)">${em1} · 100%</span>
         </div>`;
       const tooltipLines=isShared
-        ?`${em1} : ${eur(a1)} (${pct1}%) · ${em2} : ${eur(a2)} (${pct2}%)<br>${e.cat==='fixe'?'Dépense fixe':'Dépense variable'} · ${pct}% du total`
-        :`${em1} · ${e.cat==='fixe'?'Dépense fixe':'Dépense variable'}<br>${eur(e.amount)} · ${pct}% du total`;
+        ?`${em1} : ${eur(a1)} (${pct1}%) · ${em2} : ${eur(a2)} (${pct2}%)<br>${e.cat==='fixe'?'Fixe':'Variable'} · ${pct}% du total`
+        :`${em1} · ${e.cat==='fixe'?'Fixe':'Variable'}<br>${eur(e.amount)} · ${pct}% du total`;
       return`<div style="padding:9px 12px;border-radius:10px;background:var(--surface2);border:1px solid var(--border);transition:background .15s,box-shadow .15s;position:relative"
         onmouseenter="this.style.background='var(--hover)';this.style.boxShadow='0 2px 12px rgba(0,0,0,.08)';this.querySelector('.bar-tip').style.opacity='1';this.querySelector('.bar-tip').style.transform='translateX(-50%) translateY(0)'"
         onmouseleave="this.style.background='var(--surface2)';this.style.boxShadow='none';this.querySelector('.bar-tip').style.opacity='0';this.querySelector('.bar-tip').style.transform='translateX(-50%) translateY(-4px)'">
@@ -3918,7 +3918,7 @@ function renderAnalysis(){
     } else {
       // Vue membre individuel : couleur palette
       const dot=`<span style="width:10px;height:10px;border-radius:50%;background:${col1};flex-shrink:0;display:inline-block;box-shadow:0 0 0 2px ${col1}33"></span>`;
-      const tipTxt=`${e.cat==='fixe'?'Dépense fixe':'Dépense variable'} · ${pct}% du top 5`;
+      const tipTxt=`${e.cat==='fixe'?'Fixe':'Variable'} · ${pct}% du top 5`;
       return`<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:10px;background:var(--surface2);border:1px solid var(--border);transition:background .15s,box-shadow .15s;position:relative;cursor:default"
         onmouseenter="this.style.background='var(--hover)';this.style.boxShadow='0 2px 12px rgba(0,0,0,.08)';this.querySelector('.bar-tip').style.opacity='1';this.querySelector('.bar-tip').style.transform='translateX(-50%) translateY(0)'"
         onmouseleave="this.style.background='var(--surface2)';this.style.boxShadow='none';this.querySelector('.bar-tip').style.opacity='0';this.querySelector('.bar-tip').style.transform='translateX(-50%) translateY(-4px)'">
@@ -4716,7 +4716,7 @@ async function _refreshAndRender(showToast){
   _refreshing = true;
   try{
     await loadDataSilent();
-    initUserContext();
+    // Ne pas appeler initUserContext() ici : ça réinitialise les sélections (foyer → utilisateur)
     renderMemberTabs();
     updateNavForDataState();
     renderDashboard();
@@ -4773,7 +4773,7 @@ function _showSyncToast(){
   if(!el){
     el = document.createElement('div');
     el.id = 'zenith-sync-toast';
-    el.style.cssText = 'position:fixed;top:60px;right:16px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:7px 14px;font-size:var(--fs-xs);font-weight:600;color:var(--muted);z-index:9998;opacity:0;transition:opacity .25s;pointer-events:none;display:flex;align-items:center;gap:6px;box-shadow:0 4px 16px rgba(0,0,0,.12)';
+    el.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:12px 22px;font-size:var(--fs-sm);font-weight:600;color:var(--text);z-index:9998;opacity:0;transition:opacity .25s;pointer-events:none;display:flex;align-items:center;gap:8px;box-shadow:0 8px 32px rgba(0,0,0,.22)';
     el.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#3B8BD4" stroke-width="2.5" stroke-linecap="round"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>Mise à jour reçue';
     document.body.appendChild(el);
   }
