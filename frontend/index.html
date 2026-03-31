@@ -154,7 +154,7 @@ html.light .topbar{background:rgba(255,255,255,.88);box-shadow:0 1px 0 rgba(0,0,
 .main{flex:1;max-width:1280px;margin:0 auto;width:100%;padding:0 2rem 5rem}
 
 /* ── Member tabs (pill style, left-aligned) ── */
-.member-tabs{display:flex;gap:6px;margin-bottom:1.25rem;flex-wrap:wrap;margin-top:.75rem;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.member-tabs{display:flex;gap:6px;margin-bottom:1.5rem;flex-wrap:wrap;margin-top:.75rem;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
 .member-tabs::-webkit-scrollbar{display:none}
 .mtab .mtab-av{border-radius:50%;overflow:hidden;flex-shrink:0;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:var(--fs-xs);font-weight:700}
 .mtab .mtab-av img{width:100%;height:100%;object-fit:cover;border-radius:50%}
@@ -344,7 +344,7 @@ html.light .mtab-all.active{background:var(--mc-all-bg,linear-gradient(90deg,rgb
 .overlay.open{display:flex}
 .modal{background:var(--surface);width:100%;max-width:480px;border-radius:var(--rl) var(--rl) 0 0;padding:1.5rem 1.25rem 2rem;border:1px solid var(--border);max-height:92vh;overflow-y:auto}
 .modal-drag{width:36px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 1.25rem}
-.modal h3{font-size:var(--fs-title);font-weight:700;letter-spacing:-.02em;margin-bottom:1.25rem}
+.modal h3{font-size:var(--fs-title);font-weight:700;letter-spacing:-.02em;margin-bottom:1.5rem}
 .fstack{display:flex;flex-direction:column;gap:13px}
 .frow{display:grid;grid-template-columns:1fr 1fr;gap:11px}
 .fgrp{display:flex;flex-direction:column;gap:4px}
@@ -1035,7 +1035,7 @@ window.onerror = function(msg, src, line) {
     <div class="modal-drag"></div>
     <h3 style="margin-bottom:1.1rem">Réglages</h3>
     <!-- Onglets -->
-    <div style="display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:1.25rem">
+    <div style="display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:1.5rem">
       <button class="stab active" id="stab-apparence" onclick="switchSettingsTab('apparence')">Apparence</button>
       <button class="stab" id="stab-compte" onclick="switchSettingsTab('compte')">Compte</button>
       <button class="stab" id="stab-securite" onclick="switchSettingsTab('securite')">Sécurité</button>
@@ -1049,7 +1049,7 @@ window.onerror = function(msg, src, line) {
 
     <!-- Tab Compte : nom + email -->
     <div id="settings-tab-compte" style="display:none">
-      <div style="display:flex;align-items:center;gap:14px;padding:14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);margin-bottom:1.25rem" id="set-account-preview">
+      <div style="display:flex;align-items:center;gap:14px;padding:14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);margin-bottom:1.5rem" id="set-account-preview">
         <div id="set-account-avatar" style="width:48px;height:48px;border-radius:50%;flex-shrink:0"></div>
         <div>
           <div style="font-size:var(--fs-title);font-weight:700;letter-spacing:-.02em;color:var(--text)" id="set-account-name-display"></div>
@@ -1072,7 +1072,7 @@ window.onerror = function(msg, src, line) {
 
     <!-- Tab Sécurité : mot de passe -->
     <div id="settings-tab-securite" style="display:none">
-      <div style="padding:12px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);margin-bottom:1.25rem;font-size:var(--fs-sm);color:var(--muted);line-height:1.6">
+      <div style="padding:12px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);margin-bottom:1.5rem;font-size:var(--fs-sm);color:var(--muted);line-height:1.6">
         Choisissez un mot de passe d'au moins <strong style="color:var(--text)">8 caractères</strong>. Il ne sera jamais affiché en clair.
       </div>
       <div class="fstack">
@@ -1105,7 +1105,7 @@ window.onerror = function(msg, src, line) {
     <div class="modal-drag"></div>
 
     <!-- Header -->
-    <div style="display:flex;align-items:center;gap:12px;margin-bottom:1.25rem">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:1.5rem">
       <div style="width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,#3B8BD422,#e06fa022);display:flex;align-items:center;justify-content:center;flex-shrink:0">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="url(#foyer-grad)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
           <defs><linearGradient id="foyer-grad" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#3B8BD4"/><stop offset="100%" stop-color="#e06fa0"/></linearGradient></defs>
@@ -1324,7 +1324,7 @@ window.onerror = function(msg, src, line) {
 <div class="overlay" id="modal-import">
   <div class="modal" style="max-width:560px">
     <div class="modal-drag"></div>
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem">
       <h3 style="margin-bottom:0">Importer des données</h3>
       <button onclick="closeImportModal()" style="background:none;border:none;cursor:pointer;color:var(--hint);padding:4px;line-height:1">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -2862,8 +2862,8 @@ function memberTableHtml(rows,isMobile,memberName){
     if(isMobile){
       const uid=`drag-${memberName}-${g.key}`;
       const groupColor=g.key==='revenus'?'#0d9e6e':g.key==='depenses'?'#d93535':g.key==='loisir'?'#f59e0b':'#2979c8';
-      return`<div style="margin-bottom:1.25rem">
-      <div style="display:flex;justify-content:space-between;align-items:center;padding:0 2px 9px;margin-bottom:8px;border-bottom:2px solid ${groupColor}30">
+      return`<div style="margin-bottom:1.5rem">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:0 2px 6px;margin-bottom:5px;border-bottom:2px solid ${groupColor}30">
         <div style="display:flex;align-items:center;gap:7px">
           <span style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:${groupColor}">${g.label}</span>
           <span style="font-size:var(--fs-xs);color:var(--hint);background:${groupColor}18;border-radius:20px;padding:1px 7px;font-weight:700">${gRows.length}</span>
@@ -2963,7 +2963,7 @@ function renderEntries(){
       const tot1=e1.reduce((s,e)=>s+Math.abs(e.amount),0);
       const tot2=e2.reduce((s,e)=>s+Math.abs(e.amount),0);
       const tot=tot1+tot2;
-      const hdr=`<div style="display:flex;justify-content:space-between;align-items:center;padding:0 2px 9px;margin-bottom:8px;border-bottom:2px solid ${g.color}30">
+      const hdr=`<div style="display:flex;justify-content:space-between;align-items:center;padding:0 2px 6px;margin-bottom:5px;border-bottom:2px solid ${g.color}30">
         <div style="display:flex;align-items:center;gap:7px">
           <span style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:${g.color}">${g.label}</span>
           <span style="font-size:var(--fs-xs);color:var(--hint);background:${g.color}18;border-radius:20px;padding:1px 7px;font-weight:700">${allNames.length}</span>
@@ -2971,7 +2971,7 @@ function renderEntries(){
         <span style="font-size:var(--fs-sm);font-weight:800;color:${g.totColor};letter-spacing:-.02em">${eur(Math.abs(tot))}</span>
       </div>`;
       if(isMobile){
-        return`<div style="margin-bottom:1.25rem">
+        return`<div style="margin-bottom:1.5rem">
           ${hdr}
           ${allNames.map(name=>{
             const ea=e1.find(x=>x.name===name),eb=e2.find(x=>x.name===name);
