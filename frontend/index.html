@@ -2941,6 +2941,7 @@ function renderEntries(){
     document.getElementById('entries-summary').style.display='none';
     document.getElementById('entries-search').style.display='none';
     document.getElementById('btn-add-entry').style.display='none';
+    if(currentTab==='entries')document.getElementById('fab-entry').style.display='none';
     document.getElementById('entries-sections').innerHTML='';
     document.getElementById('entries-nodata').style.display='';
     document.getElementById('entries-nodata').innerHTML=`
@@ -2955,7 +2956,7 @@ function renderEntries(){
           <div style="font-size:var(--fs-title);font-weight:700;letter-spacing:-.02em;margin-bottom:6px">Aucune ligne budgétaire</div>
           <div style="font-size:var(--fs-sm);color:var(--muted);line-height:1.5">Commencez par ajouter vos revenus<br>et vos dépenses mensuelles.</div>
         </div>
-        ${entriesMember!=='Commun'?`<a onclick="document.getElementById('btn-add-entry').click()" style="display:inline-flex;align-items:center;gap:6px;padding:9px 22px;background:linear-gradient(135deg,#3B8BD4,#e06fa0);color:#fff;border-radius:24px;font-size:var(--fs-sm);font-weight:600;cursor:pointer;letter-spacing:.02em;box-shadow:0 4px 16px rgba(59,139,212,.25)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Ajouter une ligne</a>`:''}
+        ${entriesMember===myRole()?`<a onclick="document.getElementById('btn-add-entry').click()" style="display:inline-flex;align-items:center;gap:6px;padding:9px 22px;background:linear-gradient(135deg,#3B8BD4,#e06fa0);color:#fff;border-radius:24px;font-size:var(--fs-sm);font-weight:600;cursor:pointer;letter-spacing:.02em;box-shadow:0 4px 16px rgba(59,139,212,.25)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Ajouter une ligne</a>`:''}
       </div>`;
     return;
   }
@@ -2963,7 +2964,9 @@ function renderEntries(){
   document.getElementById('entries-summary').style.display='';
   document.getElementById('entries-toolbar').style.display='flex';
   document.getElementById('entries-search').style.display='flex';
-  document.getElementById('btn-add-entry').style.display=entriesMember==='Commun'?'none':'';
+  const _canAddE=entriesMember!=='Commun'&&entriesMember===myRole();
+  document.getElementById('btn-add-entry').style.display=_canAddE?'':'none';
+  if(currentTab==='entries')document.getElementById('fab-entry').style.display=_canAddE?'':'none';
   const filtered=getFiltered();const isMobile=window.innerWidth<=640;
   const container=document.getElementById('entries-sections');
   if(entriesMember==='Commun'){
@@ -3250,6 +3253,8 @@ function renderSavings(){
     : savings.filter(s=>s.member===savingsMember).length===0;
   if(_savNoData){
     barChart=destroyChart(barChart);
+    document.getElementById('btn-add-saving').style.display='none';
+    if(currentTab==='savings')document.getElementById('fab-saving').style.display='none';
     document.getElementById('savings-nodata').style.display='';
     document.getElementById('savings-nodata').innerHTML=`
       <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:3rem 1.5rem;text-align:center;background:var(--surface);border:1px solid var(--border);border-radius:var(--rl)">
@@ -3264,17 +3269,16 @@ function renderSavings(){
           <div style="font-size:var(--fs-title);font-weight:700;letter-spacing:-.02em;margin-bottom:6px">Aucune donnée d'épargne</div>
           <div style="font-size:var(--fs-sm);color:var(--muted);line-height:1.5">Enregistrez vos fonds épargnés<br>mois par mois pour suivre votre progression.</div>
         </div>
-        <a onclick="document.getElementById('btn-add-saving').click()" style="display:inline-flex;align-items:center;gap:6px;padding:9px 22px;background:linear-gradient(135deg,#3B8BD4,#e06fa0);color:#fff;border-radius:24px;font-size:var(--fs-sm);font-weight:600;cursor:pointer;letter-spacing:.02em;box-shadow:0 4px 16px rgba(59,139,212,.25)">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          Ajouter une entrée
-        </a>
+        ${savingsMember===myRole()?`<a onclick="document.getElementById('btn-add-saving').click()" style="display:inline-flex;align-items:center;gap:6px;padding:9px 22px;background:linear-gradient(135deg,#3B8BD4,#e06fa0);color:#fff;border-radius:24px;font-size:var(--fs-sm);font-weight:600;cursor:pointer;letter-spacing:.02em;box-shadow:0 4px 16px rgba(59,139,212,.25)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Ajouter une entrée</a>`:''}
       </div>`;
     document.getElementById('savings-content').style.display='none';
     return;
   }
   document.getElementById('savings-nodata').style.display='none';
   document.getElementById('savings-content').style.display='';
-  document.getElementById('btn-add-saving').style.display=savingsMember==='all'?'none':'';
+  const _canAddS=savingsMember!=='all'&&savingsMember===myRole()&&savingsStabActive!=='year';
+  document.getElementById('btn-add-saving').style.display=_canAddS?'':'none';
+  if(currentTab==='savings')document.getElementById('fab-saving').style.display=_canAddS?'':'none';
   if(!document.getElementById('bar-chart')) document.getElementById('bar-chart-wrap').innerHTML='<canvas id="bar-chart"></canvas>';
   const isYear=savingsStabActive==='year',isMobile=window.innerWidth<=640;
   const [first,second]=orderedMembers();
