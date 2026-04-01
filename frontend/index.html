@@ -871,7 +871,7 @@ window.onerror = function(msg, src, line) {
     </div>
     <div id="savings-nodata" style="display:none"></div>
     <div id="savings-content">
-    <div class="kpi-grid" id="savings-kpis" style="margin-top:var(--sg)"></div>
+    <div class="kpi-grid" id="savings-kpis"></div>
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
       <div style="display:flex;align-items:center;gap:0;border-bottom:1px solid var(--border)">
         <button class="stab active" data-stab="month">Mois</button>
@@ -2267,7 +2267,7 @@ function renderMemberTabsFor(containerId, currentValue, setter, forSavings){
       :`<span class="mtab-av" style="background:${color}33;color:${color}">${name.charAt(0)}</span>`;
   };
   let html='';
-  userList.filter(u=>u.name===currentUser?.name).forEach(u=>{
+  userList.forEach(u=>{
     const color=getMC(u.name);
     const isActive=currentValue===u.name;
     const activeStyle=isActive?`background:${color}22;border-color:${color};color:${color}`:'';
@@ -3274,10 +3274,12 @@ function renderSavings(){
       document.getElementById('savings-kpis').innerHTML=
         kpiHtml('Épargne',last?eur(last.amount):'—',getMC(m),last?`Fin ${last.year}`:'',trend);
     } else {
-      document.getElementById('savings-kpis').innerHTML=
-        kpiHtml('Épargne',lastFirst?eur(lastFirst.amount):'—',getMC(first),lastFirst?`Fin ${lastFirst.year}`:'',trendF)+
-        kpiHtml('Épargne',lastSecond?eur(lastSecond.amount):'—',getMC(second),lastSecond?`Fin ${lastSecond.year}`:'',trendS)+
-        kpiHtml('Total',eur(totalNow),'var(--green)',`Fin ${Math.max(lastFirst?.year||0,lastSecond?.year||0)||''}`,trendTotal);
+      const _mkpis=showMembers.map(m=>{const _l=getYearRows(m).slice(-1)[0],_p=getYearRows(m).slice(-2)[0],_t=_l&&_p?Math.round((_l.amount-_p.amount)/_p.amount*100):null;return kpiHtml('Épargne',_l?eur(_l.amount):'—',getMC(m),_l?`Fin ${_l.year}`:'',_t);}).join('');
+      const _tNow=showMembers.reduce((s,m)=>s+(getYearRows(m).slice(-1)[0]?.amount||0),0);
+      const _tPrev=showMembers.reduce((s,m)=>s+(getYearRows(m).slice(-2)[0]?.amount||0),0);
+      const _tT=_tPrev>0?Math.round((_tNow-_tPrev)/_tPrev*100):null;
+      const _maxYr=Math.max(...showMembers.map(m=>getYearRows(m).slice(-1)[0]?.year||0));
+      document.getElementById('savings-kpis').innerHTML=_mkpis+kpiHtml('Total',eur(_tNow),'var(--green)',_maxYr?`Fin ${_maxYr}`:'',_tT);
     }
   } else {
     const prevFirst=savings.filter(s=>s.member===first).slice(-2)[0];
@@ -3294,11 +3296,12 @@ function renderSavings(){
         (proj?kpiHtml('Projection fin d\'année',eur(proj.projected),'var(--blue)',`Moy. ${proj.avgDelta>=0?'+':''}${eur(proj.avgDelta)}/mois · ${proj.remainingMonths} mois restants`,null):'');
     } else {
       const proj=projectionFinAnnee(showMembers);
-      document.getElementById('savings-kpis').innerHTML=
-        kpiHtml('Épargne',latestFirst?eur(latestFirst.amount):'—',getMC(first),latestFirst?`Màj ${latestFirst.month} ${latestFirst.year}`:'',trendF)+
-        kpiHtml('Épargne',latestSecond?eur(latestSecond.amount):'—',getMC(second),latestSecond?`Màj ${latestSecond.month} ${latestSecond.year}`:'',trendS)+
-        kpiHtml('Total épargne',eur(totalSav),'var(--green)',(()=>{const latest=[latestFirst,latestSecond].filter(Boolean).sort((a,b)=>b.year!==a.year?b.year-a.year:MONTHS.indexOf(b.month)-MONTHS.indexOf(a.month))[0];return latest?`Màj ${latest.month} ${latest.year}`:''})(),trendTotal)+
-        (proj?kpiHtml('Projection fin d\'année',eur(proj.projected),'var(--blue)',`Moy. ${proj.avgDelta>=0?'+':''}${eur(proj.avgDelta)}/mois · ${proj.remainingMonths} mois restants`,null):'');
+      const _mkpis=showMembers.map(m=>{const _l=savings.filter(s=>s.member===m).slice(-1)[0],_p=savings.filter(s=>s.member===m).slice(-2)[0],_t=_l&&_p?Math.round((_l.amount-_p.amount)/_p.amount*100):null;return kpiHtml('Épargne',_l?eur(_l.amount):'—',getMC(m),_l?`Màj ${_l.month} ${_l.year}`:'',_t);}).join('');
+      const _tNow=showMembers.reduce((s,m)=>s+(savings.filter(x=>x.member===m).slice(-1)[0]?.amount||0),0);
+      const _tPrev=showMembers.reduce((s,m)=>s+(savings.filter(x=>x.member===m).slice(-2)[0]?.amount||0),0);
+      const _tT=_tPrev>0?Math.round((_tNow-_tPrev)/_tPrev*100):null;
+      const _latLbl=showMembers.map(m=>savings.filter(s=>s.member===m).slice(-1)[0]).filter(Boolean).sort((a,b)=>b.year!==a.year?b.year-a.year:MONTHS.indexOf(b.month)-MONTHS.indexOf(a.month))[0];
+      document.getElementById('savings-kpis').innerHTML=_mkpis+kpiHtml('Total épargne',eur(_tNow),'var(--green)',_latLbl?`Màj ${_latLbl.month} ${_latLbl.year}`:'',_tT)+(proj?kpiHtml('Projection fin d\'année',eur(proj.projected),'var(--blue)',`Moy. ${proj.avgDelta>=0?'+':''}${eur(proj.avgDelta)}/mois · ${proj.remainingMonths} mois restants`,null):'');
     }
   }
   document.getElementById('savings-chart-title').textContent=isYear?'Évolution annuelle':'Évolution mensuelle';
@@ -3327,14 +3330,14 @@ function renderSavings(){
   });
 
   // Add total line when both members visible
-  if(showMembers.length===2){
+  if(showMembers.length>=2){
     const totalData=labels.map((_,i)=>{
       const vals=datasets.map(ds=>ds.data[i]);
       return vals.some(v=>v!=null)?vals.reduce((s,v)=>s+(v||0),0):null;
     });
     const totalCol='#0d9e6e';
     lineDatasets.push({
-      label:'Total couple',
+      label:'Total foyer',
       data:totalData,
       type:'line',
       tension:.45,fill:false,
