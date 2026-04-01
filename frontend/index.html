@@ -246,19 +246,24 @@ html.dark .kpi-tooltip{box-shadow:0 8px 24px rgba(0,0,0,.4)}
 .flow-grid{display:flex;gap:8px}
 .flow-leg-item{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--surface2);border-radius:10px;border:1px solid var(--border);transition:outline .12s;flex:1;min-width:0}
 .flow-leg-accent{width:8px;height:36px;border-radius:4px;flex-shrink:0;display:block}
+.flow-leg-body{flex:1;min-width:0}
 .flow-leg-label{font-size:var(--fs-xs);font-weight:700;color:var(--hint);letter-spacing:.05em;text-transform:uppercase;margin-bottom:3px}
-.flow-leg-value{font-size:var(--fs-sm);font-weight:700;color:var(--text);margin-bottom:5px}
+.flow-leg-vp{display:flex;align-items:baseline;justify-content:space-between;gap:6px;margin-bottom:5px}
+.flow-leg-value{font-size:var(--fs-sm);font-weight:700;color:var(--text)}
 .flow-leg-bar{height:3px;background:var(--border);border-radius:2px;overflow:hidden}
 .flow-leg-bar-fill{height:100%;border-radius:2px;transition:width .4s}
-.flow-leg-pct{font-size:var(--fs-base);font-weight:800;min-width:38px;text-align:right;flex-shrink:0}
+.flow-leg-pct{font-size:var(--fs-base);font-weight:800;flex-shrink:0;min-width:0}
+.rule-cards{display:flex;gap:10px;flex-wrap:wrap}
 @media(max-width:639px){
-  .flow-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
-  .flow-leg-item{flex-direction:column;align-items:flex-start;gap:0;padding:11px 12px 10px}
-  .flow-leg-accent{width:28px;height:4px;border-radius:2px;margin-bottom:9px}
-  .flow-leg-label{margin-bottom:5px;font-size:9px;letter-spacing:.07em}
-  .flow-leg-value{font-size:var(--fs-title);font-weight:800;margin-bottom:3px;white-space:nowrap}
+  .flow-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+  .flow-leg-item{flex-direction:column;align-items:flex-start;gap:0;padding:12px 11px 10px;position:relative;overflow:hidden}
+  .flow-leg-item::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--c,var(--border))}
+  .flow-leg-accent{display:none}
+  .flow-leg-label{margin-top:4px;margin-bottom:4px;letter-spacing:.04em}
+  .flow-leg-vp{margin-bottom:0;width:100%}
+  .flow-leg-value{font-size:var(--fs-md);font-weight:800;white-space:nowrap}
   .flow-leg-bar{display:none}
-  .flow-leg-pct{font-size:var(--fs-sm);font-weight:700;text-align:left;min-width:0}
+  .flow-leg-pct{font-size:var(--fs-sm);font-weight:800}
 }
 
 /* ── Cards ── */
@@ -472,6 +477,10 @@ input[type=range]:hover::-moz-range-thumb{transform:scale(1.1)}
   .kpi-label{letter-spacing:.04em}
   .kpi-value{font-size:var(--fs-md)}
   .kpi-badge{display:none}
+  .rule-cards{flex-wrap:nowrap;gap:8px}
+  .rule-card{min-width:0!important}
+  .rule-sub,.rule-amts{display:none}
+  .rule-body{padding:9px 10px 10px!important}
   .kpi-sub-m{display:block;font-size:var(--fs-xs);color:var(--muted);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3}
   .g2,.g3,.grid-chart{grid-template-columns:1fr;gap:.75rem}
   .tbl-wrap{display:none}.entry-cards{display:block}
@@ -3738,14 +3747,16 @@ function renderAnalysis(){
   }).join('');
   const flowLegend=flowSegs.map(d=>{
     const pct=Math.round(d.value/flowBase*100);
-    return`<div class="flow-leg-item" data-label="${d.label}" data-color="${d.color}" style="">
+    return`<div class="flow-leg-item" data-label="${d.label}" data-color="${d.color}" style="--c:${d.color}">
       <span class="flow-leg-accent" style="background:${d.color}"></span>
-      <div style="flex:1;min-width:0">
+      <div class="flow-leg-body">
         <div class="flow-leg-label">${d.label}</div>
-        <div class="flow-leg-value">${eur(d.value)}</div>
+        <div class="flow-leg-vp">
+          <div class="flow-leg-value">${eur(d.value)}</div>
+          <div class="flow-leg-pct" style="color:${d.color}">${pct}%</div>
+        </div>
         <div class="flow-leg-bar"><div class="flow-leg-bar-fill" style="width:${pct}%;background:${d.color}"></div></div>
       </div>
-      <div class="flow-leg-pct" style="color:${d.color}">${pct}%</div>
     </div>`;
   }).join('');
   const baseDesc=s.rev>0?`${eur(s.rev)} brut`:`${eur(s.revNet)} net`;
@@ -3788,14 +3799,14 @@ function renderAnalysis(){
         <div style="font-size:var(--fs-xs);color:var(--hint);margin-bottom:8px;line-height:1.5">${sublabel}</div>
         <div style="font-size:var(--fs-xs);color:var(--muted);line-height:1.6">${tipAdvice}</div>
       </div>
-      <div style="padding:14px 16px 16px">
+      <div class="rule-body" style="padding:14px 16px 16px">
         <div style="font-size:var(--fs-xs);font-weight:700;color:var(--hint);text-transform:uppercase;letter-spacing:.07em;margin-bottom:2px">${label}</div>
-        <div style="font-size:var(--fs-xs);color:var(--hint);margin-bottom:14px;line-height:1.4">${sublabel}</div>
+        <div class="rule-sub" style="font-size:var(--fs-xs);color:var(--hint);margin-bottom:14px;line-height:1.4">${sublabel}</div>
         <div style="display:flex;align-items:baseline;gap:5px;margin-bottom:4px">
           <span style="font-size:1.35rem;font-weight:800;line-height:1;color:${pctColor};font-variant-numeric:tabular-nums">${val>0?val+'%':'—'}</span>
           <span style="font-size:var(--fs-xs);color:var(--hint);font-weight:500">/ ${ideal}%</span>
         </div>
-        <div style="font-size:var(--fs-xs);color:var(--muted);margin-bottom:14px">${amount>0?eur(amount):'–'}<span style="color:var(--hint)"> · obj. ${eur(idealAmt)}</span></div>
+        <div class="rule-amts" style="font-size:var(--fs-xs);color:var(--muted);margin-bottom:14px">${amount>0?eur(amount):'–'}<span style="color:var(--hint)"> · obj. ${eur(idealAmt)}</span></div>
         <div style="position:relative;height:6px;background:var(--border);border-radius:3px;margin-bottom:12px">
           <div style="position:absolute;inset:0;width:${Math.min(val,100)}%;background:${over?'var(--red)':color};border-radius:3px;transition:width .5s ease"></div>
           <div style="position:absolute;top:-3px;left:${Math.min(ideal,100)}%;transform:translateX(-50%);width:2px;height:12px;background:var(--text);opacity:.25;border-radius:1px"></div>
@@ -3822,7 +3833,7 @@ function renderAnalysis(){
       <div style="display:flex;gap:3px;height:32px;border-radius:8px;overflow:hidden;margin-bottom:10px">${allocBar}</div>
       <div style="display:flex;flex-wrap:wrap;gap:12px">${allocLegend}</div>
     </div>
-    <div style="display:flex;gap:10px;flex-wrap:wrap">
+    <div class="rule-cards">
       ${ruleCard(rNeeds,50,'Besoins','Loyer · alimentation · transport','#d93535',depStrict,Math.round(base*0.5))}
       ${ruleCard(rWants,30,'Envies','Loisirs · sorties · shopping','#f59e0b',loiScoped,Math.round(base*0.3))}
       ${ruleCard(rSaves,20,'Épargne','Livret · investissements · retraite','#2979c8',epScoped,Math.round(base*0.2))}
