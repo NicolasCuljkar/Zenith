@@ -130,6 +130,46 @@ UPDATE households SET creator_id = (
   );
   CREATE INDEX IF NOT EXISTS idx_prt_token ON password_reset_tokens(token);`,
 
+  // v8 — intégration bancaire GoCardless (Nordigen)
+  `CREATE TABLE IF NOT EXISTS nordigen_requisitions (
+    id               INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id          INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    requisition_id   TEXT    NOT NULL UNIQUE,
+    institution_id   TEXT    NOT NULL,
+    institution_name TEXT    NOT NULL,
+    status           TEXT    NOT NULL DEFAULT 'CR',
+    link             TEXT,
+    reference        TEXT    NOT NULL UNIQUE,
+    synced_at        TEXT,
+    created_at       TEXT    NOT NULL DEFAULT (datetime('now'))
+  );
+  CREATE TABLE IF NOT EXISTS nordigen_accounts (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id         INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    requisition_id  TEXT    NOT NULL REFERENCES nordigen_requisitions(requisition_id) ON DELETE CASCADE,
+    account_id      TEXT    NOT NULL UNIQUE,
+    iban            TEXT,
+    name            TEXT,
+    currency        TEXT    NOT NULL DEFAULT 'EUR',
+    type            TEXT,
+    balance         REAL    NOT NULL DEFAULT 0,
+    updated_at      TEXT    NOT NULL DEFAULT (datetime('now'))
+  );
+  CREATE TABLE IF NOT EXISTS nordigen_transactions (
+    id             INTEGER PRIMARY KEY AUTOINCREMENT,
+    account_id     TEXT    NOT NULL,
+    transaction_id TEXT    NOT NULL UNIQUE,
+    amount         REAL    NOT NULL,
+    currency       TEXT    NOT NULL DEFAULT 'EUR',
+    date           TEXT    NOT NULL,
+    description    TEXT,
+    is_pending     INTEGER NOT NULL DEFAULT 0,
+    created_at     TEXT    NOT NULL DEFAULT (datetime('now'))
+  );
+  CREATE INDEX IF NOT EXISTS idx_nreq_user   ON nordigen_requisitions(user_id);
+  CREATE INDEX IF NOT EXISTS idx_nacc_req    ON nordigen_accounts(requisition_id);
+  CREATE INDEX IF NOT EXISTS idx_ntx_date    ON nordigen_transactions(date);`,
+
 ];
 
 // ── Apply pending migrations ──────────────────────────────────────────────────
