@@ -384,18 +384,17 @@ const _users = {
 };
 
 /**
- * bridge — Open Banking via Nordigen (GoCardless Bank Account Data)
+ * bridge — Open Banking via Plaid
  */
 const _bridge = {
-  getInstitutions: ()                           => get('/bridge/institutions'),
-  createConnection: (institutionId, name)        => post('/bridge/connect', { institutionId, institutionName: name }),
-  syncItem: (itemId)                             => post(`/bridge/sync/${itemId}`),
-  syncByRef: (ref)                               => post(`/bridge/sync-by-ref/${ref}`),
-  syncAll: ()                                    => post('/bridge/sync-all'),
-  getAccounts: ()                                => get('/bridge/accounts'),
-  getTransactions: (p={})                        => get('/bridge/transactions?' + new URLSearchParams(p)),
-  getSummary: ()                                 => get('/bridge/summary'),
-  deleteItem: (itemId)                           => del(`/bridge/items/${itemId}`),
+  getLinkToken:    ()                          => post('/bridge/link-token'),
+  exchangeToken:   (publicToken, name)         => post('/bridge/exchange-token', { publicToken, institutionName: name }),
+  syncItem:        (itemId)                    => post(`/bridge/sync/${itemId}`),
+  syncAll:         ()                          => post('/bridge/sync-all'),
+  getAccounts:     ()                          => get('/bridge/accounts'),
+  getTransactions: (p={})                      => get('/bridge/transactions?' + new URLSearchParams(p)),
+  getSummary:      ()                          => get('/bridge/summary'),
+  deleteItem:      (itemId)                    => del(`/bridge/items/${itemId}`),
 };
 
 // ── Export the API object ──────────────────────────────────────────────────────

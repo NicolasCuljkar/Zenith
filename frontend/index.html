@@ -1042,7 +1042,7 @@ window.onerror = function(msg, src, line) {
         <div style="font-size:var(--fs-title);font-weight:700;letter-spacing:-.02em;margin-bottom:6px">Aucun compte connecté</div>
         <div style="font-size:var(--fs-sm);color:var(--muted);line-height:1.5">Connectez votre banque pour automatiser<br>le suivi de vos transactions.</div>
       </div>
-      <button onclick="openBankConnectModal()" style="display:inline-flex;align-items:center;gap:8px;padding:10px 24px;background:linear-gradient(135deg,#3B8BD4,#e06fa0);color:#fff;border-radius:24px;font-size:var(--fs-sm);font-weight:600;cursor:pointer;border:none;font-family:inherit;box-shadow:0 4px 16px rgba(59,139,212,.25)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Connecter une banque</button>
+      <button onclick="connectBank()" style="display:inline-flex;align-items:center;gap:8px;padding:10px 24px;background:linear-gradient(135deg,#3B8BD4,#e06fa0);color:#fff;border-radius:24px;font-size:var(--fs-sm);font-weight:600;cursor:pointer;border:none;font-family:inherit;box-shadow:0 4px 16px rgba(59,139,212,.25)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Connecter une banque</button>
     </div>
   </div>
   <!-- Error state -->
@@ -1056,7 +1056,7 @@ window.onerror = function(msg, src, line) {
   <div id="bank-content" style="display:none">
     <div class="kpi-grid" id="bank-kpis" style="margin-bottom:var(--sg)"></div>
     <div class="card" style="margin-bottom:var(--sg)">
-      <div class="card-head">Comptes bancaires <button onclick="openBankConnectModal()" class="btn-add btn-add-desktop">+ Ajouter</button></div>
+      <div class="card-head">Comptes bancaires <button onclick="connectBank()" class="btn-add btn-add-desktop">+ Ajouter</button></div>
       <div id="bank-connections"></div>
     </div>
     <div class="card">
@@ -1307,21 +1307,6 @@ window.onerror = function(msg, src, line) {
   </div>
 </div>
 
-<!-- BANK CONNECT MODAL -->
-<div class="overlay" id="modal-bank-connect" style="display:none;align-items:flex-end">
-  <div class="modal" style="max-width:520px;max-height:85vh;overflow:hidden;display:flex;flex-direction:column">
-    <div class="modal-drag"></div>
-    <h3 style="margin-bottom:1rem">Connecter une banque</h3>
-    <div style="margin-bottom:10px">
-      <input id="bank-inst-search" class="inp" placeholder="Rechercher (ex: BNP, Crédit Agricole, Société Générale…)" oninput="filterBankInst()" autocomplete="off">
-    </div>
-    <div id="bank-inst-loading" style="text-align:center;padding:2rem;color:var(--muted);font-size:var(--fs-sm)">Chargement des banques…</div>
-    <div id="bank-inst-list" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:3px;margin:0 -1.25rem;padding:0 1.25rem 1rem"></div>
-    <div class="modal-footer">
-      <button onclick="closeBankConnectModal()" class="btn btn-sec" style="width:100%">Annuler</button>
-    </div>
-  </div>
-</div>
 
 <!-- ENTRY MODAL -->
 <div class="overlay" id="modal-entry">
@@ -5130,19 +5115,11 @@ function initUserContext(){
 }
 
 // ══════════════════════════════════════════════
-// BANQUE (Bridge API)
+// BANQUE (Plaid)
 // ══════════════════════════════════════════════
-
-const ACCOUNT_TYPE_LABELS = {0:'Courant',1:'Épargne',2:'Bourse',3:'Carte de crédit',4:'Prêt',5:'Autre'};
-const ACCOUNT_TYPE_COLORS = {0:'var(--blue)',1:'var(--green)',2:'var(--purple)',3:'var(--amber)',4:'var(--red)',5:'var(--muted)'};
-let bankData = null; // cached
 
 function fmtBalance(amount, currency='EUR'){
   return new Intl.NumberFormat('fr-FR',{style:'currency',currency,maximumFractionDigits:2}).format(amount);
-}
-function maskIban(iban){
-  if(!iban) return '';
-  return iban.slice(0,4)+' •••• •••• '+iban.slice(-4);
 }
 
 async function renderBanque(){
@@ -5892,10 +5869,10 @@ function downloadImportTemplate() {
 }
 
 // ══════════════════════════════════════════════════════════════════
-// ── Banque (GoCardless / Nordigen) ─────────────────────────────────
+// ── Banque (Plaid) ────────────────────────────────────────────────
 // ══════════════════════════════════════════════════════════════════
 
-let _bankReqs=[], _bankInsts=null, _bankTxOffset=0, _bankTxHasMore=false, _bankTxAccountId='';
+let _bankItems=[], _bankTxOffset=0, _bankTxHasMore=false, _bankTxAccountId='';
 
 function _showBankState(state){
   ['loading','empty','content','error'].forEach(s=>{
@@ -5906,15 +5883,10 @@ function _showBankState(state){
 
 async function renderBank(){
   _showBankState('loading');
-  const urlRef=new URLSearchParams(window.location.search).get('ref');
   try{
     const res=await API.bridge.getAccounts();
-    _bankReqs=res||[];
-    if(urlRef){
-      try{await API.bridge.syncByRef(urlRef);const r2=await API.bridge.getAccounts();_bankReqs=r2||[];}catch(_){}
-      history.replaceState(null,'',window.location.pathname);
-    }
-    if(_bankReqs.length===0){_showBankState('empty');return;}
+    _bankItems=res||[];
+    if(_bankItems.length===0){_showBankState('empty');return;}
     _showBankState('content');
     _renderBankKpis();
     _renderBankConnections();
@@ -5926,11 +5898,11 @@ async function renderBank(){
 }
 
 function _renderBankKpis(){
-  const accs=_bankReqs.flatMap(r=>r.accounts||[]);
-  const total=accs.reduce((s,a)=>s+(a.balance||0),0);
-  const pos=accs.filter(a=>a.balance>0).reduce((s,a)=>s+a.balance,0);
-  const neg=accs.filter(a=>a.balance<0).reduce((s,a)=>s+a.balance,0);
-  const nbBanks=_bankReqs.length;
+  const accs=_bankItems.flatMap(r=>r.accounts||[]);
+  const total=accs.reduce((s,a)=>s+(a.balance_current||0),0);
+  const pos=accs.filter(a=>a.balance_current>0).reduce((s,a)=>s+a.balance_current,0);
+  const neg=accs.filter(a=>a.balance_current<0).reduce((s,a)=>s+a.balance_current,0);
+  const nbBanks=_bankItems.length;
   document.getElementById('bank-kpis').innerHTML=
     kpiHtml('Solde total',eur(total),total>=0?'var(--green)':'var(--red)')+
     kpiHtml('Comptes',accs.length+' lié'+(accs.length>1?'s':''),'var(--blue)',nbBanks+' banque'+(nbBanks>1?'s':''))+
@@ -5940,38 +5912,34 @@ function _renderBankKpis(){
 
 function _renderBankConnections(){
   const el=document.getElementById('bank-connections');if(!el)return;
-  const stLabel={LN:'Connecté',CR:'En attente',EX:'Expiré',RJ:'Refusé',GA:'Authentification',ID:'Confirmation'};
-  const stColor={LN:'var(--green)',CR:'var(--amber)',EX:'var(--red)',RJ:'var(--red)',GA:'var(--amber)',ID:'var(--amber)'};
-  const stBg={LN:'var(--green-bg)',CR:'var(--amber-bg)',EX:'var(--red-bg)',RJ:'var(--red-bg)',GA:'var(--amber-bg)',ID:'var(--amber-bg)'};
-  el.innerHTML=_bankReqs.map(req=>{
-    const st=req.status||'CR';
-    const synced=req.synced_at?new Date(req.synced_at).toLocaleDateString('fr-FR'):'—';
-    const accsHtml=(req.accounts||[]).map(a=>{
-      const iban=a.iban?`···${a.iban.slice(-4)}`:'';
-      const bc=a.balance>=0?'var(--green)':'var(--red)';
+  el.innerHTML=_bankItems.map(item=>{
+    const synced=item.synced_at?new Date(item.synced_at).toLocaleDateString('fr-FR'):'—';
+    const accsHtml=(item.accounts||[]).map(a=>{
+      const bc=(a.balance_current||0)>=0?'var(--green)':'var(--red)';
+      const sub=a.subtype?`<div style="font-size:var(--fs-xs);color:var(--muted);margin-top:1px;text-transform:capitalize">${a.subtype}</div>`:'';
       return`<div class="bank-acc-row">
         <div style="min-width:0">
           <div style="font-size:var(--fs-sm);font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${a.name||'Compte'}</div>
-          ${iban?`<div style="font-size:var(--fs-xs);color:var(--muted);font-family:monospace;margin-top:1px">${iban}</div>`:''}
+          ${sub}
         </div>
-        <div style="font-size:var(--fs-base);font-weight:800;color:${bc};flex-shrink:0;margin-left:12px;font-variant-numeric:tabular-nums">${eur(a.balance||0)}</div>
+        <div style="font-size:var(--fs-base);font-weight:800;color:${bc};flex-shrink:0;margin-left:12px;font-variant-numeric:tabular-nums">${eur(a.balance_current||0)}</div>
       </div>`;
     }).join('');
     return`<div class="bank-req-card">
-      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:${req.accounts&&req.accounts.length?'0':'-4px'}">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:${item.accounts&&item.accounts.length?'0':'-4px'}">
         <div style="flex:1;min-width:0">
-          <div style="font-size:var(--fs-base);font-weight:700;color:var(--text)">${req.institution_name}</div>
+          <div style="font-size:var(--fs-base);font-weight:700;color:var(--text)">${item.institution_name}</div>
           <div style="font-size:var(--fs-xs);color:var(--muted);margin-top:2px">Sync. ${synced}</div>
         </div>
-        <span style="font-size:var(--fs-xs);font-weight:700;padding:3px 10px;border-radius:20px;background:${stBg[st]||'var(--surface2)'};color:${stColor[st]||'var(--muted)'};flex-shrink:0">${stLabel[st]||st}</span>
+        <span style="font-size:var(--fs-xs);font-weight:700;padding:3px 10px;border-radius:20px;background:var(--green-bg);color:var(--green);flex-shrink:0">● Connecté</span>
         <div style="display:flex;gap:6px">
-          <button class="bank-btn" onclick="syncBankReq(event,'${req.requisition_id}')">↻ Sync</button>
-          <button class="bank-btn bank-btn-del" onclick="deleteBankReq('${req.requisition_id}')">Supprimer</button>
+          <button class="bank-btn" onclick="syncBankItem(event,'${item.item_id}')">↻ Sync</button>
+          <button class="bank-btn bank-btn-del" onclick="deleteBankItem('${item.item_id}')">Supprimer</button>
         </div>
       </div>
       ${accsHtml}
     </div>`;
-  }).join('')+`<button class="bank-add-btn" onclick="openBankConnectModal()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Connecter une autre banque</button>`;
+  }).join('')+`<button class="bank-add-btn" onclick="connectBank()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Connecter une autre banque</button>`;
 }
 
 async function renderBankTransactions(accountId,offset){
@@ -5985,8 +5953,9 @@ async function renderBankTransactions(accountId,offset){
     const html=txs.length===0?`<div style="text-align:center;padding:2rem;color:var(--muted);font-size:var(--fs-sm)">Aucune transaction</div>`:
       txs.map(tx=>{
         const amt=parseFloat(tx.amount||0);
-        const col=amt>=0?'var(--green)':'var(--red)';
-        const sign=amt>=0?'+':'';
+        // Plaid : montant positif = débit (dépense), négatif = crédit (revenu)
+        const col=amt<=0?'var(--green)':'var(--red)';
+        const sign=amt<=0?'+':'';
         const d=tx.date?new Date(tx.date).toLocaleDateString('fr-FR',{day:'2-digit',month:'short'}):'';
         return`<div class="bank-tx-row">
           <div style="font-size:var(--fs-xs);color:var(--muted);flex-shrink:0;width:44px;text-align:right">${d}</div>
@@ -6001,11 +5970,10 @@ async function renderBankTransactions(accountId,offset){
     if(offset===0)document.getElementById('bank-tx-list').innerHTML=html;
     else document.getElementById('bank-tx-list').innerHTML+=html;
     document.getElementById('bank-tx-more').style.display=_bankTxHasMore?'':'none';
-    // update filter
     const filter=document.getElementById('bank-account-filter');
     if(filter&&offset===0){
-      const accs=_bankReqs.flatMap(r=>r.accounts||[]);
-      filter.innerHTML=`<option value="">Tous les comptes</option>`+accs.map(a=>`<option value="${a.account_id}"${a.account_id===_bankTxAccountId?' selected':''}>${a.name||a.iban||'Compte'}</option>`).join('');
+      const accs=_bankItems.flatMap(r=>r.accounts||[]);
+      filter.innerHTML=`<option value="">Tous les comptes</option>`+accs.map(a=>`<option value="${a.account_id}"${a.account_id===_bankTxAccountId?' selected':''}>${a.name||'Compte'}</option>`).join('');
     }
   }catch(e){
     document.getElementById('bank-tx-list').innerHTML=`<div style="text-align:center;padding:1.5rem;color:var(--red);font-size:var(--fs-sm)">Erreur : ${e.message}</div>`;
@@ -6014,66 +5982,45 @@ async function renderBankTransactions(accountId,offset){
 
 function loadMoreBankTx(){renderBankTransactions(_bankTxAccountId,_bankTxOffset);}
 
-async function syncBankReq(e,reqId){
-  const btn=e.target;
-  const orig=btn.textContent;
+async function syncBankItem(e,itemId){
+  const btn=e.target;const orig=btn.textContent;
   btn.textContent='…';btn.disabled=true;
-  try{await API.bridge.syncItem(reqId);await renderBank();}
+  try{await API.bridge.syncItem(itemId);await renderBank();}
   catch(err){btn.textContent=orig;btn.disabled=false;alert('Erreur : '+err.message);}
 }
 
-async function deleteBankReq(reqId){
+async function deleteBankItem(itemId){
   if(!confirm('Supprimer cette connexion et toutes ses données ?'))return;
-  try{await API.bridge.deleteItem(reqId);await renderBank();}
+  try{await API.bridge.deleteItem(itemId);await renderBank();}
   catch(e){alert('Erreur : '+e.message);}
 }
 
-async function openBankConnectModal(){
-  document.getElementById('modal-bank-connect').style.display='flex';
-  document.getElementById('bank-inst-search').value='';
-  document.getElementById('bank-inst-loading').style.display='';
-  document.getElementById('bank-inst-list').innerHTML='';
-  if(!_bankInsts){
-    try{const r=await API.bridge.getInstitutions();_bankInsts=r||[];}
-    catch(e){document.getElementById('bank-inst-loading').innerHTML=`<div style="color:var(--red)">${e.message}</div>`;return;}
-  }
-  document.getElementById('bank-inst-loading').style.display='none';
-  _renderBankInstList(_bankInsts);
+function _loadPlaidScript(){
+  return new Promise(resolve=>{
+    if(window.Plaid)return resolve();
+    const s=document.createElement('script');
+    s.src='https://cdn.plaid.com/link/v2/stable/link-initialize.js';
+    s.onload=resolve;
+    document.head.appendChild(s);
+  });
 }
 
-function closeBankConnectModal(){document.getElementById('modal-bank-connect').style.display='none';}
-
-function filterBankInst(){
-  if(!_bankInsts)return;
-  const q=document.getElementById('bank-inst-search').value.toLowerCase().trim();
-  _renderBankInstList(q?_bankInsts.filter(i=>i.name.toLowerCase().includes(q)):_bankInsts);
-}
-
-function _renderBankInstList(list){
-  const el=document.getElementById('bank-inst-list');
-  const shown=list.slice(0,60);
-  el.innerHTML=shown.map(inst=>{
-    const logo=inst.logo?`<img src="${inst.logo}" style="width:32px;height:32px;border-radius:6px;object-fit:contain;flex-shrink:0" loading="lazy" onerror="this.replaceWith(Object.assign(document.createElement('div'),{style:'width:32px;height:32px;border-radius:6px;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:18px',textContent:'🏦'}))">`:`<div style="width:32px;height:32px;border-radius:6px;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">🏦</div>`;
-    const safeName=inst.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-    const safeId=inst.id.replace(/'/g,"\\'");
-    return`<button onclick="connectBank('${safeId}','${safeName}')" style="display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:9px;border:1px solid transparent;background:transparent;text-align:left;cursor:pointer;font-family:inherit;width:100%;transition:background .12s" onmouseover="this.style.background='var(--hover)';this.style.borderColor='var(--border)'" onmouseout="this.style.background='transparent';this.style.borderColor='transparent'">
-      ${logo}
-      <span style="flex:1;min-width:0;font-size:var(--fs-sm);font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${inst.name}</span>
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
-    </button>`;
-  }).join('')+(list.length>60?`<div style="text-align:center;padding:8px;font-size:var(--fs-xs);color:var(--muted)">Affinez votre recherche — ${list.length} résultats</div>`:'');
-}
-
-async function connectBank(institutionId,institutionName){
-  const btn=event.target.closest('button');
-  if(btn){btn.style.opacity='.5';btn.style.pointerEvents='none';}
+async function connectBank(){
   try{
-    const res=await API.bridge.createConnection(institutionId,institutionName);
-    window.location.href=res.link;
-  }catch(e){
-    if(btn){btn.style.opacity='1';btn.style.pointerEvents='';}
-    alert('Erreur : '+(e.message||'impossible de créer la connexion'));
-  }
+    await _loadPlaidScript();
+    const res=await API.bridge.getLinkToken();
+    window.Plaid.create({
+      token:res.link_token,
+      onSuccess:async(public_token,meta)=>{
+        const name=meta?.institution?.name||'Banque';
+        _showBankState('loading');
+        try{await API.bridge.exchangeToken(public_token,name);}
+        catch(e){alert('Erreur connexion : '+e.message);}
+        await renderBank();
+      },
+      onExit:(err)=>{if(err)console.warn('[Plaid]',err);},
+    }).open();
+  }catch(e){alert('Erreur : '+e.message);}
 }
 </script>
 </body>

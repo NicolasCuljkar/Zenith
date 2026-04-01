@@ -1,71 +1,61 @@
 'use strict';
 
-const nordigen = require('../services/nordigen.service');
+const plaid = require('../services/plaid.service');
 
-async function getInstitutions(req, res, next) {
+async function getLinkToken(req, res, next) {
   try {
-    res.json({ success: true, data: await nordigen.getInstitutions(req.query.country || 'FR') });
+    res.json({ success: true, data: await plaid.createLinkToken(req.user.id) });
   } catch (err) { next(err); }
 }
 
-async function getConnectUrl(req, res, next) {
+async function exchangeToken(req, res, next) {
   try {
-    const { institutionId, institutionName } = req.body;
-    if (!institutionId) return res.status(400).json({ success: false, error: 'institutionId requis' });
-    const redirectUri = `${req.protocol}://${req.get('host')}/banque`;
-    res.json({ success: true, data: await nordigen.createRequisition(req.user.id, institutionId, institutionName || institutionId, redirectUri) });
+    const { publicToken, institutionName } = req.body;
+    if (!publicToken) return res.status(400).json({ success: false, error: 'publicToken requis' });
+    res.json({ success: true, data: await plaid.exchangePublicToken(req.user.id, publicToken, institutionName) });
   } catch (err) { next(err); }
 }
 
 async function syncItem(req, res, next) {
   try {
-    res.json({ success: true, data: await nordigen.syncRequisition(req.user.id, req.params.itemId) });
-  } catch (err) { next(err); }
-}
-
-async function syncByRef(req, res, next) {
-  try {
-    res.json({ success: true, data: await nordigen.syncRequisitionByRef(req.user.id, req.params.ref) });
+    res.json({ success: true, data: await plaid.syncItem(req.user.id, req.params.itemId) });
   } catch (err) { next(err); }
 }
 
 async function syncAll(req, res, next) {
   try {
-    res.json({ success: true, data: await nordigen.syncAll(req.user.id) });
+    res.json({ success: true, data: await plaid.syncAll(req.user.id) });
   } catch (err) { next(err); }
 }
 
 async function getAccounts(req, res, next) {
   try {
-    res.json({ success: true, data: nordigen.getAccountsForUser(req.user.id) });
+    res.json({ success: true, data: plaid.getItemsForUser(req.user.id) });
   } catch (err) { next(err); }
 }
 
 async function getTransactions(req, res, next) {
   try {
     const { accountId, limit = 50, offset = 0 } = req.query;
-    res.json({ success: true, data: nordigen.getTransactionsForUser(req.user.id, {
-      accountId: accountId || null,
-      limit    : Math.min(Number(limit) || 50, 200),
-      offset   : Number(offset) || 0,
+    res.json({ success: true, data: plaid.getTransactionsForUser(req.user.id, {
+      accountId : accountId || null,
+      limit     : Math.min(Number(limit) || 50, 200),
+      offset    : Number(offset) || 0,
     })});
   } catch (err) { next(err); }
 }
 
 async function getSummary(req, res, next) {
   try {
-    res.json({ success: true, data: nordigen.getSummaryForUser(req.user.id) });
+    res.json({ success: true, data: plaid.getSummaryForUser(req.user.id) });
   } catch (err) { next(err); }
 }
 
 async function deleteItem(req, res, next) {
   try {
-    await nordigen.deleteRequisition(req.user.id, req.params.itemId);
+    await plaid.deleteItem(req.user.id, req.params.itemId);
     res.json({ success: true, data: { deleted: true } });
   } catch (err) { next(err); }
 }
 
-module.exports = {
-  getInstitutions, getConnectUrl, syncItem, syncByRef, syncAll,
-  getAccounts, getTransactions, getSummary, deleteItem,
-};
+module.exports = { getLinkToken, exchangeToken, syncItem, syncAll, getAccounts, getTransactions, getSummary, deleteItem };

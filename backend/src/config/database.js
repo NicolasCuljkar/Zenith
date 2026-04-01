@@ -170,6 +170,46 @@ UPDATE households SET creator_id = (
   CREATE INDEX IF NOT EXISTS idx_nacc_req    ON nordigen_accounts(requisition_id);
   CREATE INDEX IF NOT EXISTS idx_ntx_date    ON nordigen_transactions(date);`,
 
+  // v9 — intégration bancaire Plaid
+  `CREATE TABLE IF NOT EXISTS plaid_items (
+    id               INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id          INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    item_id          TEXT    NOT NULL UNIQUE,
+    access_token     TEXT    NOT NULL,
+    institution_name TEXT    NOT NULL DEFAULT 'Banque',
+    cursor           TEXT,
+    synced_at        TEXT,
+    created_at       TEXT    NOT NULL DEFAULT (datetime('now'))
+  );
+  CREATE TABLE IF NOT EXISTS plaid_accounts (
+    id                INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id           INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    item_id           TEXT    NOT NULL REFERENCES plaid_items(item_id) ON DELETE CASCADE,
+    account_id        TEXT    NOT NULL UNIQUE,
+    name              TEXT    NOT NULL,
+    type              TEXT,
+    subtype           TEXT,
+    balance_current   REAL    NOT NULL DEFAULT 0,
+    balance_available REAL,
+    currency          TEXT    NOT NULL DEFAULT 'EUR',
+    updated_at        TEXT    NOT NULL DEFAULT (datetime('now'))
+  );
+  CREATE TABLE IF NOT EXISTS plaid_transactions (
+    id             INTEGER PRIMARY KEY AUTOINCREMENT,
+    account_id     TEXT    NOT NULL,
+    transaction_id TEXT    NOT NULL UNIQUE,
+    amount         REAL    NOT NULL,
+    currency       TEXT    NOT NULL DEFAULT 'EUR',
+    date           TEXT    NOT NULL,
+    description    TEXT,
+    category       TEXT,
+    is_pending     INTEGER NOT NULL DEFAULT 0,
+    created_at     TEXT    NOT NULL DEFAULT (datetime('now'))
+  );
+  CREATE INDEX IF NOT EXISTS idx_pitems_user  ON plaid_items(user_id);
+  CREATE INDEX IF NOT EXISTS idx_paccs_item   ON plaid_accounts(item_id);
+  CREATE INDEX IF NOT EXISTS idx_ptx_date     ON plaid_transactions(date);`,
+
 ];
 
 // ── Apply pending migrations ──────────────────────────────────────────────────

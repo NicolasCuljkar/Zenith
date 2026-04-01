@@ -1,15 +1,14 @@
 'use strict';
 
-const router     = require('express').Router();
-const ctrl       = require('../controllers/bridge.controller');
+const router = require('express').Router();
+const ctrl   = require('../controllers/bridge.controller');
 const { requireAuth } = require('../middleware/auth.middleware');
 
 router.use(requireAuth);
 
-router.get   ('/institutions',        ctrl.getInstitutions);
-router.post  ('/connect',             ctrl.getConnectUrl);
+router.post  ('/link-token',          ctrl.getLinkToken);
+router.post  ('/exchange-token',      ctrl.exchangeToken);
 router.post  ('/sync/:itemId',        ctrl.syncItem);
-router.post  ('/sync-by-ref/:ref',    ctrl.syncByRef);
 router.post  ('/sync-all',            ctrl.syncAll);
 router.get   ('/accounts',            ctrl.getAccounts);
 router.get   ('/transactions',        ctrl.getTransactions);
