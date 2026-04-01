@@ -213,19 +213,18 @@ html.dark .bnav-btn{color:#aaa}
 
 /* ── KPI ── */
 .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:var(--sg)}
-.kpi{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px 15px;position:relative;overflow:hidden;transition:box-shadow .2s,transform .18s;display:flex;flex-direction:column;cursor:default}
-.kpi:hover{box-shadow:0 6px 28px rgba(0,0,0,.11);transform:translateY(-2px)}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px 15px;position:relative;overflow:hidden;transition:box-shadow .22s,transform .18s;display:flex;flex-direction:column;cursor:default}
+.kpi:hover{box-shadow:0 8px 32px color-mix(in srgb,var(--kc,rgba(0,0,0,.8)) 28%,transparent);transform:translateY(-2px)}
 .kpi:active{transform:scale(.98)}
-.kpi-accent{position:absolute;top:0;left:0;right:0;height:3px;border-radius:var(--r) var(--r) 0 0}
+.kpi-accent{position:absolute;top:0;left:0;right:0;height:4px;border-radius:var(--r) var(--r) 0 0}
 .kpi-label{font-size:var(--fs-xs);font-weight:700;color:var(--hint);letter-spacing:.07em;text-transform:uppercase;margin-bottom:6px;margin-top:4px}
 .kpi-value{font-size:var(--fs-xl);font-weight:800;letter-spacing:-.04em;line-height:1;font-variant-numeric:tabular-nums}
+.kpi-trend-row{margin-top:6px;display:flex;align-items:center}
 .kpi-sub{font-size:var(--fs-xs);color:var(--muted);margin-top:8px;display:flex;flex-direction:column;gap:3px;border-top:1px solid var(--border);padding-top:8px}
 .kpi-sub span{display:block;line-height:1.4}
 .kpi-sub span:first-child{color:var(--text);font-weight:600;font-size:var(--fs-sm)}
-html.light .kpi{box-shadow:0 1px 4px rgba(0,0,0,.05)}
-html.light .kpi:hover{box-shadow:0 8px 32px rgba(0,0,0,.1)}
-html.dark .kpi{box-shadow:0 2px 12px rgba(0,0,0,.25)}
-html.dark .kpi:hover{box-shadow:0 8px 32px rgba(0,0,0,.45)}
+html.light .kpi{box-shadow:0 1px 4px rgba(0,0,0,.06),0 0 0 1px rgba(0,0,0,.03)}
+html.dark .kpi{box-shadow:0 2px 12px rgba(0,0,0,.3)}
 .kpi-tooltip{
   position:absolute;top:calc(100% + 8px);left:50%;transform:translateX(-50%) translateY(-4px);
   background:var(--surface);border:1px solid var(--border);
@@ -473,7 +472,7 @@ input[type=range]:hover::-moz-range-thumb{transform:scale(1.1)}
   .kpi-label{margin-bottom:2px;margin-top:0;letter-spacing:.04em}
   .kpi-value{font-size:var(--fs-md)}
   .kpi-sub{display:none}
-  .kpi-trend{margin-top:3px}
+  .kpi-trend-row{display:none}
   .g2,.g3,.grid-chart{grid-template-columns:1fr;gap:.75rem}
   .tbl-wrap{display:none}.entry-cards{display:block}
   .toolbar{flex-direction:column;gap:6px}.toolbar-inputs{flex-direction:column;width:100%}
@@ -1606,10 +1605,11 @@ const kpiHtml=(label,value,color,sub='',trend=null,tip='',badge='')=>{
       <div style="font-size:var(--fs-sm);color:var(--text);line-height:1.6">${tooltipContent.replace(/·/g,'<br>')}</div>
     </div>`:'';
   const subLines=sub?sub.split('·').map(s=>s.trim()).filter(Boolean):[];
-  return`<div class="kpi" style="position:relative;overflow:visible;background:color-mix(in srgb,${color} 9%,var(--surface))" ${tooltipContent?'onmouseenter="this.querySelector(\'.kpi-tooltip\')&&(this.querySelector(\'.kpi-tooltip\').style.opacity=\'1\',this.querySelector(\'.kpi-tooltip\').style.transform=\'translateX(-50%) translateY(0)\')" onmouseleave="this.querySelector(\'.kpi-tooltip\')&&(this.querySelector(\'.kpi-tooltip\').style.opacity=\'0\',this.querySelector(\'.kpi-tooltip\').style.transform=\'translateX(-50%) translateY(-4px)\')"':''}>
-    <div class="kpi-accent" style="background:${color}"></div>
+  return`<div class="kpi" style="position:relative;overflow:visible;--kc:${color};background:linear-gradient(150deg,color-mix(in srgb,${color} 14%,var(--surface)) 0%,var(--surface) 62%)" ${tooltipContent?'onmouseenter="this.querySelector(\'.kpi-tooltip\')&&(this.querySelector(\'.kpi-tooltip\').style.opacity=\'1\',this.querySelector(\'.kpi-tooltip\').style.transform=\'translateX(-50%) translateY(0)\')" onmouseleave="this.querySelector(\'.kpi-tooltip\')&&(this.querySelector(\'.kpi-tooltip\').style.opacity=\'0\',this.querySelector(\'.kpi-tooltip\').style.transform=\'translateX(-50%) translateY(-4px)\')"':''}>
+    <div class="kpi-accent" style="background:${color};box-shadow:0 0 14px ${color}66"></div>
     <div class="kpi-label">${label}</div>
-    <div class="kpi-value" style="color:${color}">${value}${trendHtml?`<span style="margin-left:8px">${trendHtml}</span>`:''}</div>
+    <div class="kpi-value" style="color:${color}">${value}</div>
+    ${trendHtml?`<div class="kpi-trend-row">${trendHtml}</div>`:''}
     ${subLines.length?`<div class="kpi-sub">${subLines.map(s=>`<span>${s}</span>`).join('')}</div>`:''}
     ${badge?`<div style="display:flex;align-items:center;gap:6px;margin-top:6px;flex-wrap:wrap">${badge}</div>`:''}
     ${tooltipHtml}
