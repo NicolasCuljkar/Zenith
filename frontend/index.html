@@ -452,7 +452,7 @@ input[type=range]:hover::-moz-range-thumb{transform:scale(1.1)}
 @media(max-width:900px){.g3{grid-template-columns:1fr 1fr}}
 /* ══ 640px — mise en page uniquement (zéro changement de taille) ══ */
 @media(max-width:640px){
-  :root{--sg:.75rem}
+  :root{--sg:.75rem;--nav:48px}
   .topbar{padding-top:env(safe-area-inset-top,0px);padding-left:1rem;padding-right:1rem;gap:.5rem}
   .user-menu-btn{padding:3px;border-color:transparent!important;background:transparent!important}
   .user-menu-btn>svg{display:none}
@@ -471,7 +471,7 @@ input[type=range]:hover::-moz-range-thumb{transform:scale(1.1)}
   .inp{padding:9px 10px;min-height:40px}
   #entries-search .inp{width:auto}
   .btn-add-desktop{display:none!important}.fab{display:flex}
-  .member-tabs{position:sticky;top:calc(var(--nav) + env(safe-area-inset-top,0px));z-index:90;background:var(--bg);padding:.3rem 0;margin-top:0;margin-bottom:.3rem;flex-wrap:nowrap;overflow-x:auto;box-shadow:none}
+  .member-tabs{position:sticky;top:calc(var(--nav) + env(safe-area-inset-top,0px));z-index:90;background:transparent;padding:.3rem 0;margin-top:0;margin-bottom:.3rem;flex-wrap:nowrap;overflow-x:auto;box-shadow:none}
   .frow{grid-template-columns:1fr;gap:10px}
   .flow-bar{height:34px}
   .flow-grid{grid-template-columns:1fr 1fr;gap:6px}
@@ -494,7 +494,7 @@ input[type=range]:hover::-moz-range-thumb{transform:scale(1.1)}
 
 /* ══ 480px — mobile standard ══ */
 @media(max-width:480px){
-  :root{--nav:56px;--fs-xs:0.625rem;--fs-sm:0.75rem;--fs-md:0.875rem;--fs-base:0.9375rem;--fs-title:0.9375rem;--fs-lg:1.25rem;--fs-xl:1.5rem}
+  :root{--nav:48px;--fs-xs:0.625rem;--fs-sm:0.75rem;--fs-md:0.875rem;--fs-base:0.9375rem;--fs-title:0.9375rem;--fs-lg:1.25rem;--fs-xl:1.5rem}
   html,body{font-size:15px}
   /* layout */
   .main{padding:.625rem .625rem calc(136px + env(safe-area-inset-bottom,0px))}
@@ -746,7 +746,7 @@ window.onerror = function(msg, src, line) {
 <div id="screen-app" style="display:none">
 <div class="shell">
 
-<header class="topbar" style="position:relative">
+<header class="topbar">
   <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0">
     <div class="topbar-title"><svg width="28" height="28" viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="grad-top" x1="0" y1="0" x2="60" y2="60" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#3B8BD4"/><stop offset="100%" stop-color="#e06fa0"/></linearGradient></defs><rect width="60" height="60" rx="14" fill="url(#grad-top)"/><path d="M14 42 L24 28 L32 35 L46 14" stroke="white" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/><circle cx="46" cy="14" r="4" fill="white"/></svg><span>ZÉNITH</span></div>
   </div>
