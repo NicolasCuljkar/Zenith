@@ -4,9 +4,10 @@ const https  = require('https');
 const db     = require('../config/database');
 require('dotenv').config();
 
-const NORDIGEN_BASE = 'https://bankaccountdata.gocardless.com/api/v2';
-const SECRET_ID  = process.env.NORDIGEN_SECRET_ID;
-const SECRET_KEY = process.env.NORDIGEN_SECRET_KEY;
+const NORDIGEN_BASE   = 'https://bankaccountdata.gocardless.com/api/v2';
+const SECRET_ID       = process.env.NORDIGEN_SECRET_ID;
+const SECRET_KEY      = process.env.NORDIGEN_SECRET_KEY;
+const PERSONAL_TOKEN  = process.env.NORDIGEN_ACCESS_TOKEN;
 
 let _accessToken  = null;
 let _accessExpiry = 0;
@@ -15,9 +16,9 @@ let _accessExpiry = 0;
 
 function nordigenRequest(method, path, body, token) {
   return new Promise((resolve, reject) => {
-    if (!SECRET_ID || !SECRET_KEY) {
+    if (!PERSONAL_TOKEN && (!SECRET_ID || !SECRET_KEY)) {
       return reject(Object.assign(
-        new Error('Nordigen non configuré. Ajoutez NORDIGEN_SECRET_ID et NORDIGEN_SECRET_KEY.'),
+        new Error('Nordigen non configuré. Ajoutez NORDIGEN_ACCESS_TOKEN dans votre .env.'),
         { statusCode: 503 }
       ));
     }
@@ -57,6 +58,9 @@ function nordigenRequest(method, path, body, token) {
 // ── App-level token ──────────────────────────────────────────────────────────
 
 async function getAccessToken() {
+  // Personal access token (jeton d'accès personnel GoCardless) — utilisé directement
+  if (PERSONAL_TOKEN) return PERSONAL_TOKEN;
+  // OAuth flow avec secret_id + secret_key
   if (_accessToken && Date.now() < _accessExpiry) return _accessToken;
   const res      = await nordigenRequest('POST', '/token/new/', { secret_id: SECRET_ID, secret_key: SECRET_KEY });
   _accessToken   = res.access;
