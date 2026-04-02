@@ -3748,7 +3748,7 @@ function renderAnalysis(){
   const nb=topSegs.length;
   const topBar=topSegs.map((d,i)=>{
     const r=(i===0?'border-radius:8px 0 0 8px;':'')+(i===nb-1?'border-radius:0 8px 8px 0;':'');
-    return`<div style="flex:${d.val};background:${d.color};height:100%;${r}" title="${d.label} — ${d.val}%"></div>`;
+    return`<div data-rb="${d.label}" style="flex:${d.val};background:${d.color};height:100%;${r}cursor:pointer;transition:opacity .2s,filter .2s" title="${d.label} — ${d.val}%"></div>`;
   }).join('');
   const topLegend=topSegs.map(d=>`<span style="display:inline-flex;align-items:center;gap:5px;font-size:var(--fs-xs);color:var(--muted)"><span style="width:8px;height:8px;border-radius:2px;background:${d.color};display:inline-block;flex-shrink:0"></span>${d.label}&thinsp;<strong style="color:var(--text)">${d.val}%</strong></span>`).join('');
 
@@ -3789,7 +3789,7 @@ function renderAnalysis(){
         </div>`;
         return out;
       }).join('');
-    return`<div class="rb">
+    return`<div class="rb" data-rb="${b.label}" style="transition:opacity .2s,filter .2s">
       <div style="height:3px;background:${b.color}"></div>
       <div class="rb-head">
         <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:6px;margin-bottom:10px">
@@ -3817,6 +3817,20 @@ function renderAnalysis(){
     <div class="rb-grid">${rbHtml}</div>
     ${rUnalloc>0?`<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--green-bg);border:1px solid var(--green);border-radius:10px;margin-top:12px"><div style="width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0"></div><span style="font-size:var(--fs-sm);font-weight:700;color:var(--green)">${rUnalloc}% non alloué · ${eur(Math.round(s.revNet*rUnalloc/100))}</span><span style="font-size:var(--fs-xs);color:var(--muted);margin-left:4px">à placer en épargne</span></div>`:''}
   `;
+
+  // ── Hover bar ↔ cards ──
+  const _rbFlow=document.getElementById('analysis-flow');
+  function _rbHL(label){
+    _rbFlow.querySelectorAll('[data-rb]').forEach(el=>{
+      if(label===null){el.style.opacity='';el.style.filter='';}
+      else if(el.dataset.rb===label){el.style.opacity='1';el.style.filter='brightness(1.08)';}
+      else{el.style.opacity='0.28';el.style.filter='';}
+    });
+  }
+  _rbFlow.querySelectorAll('[data-rb]').forEach(el=>{
+    el.addEventListener('mouseenter',()=>_rbHL(el.dataset.rb));
+    el.addEventListener('mouseleave',()=>_rbHL(null));
+  });
 
   // ── Donut répartition dépenses ──
   const aMember=analysisMember;
