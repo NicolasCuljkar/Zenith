@@ -855,10 +855,6 @@ window.onerror = function(msg, src, line) {
         <div id="donut-chart-wrap" style="position:relative;height:260px"><canvas id="donut-chart"></canvas></div>
         <div id="donut-legend" style="margin-top:14px"></div>
       </div>
-      <div class="card">
-        <div class="card-head">Top dépenses fixes &amp; variables</div>
-        <div id="top-bars"></div>
-      </div>
     </div>
     </div><!-- /#dash-content -->
   </div>
@@ -3728,9 +3724,9 @@ function renderAnalysis(){
 
   const _scopedE=analysisMember==='all'?entries:entries.filter(e=>e.member===analysisMember);
   const top3Fixe=_scopedE.filter(e=>e.cat==='fixe').sort((a,b)=>Math.abs(b.amount)-Math.abs(a.amount)).slice(0,3)
-    .map(e=>({label:e.name,value:Math.abs(e.amount),color:'#d93535'}));
+    .map(e=>({label:e.name,value:Math.abs(e.amount),color:'#d93535',_group:'Charges fixes'}));
   const top3Vari=_scopedE.filter(e=>e.cat==='variable').sort((a,b)=>Math.abs(b.amount)-Math.abs(a.amount)).slice(0,3)
-    .map(e=>({label:e.name,value:Math.abs(e.amount),color:'#e07020'}));
+    .map(e=>({label:e.name,value:Math.abs(e.amount),color:'#e07020',_group:'Variables'}));
 
   const buckets=[
     {label:'Besoins',    sublabel:'Loyer · charges · impôts', ideal:50, color:'#d93535', realPct:rNeeds, realAmt:depStrict,
@@ -3764,15 +3760,34 @@ function renderAnalysis(){
     const statusText=over?`▲ ${eur(diff)} de trop`:ok?`✓ ${eur(diff)} de marge`:`—`;
     const pctColor=over?'var(--red)':ok?b.color:'var(--hint)';
     const fillW=b.ideal>0?Math.min(b.realPct/b.ideal*100,100):0;
-    const items=b.items.map(it=>{
-      const p=Math.round(it.value/flowBase*100);
-      return`<div class="rb-item">
-        <div class="rb-dot" style="background:${it.color}"></div>
-        <div style="flex:1;font-size:var(--fs-sm);color:var(--muted)">${it.label}</div>
-        <div style="font-size:var(--fs-sm);font-weight:600;color:var(--text)">${eur(it.value)}</div>
-        <div style="font-size:var(--fs-xs);color:var(--hint);width:30px;text-align:right">${p}%</div>
-      </div>`;
-    }).join('')||(b.realAmt===0?`<div style="padding:8px 16px;font-size:var(--fs-sm);color:var(--hint);border-top:1px solid var(--border)">Aucune donnée</div>`:'');
+    const hasGroups=b.items.some(it=>it._group);
+    let _gtrack=null;
+    const items=!b.items.length
+      ?(b.realAmt===0?`<div style="padding:8px 16px;font-size:var(--fs-sm);color:var(--hint);border-top:1px solid var(--border)">Aucune donnée</div>`:'')
+      :b.items.map((it,idx)=>{
+        const p=Math.round(it.value/flowBase*100);
+        const barW=Math.min(100,Math.round(it.value/(b.realAmt||1)*100));
+        let out='';
+        if(hasGroups&&it._group!==_gtrack){
+          _gtrack=it._group;
+          out+=`<div style="padding:10px 16px 6px;border-top:1px solid var(--border);display:flex;align-items:center;gap:8px">
+            <span style="display:inline-block;width:3px;height:13px;border-radius:2px;background:${it.color};flex-shrink:0"></span>
+            <span style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--hint)">${it._group}</span>
+          </div>`;
+        }
+        const btop=!hasGroups&&idx===0?'border-top:1px solid var(--border);':'';
+        out+=`<div style="padding:5px 16px 8px;${btop}">
+          <div style="display:flex;align-items:baseline;gap:6px;margin-bottom:5px">
+            <span style="flex:1;font-size:var(--fs-sm);color:var(--text);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${it.label}</span>
+            <span style="font-size:var(--fs-sm);font-weight:700;color:var(--text);flex-shrink:0">${eur(it.value)}</span>
+            <span style="font-size:var(--fs-xs);color:var(--hint);width:28px;text-align:right;flex-shrink:0">${p}%</span>
+          </div>
+          <div style="height:3px;background:var(--border);border-radius:2px;overflow:hidden">
+            <div style="width:${barW}%;height:100%;background:${it.color};border-radius:2px;transition:width .6s ease"></div>
+          </div>
+        </div>`;
+        return out;
+      }).join('');
     return`<div class="rb">
       <div style="height:3px;background:${b.color}"></div>
       <div class="rb-head">
@@ -3841,117 +3856,7 @@ function renderAnalysis(){
     }
   }
 
-  // ── Top dépenses ──
-  const showAvatars=aMember==='all';
-  const aGrouped={};
-  aEntries.filter(e=>['fixe','variable'].includes(e.cat)).forEach(e=>{
-    const key=e.name.trim();
-    if(!aGrouped[key])aGrouped[key]={name:key,amount:0,members:[],cat:e.cat,byMember:{}};
-    aGrouped[key].amount+=Math.abs(e.amount);
-    if(!aGrouped[key].members.includes(e.member))aGrouped[key].members.push(e.member);
-    aGrouped[key].byMember[e.member]=(aGrouped[key].byMember[e.member]||0)+Math.abs(e.amount);
-  });
-  const aTop=Object.values(aGrouped).sort((a,b)=>b.amount-a.amount).slice(0,5);
-  const aMax=aTop[0]?.amount||1,aTotTop=aTop.reduce((s,e)=>s+e.amount,0)||1;
   const [m1,m2]=orderedMembers();
-  const APAL=['#3B8BD4','#e06fa0','#0d9e6e','#7c52d4','#c49a00'];
-  const _topBarsContent=`<div style="display:flex;flex-direction:column;gap:6px">${aTop.map((e,i)=>{
-    const isShared=e.members.length>1;
-    const em1=e.members[0],em2=isShared?e.members[1]:null;
-    const useMemCol=aMember==='all';
-    const col1=useMemCol?getMC(em1):APAL[i%APAL.length];
-    const col2=useMemCol&&isShared?getMC(em2):null;
-    const pct=Math.round(e.amount/aTotTop*100);
-    const barW=Math.round(e.amount/aMax*100);
-    const a1=e.byMember[em1]||0,a2=isShared?(e.byMember[em2]||0):0;
-    const w1=e.amount>0?Math.round(a1/e.amount*barW):0,w2=useMemCol&&isShared&&e.amount>0?Math.round(a2/e.amount*barW):0;
-    const pct1=e.amount>0?Math.round(a1/e.amount*100):0,pct2=e.amount>0?Math.round(a2/e.amount*100):0;
-    if(useMemCol){
-      // Vue commun : avatars + barre partagée + détail par membre
-      const avatars=`<div style="display:flex;flex-shrink:0;${isShared?'width:36px':'width:24px'}">
-        <div style="flex-shrink:0">${avatarHtml(em1,26,9)}</div>
-        ${isShared?`<div style="flex-shrink:0;margin-left:-8px">${avatarHtml(em2,26,9)}</div>`:''}
-      </div>`;
-      const barInner=isShared
-        ?`<div style="width:${w1}%;height:100%;background:${col1};transition:width .6s cubic-bezier(.4,0,.2,1)"></div><div style="width:${w2}%;height:100%;background:${col2};transition:width .6s cubic-bezier(.4,0,.2,1)"></div>`
-        :`<div style="width:${barW}%;height:100%;background:${col1};transition:width .6s cubic-bezier(.4,0,.2,1)"></div>`;
-      const memberBreakdown=isShared?`
-        <div style="display:flex;gap:10px;margin-top:6px">
-          <div style="display:flex;align-items:center;gap:5px;flex:1;min-width:0">
-            ${avatarHtml(em1,18,7)}
-            <span style="font-size:var(--fs-xs);font-weight:600;color:${col1};white-space:nowrap">${eur(a1)}</span>
-            <span style="font-size:var(--fs-xs);color:var(--hint)">${pct1}%</span>
-          </div>
-          <div style="display:flex;align-items:center;gap:5px;flex:1;min-width:0;justify-content:flex-end">
-            <span style="font-size:var(--fs-xs);color:var(--hint)">${pct2}%</span>
-            <span style="font-size:var(--fs-xs);font-weight:600;color:${col2};white-space:nowrap">${eur(a2)}</span>
-            ${avatarHtml(em2,18,7)}
-          </div>
-        </div>`
-        :`<div style="display:flex;align-items:center;gap:5px;margin-top:5px">
-          ${avatarHtml(em1,16,6)}
-          <span style="font-size:var(--fs-xs);color:var(--hint)">${em1} · 100%</span>
-        </div>`;
-      const tooltipLines=isShared
-        ?`${em1} : ${eur(a1)} (${pct1}%) · ${em2} : ${eur(a2)} (${pct2}%)<br>${e.cat==='fixe'?'Fixe':'Variable'} · ${pct}% du total`
-        :`${em1} · ${e.cat==='fixe'?'Fixe':'Variable'}<br>${eur(e.amount)} · ${pct}% du total`;
-      return`<div style="padding:9px 12px;border-radius:10px;background:var(--surface2);border:1px solid var(--border);transition:background .15s,box-shadow .15s;position:relative"
-        onmouseenter="this.style.background='var(--hover)';this.style.boxShadow='0 2px 12px rgba(0,0,0,.08)';this.querySelector('.bar-tip').style.opacity='1';this.querySelector('.bar-tip').style.transform='translateX(-50%) translateY(0)'"
-        onmouseleave="this.style.background='var(--surface2)';this.style.boxShadow='none';this.querySelector('.bar-tip').style.opacity='0';this.querySelector('.bar-tip').style.transform='translateX(-50%) translateY(-4px)'">
-        <div class="bar-tip" style="position:absolute;top:calc(100% + 6px);left:50%;transform:translateX(-50%) translateY(-4px);background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:9px 13px;white-space:normal;pointer-events:none;opacity:0;transition:opacity .15s,transform .15s;z-index:50;box-shadow:0 8px 24px rgba(0,0,0,.15);min-width:160px;max-width:min(220px,70vw)">
-          <div style="font-size:var(--fs-sm);font-weight:700;color:var(--text);margin-bottom:4px">${e.name}</div>
-          <div style="font-size:var(--fs-sm);color:var(--muted);line-height:1.7">${tooltipLines}</div>
-        </div>
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-          ${avatars}
-          <div style="flex:1;min-width:0">
-            <div style="display:flex;justify-content:space-between;align-items:center">
-              <span style="font-size:var(--fs-sm);font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:130px">${e.name}</span>
-              <div style="display:flex;align-items:center;gap:5px;flex-shrink:0">
-                <span style="font-size:var(--fs-sm);font-weight:600;color:var(--muted)">${eur(e.amount)}</span>
-                <span style="font-size:var(--fs-xs);font-weight:700;color:${isShared?'var(--hint)':col1};background:${isShared?'var(--surface)':col1+'18'};border:1px solid var(--border);padding:1px 6px;border-radius:20px">${pct}%</span>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div style="height:6px;background:var(--border);border-radius:3px;overflow:hidden;display:flex">${barInner}</div>
-        ${memberBreakdown}
-      </div>`;
-    } else {
-      // Vue membre individuel : couleur palette
-      const dot=`<span style="width:10px;height:10px;border-radius:50%;background:${col1};flex-shrink:0;display:inline-block;box-shadow:0 0 0 2px ${col1}33"></span>`;
-      const tipTxt=`${e.cat==='fixe'?'Fixe':'Variable'} · ${pct}% du top 5`;
-      return`<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:10px;background:var(--surface2);border:1px solid var(--border);transition:background .15s,box-shadow .15s;position:relative;cursor:default"
-        onmouseenter="this.style.background='var(--hover)';this.style.boxShadow='0 2px 12px rgba(0,0,0,.08)';this.querySelector('.bar-tip').style.opacity='1';this.querySelector('.bar-tip').style.transform='translateX(-50%) translateY(0)'"
-        onmouseleave="this.style.background='var(--surface2)';this.style.boxShadow='none';this.querySelector('.bar-tip').style.opacity='0';this.querySelector('.bar-tip').style.transform='translateX(-50%) translateY(-4px)'">
-        <div class="bar-tip" style="position:absolute;top:calc(100% + 6px);left:50%;transform:translateX(-50%) translateY(-4px);background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:9px 13px;white-space:normal;pointer-events:none;opacity:0;transition:opacity .15s,transform .15s;z-index:50;box-shadow:0 8px 24px rgba(0,0,0,.15);min-width:160px;max-width:min(220px,70vw)">
-          <div style="font-size:var(--fs-sm);font-weight:700;color:var(--text);margin-bottom:4px">${e.name}</div>
-          <div style="font-size:var(--fs-sm);color:var(--muted);line-height:1.7">${tipTxt}</div>
-        </div>
-        ${dot}
-        <div style="flex:1;min-width:0">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-            <span style="font-size:var(--fs-sm);font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px">${e.name}</span>
-            <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
-              <span style="font-size:var(--fs-sm);font-weight:600;color:var(--muted)">${eur(e.amount)}</span>
-              <span style="font-size:var(--fs-xs);font-weight:700;color:${col1};background:${col1}18;padding:1px 6px;border-radius:20px">${pct}%</span>
-            </div>
-          </div>
-          <div style="height:4px;background:var(--border);border-radius:2px;overflow:hidden">
-            <div style="width:${barW}%;height:100%;background:${col1};transition:width .6s cubic-bezier(.4,0,.2,1)"></div>
-          </div>
-        </div>
-      </div>`;
-    }
-  }).join('')}</div>`;
-  if(aTop.length){
-    document.getElementById('analysis-flow').insertAdjacentHTML('beforeend',
-      `<div style="border-top:1px solid var(--border);margin-top:20px;padding-top:16px">
-        <div style="font-size:var(--fs-xs);font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--hint);margin-bottom:12px">Top dépenses fixes &amp; variables</div>
-        ${_topBarsContent}
-      </div>`
-    );
-  }
 }
 
 // ══════════════════════════════════════════════
