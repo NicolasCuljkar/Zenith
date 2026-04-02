@@ -3726,9 +3726,15 @@ function renderAnalysis(){
   const rNeeds=Math.round(depStrict/base*100),rWants=Math.round(loiScoped/base*100),rSaves=Math.round(epScoped/base*100);
   const rUnalloc=Math.max(0,100-rNeeds-rWants-rSaves);
 
+  const _scopedE=analysisMember==='all'?entries:entries.filter(e=>e.member===analysisMember);
+  const top3Fixe=_scopedE.filter(e=>e.cat==='fixe').sort((a,b)=>Math.abs(b.amount)-Math.abs(a.amount)).slice(0,3)
+    .map(e=>({label:e.name,value:Math.abs(e.amount),color:'#d93535'}));
+  const top3Vari=_scopedE.filter(e=>e.cat==='variable').sort((a,b)=>Math.abs(b.amount)-Math.abs(a.amount)).slice(0,3)
+    .map(e=>({label:e.name,value:Math.abs(e.amount),color:'#e07020'}));
+
   const buckets=[
     {label:'Besoins',    sublabel:'Loyer · charges · impôts', ideal:50, color:'#d93535', realPct:rNeeds, realAmt:depStrict,
-     items:flowSegs.filter(d=>['Impôts','Charges fixes','Variables'].includes(d.label))},
+     items:[...top3Fixe, ...top3Vari]},
     {label:'Envies',     sublabel:'Loisirs · sorties', ideal:30, color:'#f59e0b', realPct:rWants, realAmt:loiScoped,
      items:flowSegs.filter(d=>d.label==='Loisir')},
     {label:'Épargne',   sublabel:'Livret · investissements', ideal:20, color:'#2979c8', realPct:rSaves, realAmt:epScoped,
