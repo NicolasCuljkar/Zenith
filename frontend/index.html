@@ -2766,7 +2766,8 @@ function renderDashboard(){
       </div>
     </div>`;
   }).join('');
-  document.getElementById('top-bars').innerHTML=`<div style="display:flex;flex-direction:column;gap:5px">${topBarsHtml}</div>`;
+  const _topBarsEl=document.getElementById('top-bars');
+  if(_topBarsEl)_topBarsEl.innerHTML=`<div style="display:flex;flex-direction:column;gap:5px">${topBarsHtml}</div>`;
 }
 
 // ══════════════════════════════════════════════
