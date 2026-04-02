@@ -264,13 +264,15 @@ html.dark .kpi-tooltip{box-shadow:0 8px 24px rgba(0,0,0,.4)}
 .flow-leg-bar-fill{height:100%;border-radius:2px;transition:width .4s}
 .flow-leg-pct{font-size:var(--fs-base);font-weight:800;flex-shrink:0;min-width:0}
 .rule-cards{display:flex;gap:10px;flex-wrap:wrap}
-.rule-buckets{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:18px}
-.rule-bucket{background:var(--surface2);border:1px solid var(--border);border-radius:12px;overflow:hidden;position:relative}
-.rule-bucket-head{padding:12px 14px 10px}
-.rule-bucket-item{display:flex;align-items:center;gap:7px;padding:6px 14px;border-top:1px solid var(--border)}
+.rule-buckets{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:16px}
+.rule-bucket{background:var(--surface2);border:1px solid var(--border);border-radius:14px;overflow:hidden;transition:box-shadow .18s}
+.rule-bucket:hover{box-shadow:0 4px 18px rgba(0,0,0,.1)}
+.rule-bucket-head{padding:14px 16px 10px}
+.rule-bucket-item{display:flex;align-items:center;gap:8px;padding:7px 16px;border-top:1px solid var(--border)}
 .rule-bucket-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0}
-.rule-bucket-bar{height:4px;background:var(--border);border-radius:2px;overflow:hidden;margin:8px 14px 12px}
-.rule-bucket-bar-fill{height:100%;border-radius:2px;transition:width .5s ease}
+.rule-bucket-bar{height:5px;background:var(--border);border-radius:3px;overflow:visible;margin:6px 16px 14px;position:relative}
+.rule-bucket-bar-fill{height:100%;border-radius:3px;transition:width .5s ease;position:relative}
+.rule-bucket-bar-mark{position:absolute;top:-3px;width:2px;height:11px;background:var(--text);opacity:.2;border-radius:1px;transform:translateX(-50%)}
 @media(max-width:639px){
   .flow-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
   .flow-leg-item{flex-direction:column;align-items:flex-start;gap:0;padding:12px 11px 10px;position:relative;overflow:hidden}
@@ -496,9 +498,9 @@ input[type=range]:hover::-moz-range-thumb{transform:scale(1.1)}
   .kpi-badge{display:none}
   .rule-cards{flex-wrap:nowrap;gap:8px}
   .rule-buckets{grid-template-columns:repeat(3,1fr);gap:6px}
-  .rule-bucket-head{padding:9px 10px 8px}
-  .rule-bucket-item{padding:5px 10px}
-  .rule-bucket-bar{margin:6px 10px 8px}
+  .rule-bucket-head{padding:10px 11px 8px}
+  .rule-bucket-item{padding:5px 11px;gap:6px}
+  .rule-bucket-bar{margin:5px 11px 10px}
   .rule-sub,.rule-amts{display:none}
   .rule-card{min-width:0!important}
   .rule-sub,.rule-amts{display:none}
@@ -3854,42 +3856,73 @@ function renderAnalysis(){
      items:flowSegs.filter(d=>['Épargne'].includes(d.label))},
   ];
 
+  // Barre groupée par bucket (Besoins | Envies | Épargne | Non alloué)
+  const bucketGroups=[
+    {segs:flowSegs.filter(d=>['Impôts','Charges fixes','Variables'].includes(d.label))},
+    {segs:flowSegs.filter(d=>['Loisir'].includes(d.label))},
+    {segs:flowSegs.filter(d=>['Épargne'].includes(d.label))},
+    {segs:flowSegs.filter(d=>d.label==='Non alloué')},
+  ].filter(g=>g.segs.length>0);
+
+  const groupedBar=bucketGroups.map((g,gi)=>
+    `<div style="display:flex;gap:2px;flex:${g.segs.reduce((a,d)=>a+d.value,0)};min-width:4px${gi>0?';margin-left:3px':''}">`+
+    g.segs.map((d,si)=>{
+      const first=gi===0&&si===0,last=gi===bucketGroups.length-1&&si===g.segs.length-1;
+      const r=(first?'border-radius:10px 0 0 10px;':'')+(last?'border-radius:0 10px 10px 0;':'');
+      const pct=Math.round(d.value/flowBase*100);
+      return`<div class="flow-seg" data-label="${d.label}" data-val="${d.value}" data-pct="${pct}" data-color="${d.color}" style="flex:${d.value};background:${d.color};height:100%;min-width:3px;cursor:pointer;transition:filter .18s;${r}"></div>`;
+    }).join('')+`</div>`
+  ).join('');
+
   const bucketsHtml=buckets.map(b=>{
     const over=b.realPct>b.ideal,ok=b.realPct>0&&b.realPct<=b.ideal;
     const statusBg=over?'var(--red-bg)':ok?'var(--green-bg)':'var(--surface)';
     const statusColor=over?'var(--red)':ok?'var(--green)':'var(--hint)';
-    const diff=b.realAmt-Math.round(base*b.ideal/100);
-    const statusText=over?`▲ +${eur(Math.abs(diff))}`:ok?`✓ OK`:`— aucune donnée`;
+    const idealAmt=Math.round(base*b.ideal/100);
+    const diff=b.realAmt-idealAmt;
+    const statusText=over
+      ?`▲ ${eur(Math.abs(diff))} de trop`
+      :ok?`✓ ${eur(Math.abs(diff))} de marge`
+      :`— aucune donnée`;
     const pctColor=over?'var(--red)':ok?b.color:'var(--hint)';
+    const fillW=b.ideal>0?Math.min(b.realPct/b.ideal*100,110):0;
+    const markLeft=Math.min(b.ideal,b.ideal)/b.ideal*100; // toujours 100% = le marker est à la fin de la fill max
     const itemsHtml=b.items.map(it=>{
       const p=Math.round(it.value/flowBase*100);
       return`<div class="rule-bucket-item">
         <div class="rule-bucket-dot" style="background:${it.color}"></div>
         <div style="flex:1;min-width:0;font-size:var(--fs-xs);color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${it.label}</div>
-        <div style="font-size:var(--fs-xs);font-weight:700;color:var(--text);flex-shrink:0">${p}%</div>
+        <div style="text-align:right;flex-shrink:0">
+          <div style="font-size:var(--fs-xs);font-weight:700;color:var(--text)">${eur(it.value)}</div>
+          <div style="font-size:var(--fs-xs);color:var(--hint)">${p}%</div>
+        </div>
       </div>`;
-    }).join('')||(b.realAmt===0?`<div style="padding:6px 14px;font-size:var(--fs-xs);color:var(--hint)">Aucune donnée</div>`:'');
+    }).join('')||(b.realAmt===0?`<div style="padding:7px 16px;font-size:var(--fs-xs);color:var(--hint);border-top:1px solid var(--border)">Aucune donnée</div>`:'');
     return`<div class="rule-bucket">
-      <div style="height:3px;background:${b.color}"></div>
+      <div style="height:4px;background:linear-gradient(90deg,${b.color},${b.color}aa)"></div>
       <div class="rule-bucket-head">
-        <div style="display:flex;align-items:baseline;justify-content:space-between;gap:4px;margin-bottom:2px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
           <div style="font-size:var(--fs-xs);font-weight:700;color:var(--hint);text-transform:uppercase;letter-spacing:.07em">${b.label}</div>
-          <div style="font-size:var(--fs-xs);color:var(--hint)">obj. ${b.ideal}%</div>
+          <div style="font-size:var(--fs-xs);color:var(--hint);background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:1px 6px">obj. ${b.ideal}%</div>
         </div>
-        <div style="display:flex;align-items:baseline;gap:5px">
-          <span style="font-size:1.3rem;font-weight:800;line-height:1;color:${pctColor};font-variant-numeric:tabular-nums">${b.realPct>0?b.realPct+'%':'—'}</span>
+        <div style="display:flex;align-items:baseline;justify-content:space-between;gap:6px">
+          <span style="font-size:1.5rem;font-weight:800;line-height:1;color:${pctColor};font-variant-numeric:tabular-nums;letter-spacing:-.03em">${b.realPct>0?b.realPct+'%':'—'}</span>
+          <span style="font-size:var(--fs-xs);color:var(--muted);text-align:right;line-height:1.3">${b.realAmt>0?eur(b.realAmt):''}</span>
         </div>
-        <div style="margin-top:4px"><span style="font-size:var(--fs-xs);font-weight:600;padding:2px 8px;border-radius:20px;background:${statusBg};color:${statusColor}">${statusText}</span></div>
+        <div style="margin-top:6px"><span style="font-size:var(--fs-xs);font-weight:600;padding:2px 9px;border-radius:20px;background:${statusBg};color:${statusColor};display:inline-block">${statusText}</span></div>
       </div>
-      <div class="rule-bucket-bar"><div class="rule-bucket-bar-fill" style="width:${Math.min(b.realPct/b.ideal*100,100)}%;background:${over?'var(--red)':b.color}"></div></div>
+      <div class="rule-bucket-bar">
+        <div class="rule-bucket-bar-fill" style="width:${Math.min(fillW,100)}%;background:${over?'var(--red)':b.color}"></div>
+        <div class="rule-bucket-bar-mark" style="left:100%"></div>
+      </div>
       ${itemsHtml}
     </div>`;
   }).join('');
 
   document.getElementById('analysis-flow').innerHTML=`
-    <div style="font-size:var(--fs-sm);color:var(--muted);margin-bottom:14px">Sur <strong style="color:var(--text)">${baseDesc}</strong>${analysisMember!=='all'?' · '+analysisMember:' · groupe'} — net imposable ${eur(s.revNet)}.</div>
-    <div class="flow-bar-wrap" style="position:relative;margin-bottom:16px">
-      <div class="flow-bar" onmousemove="zenFlowBarMove(event)" onmouseleave="zenFlowBarOut(event)">${flowBar}</div>
+    <div style="font-size:var(--fs-sm);color:var(--muted);margin-bottom:14px">Sur <strong style="color:var(--text)">${baseDesc}</strong>${analysisMember!=='all'?' · '+analysisMember:' · groupe'} — net ${eur(s.revNet)}.</div>
+    <div class="flow-bar-wrap" style="position:relative;margin-bottom:18px">
+      <div class="flow-bar" style="gap:0" onmousemove="zenFlowBarMove(event)" onmouseleave="zenFlowBarOut(event)">${groupedBar}</div>
       <div class="flow-bar-tooltip" style="position:absolute;bottom:calc(100% + 10px);left:50%;transform:translateX(-50%);pointer-events:none;opacity:0;transition:opacity .15s;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:8px 14px;box-shadow:0 8px 24px rgba(0,0,0,.18);z-index:20;white-space:nowrap;max-width:min(200px,80vw)">
         <div style="display:flex;align-items:center;gap:8px">
           <span class="ftt-dot" style="width:10px;height:10px;border-radius:3px;display:inline-block;flex-shrink:0"></span>
@@ -3899,9 +3932,8 @@ function renderAnalysis(){
         </div>
       </div>
     </div>
-    <div class="flow-grid" onmousemove="zenFlowGridMove(event)" onmouseleave="zenFlowGridOut(event)">${flowLegend}</div>
     <div class="rule-buckets">${bucketsHtml}</div>
-    ${rUnalloc>0?`<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--green-bg);border:1px solid var(--green);border-radius:10px;margin-top:10px"><div style="width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0"></div><span style="font-size:var(--fs-xs);font-weight:700;color:var(--green)">Non alloué : ${rUnalloc}% · ${eur(Math.round(s.revNet*rUnalloc/100))}</span><span style="font-size:var(--fs-xs);color:var(--muted)"> disponibles</span></div>`:''}
+    ${rUnalloc>0?`<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--green-bg);border:1px solid var(--green);border-radius:10px;margin-top:10px"><div style="width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0"></div><span style="font-size:var(--fs-xs);font-weight:700;color:var(--green)">Non alloué : ${rUnalloc}% · ${eur(Math.round(s.revNet*rUnalloc/100))}</span><span style="font-size:var(--fs-xs);color:var(--muted)"> disponibles pour optimiser votre épargne</span></div>`:''}
   `;
 
   // ── Donut répartition dépenses ──
