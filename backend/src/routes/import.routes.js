@@ -6,6 +6,8 @@ const importCtrl      = require('../controllers/import.controller');
 
 const router = Router();
 
-router.post('/photo', requireAuth, importCtrl.analyzePhoto);
+router.post('/photo',   requireAuth, importCtrl.analyzePhoto);
+router.post('/csv',     requireAuth, importCtrl.analyzeCSV);
+router.post('/confirm', requireAuth, importCtrl.confirmImport);
 
 module.exports = router;

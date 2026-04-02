@@ -412,6 +412,30 @@ const _bridge = {
  * }}
  */
 /**
+ * importBank — CSV bank statement import + AI categorization
+ */
+const _import = {
+  /**
+   * Send raw CSV/text content to Claude for categorization.
+   * @param {string} csvContent — raw file text
+   * @param {string} member — member name (default 'Commun')
+   * @returns {Promise<Array>} categorized entries
+   */
+  analyzeCSV(csvContent, member) {
+    return post('/import/csv', { csvContent, member });
+  },
+
+  /**
+   * Confirm and save categorized entries to the database.
+   * @param {Array} entries — array of { name, amount, cat, member }
+   * @returns {Promise<{ saved: number, failed: string[] }>}
+   */
+  confirm(entries) {
+    return post('/import/confirm', { entries });
+  },
+};
+
+/**
  * household — Foyer (household) management
  */
 const _household = {
@@ -423,7 +447,7 @@ const _household = {
   delete: ()     => request('/household/delete', { method: 'DELETE' }),
 };
 
-const API = { auth: _auth, entries: _entries, savings: _savings, users: _users, bridge: _bridge, household: _household, getToken, clearAuth };
+const API = { auth: _auth, entries: _entries, savings: _savings, users: _users, bridge: _bridge, household: _household, import: _import, getToken, clearAuth };
 
 // Attach to window for global access in inline scripts
 if (typeof window !== 'undefined') {

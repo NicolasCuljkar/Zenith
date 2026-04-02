@@ -933,7 +933,13 @@ window.onerror = function(msg, src, line) {
   <div id="tab-analysis" class="tab-panel">
     <div id="analysis-nodata" style="display:none"></div>
     <div id="analysis-content">
-    <div class="member-tabs" id="analysis-mtabs"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:var(--sg)">
+      <div class="member-tabs" id="analysis-mtabs" style="margin-bottom:0"></div>
+      <button onclick="openImportModal()" style="display:flex;align-items:center;gap:6px;padding:7px 14px;border-radius:20px;border:1.5px solid var(--blue);background:color-mix(in srgb,var(--blue) 8%,transparent);color:var(--blue);font-size:var(--fs-sm);font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        Importer un relevé
+      </button>
+    </div>
     <div class="kpi-grid" id="analysis-kpis"></div>
     <div class="card"><div class="card-head">Où va chaque euro · Règle 50/30/20</div><div id="analysis-flow"></div></div>
     <div style="display:none"><div id="analysis-donut-wrap" style="position:relative;height:0"><canvas id="analysis-donut-chart"></canvas></div><div id="analysis-donut-legend"></div></div>
@@ -1428,9 +1434,23 @@ window.onerror = function(msg, src, line) {
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
     </div>
-    <div style="display:flex;gap:8px;margin-bottom:1rem">
+    <div style="display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap">
       <button class="import-type-pill active" data-type="excel" onclick="switchImportType('excel')">Tableau Excel / CSV</button>
       <button class="import-type-pill" data-type="photo" onclick="switchImportType('photo')">Photo</button>
+      <button class="import-type-pill" data-type="bank" onclick="switchImportType('bank')">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="display:inline;vertical-align:middle;margin-right:3px"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 4v4l3 3"/></svg>
+        Relevé bancaire IA
+      </button>
+    </div>
+    <!-- Bank-only: member selector + AI badge -->
+    <div id="import-bank-opts" style="display:none;margin-bottom:14px;padding:12px 14px;background:linear-gradient(135deg,color-mix(in srgb,var(--blue) 8%,transparent),color-mix(in srgb,var(--blue) 4%,transparent));border:1px solid color-mix(in srgb,var(--blue) 25%,var(--border));border-radius:10px">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+        <span style="font-size:var(--fs-xs);font-weight:700;color:var(--blue)">Analyse IA — Claude catégorise automatiquement vos transactions</span>
+      </div>
+      <label style="font-size:var(--fs-sm);color:var(--hint);display:block;margin-bottom:6px">Membre concerné par ce relevé</label>
+      <select id="import-bank-member" class="inp" style="width:100%"></select>
+      <div style="font-size:var(--fs-xs);color:var(--hint);margin-top:8px">Formats acceptés : CSV export de votre banque (BNP, SG, LCL, Boursorama, Crédit Agricole, CIC…)</div>
     </div>
     <label class="import-dropzone" for="import-file">
       <input type="file" id="import-file" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleImportFile(event)">
@@ -1448,12 +1468,19 @@ window.onerror = function(msg, src, line) {
           <tbody id="import-entries-body"></tbody>
         </table>
       </div>
-      <div style="font-weight:600;font-size:var(--fs-sm);margin-bottom:6px;color:var(--hint);text-transform:uppercase;letter-spacing:.04em">Épargne</div>
-      <div style="overflow-x:auto;border-radius:8px;border:1px solid var(--border)">
-        <table class="import-table">
-          <thead><tr><th>Membre</th><th>Année</th><th>Mois</th><th>Montant (€)</th><th></th></tr></thead>
-          <tbody id="import-savings-body"></tbody>
-        </table>
+      <div id="import-savings-section">
+        <div style="font-weight:600;font-size:var(--fs-sm);margin-bottom:6px;color:var(--hint);text-transform:uppercase;letter-spacing:.04em">Épargne</div>
+        <div style="overflow-x:auto;border-radius:8px;border:1px solid var(--border)">
+          <table class="import-table">
+            <thead><tr><th>Membre</th><th>Année</th><th>Mois</th><th>Montant (€)</th><th></th></tr></thead>
+            <tbody id="import-savings-body"></tbody>
+          </table>
+        </div>
+      </div>
+      <!-- Budget health — shown after bank AI analysis -->
+      <div id="import-budget-health" style="display:none;margin-top:16px;padding:14px 16px;background:var(--surface2);border:1px solid var(--border);border-radius:12px">
+        <div style="font-size:var(--fs-sm);font-weight:700;color:var(--text);margin-bottom:12px">Analyse 50/30/20 du relevé importé</div>
+        <div id="import-budget-content"></div>
       </div>
     </div>
     <div class="modal-footer">
@@ -5677,9 +5704,15 @@ function openImportModal() {
   document.getElementById('import-file').value = '';
   document.getElementById('import-preview').style.display = 'none';
   document.getElementById('import-status').style.display = 'none';
+  document.getElementById('import-budget-health').style.display = 'none';
   document.getElementById('import-btn').disabled = true;
   document.getElementById('import-btn').textContent = 'Importer';
-  switchImportType('excel');
+  // Populate member selector
+  const sel = document.getElementById('import-bank-member');
+  sel.innerHTML = (typeof orderedMembers === 'function' ? orderedMembers() : [currentUser?.name || 'Commun'])
+    .concat(['Commun']).filter((v,i,a) => a.indexOf(v) === i)
+    .map(m => `<option value="${m}">${m}</option>`).join('');
+  switchImportType('bank');
   document.getElementById('modal-import').classList.add('open');
 }
 
@@ -5690,14 +5723,19 @@ function closeImportModal() {
 function switchImportType(type) {
   document.querySelectorAll('.import-type-pill').forEach(p => p.classList.toggle('active', p.dataset.type === type));
   const input = document.getElementById('import-file');
-  input.accept = type === 'photo' ? 'image/jpeg,image/png,image/webp,image/heic' : '.xlsx,.xls,.csv';
+  input.accept = type === 'photo' ? 'image/jpeg,image/png,image/webp,image/heic' : '.csv,.xlsx,.xls,.txt';
   input.value = '';
   document.getElementById('import-preview').style.display = 'none';
+  document.getElementById('import-budget-health').style.display = 'none';
   document.getElementById('import-status').style.display = 'none';
-  document.getElementById('import-template-btn').style.display = type === 'photo' ? 'none' : '';
+  document.getElementById('import-bank-opts').style.display = type === 'bank' ? 'block' : 'none';
+  document.getElementById('import-savings-section').style.display = type === 'bank' ? 'none' : 'block';
+  document.getElementById('import-template-btn').style.display = type === 'excel' ? '' : 'none';
   document.getElementById('import-dropzone-hint').textContent = type === 'photo'
-    ? 'Photo d\'un relevé, tableau ou document budgétaire'
-    : 'Excel (.xlsx, .xls) ou CSV';
+    ? "Photo d'un relevé, tableau ou document budgétaire"
+    : type === 'bank'
+    ? 'CSV export de votre banque (.csv, .txt)'
+    : 'Excel (.xlsx, .xls) ou CSV structuré';
 }
 
 async function handleImportFile(e) {
@@ -5706,6 +5744,8 @@ async function handleImportFile(e) {
   const type = document.querySelector('.import-type-pill.active')?.dataset.type || 'excel';
   if (type === 'photo') {
     await _parseImportPhoto(file);
+  } else if (type === 'bank') {
+    await _parseImportBankCSV(file);
   } else {
     _parseImportExcel(file);
   }
@@ -5783,6 +5823,82 @@ async function _parseImportPhoto(file) {
   reader.readAsDataURL(file);
 }
 
+async function _parseImportBankCSV(file) {
+  _showImportStatus('🤖 L\'IA analyse vos transactions…', false);
+  document.getElementById('import-btn').disabled = true;
+  const member = document.getElementById('import-bank-member').value || 'Commun';
+  const reader = new FileReader();
+  reader.onload = async function(ev) {
+    try {
+      const csvContent = ev.target.result;
+      const entries = await API.import.analyzeCSV(csvContent, member);
+      _importData = { entries, savings: [] };
+      document.getElementById('import-status').style.display = 'none';
+      _renderImportPreview();
+      _renderBudgetHealth();
+    } catch (err) {
+      _showImportStatus('Erreur : ' + err.message, true);
+    }
+  };
+  reader.readAsText(file, 'UTF-8');
+}
+
+const _CAT_META = {
+  revenu:   { label: 'Revenus',          color: '#0d9e6e' },
+  impot:    { label: 'Impôts',           color: '#c49a00' },
+  fixe:     { label: 'Charges fixes',    color: '#d93535' },
+  variable: { label: 'Dépenses variables', color: '#e07020' },
+  epargne:  { label: 'Épargne',          color: '#2979c8' },
+  loisir:   { label: 'Loisirs',          color: '#f59e0b' },
+};
+
+function _renderBudgetHealth() {
+  const es = _importData.entries;
+  const sum = cat => es.filter(e => e.cat === cat).reduce((s,e) => s + Math.abs(e.amount), 0);
+  const rev  = sum('revenu');
+  const tax  = sum('impot');
+  const revNet = Math.max(rev - tax, 0.01);
+  const needs = sum('fixe') + sum('variable') + tax;
+  const wants = sum('loisir');
+  const saves = sum('epargne');
+  const pNeeds = Math.round(needs / revNet * 100);
+  const pWants = Math.round(wants / revNet * 100);
+  const pSaves = Math.round(saves / revNet * 100);
+
+  const buckets = [
+    { label: 'Besoins (fixe + variable + impôts)', ideal: 50, pct: pNeeds, amt: needs, color: '#d93535', ok: pNeeds <= 50 },
+    { label: 'Envies (loisirs)',                   ideal: 30, pct: pWants, amt: wants, color: '#f59e0b', ok: pWants <= 30 },
+    { label: 'Épargne',                            ideal: 20, pct: pSaves, amt: saves, color: '#2979c8', ok: pSaves >= 20 },
+  ];
+
+  const eur = n => n.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 });
+
+  document.getElementById('import-budget-content').innerHTML =
+    `<div style="font-size:var(--fs-xs);color:var(--muted);margin-bottom:10px">Revenu net analysé : <strong style="color:var(--text)">${eur(revNet)}</strong>${rev === 0 ? ' <span style="color:var(--amber)">(aucun revenu détecté — ajustez les catégories)</span>' : ''}</div>` +
+    buckets.map(b => {
+      const diff = Math.abs(b.amt - revNet * b.ideal / 100);
+      const badge = b.ok
+        ? `<span style="font-size:var(--fs-xs);font-weight:700;padding:2px 8px;border-radius:20px;background:var(--green-bg);color:var(--green)">✓ Dans les clous</span>`
+        : `<span style="font-size:var(--fs-xs);font-weight:700;padding:2px 8px;border-radius:20px;background:var(--red-bg);color:var(--red)">${b.label.startsWith('Épargne') ? '⬇ Insuffisant' : '⬆ Dépassement'} ${eur(diff)}</span>`;
+      const fill = Math.min(b.pct / b.ideal * 100, 100);
+      return `<div style="margin-bottom:10px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+          <span style="font-size:var(--fs-sm);color:var(--muted)">${b.label}</span>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-size:var(--fs-sm);font-weight:700;color:${b.ok?(b.color):'var(--red)'}">${b.pct}%</span>
+            <span style="font-size:var(--fs-xs);color:var(--hint)">obj. ${b.ideal}%</span>
+            ${badge}
+          </div>
+        </div>
+        <div style="height:5px;background:var(--border);border-radius:3px;overflow:hidden">
+          <div style="width:${fill}%;height:100%;background:${b.ok?b.color:'var(--red)'};transition:width .5s ease;border-radius:3px"></div>
+        </div>
+      </div>`;
+    }).join('');
+
+  document.getElementById('import-budget-health').style.display = 'block';
+}
+
 function _showImportStatus(msg, isError) {
   const el = document.getElementById('import-status');
   el.textContent = msg;
@@ -5853,6 +5969,8 @@ async function doImport() {
     await loadData();
     renderDashboard();
     renderEntries();
+    renderAnalysis();
+    showTab('analysis');
   }
 }
 
