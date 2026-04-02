@@ -1438,15 +1438,14 @@ window.onerror = function(msg, src, line) {
       <button class="import-type-pill active" data-type="excel" onclick="switchImportType('excel')">Tableau Excel / CSV</button>
       <button class="import-type-pill" data-type="photo" onclick="switchImportType('photo')">Photo</button>
       <button class="import-type-pill" data-type="bank" onclick="switchImportType('bank')">
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="display:inline;vertical-align:middle;margin-right:3px"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 4v4l3 3"/></svg>
-        Relevé bancaire IA
+        Relevé bancaire
       </button>
     </div>
     <!-- Bank-only: member selector + AI badge -->
     <div id="import-bank-opts" style="display:none;margin-bottom:14px;padding:12px 14px;background:linear-gradient(135deg,color-mix(in srgb,var(--blue) 8%,transparent),color-mix(in srgb,var(--blue) 4%,transparent));border:1px solid color-mix(in srgb,var(--blue) 25%,var(--border));border-radius:10px">
       <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
-        <span style="font-size:var(--fs-xs);font-weight:700;color:var(--blue)">Analyse IA — Claude catégorise automatiquement vos transactions</span>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        <span style="font-size:var(--fs-xs);font-weight:700;color:var(--blue)">Catégorisation automatique par mots-clés — vérifiez et corrigez avant d'importer</span>
       </div>
       <label style="font-size:var(--fs-sm);color:var(--hint);display:block;margin-bottom:6px">Membre concerné par ce relevé</label>
       <select id="import-bank-member" class="inp" style="width:100%"></select>
@@ -5823,21 +5822,118 @@ async function _parseImportPhoto(file) {
   reader.readAsDataURL(file);
 }
 
+// ── Moteur de catégorisation bancaire (règles par mots-clés) ─────────────────
+
+const _BANK_CATS = [
+  { cat: 'revenu', words: ['salaire','paie ','virement recu','virement de ','remboursement secu','remboursement cpam','remboursement caf','allocation','prime ','indemnite','pension retraite','retraite ','pole emploi','poleemploi','rsa ','aides ','caf ','cpam '] },
+  { cat: 'impot',  words: ['dgfip','direction generale des finances','taxe fonciere','taxe d habitation','taxe habitation','impots.gouv','tresor public','trésor public','csg ','crds ','urssaf impot','contribution sociale'] },
+  { cat: 'epargne',words: ['livret a ','livret a-','ldds','ldd ','pel ','cel ','pea ','assur vie','assurance vie','trade republic','bourse direct','fortuneo','vir epargne','virt epargne','virement epargne','plan epargne'] },
+  { cat: 'fixe',   words: ['loyer ','loyer-','edf ','engie ','total energie','suez ','veolia ','grdf ','eau ','orange ','sfr ','bouygues','free mobile','free telecom','assurance ','mutuelle ','credit foncier','pret immo','sofinco','cetelem','cofinoga','netflix','spotify','amazon prime','disney+','apple.com','google play','microsoft 365','adobe ','canal+','bbox','livebox'] },
+  { cat: 'loisir', words: ['restaurant','brasserie','bistro','cafe ','bar ','bistrot','cinema','cine ','theatre','theatr','concert','voyage ','hotel ','airbnb','booking.com','expedia','amazon.fr','fnac ','darty ','decathlon','sport ','fitness','basic-fit','basic fit','salle de sport','zalando','asos ','h&m ','zara ','shein ','vinted ','cdiscount','ebay ','gaming','playstation','xbox ','steam '] },
+  { cat: 'variable',words: ['carrefour','leclerc','lidl ','aldi ','intermarche','monoprix','franprix','picard ','casino ','biocoop','naturalia','pharmacie','parapharmacie','essence ','total access','bp ','shell ','station ','ratp ','navigo','sncf ','ter ','tgv ','ouigo ','uber ','bolt ','taxi ','heetch','blablacar','medecin','docteur','dentiste','opticien','laboratoire','analyses ','boulangerie','kebab','mcdo','mcdonald','burger king','kfc ','subway '] },
+];
+
+function _categorizeBankLine(name) {
+  const s = name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '') + ' ';
+  for (const { cat, words } of _BANK_CATS) {
+    if (words.some(w => s.includes(w.normalize('NFD').replace(/[\u0300-\u036f]/g, '')))) return cat;
+  }
+  return 'variable';
+}
+
+function _cleanBankLabel(raw) {
+  return raw
+    .replace(/\s+/g, ' ')
+    .replace(/^(VIR (SEPA |INST )?|PRLV SEPA |CB |CARTE |ACHAT |RETRAIT )+/i, '')
+    .replace(/\d{2}\/\d{2}(\/\d{2,4})?/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 60) || raw.slice(0, 60);
+}
+
+function _parseBankCSVText(text, member) {
+  const lines = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n').filter(l => l.trim());
+  if (lines.length < 2) return [];
+
+  // Detect separator
+  const firstLine = lines[0];
+  const sep = (firstLine.match(/;/g)||[]).length >= (firstLine.match(/,/g)||[]).length ? ';' : ',';
+
+  // CSV row parser (handles quoted fields)
+  const parseRow = line => {
+    const cols = []; let cur = '', inQ = false;
+    for (const ch of line) {
+      if (ch === '"') { inQ = !inQ; }
+      else if (ch === sep && !inQ) { cols.push(cur.trim()); cur = ''; }
+      else cur += ch;
+    }
+    cols.push(cur.trim());
+    return cols.map(c => c.replace(/^"+|"+$/g, '').trim());
+  };
+
+  const header = parseRow(lines[0]).map(h => h.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''));
+  const find = (...kws) => header.findIndex(h => kws.some(k => h.includes(k)));
+
+  const labelCol  = find('libel','operat','design','label','description','motif','reference','intitule');
+  const amtCol    = find('montant','amount','valeur');
+  const debitCol  = find('debit','sortie','depense');
+  const creditCol = find('credit','entree','recette');
+
+  const parseAmt = s => {
+    if (!s) return 0;
+    // French format: "1 234,56" or "1234,56" or "1234.56"
+    const clean = String(s).replace(/\s/g,'').replace(/\.(?=\d{3})/g,'').replace(',','.');
+    return parseFloat(clean) || 0;
+  };
+
+  const entries = [];
+  for (let i = 1; i < lines.length; i++) {
+    const cols = parseRow(lines[i]);
+    if (!cols.some(c => c)) continue;
+
+    const rawName = labelCol >= 0 ? cols[labelCol] : cols.find(c => c.length > 3 && isNaN(parseFloat(c.replace(',','.')))) || '';
+    if (!rawName) continue;
+
+    let amount = 0;
+    if (debitCol >= 0 && creditCol >= 0) {
+      const d = parseAmt(cols[debitCol]);
+      const c = parseAmt(cols[creditCol]);
+      amount = c !== 0 ? Math.abs(c) : (d !== 0 ? -Math.abs(d) : 0);
+    } else if (amtCol >= 0) {
+      amount = parseAmt(cols[amtCol]);
+    } else {
+      // Fallback: find first numeric column
+      for (const col of cols) {
+        const n = parseAmt(col);
+        if (n !== 0) { amount = n; break; }
+      }
+    }
+    if (amount === 0) continue;
+
+    const name = _cleanBankLabel(rawName);
+    const cat  = _categorizeBankLine(name);
+    entries.push({ name, amount, cat, member });
+  }
+  return entries;
+}
+
 async function _parseImportBankCSV(file) {
-  _showImportStatus('🤖 L\'IA analyse vos transactions…', false);
-  document.getElementById('import-btn').disabled = true;
+  _showImportStatus('Lecture du fichier…', false);
   const member = document.getElementById('import-bank-member').value || 'Commun';
   const reader = new FileReader();
-  reader.onload = async function(ev) {
+  reader.onload = function(ev) {
     try {
-      const csvContent = ev.target.result;
-      const entries = await API.import.analyzeCSV(csvContent, member);
+      const entries = _parseBankCSVText(ev.target.result, member);
+      if (entries.length === 0) {
+        _showImportStatus('Aucune transaction détectée. Vérifiez le format du fichier (CSV exporté depuis votre banque).', true);
+        return;
+      }
       _importData = { entries, savings: [] };
       document.getElementById('import-status').style.display = 'none';
       _renderImportPreview();
       _renderBudgetHealth();
     } catch (err) {
-      _showImportStatus('Erreur : ' + err.message, true);
+      _showImportStatus('Erreur de lecture : ' + err.message, true);
     }
   };
   reader.readAsText(file, 'UTF-8');

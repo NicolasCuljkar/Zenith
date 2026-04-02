@@ -412,21 +412,11 @@ const _bridge = {
  * }}
  */
 /**
- * importBank — CSV bank statement import + AI categorization
+ * importBank — Bank statement import
  */
 const _import = {
   /**
-   * Send raw CSV/text content to Claude for categorization.
-   * @param {string} csvContent — raw file text
-   * @param {string} member — member name (default 'Commun')
-   * @returns {Promise<Array>} categorized entries
-   */
-  analyzeCSV(csvContent, member) {
-    return post('/import/csv', { csvContent, member });
-  },
-
-  /**
-   * Confirm and save categorized entries to the database.
+   * Confirm and save categorized entries to the database (bulk).
    * @param {Array} entries — array of { name, amount, cat, member }
    * @returns {Promise<{ saved: number, failed: string[] }>}
    */
