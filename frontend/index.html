@@ -3811,7 +3811,7 @@ function renderAnalysis(){
   }).join('');
 
   document.getElementById('analysis-flow').innerHTML=`
-    <div style="font-size:var(--fs-sm);color:var(--muted);margin-bottom:16px">Revenus bruts <strong style="color:var(--text)">${baseDesc}</strong> · nets <strong style="color:var(--text)">${eur(s.revNet)}</strong>${analysisMember!=='all'?' · '+analysisMember:''}.</div>
+    <div style="font-size:var(--fs-sm);color:var(--muted);margin-bottom:16px">Revenus bruts <strong style="color:var(--text)">${baseDesc}</strong> · nets <strong style="color:var(--text)">${eur(s.revNet)}</strong>.</div>
     <div style="display:flex;gap:2px;height:10px;border-radius:8px;overflow:hidden;margin-bottom:10px">${topBar}</div>
     <div style="display:flex;flex-wrap:wrap;gap:8px 16px;margin-bottom:4px">${topLegend}</div>
     <div class="rb-grid">${rbHtml}</div>
