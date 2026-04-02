@@ -935,7 +935,7 @@ window.onerror = function(msg, src, line) {
     <div id="analysis-content">
     <div class="member-tabs" id="analysis-mtabs"></div>
     <div class="kpi-grid" id="analysis-kpis"></div>
-    <div class="card"><div class="card-head">Où va chaque euro · Règle 50/30/20</div><div id="analysis-flow"></div><div id="analysis-top-bars-wrap" style="display:none"><div style="font-size:var(--fs-xs);font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--hint);margin:20px 0 10px">Top dépenses fixes &amp; variables</div><div id="analysis-top-bars"></div></div></div>
+    <div class="card"><div class="card-head">Où va chaque euro · Règle 50/30/20</div><div id="analysis-flow"></div></div>
     <div style="display:none"><div id="analysis-donut-wrap" style="position:relative;height:0"><canvas id="analysis-donut-chart"></canvas></div><div id="analysis-donut-legend"></div></div>
     </div><!-- /#analysis-content -->
   </div>
@@ -3967,8 +3967,7 @@ function renderAnalysis(){
   const aMax=aTop[0]?.amount||1,aTotTop=aTop.reduce((s,e)=>s+e.amount,0)||1;
   const [m1,m2]=orderedMembers();
   const APAL=['#3B8BD4','#e06fa0','#0d9e6e','#7c52d4','#c49a00'];
-  document.getElementById('analysis-top-bars-wrap').style.display=aTop.length?'block':'none';
-  document.getElementById('analysis-top-bars').innerHTML=`<div style="display:flex;flex-direction:column;gap:6px">${aTop.map((e,i)=>{
+  const _topBarsContent=`<div style="display:flex;flex-direction:column;gap:6px">${aTop.map((e,i)=>{
     const isShared=e.members.length>1;
     const em1=e.members[0],em2=isShared?e.members[1]:null;
     const useMemCol=aMember==='all';
@@ -4057,6 +4056,14 @@ function renderAnalysis(){
       </div>`;
     }
   }).join('')}</div>`;
+  if(aTop.length){
+    document.getElementById('analysis-kpis').insertAdjacentHTML('beforeend',
+      `<div style="grid-column:1/-1;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px">
+        <div style="font-size:var(--fs-xs);font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--hint);margin-bottom:12px">Top dépenses fixes &amp; variables</div>
+        ${_topBarsContent}
+      </div>`
+    );
+  }
 }
 
 // ══════════════════════════════════════════════
