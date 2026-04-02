@@ -4057,8 +4057,8 @@ function renderAnalysis(){
     }
   }).join('')}</div>`;
   if(aTop.length){
-    document.getElementById('analysis-kpis').insertAdjacentHTML('beforeend',
-      `<div style="grid-column:1/-1;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px">
+    document.getElementById('analysis-flow').insertAdjacentHTML('beforeend',
+      `<div style="border-top:1px solid var(--border);margin-top:20px;padding-top:16px">
         <div style="font-size:var(--fs-xs);font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--hint);margin-bottom:12px">Top dépenses fixes &amp; variables</div>
         ${_topBarsContent}
       </div>`
