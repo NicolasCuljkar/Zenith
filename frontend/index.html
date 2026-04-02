@@ -4606,6 +4606,7 @@ async function pwdModalConfirm(){
       document.getElementById('modal-quick-pwd').style.display = 'none';
       _setAppInert(false);
       _quickLoginUser = null;
+      _scheduleTokenExpiry();
       startInactivityTimer();
     } else {
       await _doLoginWithCredentials(u.id, pwd);
@@ -4649,7 +4650,7 @@ async function _doLoginWithCredentials(userIdOrEmail,password){
     initUserContext();renderMemberTabs();updateNavForDataState();renderDashboard();renderEntries();document.getElementById('fab-entry').style.display='none';document.getElementById('fab-saving').style.display='none';
     if(window.location.pathname==='/banque'){switchTab('banque');}
     registerPushSubscription();
-    connectSSE(); _startPoll();
+    _scheduleTokenExpiry(); connectSSE(); _startPoll();
   }catch(err){
     showApiError(err.message||'Échec de la connexion.');
   }finally{hideLoading();}
@@ -4675,7 +4676,7 @@ async function doLogin(){
     initUserContext();renderMemberTabs();updateNavForDataState();renderDashboard();renderEntries();document.getElementById('fab-entry').style.display='none';document.getElementById('fab-saving').style.display='none';
     if(window.location.pathname==='/banque'){switchTab('banque');}
     registerPushSubscription();
-    connectSSE(); _startPoll();
+    _scheduleTokenExpiry(); connectSSE(); _startPoll();
   }catch(err){
     if(errEl){errEl.textContent=err.message||'Identifiants incorrects.';errEl.classList.add('show');}
   }finally{hideLoading();}
@@ -4704,7 +4705,7 @@ async function doRegister(){
     initUserContext();renderMemberTabs();updateNavForDataState();renderDashboard();renderEntries();document.getElementById('fab-entry').style.display='none';document.getElementById('fab-saving').style.display='none';
     if(window.location.pathname==='/banque'){switchTab('banque');}
     registerPushSubscription();
-    connectSSE(); _startPoll();
+    _scheduleTokenExpiry(); connectSSE(); _startPoll();
   }catch(apiErr){
     err.textContent=apiErr.message||'Erreur lors de la création du compte.';
     err.classList.add('show');
@@ -4735,30 +4736,33 @@ async function _refreshAndRender(showToast){
   }finally{ _refreshing = false; }
 }
 
+let _sseRetryCount = 0;
+
 function connectSSE(){
-  // Ne crée pas une nouvelle connexion si une est déjà ouverte ou en cours
   if(_sseSource && _sseSource.readyState !== EventSource.CLOSED) return;
-  const token = localStorage.getItem('zenith_token');
-  if(!token) return;
+  const token = API.getToken();
+  if(!token || _isTokenExpired()) return; // ne pas connecter avec un token expiré
   clearTimeout(_sseRetryTimer);
   if(_sseSource){ _sseSource.close(); _sseSource = null; }
 
   const src = new EventSource(`/api/events?token=${encodeURIComponent(token)}`);
   _sseSource = src;
 
-  // Reconnexion réussie → rafraîchir pour récupérer les événements manqués
-  src.addEventListener('connected', ()=>{ _refreshAndRender(true); });
-
-  // Événement push : rafraîchir immédiatement
+  src.addEventListener('connected', ()=>{ _sseRetryCount=0; _refreshAndRender(true); });
   src.addEventListener('data_changed', ()=>{ _refreshAndRender(true); });
 
   src.onerror = ()=>{
-    // Si la connexion est fermée définitivement, planifier une reconnexion
     if(src.readyState === EventSource.CLOSED){
       if(_sseSource === src) _sseSource = null;
-      _sseRetryTimer = setTimeout(()=>{ if(currentUser) connectSSE(); }, 5000);
+      // Ne pas réessayer si déconnecté ou token expiré
+      if(!currentUser || _isTokenExpired()) return;
+      // Backoff exponentiel : 5s → 10s → 20s → 40s → 60s max
+      const delay = Math.min(5000 * Math.pow(2, _sseRetryCount), 60000);
+      _sseRetryCount = Math.min(_sseRetryCount + 1, 5);
+      _sseRetryTimer = setTimeout(()=>{
+        if(currentUser && !_isTokenExpired()) connectSSE();
+      }, delay);
     }
-    // Si readyState === CONNECTING, EventSource tente déjà de se reconnecter
   };
 }
 
@@ -4866,6 +4870,7 @@ function _showSyncToast(){
  * doLogout() — Clear session and return to login screen.
  */
 async function doLogout(){
+  clearTimeout(_tokenExpiryTimer);
   disconnectSSE(); // ferme SSE + poll
   API.auth.logout(); // clears localStorage token + user
   localStorage.removeItem('zenith_last_activity');
@@ -4873,25 +4878,58 @@ async function doLogout(){
   currentHousehold=null;
   entries=[];
   savings=[];
+  _lockMode=false;
+  sessionStorage.removeItem('zenith_locked');
   showScreen('login');
 }
 
-// Handle auto-logout on 401 (expired token)
-window.addEventListener('zenith:unauthorized',()=>{
-  currentUser=null;
-  showScreen('login');
+// Handle auto-logout on 401 (expired token) — appelle doLogout() complet
+window.addEventListener('zenith:unauthorized', ()=>{ doLogout(); });
+
+// Cross-tab logout : si le token est supprimé dans un autre onglet, déconnecter ici aussi
+window.addEventListener('storage', e=>{
+  if(e.key==='zenith_token' && !e.newValue && currentUser) doLogout();
 });
 
-// ── Auto-logout : inactivité 10 min + retour d'arrière-plan ─────────────
-// ── Verrou session ────────────────────────────────────────────────────────
-// Délai de grâce : si l'app revient en moins de GRACE_MS, pas de verrou.
-// Sinon, le mot de passe est requis (sans full logout — données conservées).
-const GRACE_MS        = 10 * 60 * 1000; // 10 minutes de grâce
-const IDLE_LOGOUT_MS  = 30 * 60 * 1000; // 30 min sans interaction → logout complet
+// ── Auto-logout : inactivité + verrou session ────────────────────────────
+const GRACE_MS       = 10 * 60 * 1000; // 10 min de grâce avant verrou
+const IDLE_LOGOUT_MS = 30 * 60 * 1000; // 30 min sans interaction → logout complet
 
-let _inactivityTimer = null;
-let _hiddenAt        = null;
-let _lockMode        = false; // true = verrou actif (mot de passe requis)
+let _inactivityTimer  = null;
+let _tokenExpiryTimer = null;
+let _hiddenAt         = null;
+let _lockMode         = false; // true = verrou actif (mot de passe requis)
+
+// ── Expiration JWT côté client ─────────────────────────────────────────────
+/** Décode le champ exp du JWT stocké (en ms). Retourne null si absent. */
+function _getTokenExpiry(){
+  const token = API.getToken();
+  if(!token) return null;
+  try{
+    const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));
+    return payload.exp ? payload.exp * 1000 : null;
+  }catch{ return null; }
+}
+
+/** Retourne true si le JWT est expiré ou sur le point de l'être (< 30 s). */
+function _isTokenExpired(){
+  const exp = _getTokenExpiry();
+  return exp !== null && Date.now() >= exp - 30000;
+}
+
+/**
+ * Planifie un doLogout() automatique 30 s avant l'expiration du JWT.
+ * Appelé après chaque login et au démarrage.
+ */
+function _scheduleTokenExpiry(){
+  clearTimeout(_tokenExpiryTimer);
+  const exp = _getTokenExpiry();
+  if(!exp) return;
+  const remaining = exp - Date.now() - 30000; // marge de 30 s
+  if(remaining <= 0){ doLogout(); return; }
+  // setTimeout max ~24.8 jours — JWT_EXPIRES_IN=7d, donc pas de dépassement
+  _tokenExpiryTimer = setTimeout(()=>{ if(currentUser) doLogout(); }, remaining);
+}
 
 function startInactivityTimer(){
   clearTimeout(_inactivityTimer);
@@ -4921,14 +4959,14 @@ document.addEventListener('visibilitychange', ()=>{
   } else {
     const elapsed = _hiddenAt ? Date.now() - _hiddenAt : 0;
     _hiddenAt = null;
-    if(!currentUser){ return; }
+    if(!currentUser) return;
+    // Si le JWT a expiré pendant l'absence → logout complet (pas de verrou)
+    if(_isTokenExpired()){ doLogout(); return; }
     if(elapsed >= GRACE_MS){
-      // Afficher le verrou (mot de passe requis, données conservées)
       _lockMode = true;
       _showLockScreen();
     } else {
       startInactivityTimer();
-      // Rafraîchir silencieusement si l'onglet était masqué plus de 5 s
       if(elapsed > 5000) _refreshAndRender(false);
     }
   }
@@ -5402,12 +5440,20 @@ async function initApp(){
   initTheme();
   updateMtabColors();
 
-  // Si l'app a été fermée depuis >=10 min, on invalide la session
-  if(API.auth.isLoggedIn() && checkColdStartExpiry()){
-    API.auth.logout();
-    localStorage.removeItem('zenith_last_activity');
-    showScreen('login');
-    return;
+  // Vérifications de sécurité au démarrage
+  if(API.auth.isLoggedIn()){
+    // 1. Token JWT expiré côté client → logout immédiat
+    if(_isTokenExpired()){
+      await doLogout();
+      return;
+    }
+    // 2. Inactivité trop longue (cold start) → logout
+    if(checkColdStartExpiry()){
+      await doLogout();
+      return;
+    }
+    // 3. Planifier le logout automatique avant expiration du JWT
+    _scheduleTokenExpiry();
   }
 
   // If a JWT is stored, try to resume the session
@@ -5453,7 +5499,7 @@ async function initApp(){
       renderDashboard();
       renderEntries();
       registerPushSubscription(); // non-bloquant
-      connectSSE();
+      connectSSE(); _startPoll();
     } else {
       showScreen('login');
     }
