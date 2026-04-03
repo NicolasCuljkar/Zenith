@@ -900,9 +900,7 @@ window.onerror = function(msg, src, line) {
       <div id="bar-chart-wrap" style="position:relative;height:210px"><canvas id="bar-chart"></canvas></div>
       <div id="bar-chart-legend" style="display:flex;justify-content:center;gap:16px;flex-wrap:wrap;margin-top:10px"></div>
     </div>
-    <div class="card" id="savings-heatmap-card" style="display:none"><div class="card-head">Historique épargne</div><div id="savings-heatmap" style="padding:4px 0"></div></div>
     <div id="savings-tables"></div>
-    <div id="hm-tip" style="position:fixed;display:none;pointer-events:none;z-index:200;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:8px 13px;box-shadow:0 8px 24px rgba(0,0,0,.15);white-space:nowrap;font-size:var(--fs-sm)"></div>
     </div><!-- /#savings-content -->
   </div>
 
@@ -3385,48 +3383,6 @@ function renderSavings(){
     });
   }
 
-  // ── Heatmap historique épargne ──
-  const _hmCard=document.getElementById('savings-heatmap-card');
-  const _hmEl=document.getElementById('savings-heatmap');
-  if(_hmCard&&_hmEl){
-    const _scopedSavAll=savingsMember==='all'?savings:savings.filter(r=>r.member===savingsMember);
-    const _scopedSav=(!isYear&&savingsYearFilter!=='all')?_scopedSavAll.filter(r=>String(r.year)===String(savingsYearFilter)):_scopedSavAll;
-    const _hmYears=[...new Set(_scopedSav.map(r=>r.year))].sort((a,b)=>a-b);
-    if(_hmYears.length>0){
-      const _hmMap={};
-      _scopedSav.forEach(r=>{const k=`${r.year}_${r.month}`;_hmMap[k]=(_hmMap[k]||0)+r.amount;});
-      const _hmMax=Math.max(...Object.values(_hmMap).filter(v=>v>0),1);
-      const _hmAbbr=['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];
-      const _hmFull=MONTHS;
-      _hmEl.innerHTML=`<table style="border-collapse:collapse;width:100%;table-layout:fixed;font-size:var(--fs-xs)"><thead><tr><th style="width:36px;padding:0 4px 6px 0;text-align:left;color:var(--hint);font-weight:500;font-size:10px"></th>${_hmAbbr.map(m=>`<th style="padding:0 1px 6px;text-align:center;color:var(--hint);font-weight:500;font-size:10px;letter-spacing:.02em">${m}</th>`).join('')}</tr></thead><tbody>${_hmYears.map(y=>`<tr><td style="padding:2px 6px 2px 0;font-weight:600;color:var(--hint);white-space:nowrap;font-size:10px;letter-spacing:.03em">${y}</td>${_hmFull.map(m=>{const k=`${y}_${m}`;const v=_hmMap[k]||0;const mIdx=_hmFull.indexOf(m);const prevM=mIdx>0?_hmFull[mIdx-1]:_hmFull[11];const prevY=mIdx>0?y:y-1;const prevV=_hmMap[`${prevY}_${prevM}`]??null;const delta=(v>0&&prevV!=null)?v-prevV:null;let bg,textCol='rgba(255,255,255,.9)';if(v===0){bg='var(--surface2)';textCol='var(--muted)';}else if(delta===null){bg='rgba(45,161,115,.5)';}else if(delta>=0){const p=prevV>0?Math.min(1,delta/prevV):1;bg=`rgba(45,161,115,${(0.32+p*.58).toFixed(2)})`;}else{const p=Math.min(1,Math.abs(delta)/Math.max(1,v));bg=`rgba(220,75,75,${(0.32+p*.58).toFixed(2)})`;}const amt=v>=1000?(Math.round(v/100)/10).toFixed(1).replace('.0','')+'k':Math.round(v);const arrow=delta!=null?(delta>0?'↑':delta<0?'↓':''):'';return`<td style="padding:2px 1px"><div data-hm="${m} ${y}" data-hmv="${v}" data-hmd="${delta??''}" style="width:100%;height:38px;border-radius:5px;background:${bg};display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;transition:transform .12s,box-shadow .12s;cursor:default" onmouseenter="_hmShowTip(this)" onmouseleave="_hmHideTip()">${v>0?`<span style="font-size:11px;font-weight:700;color:${textCol};pointer-events:none;line-height:1">${amt}</span><span style="font-size:9px;color:${textCol};pointer-events:none;line-height:1">${arrow}</span>`:''}</div></td>`;}).join('')}</tr>`).join('')}</tbody></table>`;
-      _hmCard.style.display='';
-    } else {
-      _hmCard.style.display='none';
-    }
-  }
-}
-function _hmShowTip(el){
-  const t=document.getElementById('hm-tip');if(!t)return;
-  const label=el.dataset.hm,v=parseFloat(el.dataset.hmv)||0;
-  const rawD=el.dataset.hmd;const delta=rawD!==''&&rawD!=null?parseFloat(rawD):null;
-  const col=delta==null?'var(--hint)':delta>=0?'#2da173':'#e05252';
-  const sign=delta!=null&&delta>0?'+':'';
-  const pct=delta!=null&&(v-delta)>0?` (${sign}${Math.round(delta/(v-delta)*100)}%)` :'';
-  const evolHtml=delta!=null?`<span style="font-size:var(--fs-xs);color:${col};margin-left:6px">${sign}${eur(delta)}${pct}</span>`:'';
-  t.innerHTML=`<span style="font-weight:700;color:var(--text)">${label}</span>${v>0?` — <span style="color:#2da173;font-weight:700">${eur(v)}</span>${evolHtml}`:'<span style="color:var(--hint);margin-left:4px">—</span>'}`;
-  t.style.display='block';
-  el.style.transform='scale(1.25)';
-  const r=el.getBoundingClientRect();
-  let left=r.left+r.width/2-t.offsetWidth/2;
-  let top=r.top-t.offsetHeight-8;
-  if(top<8){top=r.bottom+8;}
-  if(left<8){left=8;}
-  if(left+t.offsetWidth>window.innerWidth-8){left=window.innerWidth-t.offsetWidth-8;}
-  t.style.left=left+'px';t.style.top=top+'px';
-}
-function _hmHideTip(){
-  const t=document.getElementById('hm-tip');if(t)t.style.display='none';
-  document.querySelectorAll('[data-hm]').forEach(el=>el.style.transform='');
 }
 function openAddSaving(){
   editSavingId=null;const now=new Date();const curMonth=MONTHS[now.getMonth()],curYear=now.getFullYear();
