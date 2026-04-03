@@ -777,6 +777,12 @@ window.onerror = function(msg, src, line) {
 
   <span id="topbar-page-title" class="topbar-page-title"></span>
 
+  <!-- Alert bell -->
+  <button class="icon-btn" id="topbar-bell-btn" onclick="switchTab('dashboard');setTimeout(()=>document.getElementById('dash-alert')?.scrollIntoView({behavior:'smooth'}),100)" title="Alertes budgétaires" style="flex-shrink:0;position:relative;display:none">
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+    <span id="topbar-bell-badge" style="position:absolute;top:3px;right:3px;min-width:16px;height:16px;border-radius:8px;background:var(--red);color:#fff;font-size:10px;font-weight:700;display:none;align-items:center;justify-content:center;padding:0 3px;line-height:1"></span>
+  </button>
+
   <!-- Refresh button (desktop only) -->
   <button class="icon-btn btn-add-desktop" id="topbar-refresh-btn" onclick="_refreshAndRender(true)" title="Actualiser les données" style="flex-shrink:0">
     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
@@ -2383,7 +2389,6 @@ function renderDashboard(){
   const epCouple=Math.round(memberList.reduce((sum,m)=>sum+(statsByMember[m]?.rav||0)*(savingPct[m]??60)/100,0));
   epRate=revNetScoped>0?Math.round(epScoped/revNetScoped*100):0;
 
-  document.getElementById('dash-alert').innerHTML='';
   const smScoped=dashboardMember==='all'?s:(statsByMember[dashboardMember]||s);
   const depContrainte=smScoped.fix+smScoped.vari;
   const ravScoped=smScoped.rav;
@@ -2421,6 +2426,8 @@ function renderDashboard(){
       `${libreRate}% du revenu net · Après épargne`,null,
       `Librement dépensable après épargne · Loisirs, sorties, imprévus · Reste à vivre ${eur(ravScoped)} − Épargne ${eur(epScoped)}`);
 
+
+  checkInAppAlerts();
 
   const profiles=document.getElementById('dash-profiles');profiles.innerHTML='';
   const showMembers=dashboardMember==='all'?[]:[dashboardMember];
@@ -3172,6 +3179,7 @@ document.getElementById('modal-entry-save').onclick=async ()=>{
       entries.push(created);
     }
     renderEntries();renderDashboard();
+    _triggerPushAlertCheck();
   }catch(err){
     showApiError('Erreur lors de la sauvegarde : '+err.message);
     document.getElementById('modal-entry').classList.add('open');
@@ -3560,6 +3568,7 @@ document.getElementById('modal-saving-save').onclick=async ()=>{
       savings.push(created);
     }
     renderSavings();
+    _triggerPushAlertCheck();
   }catch(err){
     showApiError('Erreur lors de la sauvegarde : '+err.message);
     document.getElementById('modal-saving').classList.add('open');
@@ -5463,6 +5472,112 @@ async function initApp(){
 
 // Start the app
 initApp();
+
+// ══════════════════════════════════════════════
+// ALERTES IN-APP
+// ══════════════════════════════════════════════
+function checkInAppAlerts() {
+  const alertEl = document.getElementById('dash-alert');
+  if (!alertEl || !currentUser || !entries.length) { _updateBell([]); return; }
+
+  const memberList = orderedMembers();
+  const s = calcStats(entries);
+  if (s.rev === 0) { _updateBell([]); return; }
+
+  const epScoped = Math.round(memberList.reduce((sum,m) => {
+    const sm = calcStats(entries.filter(e=>e.member===m));
+    return sum + sm.rav * (savingPct[m]??60) / 100;
+  }, 0));
+  const loiScoped = s.rav - epScoped;
+  const depStrict = s.fix + s.vari;
+  const revNet    = s.revNet;
+
+  const depRate   = revNet > 0 ? Math.round(depStrict / revNet * 100) : 0;
+  const epRate    = revNet > 0 ? Math.round(epScoped  / revNet * 100) : 0;
+  const fixRate   = revNet > 0 ? Math.round(s.fix     / revNet * 100) : 0;
+  const contrRate = revNet > 0 ? Math.round((s.tax + s.fix) / revNet * 100) : 0;
+  const libreRate = revNet > 0 ? Math.round(loiScoped / revNet * 100) : 0;
+
+  // Jours couverts
+  const _latSav = m => { const ms=savings.filter(x=>x.member===m); if(!ms.length)return 0; ms.sort((a,b)=>b.year-a.year||MONTHS.indexOf(b.month)-MONTHS.indexOf(a.month)); return ms[0].amount||0; };
+  const totalSav = memberList.reduce((sum,m)=>sum+_latSav(m),0);
+  const joursCouverts = depStrict > 0 ? Math.round(totalSav / depStrict * 30) : null;
+
+  // Score santé
+  const scoreSav = Math.min(40, epRate * 2);
+  const scoreRig = fixRate<=30?30:fixRate<=50?Math.round(30-(fixRate-30)*0.75):0;
+  const scoreDepA = depStrict/revNet*100; const scoreDep = scoreDepA<=50?30:scoreDepA<=70?Math.round(30-(scoreDepA-50)*1.5):0;
+  const healthScore = scoreSav + scoreRig + scoreDep;
+
+  const dismissKey = 'zenith_alerts_' + new Date().toDateString();
+  const dismissed = JSON.parse(sessionStorage.getItem(dismissKey) || '[]');
+
+  const ALL_ALERTS = [
+    { key:'rav_negatif',    level:'critical', icon:'🔴', msg:`Reste à vivre négatif (${eur(s.rav)}) — votre budget est en déficit.`, condition: s.rav < 0 },
+    { key:'dep_critique',   level:'critical', icon:'🔴', msg:`Dépenses à ${depRate}% du revenu net — seuil critique (70%).`, condition: depRate > 70 },
+    { key:'ep_faible',      level:'critical', icon:'🔴', msg:`Taux d'épargne très faible (${epRate}%) — objectif minimum 10%.`, condition: epRate < 5 && revNet > 0 },
+    { key:'score_bas',      level:'critical', icon:'🔴', msg:`Score santé faible (${healthScore}/100) — situation tendue.`, condition: healthScore < 40 },
+    { key:'matelas_faible', level:'warning',  icon:'🟠', msg:`Matelas de sécurité insuffisant (${joursCouverts} j) — objectif 90 j.`, condition: joursCouverts !== null && joursCouverts < 30 },
+    { key:'fixes_eleves',   level:'warning',  icon:'🟠', msg:`Charges fixes à ${fixRate}% du revenu net — peu de flexibilité (seuil 50%).`, condition: fixRate > 50 },
+    { key:'contrainte_elev',level:'warning',  icon:'🟠', msg:`Coefficient de contrainte élevé (${contrRate}%) — budget très rigide.`, condition: contrRate > 55 },
+    { key:'libre_faible',   level:'warning',  icon:'🟠', msg:`Budget libre très faible (${libreRate}%) — peu de marge pour les imprévus.`, condition: libreRate < 5 && revNet > 0 },
+  ];
+
+  const alerts = ALL_ALERTS.filter(a => a.condition && !dismissed.includes(a.key));
+  _updateBell(alerts);
+
+  if (!alerts.length) { alertEl.innerHTML = ''; return; }
+
+  const hasCritical = alerts.some(a => a.level === 'critical');
+  const border = hasCritical ? 'var(--red)' : 'var(--amber)';
+  const bg     = hasCritical ? 'var(--red-bg)' : 'var(--amber-bg)';
+  const titleC = hasCritical ? 'var(--red)' : 'var(--amber)';
+  const count  = alerts.length;
+
+  alertEl.innerHTML = `
+    <div style="background:${bg};border:1px solid ${border};border-radius:var(--r);padding:14px 16px;margin-bottom:var(--sg)">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
+        <div style="flex:1;min-width:0">
+          <div style="font-size:var(--fs-sm);font-weight:700;color:${titleC};margin-bottom:10px">
+            ${hasCritical?'⚠ ':''}${count} alerte${count>1?'s':''} budgétaire${count>1?'s':''}
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            ${alerts.map(a=>`
+              <div style="display:flex;align-items:flex-start;gap:8px">
+                <span style="flex-shrink:0;font-size:var(--fs-sm)">${a.icon}</span>
+                <span style="font-size:var(--fs-sm);color:var(--text);flex:1">${a.msg}</span>
+                <button onclick="(function(){const d=JSON.parse(sessionStorage.getItem('${dismissKey}')||'[]');d.push('${a.key}');sessionStorage.setItem('${dismissKey}',JSON.stringify(d));checkInAppAlerts();})()"
+                  style="flex-shrink:0;background:none;border:none;cursor:pointer;color:var(--hint);font-size:var(--fs-xs);padding:0 2px;line-height:1" title="Ignorer">✕</button>
+              </div>`).join('')}
+          </div>
+        </div>
+        <button onclick="(function(){const d=${JSON.stringify(alerts.map(a=>a.key))};sessionStorage.setItem('${dismissKey}',JSON.stringify(d));document.getElementById('dash-alert').innerHTML='';_updateBell([]);})()"
+          style="flex-shrink:0;background:none;border:none;cursor:pointer;color:var(--hint);font-size:1rem;padding:2px;line-height:1;margin-top:-2px" title="Tout ignorer">✕</button>
+      </div>
+    </div>`;
+}
+
+function _updateBell(alerts) {
+  const btn   = document.getElementById('topbar-bell-btn');
+  const badge = document.getElementById('topbar-bell-badge');
+  if (!btn || !badge) return;
+  if (!alerts.length) { btn.style.display='none'; return; }
+  const count = alerts.length;
+  btn.style.display = 'flex';
+  badge.style.display = 'flex';
+  badge.textContent = count > 9 ? '9+' : String(count);
+  const hasCritical = alerts.some(a => a.level === 'critical');
+  badge.style.background = hasCritical ? 'var(--red)' : 'var(--amber)';
+}
+
+// Déclenche une vérification push côté serveur (non bloquant)
+function _triggerPushAlertCheck() {
+  if (!API.auth.isLoggedIn()) return;
+  fetch('/api/notifications/check-alerts', {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${API.getToken()}`, 'Content-Type': 'application/json' },
+  }).catch(() => {});
+}
 
 // ── Push notifications ────────────────────────────────────────────────────────
 async function registerPushSubscription() {

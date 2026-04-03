@@ -47,4 +47,11 @@ async function test(req, res, next) {
   } catch (err) { next(err); }
 }
 
-module.exports = { getVapidKey, subscribe, unsubscribe, test, debug };
+async function checkAlerts(req, res, next) {
+  try {
+    await notifService.checkBudgetAlerts(req.user.id, req.user.name);
+    res.json({ success: true });
+  } catch (err) { next(err); }
+}
+
+module.exports = { getVapidKey, subscribe, unsubscribe, test, debug, checkAlerts };
