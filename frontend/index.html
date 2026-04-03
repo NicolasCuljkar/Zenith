@@ -861,6 +861,10 @@ window.onerror = function(msg, src, line) {
         <div id="donut-chart-wrap" style="position:relative;height:260px"><canvas id="donut-chart"></canvas></div>
         <div id="donut-legend" style="margin-top:14px"></div>
       </div>
+      <div class="card" id="waterfall-card">
+        <div class="card-head">Cascade budgétaire</div>
+        <div id="waterfall-chart-wrap" style="position:relative;height:220px"><canvas id="waterfall-chart"></canvas></div>
+      </div>
     </div>
     </div><!-- /#dash-content -->
   </div>
@@ -870,7 +874,7 @@ window.onerror = function(msg, src, line) {
     <div class="member-tabs" id="entries-mtabs"></div>
     <div id="entries-nodata" style="display:none"></div>
     <div class="kpi-grid" id="entries-summary" style="margin-bottom:1rem"></div>
-    <div id="entries-toolbar" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem;gap:8px">
+    <div id="entries-toolbar" style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:.75rem;gap:8px">
       <div id="entries-search" style="flex:1;display:flex;flex-direction:row;gap:6px;min-width:0">
         <input type="text" id="search-input" class="inp search-inp" placeholder="Rechercher…" style="flex:1;min-width:0">
         <select id="filter-cat" class="inp" style="flex-shrink:0;width:auto">
@@ -893,7 +897,7 @@ window.onerror = function(msg, src, line) {
     <div id="savings-nodata" style="display:none"></div>
     <div id="savings-content">
     <div class="kpi-grid" id="savings-kpis"></div>
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+    <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:1rem">
       <div style="display:flex;align-items:center;gap:0;border-bottom:1px solid var(--border)">
         <button class="stab active" data-stab="month">Mois</button>
         <button class="stab" data-stab="year">Année</button>
@@ -906,6 +910,7 @@ window.onerror = function(msg, src, line) {
       <div id="bar-chart-legend" style="display:flex;justify-content:center;gap:16px;flex-wrap:wrap;margin-top:10px"></div>
     </div>
     <div id="savings-tables"></div>
+    <div class="card" id="savings-heatmap-card" style="display:none"><div class="card-head">Historique épargne</div><div id="savings-heatmap" style="padding:4px 0"></div></div>
     </div><!-- /#savings-content -->
   </div>
 
@@ -916,6 +921,11 @@ window.onerror = function(msg, src, line) {
     <div class="member-tabs" id="analysis-mtabs"></div>
     <div class="kpi-grid" id="analysis-kpis"></div>
     <div class="card"><div class="card-head">Où va chaque euro · Règle 50/30/20</div><div id="analysis-flow"></div></div>
+    <div class="g2" style="margin-bottom:0">
+      <div class="card"><div class="card-head">Score santé</div><div id="gauge-chart-wrap" style="position:relative;height:170px"><canvas id="gauge-chart"></canvas></div></div>
+      <div class="card"><div class="card-head">Répartition 50/30/20</div><div id="radar-chart-wrap" style="position:relative;height:170px"><canvas id="radar-chart"></canvas></div></div>
+    </div>
+    <div class="card" id="member-bars-card" style="display:none"><div class="card-head">Comparaison membres</div><div id="member-bars-wrap" style="position:relative;height:210px"><canvas id="member-bars-chart"></canvas></div></div>
     <div style="display:none"><div id="analysis-donut-wrap" style="position:relative;height:0"><canvas id="analysis-donut-chart"></canvas></div><div id="analysis-donut-legend"></div></div>
     </div><!-- /#analysis-content -->
   </div>
@@ -1009,6 +1019,9 @@ window.onerror = function(msg, src, line) {
 
   </div>
 
+  <!-- Comparaison placements -->
+  <div style="font-size:var(--fs-title);font-weight:700;letter-spacing:-.02em;color:var(--text);margin-bottom:.6rem">Croissance sur 10 ans par véhicule</div>
+  <div class="card" style="margin-bottom:1rem"><div id="placements-chart-wrap" style="position:relative;height:210px"><canvas id="placements-chart"></canvas></div></div>
   <!-- Simulateur -->
   <div style="font-size:var(--fs-title);font-weight:700;letter-spacing:-.02em;color:var(--text);margin-bottom:.6rem">Simulateur de revenus passifs</div>
   <div class="card" style="margin-bottom:1rem"><div id="conseils-sim"></div></div>
@@ -1382,6 +1395,7 @@ document.getElementById('modal-confirm').addEventListener('click',e=>{if(e.targe
 
 let nextId=200,editEntryId=null,editSavingId=null;
 let donutChart=null,barChart=null,analysisDonut=null,projChart=null,topDonutChart=null;
+let waterfallChart=null,gaugeChart=null,radarChart=null,memberBarsChart=null,placementsChart=null;
 let savingsStabActive='month';
 let currentTab='dashboard';
 let memberColors={Nicolas:'#3B8BD4',Carla:'#e06fa0'};
@@ -2360,7 +2374,7 @@ function updateSavingCalc(name){
 }
 function renderDashboard(){
   if(hasNoData(dashboardMember)){
-    donutChart=destroyChart(donutChart);topDonutChart=destroyChart(topDonutChart);
+    donutChart=destroyChart(donutChart);topDonutChart=destroyChart(topDonutChart);waterfallChart=destroyChart(waterfallChart);
     document.getElementById('dash-nodata').innerHTML=noDataBanner();
     document.getElementById('dash-nodata').style.display='';
     document.getElementById('dash-content').style.display='none';
@@ -2459,12 +2473,12 @@ function renderDashboard(){
       <div style="margin:12px 0 6px">
         <!-- Toggle % / € -->
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-          <div style="display:flex;gap:0;border:1px solid var(--border);border-radius:8px;overflow:hidden">
+          ${canEdit(name)?`<div style="display:flex;gap:0;border:1px solid var(--border);border-radius:8px;overflow:hidden">
             <button id="mode-pct-${name}" onclick="setSavingMode('${name}','pct',this)"
               style="padding:3px 10px;font-size:var(--fs-sm);font-weight:600;border:none;cursor:pointer;font-family:inherit;transition:background .12s;background:${getMC(name)};color:#fff">%</button>
             <button id="mode-eur-${name}" onclick="setSavingMode('${name}','eur',this)"
               style="padding:3px 10px;font-size:var(--fs-sm);font-weight:600;border:none;cursor:pointer;font-family:inherit;transition:background .12s;background:var(--surface);color:var(--muted)">€</button>
-          </div>
+          </div>`:'<span></span>'}
           <span id="pctv-${name}" style="font-size:var(--fs-md);font-weight:700;color:${getMC(name)}">${pct}%</span>
         </div>
 
@@ -2472,14 +2486,14 @@ function renderDashboard(){
         <div id="slider-pct-${name}">
           <input type="range" min="0" max="100" step="1" value="${pct}" id="pct-${name}"
             style="width:100%;accent-color:${getMC(name)};--accent-c:${getMC(name)};--track-right:var(--amber)"
-            oninput="savingPct['${name}']=+this.value;document.getElementById('pctv-${name}').textContent=this.value+'%';updateSplitBar('${name}',+this.value);saveData();updateSavingCalc('${name}');debouncedDashRefresh();">
+            ${canEdit(name)?`oninput="savingPct['${name}']=+this.value;document.getElementById('pctv-${name}').textContent=this.value+'%';updateSplitBar('${name}',+this.value);saveData();updateSavingCalc('${name}');debouncedDashRefresh();"`:' disabled style="width:100%;accent-color:'+getMC(name)+';opacity:.45;pointer-events:none"'}>
         </div>
 
         <!-- Slider € mode -->
         <div id="slider-eur-${name}" style="display:none">
           <input type="range" min="0" max="${Math.round(ps.rav)}" step="10" value="${epC}" id="eur-${name}"
             style="width:100%;accent-color:${getMC(name)};--accent-c:${getMC(name)};--track-right:var(--amber)"
-            oninput="const pctVal=+this.max>0?Math.round(+this.value/+this.max*100):0;savingPct['${name}']=pctVal;document.getElementById('pct-${name}').value=pctVal;document.getElementById('pctv-${name}').textContent=parseInt(this.value).toLocaleString('fr-FR')+' €';updateSplitBar('${name}',pctVal);saveData();updateSavingCalc('${name}');debouncedDashRefresh();">
+            ${canEdit(name)?`oninput="const pctVal=+this.max>0?Math.round(+this.value/+this.max*100):0;savingPct['${name}']=pctVal;document.getElementById('pct-${name}').value=pctVal;document.getElementById('pctv-${name}').textContent=parseInt(this.value).toLocaleString('fr-FR')+' €';updateSplitBar('${name}',pctVal);saveData();updateSavingCalc('${name}');debouncedDashRefresh();"`:' disabled style="width:100%;accent-color:'+getMC(name)+';opacity:.45;pointer-events:none"'}>
         </div>
       </div>
       <div class="prow"><span class="prow-lbl" style="color:var(--blue)">→ Épargne calculée</span><span class="prow-val" style="color:var(--blue)" data-ep="${name}">${eur(epC)}</span></div>
@@ -2708,6 +2722,42 @@ function renderDashboard(){
         </div>`;
       }).join('')}
     </div>`;
+  }
+
+  // Show charts section + waterfall
+  const _dashChartsEl=document.getElementById('dash-charts');
+  if(_dashChartsEl) _dashChartsEl.style.display='';
+  if(!document.getElementById('waterfall-chart')){const _ww=document.getElementById('waterfall-chart-wrap');if(_ww)_ww.innerHTML='<canvas id="waterfall-chart"></canvas>';}
+  waterfallChart=destroyChart(waterfallChart);
+  const _wfE=document.getElementById('waterfall-chart');
+  if(_wfE){
+    const _wfRn=smScoped.revNet||0;
+    const _wfSteps=[
+      {label:'Revenus bruts',start:0,end:smScoped.rev,color:'#0d9e6e'},
+      {label:'Impôts',start:_wfRn,end:smScoped.rev,color:'#c49a00'},
+      {label:'Charges fixes',start:Math.max(0,_wfRn-smScoped.fix),end:_wfRn,color:'#d93535'},
+      {label:'Variables',start:Math.max(0,_wfRn-smScoped.fix-smScoped.vari),end:Math.max(0,_wfRn-smScoped.fix),color:'#e07020'},
+      {label:'Reste à vivre',start:0,end:Math.abs(smScoped.rav),color:smScoped.rav>=0?'#2979c8':'#d93535'},
+    ].filter(d=>d.end>d.start);
+    const _wfTc=darkVal('rgba(255,255,255,1)','rgba(28,28,32,1)');
+    waterfallChart=new Chart(_wfE,{
+      type:'bar',
+      data:{labels:_wfSteps.map(d=>d.label),datasets:[{data:_wfSteps.map(d=>[d.start,d.end]),backgroundColor:_wfSteps.map(d=>d.color+'cc'),borderColor:_wfSteps.map(d=>d.color),borderWidth:1.5,borderRadius:4}]},
+      options:{
+        responsive:true,maintainAspectRatio:false,
+        layout:{padding:{top:28,right:8,left:4,bottom:4}},
+        plugins:{
+          legend:{display:false},
+          tooltip:{backgroundColor:_wfTc,borderColor:darkVal('rgba(0,0,0,.15)','rgba(255,255,255,.2)'),borderWidth:1,titleColor:cssCol('--text'),bodyColor:cssCol('--muted'),titleFont:{size:fsPx('--fs-sm'),weight:'700'},bodyFont:{size:fsPx('--fs-xs')},padding:10,cornerRadius:10,callbacks:{label:ctx=>` ${eur(Math.abs(_wfSteps[ctx.dataIndex].end-_wfSteps[ctx.dataIndex].start))}`}},
+          datalabels:{anchor:'end',align:'top',formatter:(v,ctx)=>eur(Math.abs(_wfSteps[ctx.dataIndex].end-_wfSteps[ctx.dataIndex].start)),color:(ctx)=>_wfSteps[ctx.dataIndex].color,font:{size:fsPx('--fs-xs'),weight:'700'}}
+        },
+        scales:{
+          x:{grid:{display:false},ticks:{color:cssCol('--muted'),font:{size:fsPx('--fs-xs')}},border:{display:false}},
+          y:{beginAtZero:true,ticks:{callback:v=>v===0?'':((v/1000).toFixed(0)+'k€'),color:cssCol('--hint'),font:{size:fsPx('--fs-xs')},maxTicksLimit:5},grid:{color:darkVal('rgba(0,0,0,.04)','rgba(255,255,255,.04)')},border:{display:false}}
+        }
+      },
+      plugins:[ChartDataLabels]
+    });
   }
 
   // Top bars
@@ -3481,6 +3531,25 @@ function renderSavings(){
       container.appendChild(wrap);
     });
   }
+
+  // ── Heatmap historique épargne ──
+  const _hmCard=document.getElementById('savings-heatmap-card');
+  const _hmEl=document.getElementById('savings-heatmap');
+  if(_hmCard&&_hmEl){
+    const _scopedSav=savingsMember==='all'?savings:savings.filter(r=>r.member===savingsMember);
+    const _hmYears=[...new Set(_scopedSav.map(r=>r.year))].sort((a,b)=>a-b);
+    if(_hmYears.length>0){
+      const _hmMap={};
+      _scopedSav.forEach(r=>{const k=`${r.year}_${r.month}`;_hmMap[k]=(_hmMap[k]||0)+r.amount;});
+      const _hmMax=Math.max(...Object.values(_hmMap).filter(v=>v>0),1);
+      const _hmAbbr=['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];
+      const _hmFull=MONTHS;
+      _hmEl.innerHTML=`<div style="overflow-x:auto;padding-bottom:4px"><table style="border-collapse:collapse;min-width:100%;font-size:var(--fs-xs)"><thead><tr><th style="padding:4px 8px 4px 0;text-align:left;color:var(--hint);font-weight:600;min-width:46px"></th>${_hmAbbr.map(m=>`<th style="padding:4px 3px;text-align:center;color:var(--hint);font-weight:600;min-width:30px">${m}</th>`).join('')}</tr></thead><tbody>${_hmYears.map(y=>`<tr><td style="padding:3px 8px 3px 0;font-weight:700;color:var(--muted);white-space:nowrap">${y}</td>${_hmFull.map(m=>{const k=`${y}_${m}`;const v=_hmMap[k]||0;const alpha=v>0?(0.15+Math.min(1,v/_hmMax)*0.72).toFixed(2):0;const bg=v>0?`rgba(45,161,115,${alpha})`:'var(--surface2)';const textCol=v>0&&v/_hmMax>0.55?'#fff':'var(--muted)';return`<td style="padding:2px" title="${m} ${y}${v>0?' — '+eur(v):''}"><div style="width:26px;height:22px;border-radius:4px;background:${bg};display:flex;align-items:center;justify-content:center;transition:transform .1s;cursor:default" onmouseenter="this.style.transform='scale(1.2)'" onmouseleave="this.style.transform=''">${v>0?`<span style="font-size:8px;font-weight:700;color:${textCol};pointer-events:none;line-height:1">${v>=1000?Math.round(v/1000)+'k':Math.round(v)}</span>`:''}</div></td>`;}).join('')}</tr>`).join('')}</tbody></table></div>`;
+      _hmCard.style.display='';
+    } else {
+      _hmCard.style.display='none';
+    }
+  }
 }
 function openAddSaving(){
   editSavingId=null;const now=new Date();const curMonth=MONTHS[now.getMonth()],curYear=now.getFullYear();
@@ -3642,7 +3711,7 @@ function _ruleReset(){
 // ══════════════════════════════════════════════
 function renderAnalysis(){
   if(hasNoData(analysisMember)){
-    analysisDonut=destroyChart(analysisDonut);
+    analysisDonut=destroyChart(analysisDonut);gaugeChart=destroyChart(gaugeChart);radarChart=destroyChart(radarChart);memberBarsChart=destroyChart(memberBarsChart);
     document.getElementById('analysis-nodata').innerHTML=noDataBanner();
     document.getElementById('analysis-nodata').style.display='';
     document.getElementById('analysis-content').style.display='none';
@@ -3906,6 +3975,98 @@ function renderAnalysis(){
     }
   }
 
+  // ── Gauge score santé ──
+  if(!document.getElementById('gauge-chart')){const _gw=document.getElementById('gauge-chart-wrap');if(_gw)_gw.innerHTML='<canvas id="gauge-chart"></canvas>';}
+  gaugeChart=destroyChart(gaugeChart);
+  const _gEl=document.getElementById('gauge-chart');
+  if(_gEl){
+    gaugeChart=new Chart(_gEl,{
+      type:'doughnut',
+      data:{labels:['Score','Reste'],datasets:[{data:[healthScore,100-healthScore],backgroundColor:[scoreColor+'cc',darkVal('rgba(0,0,0,.06)','rgba(255,255,255,.06)')],borderWidth:0,hoverOffset:0}]},
+      options:{
+        responsive:true,maintainAspectRatio:false,rotation:-90,circumference:180,cutout:'72%',
+        animation:{duration:900,easing:'easeInOutQuart'},
+        plugins:{legend:{display:false},tooltip:{enabled:false},datalabels:{display:false}}
+      },
+      plugins:[{id:'gaugeText',afterDraw(chart){
+        const{ctx,chartArea:{left,right,bottom}}=chart;
+        const cx=(left+right)/2;
+        ctx.save();
+        ctx.textAlign='center';ctx.textBaseline='bottom';
+        ctx.fillStyle=scoreColor;ctx.font=`800 ${fsPx('--fs-xl')+4}px Inter,system-ui,sans-serif`;
+        ctx.fillText(healthScore,cx,bottom-4);
+        ctx.fillStyle=cssCol('--muted');ctx.font=`500 ${fsPx('--fs-xs')}px Inter,system-ui,sans-serif`;
+        ctx.fillText('/ 100 — '+scoreLabel,cx,bottom+12);
+        ctx.restore();
+      }}]
+    });
+  }
+
+  // ── Radar 50/30/20 ──
+  if(!document.getElementById('radar-chart')){const _rw=document.getElementById('radar-chart-wrap');if(_rw)_rw.innerHTML='<canvas id="radar-chart"></canvas>';}
+  radarChart=destroyChart(radarChart);
+  const _rEl=document.getElementById('radar-chart');
+  if(_rEl){
+    radarChart=new Chart(_rEl,{
+      type:'radar',
+      data:{
+        labels:['Besoins (50%)','Envies (30%)','Épargne (20%)'],
+        datasets:[
+          {label:'Idéal',data:[50,30,20],borderColor:darkVal('rgba(0,0,0,.25)','rgba(255,255,255,.25)'),backgroundColor:darkVal('rgba(0,0,0,.04)','rgba(255,255,255,.04)'),borderWidth:1.5,pointRadius:3,pointBackgroundColor:darkVal('rgba(0,0,0,.2)','rgba(255,255,255,.2)')},
+          {label:'Réel',data:[rNeeds,rWants,rSaves],borderColor:'#2979c8',backgroundColor:'#2979c822',borderWidth:2,pointRadius:4,pointBackgroundColor:'#2979c8',pointBorderColor:'#fff',pointBorderWidth:2}
+        ]
+      },
+      options:{
+        responsive:true,maintainAspectRatio:false,
+        plugins:{
+          legend:{display:true,position:'bottom',labels:{font:{size:fsPx('--fs-xs'),weight:'600'},boxWidth:10,boxHeight:3,padding:10,color:cssCol('--muted')}},
+          tooltip:{enabled:false},datalabels:{display:false}
+        },
+        scales:{r:{beginAtZero:true,max:80,ticks:{stepSize:20,display:false},grid:{color:darkVal('rgba(0,0,0,.08)','rgba(255,255,255,.08)')},pointLabels:{font:{size:fsPx('--fs-xs'),weight:'600'},color:cssCol('--muted')},angleLines:{color:darkVal('rgba(0,0,0,.06)','rgba(255,255,255,.06)')}}}
+      }
+    });
+  }
+
+  // ── Barres groupées membres (si vue "Tous") ──
+  const _mbCard=document.getElementById('member-bars-card');
+  if(_mbCard){
+    if(analysisMember!=='all'||memberList.length<2){
+      _mbCard.style.display='none';memberBarsChart=destroyChart(memberBarsChart);
+    } else {
+      _mbCard.style.display='';
+      if(!document.getElementById('member-bars-chart')){const _mbw=document.getElementById('member-bars-wrap');if(_mbw)_mbw.innerHTML='<canvas id="member-bars-chart"></canvas>';}
+      memberBarsChart=destroyChart(memberBarsChart);
+      const _mbEl=document.getElementById('member-bars-chart');
+      if(_mbEl){
+        const _cats=['revenu','impot','fixe','variable'];
+        const _catLabels=['Revenus','Impôts','Fixes','Variables'];
+        const _mbDatasets=memberList.map(m=>({
+          label:m,
+          data:_cats.map(cat=>entries.filter(e=>e.member===m&&e.cat===cat).reduce((s,e)=>s+Math.abs(e.amount),0)),
+          backgroundColor:getMC(m)+'cc',borderColor:getMC(m),borderWidth:1.5,borderRadius:4
+        }));
+        memberBarsChart=new Chart(_mbEl,{
+          type:'bar',
+          data:{labels:_catLabels,datasets:_mbDatasets},
+          options:{
+            responsive:true,maintainAspectRatio:false,
+            interaction:{mode:'index',intersect:false},
+            layout:{padding:{top:20,right:8}},
+            plugins:{
+              legend:{display:true,position:'bottom',labels:{font:{size:fsPx('--fs-xs'),weight:'600'},boxWidth:10,boxHeight:3,padding:10,color:cssCol('--muted')}},
+              tooltip:{backgroundColor:darkVal('rgba(255,255,255,1)','rgba(28,28,32,1)'),borderColor:darkVal('rgba(0,0,0,.15)','rgba(255,255,255,.2)'),borderWidth:1,titleColor:cssCol('--text'),bodyColor:cssCol('--muted'),titleFont:{size:fsPx('--fs-sm'),weight:'700'},bodyFont:{size:fsPx('--fs-xs')},padding:10,cornerRadius:10,callbacks:{label:ctx=>` ${ctx.dataset.label} : ${eur(ctx.raw)}`}},
+              datalabels:{display:false}
+            },
+            scales:{
+              x:{grid:{display:false},ticks:{color:cssCol('--muted'),font:{size:fsPx('--fs-xs')}},border:{display:false}},
+              y:{beginAtZero:true,ticks:{callback:v=>v===0?'':((v/1000).toFixed(0)+'k€'),color:cssCol('--hint'),font:{size:fsPx('--fs-xs')},maxTicksLimit:5},grid:{color:darkVal('rgba(0,0,0,.04)','rgba(255,255,255,.04)')},border:{display:false}}
+            }
+          }
+        });
+      }
+    }
+  }
+
   const [m1,m2]=orderedMembers();
 }
 
@@ -3931,7 +4092,8 @@ function renderProjection(){
   const projLabels=Array.from({length:years+1},(_,i)=>i===0?'Auj.':`+${i}a`);
   const noInterest=[],withInterest=[];
   let balNI=curSav,balWI=curSav;
-  for(let y=0;y<=years;y++){noInterest.push(Math.round(balNI));withInterest.push(Math.round(balWI));balNI+=monthly*12;balWI=(balWI+monthly*12)*(1+annualRate);}
+  const bal2=[],bal7=[];let b2=curSav,b7=curSav;
+  for(let y=0;y<=years;y++){noInterest.push(Math.round(balNI));withInterest.push(Math.round(balWI));bal2.push(Math.round(b2));bal7.push(Math.round(b7));balNI+=monthly*12;balWI=(balWI+monthly*12)*(1+annualRate);b2=(b2+monthly*12)*(1+0.02);b7=(b7+monthly*12)*(1+0.07);}
   const textColor=darkVal('#666','#999');
   const lineColor=projectionMember==='all'?'#2979c8':memberColors[projectionMember]||'#2979c8';
   const lineColor2='#0d9e6e';
@@ -3970,6 +4132,8 @@ function renderProjection(){
         pointRadius:0,pointHoverRadius:5,
         pointBackgroundColor:lineColor2,pointBorderColor:'#fff',pointBorderWidth:2,
       },
+      {label:'2% rendement',data:bal2,borderColor:'#f59e0b',backgroundColor:'transparent',tension:.45,fill:false,borderWidth:1.5,borderDash:[5,4],pointRadius:0,pointHoverRadius:4,pointBackgroundColor:'#f59e0b',pointBorderColor:'#fff',pointBorderWidth:2},
+      {label:'7% rendement',data:bal7,borderColor:'#7c52d4',backgroundColor:'transparent',tension:.45,fill:false,borderWidth:1.5,borderDash:[5,4],pointRadius:0,pointHoverRadius:4,pointBackgroundColor:'#7c52d4',pointBorderColor:'#fff',pointBorderWidth:2},
     ]},
     options:{
       responsive:true,maintainAspectRatio:false,
@@ -3999,7 +4163,7 @@ function renderProjection(){
           display:(ctx)=>ctx.dataIndex===ctx.dataset.data.length-1,
           anchor:'end',align:'top',
           formatter:(v)=>`${(v/1000).toFixed(0)}k€`,
-          color:(ctx)=>ctx.datasetIndex===0?cssCol('--red'):lineColor2,
+          color:(ctx)=>ctx.datasetIndex===0?cssCol('--red'):ctx.datasetIndex===1?lineColor2:ctx.datasetIndex===2?'#f59e0b':'#7c52d4',
           font:{size:fsPx('--fs-xs'),weight:'800'},
           backgroundColor:(ctx)=>darkVal('#fff','#1a1a18'),
           borderRadius:4,
@@ -4214,6 +4378,7 @@ function setConseilsMember(m){
 }
 function renderConseils(){
   if(hasNoData(conseilsMember)){
+    placementsChart=destroyChart(placementsChart);
     document.getElementById('conseils-nodata').innerHTML=noDataBanner();
     document.getElementById('conseils-nodata').style.display='';
     document.getElementById('conseils-content').style.display='none';
@@ -4297,6 +4462,38 @@ function renderConseils(){
     <div id="conseils-sim-result"></div>`;
   updateConseilsSim();
   requestAnimationFrame(fillAllTracks);
+
+  // ── Graphique comparaison placements ──
+  if(!document.getElementById('placements-chart')){const _pw=document.getElementById('placements-chart-wrap');if(_pw)_pw.innerHTML='<canvas id="placements-chart"></canvas>';}
+  placementsChart=destroyChart(placementsChart);
+  const _plEl=document.getElementById('placements-chart');
+  if(_plEl){
+    const _plVehicles=[
+      {label:'Livret A — 3%',rate:.03,color:'#0d9e6e'},
+      {label:'Assurance-vie — 2.5%',rate:.025,color:'#7c52d4'},
+      {label:'SCPI — 4.5%',rate:.045,color:'#d93535'},
+      {label:'ETF / PEA — 7%',rate:.07,color:'#2979c8'},
+    ];
+    const _plFv=(rate)=>Math.round(curSav*Math.pow(1+rate,10)+epMonthly*(Math.pow(1+rate,10)-1)/(Math.pow(1+rate,1/12)-1));
+    placementsChart=new Chart(_plEl,{
+      type:'bar',
+      data:{labels:_plVehicles.map(v=>v.label),datasets:[{label:'Capital dans 10 ans',data:_plVehicles.map(v=>_plFv(v.rate)),backgroundColor:_plVehicles.map(v=>v.color+'cc'),borderColor:_plVehicles.map(v=>v.color),borderWidth:1.5,borderRadius:6}]},
+      options:{
+        indexAxis:'y',responsive:true,maintainAspectRatio:false,
+        layout:{padding:{top:4,right:70,left:4,bottom:4}},
+        plugins:{
+          legend:{display:false},
+          tooltip:{backgroundColor:darkVal('rgba(255,255,255,1)','rgba(28,28,32,1)'),borderColor:darkVal('rgba(0,0,0,.15)','rgba(255,255,255,.2)'),borderWidth:1,titleColor:cssCol('--text'),bodyColor:cssCol('--muted'),titleFont:{size:fsPx('--fs-sm'),weight:'700'},bodyFont:{size:fsPx('--fs-xs')},padding:10,cornerRadius:10,callbacks:{label:ctx=>` ${eur(ctx.raw)}`}},
+          datalabels:{anchor:'end',align:'end',formatter:v=>eur(v),color:(ctx)=>_plVehicles[ctx.dataIndex].color,font:{size:fsPx('--fs-xs'),weight:'700'}}
+        },
+        scales:{
+          x:{beginAtZero:true,ticks:{callback:v=>v===0?'':((v/1000).toFixed(0)+'k€'),color:cssCol('--hint'),font:{size:fsPx('--fs-xs')},maxTicksLimit:5},grid:{color:darkVal('rgba(0,0,0,.04)','rgba(255,255,255,.04)')},border:{display:false}},
+          y:{grid:{display:false},ticks:{color:cssCol('--muted'),font:{size:fsPx('--fs-xs'),weight:'600'}},border:{display:false}}
+        }
+      },
+      plugins:[ChartDataLabels]
+    });
+  }
 }
 
 function updateConseilsSim(){
