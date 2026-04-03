@@ -2395,15 +2395,31 @@ function renderDashboard(){
     ?`<span style="font-size:var(--fs-xs);font-weight:700;padding:2px 8px;border-radius:20px;background:var(--amber-bg);color:var(--amber)">Correct — viser 20%</span>`
     :`<span style="font-size:var(--fs-xs);font-weight:700;padding:2px 8px;border-radius:20px;background:var(--red-bg);color:var(--red)">⚠ Taux bas</span>`;
 
+  const loiScopedDash=ravScoped-epScoped;
+  const joursRavD=depContrainte>0?Math.round(ravScoped/depContrainte*30):null;
+  const chargesIncompD=smScoped.tax+smScoped.fix;
+  const chargesRateD=revNetScoped>0?Math.round(chargesIncompD/revNetScoped*100):0;
+  const chargesColorD=chargesRateD<=40?'var(--green)':chargesRateD<=60?'var(--amber)':'var(--red)';
+  const libreRate=revNetScoped>0?Math.round(loiScopedDash/revNetScoped*100):0;
+  const mkBD=(txt,ok,warn)=>`<span style="font-size:var(--fs-xs);font-weight:700;padding:2px 8px;border-radius:20px;background:${ok?'var(--green-bg)':warn?'var(--amber-bg)':'var(--red-bg)'};color:${ok?'var(--green)':warn?'var(--amber)':'var(--red)'}">${txt}</span>`;
+  const chargesBadgeD=mkBD(chargesRateD<=40?'✓ Maîtrisé':chargesRateD<=60?'Modéré':'⚠ Élevé',chargesRateD<=40,chargesRateD<=60);
+
+  document.getElementById('dash-kpis').style.gridTemplateColumns='repeat(3,1fr)';
   document.getElementById('dash-kpis').innerHTML=
     kpiHtml('Revenus nets',eur(revNetScoped),'var(--green)',
       dashboardMember==='all'?`Brut ${eur(s.rev)} · Impôts ${eur(s.tax)}`:`Brut ${eur(revNetScoped+smScoped.tax)} · Impôts ${eur(smScoped.tax)}`)+
     kpiHtml('Dépenses',eur(depContrainte),'var(--red)',
       `${depRate}% du revenu net · Fixes ${eur(smScoped.fix)} + Var. ${eur(smScoped.vari)}`)+
-    kpiHtml('Reste à vivre',eur(ravScoped),ravScoped>=0?'var(--blue)':'var(--red)',
-      `${ravRate}% du revenu net · Avant épargne & loisir`)+
     kpiHtml('Épargne calculée',eur(epScoped),epRate>=20?'var(--green)':epRate>=10?'var(--amber)':'var(--red)',
-      `${epRate}% du revenu net`,epRate-20,'',epBadge);
+      `${epRate}% du revenu net · ≈ ${eur(epScoped*12)} / an`,epRate-20,'',epBadge)+
+    kpiHtml('Reste à vivre',eur(ravScoped),ravScoped>=0?'var(--blue)':'var(--red)',
+      `${ravRate}% du revenu net${joursRavD!=null?' · ≈ '+joursRavD+' j de charges':''}`)+
+    kpiHtml('Charges incompressibles',eur(chargesIncompD),chargesColorD,
+      `${chargesRateD}% du revenu net · Impôts + fixes`,null,
+      `Montant non négociable chaque mois · Impôts ${eur(smScoped.tax)} + Charges fixes ${eur(smScoped.fix)} · Objectif : rester sous 40% du revenu net`,chargesBadgeD)+
+    kpiHtml('Budget libre',eur(Math.max(0,loiScopedDash)),loiScopedDash>=0?'var(--amber)':'var(--red)',
+      `${libreRate}% du revenu net · Après épargne`,null,
+      `Librement dépensable après épargne · Loisirs, sorties, imprévus · Reste à vivre ${eur(ravScoped)} − Épargne ${eur(epScoped)}`);
 
 
   const profiles=document.getElementById('dash-profiles');profiles.innerHTML='';
@@ -3676,14 +3692,24 @@ function renderAnalysis(){
   const jColA=joursAna==null?'var(--muted)':joursAna>=90?'var(--green)':joursAna>=30?'var(--amber)':'var(--red)';
   const jBadgeA=joursAna==null?'':mkBadge(joursAna>=90?'✓ Matelas solide':joursAna>=30?'Objectif : 3 mois':'⚠ Constituez un matelas',joursAna>=90,joursAna>=30);
 
-  document.getElementById('analysis-kpis').style.gridTemplateColumns='';
+  // ── KPIs supplémentaires ──
+  const contrRate=s.revNet>0?Math.round((s.tax+s.fix)/s.revNet*100):0;
+  const contrColor=contrRate<=35?'var(--green)':contrRate<=55?'var(--amber)':'var(--red)';
+  const contrBadge=mkBadge(contrRate<=35?'✓ Maîtrisé':contrRate<=55?'Modéré':'⚠ Élevé',contrRate<=35,contrRate<=55);
+  const capRateA=s.revNet>0?Math.round(s.rav/s.revNet*100):0;
+  const capColorA=capRateA>=30?'var(--green)':capRateA>=15?'var(--amber)':'var(--red)';
+  const capBadgeA=mkBadge(capRateA>=30?'✓ Bonne marge':capRateA>=15?'Marge réduite':'⚠ Très contraint',capRateA>=30,capRateA>=15);
+
+  document.getElementById('analysis-kpis').style.gridTemplateColumns='repeat(3,1fr)';
   document.getElementById('analysis-kpis').innerHTML=
     kpiHtml('Score santé',healthScore+' / 100',scoreColor,`Épargne ${scoreSav}pt · Flexibilité ${scoreRig}pt · Dépenses ${scoreDep}pt`,null,scoreTip,scoreBadge)+
     kpiHtml("Taux d'épargne",epRateCalc+'%',epRateCalc>=20?'var(--green)':epRateCalc>=10?'var(--amber)':'var(--red)',epSub,epRateCalc-20,`Épargne mensuelle : ${eur(epScoped)} · En 10 ans avec intérêts : ${eur(Math.round(epScoped*12*10*1.04))} estimé`,epBadge)+
     kpiHtml('Rigidité budgétaire',fixRate+'%',rigidColor,`Charges fixes : ${eur(s.fix)} · ${100-fixRate}% de liberté`,null,`Charges fixes vs revenu net · Objectif ≤ 30% · En dessous : budget flexible, au-dessus : contraintes fortes`,rigBadge)+
     kpiHtml('Jours couverts',jValA,jColA,
-      joursAna!=null?`≈ ${(joursAna/30).toFixed(1)} mois · Épargne ${eur(totalSavAna)}`:'Aucune épargne enregistrée',null,
-      `Épargne totale ÷ dépenses mensuelles · Objectif recommandé : 3 mois (90 j) · Permet de tenir sans revenus`,jBadgeA);
+      joursAna!=null?`${joursAna} j / 90 j · ${Math.min(Math.round(joursAna/90*100),100)}% de l'objectif`:'Aucune épargne enregistrée',null,
+      `Épargne totale ÷ dépenses mensuelles · Objectif recommandé : 3 mois (90 j) · Permet de tenir sans revenus`,jBadgeA)+
+    kpiHtml('Coefficient de contrainte',contrRate+'%',contrColor,`Impôts ${eur(s.tax)} + Fixes ${eur(s.fix)} · Non négociable`,null,`Part du revenu net bloquée par impôts + charges fixes · Impossible à réduire à court terme · Objectif : rester sous 35%`,contrBadge)+
+    kpiHtml('Marge budgétaire',capRateA+'%',capColorA,`${eur(s.rav)} disponible après dépenses`,null,`% du revenu net disponible après toutes les dépenses contraintes · Divisé en épargne ${eur(epScoped)} et loisirs ${eur(loiScoped)} · Plus c'est élevé, plus le budget est sain`,capBadgeA);
 
   // ── Où va chaque euro? ──
   const flowBase=s.rev||1;
