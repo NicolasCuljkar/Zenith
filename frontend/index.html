@@ -856,11 +856,8 @@ window.onerror = function(msg, src, line) {
     <div class="g2" id="dash-profiles" style="margin-bottom:0"></div>
     <div id="dash-combined" style="margin-top:var(--sg);margin-bottom:var(--sg);display:none"></div>
     <div id="dash-charts" style="margin-top:0;display:none">
-      <div class="card">
-        <div class="card-head">Répartition dépenses</div>
-        <div id="donut-chart-wrap" style="position:relative;height:260px"><canvas id="donut-chart"></canvas></div>
-        <div id="donut-legend" style="margin-top:14px"></div>
-      </div>
+      <div id="donut-chart-wrap" style="display:none"><canvas id="donut-chart"></canvas></div>
+      <div id="donut-legend" style="display:none"></div>
       <div class="card" id="waterfall-card">
         <div class="card-head">Cascade budgétaire</div>
         <div id="waterfall-chart-wrap" style="position:relative;height:220px"><canvas id="waterfall-chart"></canvas></div>
@@ -921,10 +918,7 @@ window.onerror = function(msg, src, line) {
     <div class="member-tabs" id="analysis-mtabs"></div>
     <div class="kpi-grid" id="analysis-kpis"></div>
     <div class="card"><div class="card-head">Où va chaque euro · Règle 50/30/20</div><div id="analysis-flow"></div></div>
-    <div class="g2" style="margin-bottom:0">
-      <div class="card"><div class="card-head">Score santé</div><div id="gauge-chart-wrap" style="position:relative;height:170px"><canvas id="gauge-chart"></canvas></div></div>
-      <div class="card"><div class="card-head">Répartition 50/30/20</div><div id="radar-chart-wrap" style="position:relative;height:170px"><canvas id="radar-chart"></canvas></div></div>
-    </div>
+    <div style="display:none"><div id="gauge-chart-wrap"><canvas id="gauge-chart"></canvas></div><div id="radar-chart-wrap"><canvas id="radar-chart"></canvas></div></div>
     <div class="card" id="member-bars-card" style="display:none"><div class="card-head">Comparaison membres</div><div id="member-bars-wrap" style="position:relative;height:210px"><canvas id="member-bars-chart"></canvas></div></div>
     <div style="display:none"><div id="analysis-donut-wrap" style="position:relative;height:0"><canvas id="analysis-donut-chart"></canvas></div><div id="analysis-donut-legend"></div></div>
     </div><!-- /#analysis-content -->
@@ -1019,9 +1013,7 @@ window.onerror = function(msg, src, line) {
 
   </div>
 
-  <!-- Comparaison placements -->
-  <div style="font-size:var(--fs-title);font-weight:700;letter-spacing:-.02em;color:var(--text);margin-bottom:.6rem">Croissance sur 10 ans par véhicule</div>
-  <div class="card" style="margin-bottom:1rem"><div id="placements-chart-wrap" style="position:relative;height:210px"><canvas id="placements-chart"></canvas></div></div>
+  <div style="display:none"><div id="placements-chart-wrap"><canvas id="placements-chart"></canvas></div></div>
   <!-- Simulateur -->
   <div style="font-size:var(--fs-title);font-weight:700;letter-spacing:-.02em;color:var(--text);margin-bottom:.6rem">Simulateur de revenus passifs</div>
   <div class="card" style="margin-bottom:1rem"><div id="conseils-sim"></div></div>
@@ -2603,126 +2595,7 @@ function renderDashboard(){
   }
   requestAnimationFrame(fillAllTracks);
 
-  // Donut
-  const df=dashboardMember;
-  const dEntries=df==='all'?entries:entries.filter(e=>e.member===df);
-  const ds=calcStats(dEntries);
-  const donutMembers=df==='all'?memberList:[df];
-  let dsEp=0,dsLoi=0;
-  donutMembers.forEach(m=>{const sm=calcStats(entries.filter(e=>e.member===m));const p=savingPct[m]??60;dsEp+=sm.rav*p/100;dsLoi+=sm.rav*(100-p)/100;});
-  const donutData=[
-    {label:'Impôts', value:ds.tax,  color:'#c49a00'},
-    {label:'Fixes',  value:ds.fix,  color:'#d93535'},
-    {label:'Variables',value:ds.vari,color:'#e07020'},
-    {label:'Épargne',value:dsEp,    color:'#2979c8'},
-    {label:'Loisir', value:dsLoi,   color:'#f59e0b'}
-  ].filter(d=>d.value>0);
-  const donutTotal=donutData.reduce((s,d)=>s+d.value,0);
   donutChart=destroyChart(donutChart);
-  donutChart=new Chart(document.getElementById('donut-chart'),{
-    type:'doughnut',
-    data:{
-      labels:donutData.map(d=>d.label),
-      datasets:[
-        // Outer ring — full opacity
-        {
-          data:donutData.map(d=>d.value),
-          backgroundColor:donutData.map(d=>d.color),
-          hoverBackgroundColor:donutData.map(d=>d.color+'dd'),
-          borderWidth:0, hoverBorderWidth:0,
-          hoverOffset:14,
-          weight:1.6,
-        },
-        // Inner ring — transparent version (same data, faded)
-        {
-          data:donutData.map(d=>d.value),
-          backgroundColor:donutData.map(d=>d.color+'44'),
-          hoverBackgroundColor:donutData.map(d=>d.color+'66'),
-          borderWidth:0, hoverBorderWidth:0,
-          hoverOffset:0,
-          weight:0.6,
-        }
-      ]
-    },
-    options:{
-      responsive:true, maintainAspectRatio:false,
-      cutout:'62%',
-      animation:{animateRotate:true,animateScale:true,duration:900,easing:'easeInOutQuart'},
-      plugins:{
-        legend:{display:false},
-        tooltip:{
-          backgroundColor:darkVal('rgba(255,255,255,1)','rgba(28,28,32,1)'),
-          borderColor:darkVal('rgba(0,0,0,.15)','rgba(255,255,255,.2)'),
-          borderWidth:1,
-          titleColor:cssCol('--text'),
-          bodyColor:cssCol('--muted'),
-          titleFont:{size:fsPx('--fs-sm'),weight:'700'}, bodyFont:{size:fsPx('--fs-xs')},
-          padding:10, cornerRadius:10,
-          callbacks:{
-            label:ctx=>{
-              if(ctx.datasetIndex!==0) return null;
-              const pct=Math.round(ctx.raw/donutTotal*100);
-              return ` ${ctx.raw.toLocaleString('fr-FR')} € — ${pct}%`;
-            }
-          }
-        }
-      }
-    },
-    plugins:[
-      {id:'centerText',beforeDraw(chart){
-        const{ctx,chartArea:{left,right,top,bottom}}=chart;
-        const cx=(left+right)/2,cy=(top+bottom)/2;
-        ctx.save();
-        ctx.textAlign='center';ctx.textBaseline='middle';
-        ctx.fillStyle=cssCol('--text');
-        ctx.font=`800 ${fsPx('--fs-lg')}px Inter,system-ui,sans-serif`;
-        ctx.fillText(eur(donutTotal),cx,cy-11);
-        ctx.fillStyle=cssCol('--muted');
-        ctx.font=`500 ${fsPx('--fs-xs')}px Inter,system-ui,sans-serif`;
-        ctx.fillText('Total dépenses',cx,cy+11);
-        ctx.restore();
-      }},
-      {id:'pctLabels',afterDraw(chart){
-        const ctx=chart.ctx,meta=chart.getDatasetMeta(0);
-        meta.data.forEach((arc,i)=>{
-          const pct=donutData[i].value/donutTotal;if(pct<0.05)return;
-          const angle=(arc.startAngle+arc.endAngle)/2;
-          const r=(arc.outerRadius+arc.innerRadius)/2;
-          const x=arc.x+Math.cos(angle)*r, y=arc.y+Math.sin(angle)*r;
-          const txt=Math.round(pct*100)+'%';
-          ctx.save();
-          ctx.textAlign='center';ctx.textBaseline='middle';
-          ctx.font=`700 ${fsPx('--fs-xs')}px Inter,system-ui,sans-serif`;
-          ctx.fillStyle='rgba(255,255,255,.95)';
-          ctx.fillText(txt,x,y);
-          ctx.restore();
-        });
-      }}
-    ]
-  });
-
-  // Custom legend — clean table style
-  const legendEl=document.getElementById('donut-legend');
-  if(legendEl){
-    const sortedDonut=[...donutData].sort((a,b)=>b.value-a.value);
-    legendEl.innerHTML=`<div style="display:flex;flex-direction:column;gap:8px">
-      ${sortedDonut.map(d=>{
-        const pct=Math.round(d.value/donutTotal*100);
-        const barW=pct;
-        return`<div style="display:grid;grid-template-columns:10px 1fr auto auto;align-items:center;gap:8px">
-          <span style="width:10px;height:10px;border-radius:3px;background:${d.color};flex-shrink:0;display:block"></span>
-          <div style="min-width:0">
-            <div style="font-size:var(--fs-sm);font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:4px">${d.label}</div>
-            <div style="height:5px;background:var(--surface2);border-radius:3px;overflow:hidden;border:1px solid var(--border)">
-              <div style="width:${barW}%;height:100%;background:${d.color};border-radius:3px;transition:width .4s ease"></div>
-            </div>
-          </div>
-          <span style="font-size:var(--fs-sm);font-weight:600;color:var(--muted);white-space:nowrap;padding-left:4px">${eur(d.value)}</span>
-          <span style="font-size:var(--fs-sm);font-weight:700;color:${d.color};min-width:30px;text-align:right">${pct}%</span>
-        </div>`;
-      }).join('')}
-    </div>`;
-  }
 
   // Show charts section + waterfall
   const _dashChartsEl=document.getElementById('dash-charts');
@@ -3975,57 +3848,8 @@ function renderAnalysis(){
     }
   }
 
-  // ── Gauge score santé ──
-  if(!document.getElementById('gauge-chart')){const _gw=document.getElementById('gauge-chart-wrap');if(_gw)_gw.innerHTML='<canvas id="gauge-chart"></canvas>';}
   gaugeChart=destroyChart(gaugeChart);
-  const _gEl=document.getElementById('gauge-chart');
-  if(_gEl){
-    gaugeChart=new Chart(_gEl,{
-      type:'doughnut',
-      data:{labels:['Score','Reste'],datasets:[{data:[healthScore,100-healthScore],backgroundColor:[scoreColor+'cc',darkVal('rgba(0,0,0,.06)','rgba(255,255,255,.06)')],borderWidth:0,hoverOffset:0}]},
-      options:{
-        responsive:true,maintainAspectRatio:false,rotation:-90,circumference:180,cutout:'72%',
-        animation:{duration:900,easing:'easeInOutQuart'},
-        plugins:{legend:{display:false},tooltip:{enabled:false},datalabels:{display:false}}
-      },
-      plugins:[{id:'gaugeText',afterDraw(chart){
-        const{ctx,chartArea:{left,right,bottom}}=chart;
-        const cx=(left+right)/2;
-        ctx.save();
-        ctx.textAlign='center';ctx.textBaseline='bottom';
-        ctx.fillStyle=scoreColor;ctx.font=`800 ${fsPx('--fs-xl')+4}px Inter,system-ui,sans-serif`;
-        ctx.fillText(healthScore,cx,bottom-4);
-        ctx.fillStyle=cssCol('--muted');ctx.font=`500 ${fsPx('--fs-xs')}px Inter,system-ui,sans-serif`;
-        ctx.fillText('/ 100 — '+scoreLabel,cx,bottom+12);
-        ctx.restore();
-      }}]
-    });
-  }
-
-  // ── Radar 50/30/20 ──
-  if(!document.getElementById('radar-chart')){const _rw=document.getElementById('radar-chart-wrap');if(_rw)_rw.innerHTML='<canvas id="radar-chart"></canvas>';}
   radarChart=destroyChart(radarChart);
-  const _rEl=document.getElementById('radar-chart');
-  if(_rEl){
-    radarChart=new Chart(_rEl,{
-      type:'radar',
-      data:{
-        labels:['Besoins (50%)','Envies (30%)','Épargne (20%)'],
-        datasets:[
-          {label:'Idéal',data:[50,30,20],borderColor:darkVal('rgba(0,0,0,.25)','rgba(255,255,255,.25)'),backgroundColor:darkVal('rgba(0,0,0,.04)','rgba(255,255,255,.04)'),borderWidth:1.5,pointRadius:3,pointBackgroundColor:darkVal('rgba(0,0,0,.2)','rgba(255,255,255,.2)')},
-          {label:'Réel',data:[rNeeds,rWants,rSaves],borderColor:'#2979c8',backgroundColor:'#2979c822',borderWidth:2,pointRadius:4,pointBackgroundColor:'#2979c8',pointBorderColor:'#fff',pointBorderWidth:2}
-        ]
-      },
-      options:{
-        responsive:true,maintainAspectRatio:false,
-        plugins:{
-          legend:{display:true,position:'bottom',labels:{font:{size:fsPx('--fs-xs'),weight:'600'},boxWidth:10,boxHeight:3,padding:10,color:cssCol('--muted')}},
-          tooltip:{enabled:false},datalabels:{display:false}
-        },
-        scales:{r:{beginAtZero:true,max:80,ticks:{stepSize:20,display:false},grid:{color:darkVal('rgba(0,0,0,.08)','rgba(255,255,255,.08)')},pointLabels:{font:{size:fsPx('--fs-xs'),weight:'600'},color:cssCol('--muted')},angleLines:{color:darkVal('rgba(0,0,0,.06)','rgba(255,255,255,.06)')}}}
-      }
-    });
-  }
 
   // ── Barres groupées membres (si vue "Tous") ──
   const _mbCard=document.getElementById('member-bars-card');
@@ -4463,37 +4287,7 @@ function renderConseils(){
   updateConseilsSim();
   requestAnimationFrame(fillAllTracks);
 
-  // ── Graphique comparaison placements ──
-  if(!document.getElementById('placements-chart')){const _pw=document.getElementById('placements-chart-wrap');if(_pw)_pw.innerHTML='<canvas id="placements-chart"></canvas>';}
   placementsChart=destroyChart(placementsChart);
-  const _plEl=document.getElementById('placements-chart');
-  if(_plEl){
-    const _plVehicles=[
-      {label:'Livret A — 3%',rate:.03,color:'#0d9e6e'},
-      {label:'Assurance-vie — 2.5%',rate:.025,color:'#7c52d4'},
-      {label:'SCPI — 4.5%',rate:.045,color:'#d93535'},
-      {label:'ETF / PEA — 7%',rate:.07,color:'#2979c8'},
-    ];
-    const _plFv=(rate)=>Math.round(curSav*Math.pow(1+rate,10)+epMonthly*(Math.pow(1+rate,10)-1)/(Math.pow(1+rate,1/12)-1));
-    placementsChart=new Chart(_plEl,{
-      type:'bar',
-      data:{labels:_plVehicles.map(v=>v.label),datasets:[{label:'Capital dans 10 ans',data:_plVehicles.map(v=>_plFv(v.rate)),backgroundColor:_plVehicles.map(v=>v.color+'cc'),borderColor:_plVehicles.map(v=>v.color),borderWidth:1.5,borderRadius:6}]},
-      options:{
-        indexAxis:'y',responsive:true,maintainAspectRatio:false,
-        layout:{padding:{top:4,right:70,left:4,bottom:4}},
-        plugins:{
-          legend:{display:false},
-          tooltip:{backgroundColor:darkVal('rgba(255,255,255,1)','rgba(28,28,32,1)'),borderColor:darkVal('rgba(0,0,0,.15)','rgba(255,255,255,.2)'),borderWidth:1,titleColor:cssCol('--text'),bodyColor:cssCol('--muted'),titleFont:{size:fsPx('--fs-sm'),weight:'700'},bodyFont:{size:fsPx('--fs-xs')},padding:10,cornerRadius:10,callbacks:{label:ctx=>` ${eur(ctx.raw)}`}},
-          datalabels:{anchor:'end',align:'end',formatter:v=>eur(v),color:(ctx)=>_plVehicles[ctx.dataIndex].color,font:{size:fsPx('--fs-xs'),weight:'700'}}
-        },
-        scales:{
-          x:{beginAtZero:true,ticks:{callback:v=>v===0?'':((v/1000).toFixed(0)+'k€'),color:cssCol('--hint'),font:{size:fsPx('--fs-xs')},maxTicksLimit:5},grid:{color:darkVal('rgba(0,0,0,.04)','rgba(255,255,255,.04)')},border:{display:false}},
-          y:{grid:{display:false},ticks:{color:cssCol('--muted'),font:{size:fsPx('--fs-xs'),weight:'600'}},border:{display:false}}
-        }
-      },
-      plugins:[ChartDataLabels]
-    });
-  }
 }
 
 function updateConseilsSim(){
