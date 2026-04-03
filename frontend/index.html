@@ -890,12 +890,9 @@ window.onerror = function(msg, src, line) {
     <div id="savings-nodata" style="display:none"></div>
     <div id="savings-content">
     <div class="kpi-grid" id="savings-kpis"></div>
-    <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:1rem">
-      <div style="display:flex;align-items:center;gap:0;border-bottom:1px solid var(--border)">
-        <button class="stab active" data-stab="month">Mois</button>
-        <button class="stab" data-stab="year">Année</button>
-      </div>
-      <button class="btn-add btn-add-desktop" id="btn-add-saving" style="display:none"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Ajouter</button>
+    <div style="display:flex;align-items:center;gap:0;border-bottom:1px solid var(--border);margin-bottom:.75rem">
+      <button class="stab active" data-stab="month">Mois</button>
+      <button class="stab" data-stab="year">Année</button>
     </div>
     <div id="savings-year-filter" style="display:none;margin-bottom:.75rem"></div>
     <div class="card" id="savings-chart-card">
@@ -3085,7 +3082,6 @@ document.querySelectorAll('#tab-savings .stab').forEach(btn=>{
     if(savingsStabActive==='year')savingsYearFilter='all';
     document.querySelectorAll('#tab-savings .stab').forEach(b=>b.classList.remove('active'));btn.classList.add('active');
     const isYear=savingsStabActive==='year';
-    document.getElementById('btn-add-saving').style.display=isYear?'none':'';
     document.getElementById('fab-saving').style.display=isYear?'none':(currentTab==='savings'?'':'none');
     renderSavings();
   });
@@ -3122,7 +3118,6 @@ function renderSavings(){
     : savings.filter(s=>s.member===savingsMember).length===0;
   if(_savNoData){
     barChart=destroyChart(barChart);
-    document.getElementById('btn-add-saving').style.display='none';
     if(currentTab==='savings')document.getElementById('fab-saving').style.display='none';
     document.getElementById('savings-nodata').style.display='';
     document.getElementById('savings-nodata').innerHTML=`
@@ -3146,7 +3141,6 @@ function renderSavings(){
   document.getElementById('savings-nodata').style.display='none';
   document.getElementById('savings-content').style.display='';
   const _canAddS=savingsMember!=='all'&&savingsMember===myRole()&&savingsStabActive!=='year';
-  document.getElementById('btn-add-saving').style.display=_canAddS?'':'none';
   if(currentTab==='savings')document.getElementById('fab-saving').style.display=_canAddS?'':'none';
   if(!document.getElementById('bar-chart')) document.getElementById('bar-chart-wrap').innerHTML='<canvas id="bar-chart"></canvas>';
   const isYear=savingsStabActive==='year',isMobile=window.innerWidth<=640;
@@ -3308,14 +3302,11 @@ function renderSavings(){
     } else {
       const _yfScoped=savingsMember==='all'?savings:savings.filter(s=>showMembers.includes(s.member));
       const _yfYears=[...new Set(_yfScoped.map(s=>s.year))].sort((a,b)=>a-b);
-      if(_yfYears.length>1){
-        if(savingsYearFilter!=='all'&&!_yfYears.includes(+savingsYearFilter))savingsYearFilter='all';
-        _yfEl.style.display='';
-        _yfEl.innerHTML='<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap"><span style="font-size:var(--fs-xs);color:var(--hint);margin-right:2px">Année</span>'+['all',..._yfYears].map(y=>{const sel=String(savingsYearFilter)===String(y);return`<button onclick="savingsYearFilter='${y}';renderSavings()" style="padding:3px 10px;border-radius:20px;border:1px solid ${sel?'var(--accent)':'var(--border)'};background:${sel?'var(--accent)':'transparent'};color:${sel?'#fff':'var(--text)'};font-size:var(--fs-xs);cursor:pointer;font-weight:${sel?'700':'400'}">${y==='all'?'Toutes':y}</button>`;}).join('')+'</div>';
-      } else {
-        _yfEl.style.display='none';
-        savingsYearFilter='all';
-      }
+      if(savingsYearFilter!=='all'&&!_yfYears.includes(+savingsYearFilter))savingsYearFilter='all';
+      const _addBtnHtml=_canAddS?`<button class="btn-add btn-add-desktop" onclick="openAddSaving()" style="flex-shrink:0"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Ajouter</button>`:'';
+      const _pillsHtml=_yfYears.length>1?'<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap"><span style="font-size:var(--fs-xs);color:var(--hint);margin-right:2px">Année</span>'+['all',..._yfYears].map(y=>{const sel=String(savingsYearFilter)===String(y);return`<button onclick="savingsYearFilter='${y}';renderSavings()" style="padding:3px 10px;border-radius:20px;border:1px solid ${sel?'var(--accent)':'var(--border)'};background:${sel?'var(--accent)':'transparent'};color:${sel?'#fff':'var(--text)'};font-size:var(--fs-xs);cursor:pointer;font-weight:${sel?'700':'400'}">${y==='all'?'Toutes':y}</button>`;}).join('')+'</div>':'<div></div>';
+      _yfEl.style.display=(_yfYears.length>1||_canAddS)?'':'none';
+      _yfEl.innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;gap:8px">${_pillsHtml}${_addBtnHtml}</div>`;
     }
   }
 
@@ -3476,7 +3467,6 @@ function setSavingAmountMode(mode){
     inp.value='';
   }
 }
-document.getElementById('btn-add-saving').addEventListener('click',openAddSaving);
 document.getElementById('fab-saving').addEventListener('click',openAddSaving);
 function openEditSaving(id){
   const s=savings.find(x=>x.id===id);if(!s||!canEdit(s.member))return;editSavingId=id;
