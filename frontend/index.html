@@ -858,10 +858,6 @@ window.onerror = function(msg, src, line) {
     <div id="dash-charts" style="margin-top:0;display:none">
       <div id="donut-chart-wrap" style="display:none"><canvas id="donut-chart"></canvas></div>
       <div id="donut-legend" style="display:none"></div>
-      <div class="card" id="waterfall-card">
-        <div class="card-head">Cascade budgétaire</div>
-        <div id="waterfall-chart-wrap" style="position:relative;height:220px"><canvas id="waterfall-chart"></canvas></div>
-      </div>
     </div>
     </div><!-- /#dash-content -->
   </div>
@@ -906,6 +902,7 @@ window.onerror = function(msg, src, line) {
       <div id="bar-chart-wrap" style="position:relative;height:210px"><canvas id="bar-chart"></canvas></div>
       <div id="bar-chart-legend" style="display:flex;justify-content:center;gap:16px;flex-wrap:wrap;margin-top:10px"></div>
     </div>
+    <div id="savings-year-filter" style="display:none;margin-bottom:.75rem"></div>
     <div id="savings-tables"></div>
     <div class="card" id="savings-heatmap-card" style="display:none"><div class="card-head">Historique épargne</div><div id="savings-heatmap" style="padding:4px 0"></div></div>
     <div id="hm-tip" style="position:fixed;display:none;pointer-events:none;z-index:200;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:8px 13px;box-shadow:0 8px 24px rgba(0,0,0,.15);white-space:nowrap;font-size:var(--fs-sm)"></div>
@@ -1390,6 +1387,7 @@ let nextId=200,editEntryId=null,editSavingId=null;
 let donutChart=null,barChart=null,analysisDonut=null,projChart=null,topDonutChart=null;
 let waterfallChart=null,gaugeChart=null,radarChart=null,memberBarsChart=null,placementsChart=null;
 let savingsStabActive='month';
+let savingsYearFilter='all';
 let currentTab='dashboard';
 let memberColors={Nicolas:'#3B8BD4',Carla:'#e06fa0'};
 let savingPct={Nicolas:60,Carla:50};
@@ -2597,42 +2595,10 @@ function renderDashboard(){
   requestAnimationFrame(fillAllTracks);
 
   donutChart=destroyChart(donutChart);
+  waterfallChart=destroyChart(waterfallChart);
 
-  // Show charts section + waterfall
   const _dashChartsEl=document.getElementById('dash-charts');
   if(_dashChartsEl) _dashChartsEl.style.display='';
-  if(!document.getElementById('waterfall-chart')){const _ww=document.getElementById('waterfall-chart-wrap');if(_ww)_ww.innerHTML='<canvas id="waterfall-chart"></canvas>';}
-  waterfallChart=destroyChart(waterfallChart);
-  const _wfE=document.getElementById('waterfall-chart');
-  if(_wfE){
-    const _wfRn=smScoped.revNet||0;
-    const _wfSteps=[
-      {label:'Revenus bruts',start:0,end:smScoped.rev,color:'#0d9e6e'},
-      {label:'Impôts',start:_wfRn,end:smScoped.rev,color:'#c49a00'},
-      {label:'Charges fixes',start:Math.max(0,_wfRn-smScoped.fix),end:_wfRn,color:'#d93535'},
-      {label:'Variables',start:Math.max(0,_wfRn-smScoped.fix-smScoped.vari),end:Math.max(0,_wfRn-smScoped.fix),color:'#e07020'},
-      {label:'Reste à vivre',start:0,end:Math.abs(smScoped.rav),color:smScoped.rav>=0?'#2979c8':'#d93535'},
-    ].filter(d=>d.end>d.start);
-    const _wfTc=darkVal('rgba(255,255,255,1)','rgba(28,28,32,1)');
-    waterfallChart=new Chart(_wfE,{
-      type:'bar',
-      data:{labels:_wfSteps.map(d=>d.label),datasets:[{data:_wfSteps.map(d=>[d.start,d.end]),backgroundColor:_wfSteps.map(d=>d.color+'cc'),borderColor:_wfSteps.map(d=>d.color),borderWidth:1.5,borderRadius:4}]},
-      options:{
-        responsive:true,maintainAspectRatio:false,
-        layout:{padding:{top:28,right:8,left:4,bottom:4}},
-        plugins:{
-          legend:{display:false},
-          tooltip:{backgroundColor:_wfTc,borderColor:darkVal('rgba(0,0,0,.15)','rgba(255,255,255,.2)'),borderWidth:1,titleColor:cssCol('--text'),bodyColor:cssCol('--muted'),titleFont:{size:fsPx('--fs-sm'),weight:'700'},bodyFont:{size:fsPx('--fs-xs')},padding:10,cornerRadius:10,callbacks:{label:ctx=>` ${eur(Math.abs(_wfSteps[ctx.dataIndex].end-_wfSteps[ctx.dataIndex].start))}`}},
-          datalabels:{anchor:'end',align:'top',formatter:(v,ctx)=>eur(Math.abs(_wfSteps[ctx.dataIndex].end-_wfSteps[ctx.dataIndex].start)),color:(ctx)=>_wfSteps[ctx.dataIndex].color,font:{size:fsPx('--fs-xs'),weight:'700'}}
-        },
-        scales:{
-          x:{grid:{display:false},ticks:{color:cssCol('--muted'),font:{size:fsPx('--fs-xs')}},border:{display:false}},
-          y:{beginAtZero:true,ticks:{callback:v=>v===0?'':((v/1000).toFixed(0)+'k€'),color:cssCol('--hint'),font:{size:fsPx('--fs-xs')},maxTicksLimit:5},grid:{color:darkVal('rgba(0,0,0,.04)','rgba(255,255,255,.04)')},border:{display:false}}
-        }
-      },
-      plugins:[ChartDataLabels]
-    });
-  }
 
   // Top bars
   const showTopAvatars=dashboardMember==='all';
@@ -3116,6 +3082,7 @@ document.getElementById('modal-entry-save').onclick=async ()=>{
 document.querySelectorAll('#tab-savings .stab').forEach(btn=>{
   btn.addEventListener('click',()=>{
     savingsStabActive=btn.dataset.stab;
+    if(savingsStabActive==='year')savingsYearFilter='all';
     document.querySelectorAll('#tab-savings .stab').forEach(b=>b.classList.remove('active'));btn.classList.add('active');
     const isYear=savingsStabActive==='year';
     document.getElementById('btn-add-saving').style.display=isYear?'none':'';
@@ -3331,6 +3298,26 @@ function renderSavings(){
       return`<div style="display:flex;align-items:center;gap:6px">${prefix}<span style="font-size:var(--fs-xs);font-weight:600;color:${col}">${name}</span></div>`;
     }).join('');
   }
+  // ── Year filter pills (month mode only) ──
+  const _yfEl=document.getElementById('savings-year-filter');
+  if(_yfEl){
+    if(isYear){
+      _yfEl.style.display='none';
+      savingsYearFilter='all';
+    } else {
+      const _yfScoped=savingsMember==='all'?savings:savings.filter(s=>showMembers.includes(s.member));
+      const _yfYears=[...new Set(_yfScoped.map(s=>s.year))].sort((a,b)=>a-b);
+      if(_yfYears.length>1){
+        if(savingsYearFilter!=='all'&&!_yfYears.includes(+savingsYearFilter))savingsYearFilter='all';
+        _yfEl.style.display='';
+        _yfEl.innerHTML='<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap"><span style="font-size:var(--fs-xs);color:var(--hint);margin-right:2px">Année</span>'+['all',..._yfYears].map(y=>{const sel=String(savingsYearFilter)===String(y);return`<button onclick="savingsYearFilter='${y}';renderSavings()" style="padding:3px 10px;border-radius:20px;border:1px solid ${sel?'var(--accent)':'var(--border)'};background:${sel?'var(--accent)':'transparent'};color:${sel?'#fff':'var(--text)'};font-size:var(--fs-xs);cursor:pointer;font-weight:${sel?'700':'400'}">${y==='all'?'Toutes':y}</button>`;}).join('')+'</div>';
+      } else {
+        _yfEl.style.display='none';
+        savingsYearFilter='all';
+      }
+    }
+  }
+
   const container=document.getElementById('savings-tables');container.innerHTML='';
 
   if(showMembers.length===2){
@@ -3358,7 +3345,7 @@ function renderSavings(){
       wrap.innerHTML=`<div class="tbl-wrap"><table><thead><tr><th>Année</th><th style="text-align:right;color:${memberColors[m1]}">${avatarHtml(m1,30,12)}</th><th style="display:none">% rev.</th><th style="text-align:right;color:${memberColors[m2]}">${avatarHtml(m2,30,12)}</th><th style="display:none">% rev.</th><th style="text-align:right;color:var(--green)"><div style="display:inline-flex;align-items:center;justify-content:flex-end"><div style="z-index:1">${avatarHtml(m1,30,12)}</div><div style="margin-left:-10px">${avatarHtml(m2,30,12)}</div></div></th><th style="display:none">% rev.</th><th style="text-align:right">Évol.</th><th style="text-align:right">%</th></tr></thead><tbody>${rows.map(r=>{const col=r.delta==null?'var(--hint)':r.delta>=0?'var(--green)':'var(--red)';const bg=r.delta==null?'':r.delta>=0?'background:var(--green-bg)':'background:var(--red-bg)';return`<tr style="${bg}"><td style="font-weight:600">${r.yr}</td><td style="text-align:right;color:${memberColors[m1]}">${eur(r.a1)}</td><td style="display:none"></td><td style="text-align:right;color:${memberColors[m2]}">${eur(r.a2)}</td><td style="display:none"></td><td style="text-align:right;font-weight:700;color:var(--green)">${eur(r.total)}</td><td style="display:none"></td><td style="text-align:right;color:${col}">${dlt(r.delta)}</td><td style="text-align:right;font-size:var(--fs-sm);color:${col}">${fmtPct(r.pctV)}</td></tr>`;}).join('')}</tbody></table></div>`;
       }
     } else {
-      const allLabels=[...new Set(savings.filter(s=>[m1,m2].includes(s.member)).map(s=>`${s.month} ${s.year}`))];
+      const allLabels=[...new Set(savings.filter(s=>[m1,m2].includes(s.member)&&(savingsYearFilter==='all'||String(s.year)===String(savingsYearFilter))).map(s=>`${s.month} ${s.year}`))];
       allLabels.sort((a,b)=>{const[mA,yA]=a.split(' ');const[mB,yB]=b.split(' ');return yA!==yB?yA-yB:MONTHS.indexOf(mA)-MONTHS.indexOf(mB);});
       const rows=allLabels.map((lbl,i)=>{
         const s1=savings.find(s=>s.member===m1&&`${s.month} ${s.year}`===lbl);
@@ -3386,7 +3373,7 @@ function renderSavings(){
   } else {
     // ── Single member table ──
     showMembers.forEach(name=>{
-      const rows=isYear?getYearRows(name):savings.filter(s=>s.member===name).sort((a,b)=>a.year-b.year);
+      const rows=isYear?getYearRows(name):savings.filter(s=>s.member===name&&(savingsYearFilter==='all'||String(s.year)===String(savingsYearFilter))).sort((a,b)=>a.year-b.year||MONTHS.indexOf(a.month)-MONTHS.indexOf(b.month));
       const wrap=document.createElement('div');wrap.style.marginBottom='1rem';
       const pct=(s,i)=>{if(i===0||!rows[i-1]||rows[i-1].amount===0)return null;return(s.amount-rows[i-1].amount)/rows[i-1].amount*100;};
 
