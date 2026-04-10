@@ -92,11 +92,13 @@ function getStats(filters = {}) {
 
     let actual;
     if (AUTO_CATS.includes(cat)) {
-      // Use monthly override if exists, otherwise budget
+      // Base : override si existe, sinon budget prévisionnel
       actual = catEntries.reduce((s, e) => {
         const ov = overrides.get(e.id);
         return s + (ov !== undefined ? Math.abs(ov.amount) : Math.abs(e.amount));
       }, 0);
+      // Plus dépenses exceptionnelles pour ce cat (sans entry_id)
+      actual += manualExpenses.filter(e => e.cat === cat && !e.entry_id).reduce((s, e) => s + Math.abs(e.amount), 0);
     } else if (cat === 'epargne') {
       actual = epargneActual;
     } else {
@@ -129,10 +131,10 @@ function create({ year, month, name, amount, cat, member, note, entry_id }, user
   if (isNaN(Number(amount))) throw httpError('Le montant doit être un nombre.', 400);
   if (!year || !month)       throw httpError('Année et mois requis.', 400);
 
-  const isAutoOverride = AUTO_CATS.includes(cat);
-  const isManual       = MANUAL_CATS.includes(cat);
-  if (!isAutoOverride && !isManual) throw httpError(`Catégorie invalide : ${cat}`, 400);
-  if (isAutoOverride && !entry_id)  throw httpError('entry_id requis pour corriger une ligne auto.', 400);
+  const isAuto   = AUTO_CATS.includes(cat);
+  const isManual = MANUAL_CATS.includes(cat);
+  if (!isAuto && !isManual) throw httpError(`Catégorie invalide : ${cat}`, 400);
+  // entry_id requis uniquement pour les overrides (cat auto + entry_id fourni) — sans entry_id c'est une dépense exceptionnelle
 
   const result = db.prepare(`
     INSERT INTO monthly_expenses (user_id, year, month, name, amount, cat, member, note, entry_id, updated_at)
@@ -154,9 +156,7 @@ function update(id, { name, amount, cat, member, note, entry_id }, userId) {
   const updatedNote    = note      !== undefined ? note             : existing.note;
   const updatedEntryId = entry_id  !== undefined ? entry_id        : existing.entry_id;
 
-  const isAutoOverride = AUTO_CATS.includes(updatedCat);
-  const isManual       = MANUAL_CATS.includes(updatedCat);
-  if (!isAutoOverride && !isManual) throw httpError(`Catégorie invalide : ${updatedCat}`, 400);
+  if (!AUTO_CATS.includes(updatedCat) && !MANUAL_CATS.includes(updatedCat)) throw httpError(`Catégorie invalide : ${updatedCat}`, 400);
 
   db.prepare(`
     UPDATE monthly_expenses
