@@ -29,7 +29,7 @@ function sanitizeUser(user) {
 }
 
 function getUsers() {
-  return db.prepare('SELECT id, name, email, role, color, photo, created_at FROM users ORDER BY id ASC').all();
+  return db.prepare('SELECT id, name, email, role, color, photo, created_at, last_login_at FROM users ORDER BY id ASC').all();
 }
 
 // Version publique sans email (profile picker) — exclut les admins
