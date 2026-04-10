@@ -4,12 +4,23 @@ const monthlyService   = require('../services/monthly_expenses.service');
 const householdService = require('../services/household.service');
 
 function resolveUserScope(userId, member) {
+  const household = householdService.getForUser(userId);
+
+  // Vue Commun ou pas de filtre membre → tous les membres du foyer
   if (!member || member === 'all' || member === 'Commun') {
-    const household = householdService.getForUser(userId);
     if (household && household.members.length > 0) {
       return { userIds: household.members.map(m => m.id) };
     }
+    return { userId };
   }
+
+  // Vue d'un membre spécifique → trouver son user_id dans le foyer
+  if (household && household.members.length > 0) {
+    const found = household.members.find(m => m.name === member);
+    if (found) return { userId: found.id };
+  }
+
+  // Fallback : utilisateur courant
   return { userId };
 }
 
