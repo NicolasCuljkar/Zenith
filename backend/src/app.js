@@ -80,7 +80,10 @@ app.use('/api/bridge',           bridgeRoutes);
 app.use('/api/monthly-expenses', monthlyExpensesRoutes);
 
 app.get('/api/health', (req, res) => {
-  res.json({ success: true, status: 'ok', env: process.env.NODE_ENV || 'development' });
+  const db = require('./config/database');
+  const version = db.prepare('PRAGMA user_version').get().user_version;
+  const tables  = db.prepare("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name").all().map(r => r.name);
+  res.json({ success: true, status: 'ok', env: process.env.NODE_ENV || 'development', db_version: version, tables });
 });
 
 const frontendPath = path.resolve(__dirname, '../../frontend');
