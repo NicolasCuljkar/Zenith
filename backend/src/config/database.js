@@ -245,6 +245,9 @@ UPDATE households SET creator_id = (
   `CREATE INDEX IF NOT EXISTS idx_me_user  ON monthly_expenses(user_id)`,
   `CREATE INDEX IF NOT EXISTS idx_me_month ON monthly_expenses(year, month)`,
 
+  // v14 — horodatage dernière connexion
+  `ALTER TABLE users ADD COLUMN last_login_at TEXT`,
+
 ];
 
 // ── Apply pending migrations ──────────────────────────────────────────────────

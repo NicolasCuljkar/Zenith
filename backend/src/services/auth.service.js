@@ -37,6 +37,10 @@ function getPublicUsers() {
   return db.prepare('SELECT id, name, role, color, photo FROM users WHERE is_admin = 0 ORDER BY id ASC').all();
 }
 
+function touchLastLogin(userId) {
+  try { db.prepare("UPDATE users SET last_login_at = datetime('now') WHERE id = ?").run(userId); } catch (_) {}
+}
+
 function login(email, password) {
   if (!email || !password) throw httpError('Email et mot de passe requis.', 400);
 
@@ -46,6 +50,7 @@ function login(email, password) {
   }
   if (user.is_admin) throw httpError('Identifiants incorrects.', 401);
 
+  touchLastLogin(user.id);
   return { token: createToken(user), user: sanitizeUser(user) };
 }
 
@@ -70,6 +75,7 @@ function loginById(userId, password) {
   }
   if (user.is_admin) throw httpError('Mot de passe incorrect.', 401);
 
+  touchLastLogin(user.id);
   return { token: createToken(user), user: sanitizeUser(user) };
 }
 

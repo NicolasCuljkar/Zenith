@@ -12,10 +12,11 @@ function httpError(message, statusCode) {
 function getUsers() {
   return db.prepare(`
     SELECT
-      u.id, u.name, u.email, u.role, u.color, u.is_admin, u.created_at,
-      (SELECT COUNT(*) FROM entries  WHERE user_id = u.id) AS entries_count,
-      (SELECT COUNT(*) FROM savings  WHERE user_id = u.id) AS savings_count,
-      (SELECT h.id    FROM households h
+      u.id, u.name, u.email, u.role, u.color, u.is_admin, u.created_at, u.last_login_at,
+      (SELECT COUNT(*) FROM entries          WHERE user_id = u.id) AS entries_count,
+      (SELECT COUNT(*) FROM savings          WHERE user_id = u.id) AS savings_count,
+      (SELECT COUNT(*) FROM monthly_expenses WHERE user_id = u.id) AS monthly_count,
+      (SELECT h.id FROM households h
         JOIN household_members hm ON hm.household_id = h.id
         WHERE hm.user_id = u.id LIMIT 1) AS household_id
     FROM users u
@@ -24,11 +25,12 @@ function getUsers() {
 }
 
 function getUserData(userId) {
-  const user = db.prepare('SELECT id, name, email, role, color, is_admin, created_at FROM users WHERE id = ?').get(userId);
+  const user = db.prepare('SELECT id, name, email, role, color, is_admin, created_at, last_login_at FROM users WHERE id = ?').get(userId);
   if (!user) throw httpError('Utilisateur introuvable.', 404);
-  const entries = db.prepare('SELECT id, name, amount, cat, member, created_at FROM entries WHERE user_id = ? ORDER BY cat, ABS(amount) DESC').all(userId);
-  const savings = db.prepare('SELECT id, year, month, amount, delta FROM savings WHERE user_id = ? ORDER BY year DESC, id DESC').all(userId);
-  return { user, entries, savings };
+  const entries          = db.prepare('SELECT id, name, amount, cat, member, created_at FROM entries WHERE user_id = ? ORDER BY cat, ABS(amount) DESC').all(userId);
+  const savings          = db.prepare('SELECT id, year, month, amount, delta FROM savings WHERE user_id = ? ORDER BY year DESC, id DESC').all(userId);
+  const monthlyExpenses  = db.prepare('SELECT id, year, month, name, amount, cat, created_at FROM monthly_expenses WHERE user_id = ? ORDER BY year DESC, month DESC, created_at DESC').all(userId);
+  return { user, entries, savings, monthlyExpenses };
 }
 
 function deleteUser(userId, adminId) {

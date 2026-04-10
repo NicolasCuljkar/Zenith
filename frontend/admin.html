@@ -138,6 +138,7 @@ tr:hover td{background:var(--surface2)}
           <th style="text-align:right">Épargne</th>
           <th>Foyer</th>
           <th>Inscrit le</th>
+          <th>Dernière connexion</th>
           <th></th>
         </tr></thead>
         <tbody id="users-tbody"></tbody>
@@ -242,6 +243,18 @@ function renderStats() {
     `${_users.filter(u=>!u.is_admin).length} utilisateur(s) actif(s) — dernière actualisation ${new Date().toLocaleTimeString('fr-FR')}`;
 }
 
+function fmtDate(iso) {
+  if (!iso) return '<span style="color:var(--muted)">Jamais</span>';
+  const d = new Date(iso);
+  const now = new Date();
+  const diff = Math.floor((now - d) / 1000);
+  if (diff < 60)   return 'À l\'instant';
+  if (diff < 3600) return `Il y a ${Math.floor(diff/60)} min`;
+  if (diff < 86400) return `Il y a ${Math.floor(diff/3600)} h`;
+  if (diff < 172800) return 'Hier';
+  return d.toLocaleDateString('fr-FR', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
+}
+
 function renderUsers() {
   const tbody = document.getElementById('users-tbody');
   tbody.innerHTML = _users.map(u => {
@@ -250,11 +263,14 @@ function renderUsers() {
     const badge = u.is_admin
       ? `<span class="badge badge-admin">Admin</span>`
       : `<span class="badge badge-user">Utilisateur</span>`;
+    const lastLogin = fmtDate(u.last_login_at);
+    const loginColor = !u.last_login_at ? 'var(--muted)'
+      : (new Date() - new Date(u.last_login_at)) < 86400000 ? 'var(--green)' : 'var(--hint)';
     const actions = u.is_admin ? `<span style="color:var(--muted);font-size:var(--fs-xs)">—</span>` : `
       <div style="display:flex;gap:6px;justify-content:flex-end">
-        <button class="btn btn-ghost" onclick="viewData(${u.id})" title="Voir les données">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-          Données
+        <button class="btn btn-primary" onclick="viewActivity(${u.id})" title="Voir l'activité">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          Activité
         </button>
         <button class="btn btn-warn" onclick="resetPwd(${u.id},'${u.name.replace(/'/g,"\\'")}')">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
@@ -268,7 +284,10 @@ function renderUsers() {
     return `<tr>
       <td><div style="display:flex;align-items:center;gap:10px">
         <div class="av" style="background:${u.color}22;color:${u.color}">${initials}</div>
-        <span style="font-weight:600">${u.name}</span>
+        <div>
+          <div style="font-weight:600">${u.name}</div>
+          <div style="font-size:var(--fs-xs);color:var(--muted)">${u.monthly_count || 0} dép. mensuelles</div>
+        </div>
       </div></td>
       <td style="color:var(--muted)">${u.email}</td>
       <td>${badge}</td>
@@ -276,6 +295,7 @@ function renderUsers() {
       <td style="text-align:right;color:var(--hint)">${u.savings_count}</td>
       <td style="color:var(--hint)">${u.household_id ? `Foyer #${u.household_id}` : '—'}</td>
       <td style="color:var(--muted)">${date}</td>
+      <td style="color:${loginColor};font-size:var(--fs-xs)">${lastLogin}</td>
       <td>${actions}</td>
     </tr>`;
   }).join('');
@@ -301,35 +321,96 @@ async function resetPwd(id, name) {
   } catch (e) { alert('Erreur : ' + e.message); }
 }
 
-async function viewData(id) {
+async function viewActivity(id) {
   try {
     const d = await req(`/admin/users/${id}/data`);
-    document.getElementById('modal-data-title').textContent = d.user.name;
-    document.getElementById('modal-data-sub').textContent = `${d.user.email} — ${d.entries.length} lignes budgétaires · ${d.savings.length} entrées épargne`;
-
+    const eur = n => Math.abs(n).toLocaleString('fr-FR',{style:'currency',currency:'EUR',maximumFractionDigits:0});
     const CATS = {revenu:'Revenus',impot:'Impôts',fixe:'Dépenses fixes',variable:'Dépenses variables',epargne:'Épargne',loisir:'Loisir'};
     const CAT_COLOR = {revenu:'var(--green)',impot:'var(--amber)',fixe:'var(--red)',variable:'var(--red)',epargne:'var(--blue)',loisir:'var(--amber)'};
-    const eur = n => Math.abs(n).toLocaleString('fr-FR',{style:'currency',currency:'EUR',maximumFractionDigits:0});
+    const MONTH_NAMES = ['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];
 
+    document.getElementById('modal-data-title').textContent = d.user.name;
+    document.getElementById('modal-data-sub').innerHTML =
+      `${d.user.email}` +
+      `<span style="margin:0 8px;color:var(--border)">·</span>` +
+      `Inscrit le ${new Date(d.user.created_at).toLocaleDateString('fr-FR')}` +
+      `<span style="margin:0 8px;color:var(--border)">·</span>` +
+      `<span style="color:${d.user.last_login_at ? 'var(--green)' : 'var(--muted)'}">` +
+        `Dernière connexion : ${d.user.last_login_at ? fmtDate(d.user.last_login_at) : 'jamais'}` +
+      `</span>`;
+
+    // ── Compteurs KPI ──
+    const kpisHtml = `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px">
+      <div style="background:var(--surface2);border-radius:8px;padding:12px;text-align:center">
+        <div style="font-size:1.4rem;font-weight:700;color:var(--blue)">${d.entries.length}</div>
+        <div style="font-size:var(--fs-xs);color:var(--muted);text-transform:uppercase;letter-spacing:.05em">Lignes budget</div>
+      </div>
+      <div style="background:var(--surface2);border-radius:8px;padding:12px;text-align:center">
+        <div style="font-size:1.4rem;font-weight:700;color:var(--blue)">${d.savings.length}</div>
+        <div style="font-size:var(--fs-xs);color:var(--muted);text-transform:uppercase;letter-spacing:.05em">Épargne</div>
+      </div>
+      <div style="background:var(--surface2);border-radius:8px;padding:12px;text-align:center">
+        <div style="font-size:1.4rem;font-weight:700;color:var(--blue)">${d.monthlyExpenses.length}</div>
+        <div style="font-size:var(--fs-xs);color:var(--muted);text-transform:uppercase;letter-spacing:.05em">Dép. mensuelles</div>
+      </div>
+    </div>`;
+
+    // ── Dépenses mensuelles récentes (groupées par mois) ──
+    let monthlyHtml = '';
+    if (d.monthlyExpenses.length) {
+      const byMonth = {};
+      d.monthlyExpenses.forEach(e => {
+        const key = `${e.year}-${String(e.month).padStart(2,'0')}`;
+        (byMonth[key] = byMonth[key] || []).push(e);
+      });
+      const recentMonths = Object.entries(byMonth).slice(0, 6);
+      monthlyHtml = `<div class="entry-group">
+        <div class="entry-group-lbl" style="color:var(--blue)">Dépenses mensuelles récentes</div>
+        ${recentMonths.map(([key, rows]) => {
+          const [y, m] = key.split('-');
+          const total = rows.reduce((s,e)=>s+Math.abs(e.amount),0);
+          return `<div style="margin-bottom:8px">
+            <div style="font-size:var(--fs-xs);font-weight:700;color:var(--hint);margin-bottom:3px">
+              ${MONTH_NAMES[+m-1]} ${y} — ${rows.length} dépense(s) — ${eur(total)}
+            </div>
+            ${rows.map(e=>`<div class="entry-row">
+              <span class="name">${e.name}</span>
+              <span class="amt" style="color:${CAT_COLOR[e.cat]||'var(--text)'}">${eur(e.amount)}</span>
+            </div>`).join('')}
+          </div>`;
+        }).join('')}
+      </div>`;
+    }
+
+    // ── Lignes budgétaires ──
     const grouped = {};
     d.entries.forEach(e => { (grouped[e.cat] = grouped[e.cat]||[]).push(e); });
-    const entriesHtml = Object.entries(grouped).map(([cat, rows]) => `
-      <div class="entry-group">
-        <div class="entry-group-lbl">${CATS[cat]||cat}</div>
-        ${rows.map(e=>`<div class="entry-row">
-          <span class="name">${e.name}</span>
-          <span class="amt" style="color:${CAT_COLOR[cat]||'var(--text)'}">${eur(e.amount)}</span>
-        </div>`).join('')}
-      </div>`).join('') || '<p style="color:var(--muted);font-size:var(--fs-sm)">Aucune ligne budgétaire.</p>';
+    const entriesHtml = Object.entries(grouped).length
+      ? `<div class="entry-group">
+          <div class="entry-group-lbl">Lignes budgétaires</div>
+          ${Object.entries(grouped).map(([cat, rows]) => `
+            <div style="margin-bottom:6px">
+              <div style="font-size:var(--fs-xs);font-weight:700;color:${CAT_COLOR[cat]||'var(--hint)'};margin-bottom:2px">${CATS[cat]||cat}</div>
+              ${rows.map(e=>`<div class="entry-row">
+                <span class="name">${e.name}</span>
+                <span class="amt" style="color:${CAT_COLOR[cat]||'var(--text)'}">${eur(e.amount)}</span>
+              </div>`).join('')}
+            </div>`).join('')}
+        </div>`
+      : '<p style="color:var(--muted);font-size:var(--fs-sm);margin-bottom:12px">Aucune ligne budgétaire.</p>';
 
+    // ── Épargne ──
     const savingsHtml = d.savings.length
-      ? `<div class="entry-group"><div class="entry-group-lbl">Épargne</div>${d.savings.map(s=>`<div class="entry-row">
-          <span class="name">${s.month} ${s.year}</span>
-          <span class="amt" style="color:var(--blue)">${eur(s.amount)}</span>
-        </div>`).join('')}</div>`
+      ? `<div class="entry-group">
+          <div class="entry-group-lbl">Épargne</div>
+          ${d.savings.slice(0,12).map(s=>`<div class="entry-row">
+            <span class="name">${s.month} ${s.year}</span>
+            <span class="amt" style="color:var(--blue)">${eur(s.amount)}</span>
+          </div>`).join('')}
+        </div>`
       : '';
 
-    document.getElementById('modal-data-body').innerHTML = entriesHtml + savingsHtml;
+    document.getElementById('modal-data-body').innerHTML = kpisHtml + monthlyHtml + entriesHtml + savingsHtml;
     document.getElementById('modal-data').classList.add('open');
   } catch (e) { alert('Erreur : ' + e.message); }
 }
