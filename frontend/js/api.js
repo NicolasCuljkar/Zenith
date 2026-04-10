@@ -437,7 +437,25 @@ const _household = {
   delete: ()     => request('/household/delete', { method: 'DELETE' }),
 };
 
-const API = { auth: _auth, entries: _entries, savings: _savings, users: _users, bridge: _bridge, household: _household, import: _import, getToken, clearAuth };
+/**
+ * monthlyExpenses — Suivi des dépenses réelles mensuelles
+ */
+const _monthlyExpenses = {
+  /** Dépenses manuelles saisies pour un mois donné */
+  getAll(params = {})  { return get('/monthly-expenses', params); },
+  /** Stats comparatives budget prévu vs réel (auto + manuel) */
+  getStats(params = {}) { return get('/monthly-expenses/stats', params); },
+  /** Historique des mois ayant des données */
+  getHistory(params = {}) { return get('/monthly-expenses/history', params); },
+  /** Ajouter une dépense manuelle */
+  create(data) { return post('/monthly-expenses', data); },
+  /** Modifier une dépense */
+  update(id, data) { return put(`/monthly-expenses/${id}`, data); },
+  /** Supprimer une dépense */
+  delete(id) { return del(`/monthly-expenses/${id}`); },
+};
+
+const API = { auth: _auth, entries: _entries, savings: _savings, users: _users, bridge: _bridge, household: _household, import: _import, monthlyExpenses: _monthlyExpenses, getToken, clearAuth };
 
 // Attach to window for global access in inline scripts
 if (typeof window !== 'undefined') {

@@ -865,21 +865,69 @@ window.onerror = function(msg, src, line) {
   <!-- ENTRIES -->
   <div id="tab-entries" class="tab-panel">
     <div class="member-tabs" id="entries-mtabs"></div>
-    <div id="entries-nodata" style="display:none"></div>
-    <div class="kpi-grid" id="entries-summary" style="margin-bottom:1rem"></div>
-    <div id="entries-toolbar" style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:.75rem;gap:8px">
-      <div id="entries-search" style="flex:1;display:flex;flex-direction:row;gap:6px;min-width:0">
-        <input type="text" id="search-input" class="inp search-inp" placeholder="Rechercher…" style="flex:1;min-width:0">
-        <select id="filter-cat" class="inp" style="flex-shrink:0;width:auto">
-          <option value="">Toutes catégories</option>
-          <option value="revenu">Revenu</option><option value="impot">Impôt</option>
-          <option value="fixe">Fixe</option><option value="variable">Variable</option>
-          <option value="epargne">Épargne</option><option value="loisir">Loisir</option>
-        </select>
-      </div>
-      <button class="btn-add btn-add-desktop" id="btn-add-entry"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Ajouter</button>
+
+    <!-- Sous-onglets Prévisionnel / Suivi mensuel -->
+    <div style="display:flex;align-items:center;gap:0;border-bottom:1px solid var(--border);margin-bottom:.75rem">
+      <button class="stab active" data-etab="previsionnel" onclick="switchEntriesTab('previsionnel')">Prévisionnel</button>
+      <button class="stab" data-etab="mensuel" onclick="switchEntriesTab('mensuel')">Suivi mensuel</button>
     </div>
-    <div id="entries-sections"></div>
+
+    <!-- ── PRÉVISIONNEL ── -->
+    <div id="entries-previsionnel">
+      <div id="entries-nodata" style="display:none"></div>
+      <div class="kpi-grid" id="entries-summary" style="margin-bottom:1rem"></div>
+      <div id="entries-toolbar" style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:.75rem;gap:8px">
+        <div id="entries-search" style="flex:1;display:flex;flex-direction:row;gap:6px;min-width:0">
+          <input type="text" id="search-input" class="inp search-inp" placeholder="Rechercher…" style="flex:1;min-width:0">
+          <select id="filter-cat" class="inp" style="flex-shrink:0;width:auto">
+            <option value="">Toutes catégories</option>
+            <option value="revenu">Revenu</option><option value="impot">Impôt</option>
+            <option value="fixe">Fixe</option><option value="variable">Variable</option>
+            <option value="epargne">Épargne</option><option value="loisir">Loisir</option>
+          </select>
+        </div>
+        <button class="btn-add btn-add-desktop" id="btn-add-entry"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Ajouter</button>
+      </div>
+      <div id="entries-sections"></div>
+    </div>
+
+    <!-- ── SUIVI MENSUEL ── -->
+    <div id="entries-mensuel" style="display:none">
+      <!-- Navigateur de mois -->
+      <div style="display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:1rem">
+        <button onclick="monthlyNavPrev()" style="background:none;border:1px solid var(--border);border-radius:8px;padding:4px 10px;cursor:pointer;color:var(--fg);font-size:1rem">&#8249;</button>
+        <span id="monthly-label" style="font-size:var(--fs-base);font-weight:700;min-width:130px;text-align:center"></span>
+        <button onclick="monthlyNavNext()" style="background:none;border:1px solid var(--border);border-radius:8px;padding:4px 10px;cursor:pointer;color:var(--fg);font-size:1rem">&#8250;</button>
+      </div>
+
+      <!-- KPIs budget vs réel -->
+      <div class="kpi-grid" id="monthly-kpis" style="margin-bottom:1rem"></div>
+
+      <!-- Sections auto-renseignées -->
+      <div class="card" style="margin-bottom:.75rem">
+        <div class="card-head" style="display:flex;align-items:center;gap:8px">
+          Auto-renseignées
+          <span style="font-size:var(--fs-xs);font-weight:600;color:var(--muted);background:var(--surface2);border-radius:20px;padding:2px 8px">depuis le prévisionnel</span>
+        </div>
+        <div id="monthly-auto-sections"></div>
+      </div>
+
+      <!-- Section dépenses variables manuelles -->
+      <div class="card" style="margin-bottom:.75rem">
+        <div class="card-head" style="display:flex;align-items:center;justify-content:space-between">
+          <span>Dépenses variables &amp; autres</span>
+          <button class="btn-add" onclick="openAddMonthlyExpense()" style="font-size:var(--fs-xs);padding:5px 12px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Ajouter</button>
+        </div>
+        <div id="monthly-manual-bar" style="margin-bottom:.5rem"></div>
+        <div id="monthly-manual-list"></div>
+      </div>
+
+      <!-- Historique -->
+      <div class="card">
+        <div class="card-head">Historique mensuel</div>
+        <div id="monthly-history"></div>
+      </div>
+    </div>
   </div>
 
   <!-- SAVINGS -->
@@ -1284,6 +1332,32 @@ window.onerror = function(msg, src, line) {
     <div class="modal-footer">
       <button class="btn" id="modal-entry-cancel">Annuler</button>
       <button class="btn-add" id="modal-entry-save">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- MONTHLY EXPENSE MODAL -->
+<div class="overlay" id="modal-monthly-expense">
+  <div class="modal">
+    <div class="modal-drag"></div>
+    <h3 id="modal-me-title">Ajouter une dépense</h3>
+    <div class="fstack">
+      <div class="fgrp"><label>Désignation</label><input type="text" id="fme-name" placeholder="ex. Courses, Essence…"></div>
+      <div class="frow">
+        <div class="fgrp"><label>Catégorie</label>
+          <select id="fme-cat">
+            <option value="variable">Variable</option>
+            <option value="loisir">Loisir</option>
+            <option value="epargne">Épargne</option>
+          </select>
+        </div>
+        <div class="fgrp"><label>Montant (€)</label><input type="number" id="fme-amount" min="0" step="0.01" placeholder="0"></div>
+      </div>
+      <div class="fgrp"><label>Note (optionnel)</label><input type="text" id="fme-note" placeholder="Ex. Leclerc, Total…"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" id="modal-me-cancel">Annuler</button>
+      <button class="btn-add" id="modal-me-save">Enregistrer</button>
     </div>
   </div>
 </div>
@@ -3017,7 +3091,10 @@ function onEntryCatChange(cat){
   }
 }
 document.getElementById('btn-add-entry').addEventListener('click',openAddEntry);
-document.getElementById('fab-entry').addEventListener('click',openAddEntry);
+document.getElementById('fab-entry').addEventListener('click',()=>{
+  const mensuelActive=document.getElementById('entries-mensuel').style.display!=='none';
+  if(mensuelActive)openAddMonthlyExpense();else openAddEntry();
+});
 function openEditEntry(id){
   const e=entries.find(x=>x.id===id);if(!e||!canEdit(e.member)){return;}editEntryId=id;
   document.getElementById('modal-entry-title').textContent='Modifier';
@@ -3069,6 +3146,237 @@ document.getElementById('modal-entry-save').onclick=async ()=>{
     showApiError('Erreur lors de la sauvegarde : '+err.message);
     document.getElementById('modal-entry').classList.add('open');
   }finally{hideLoading();btn.disabled=false;}
+};
+
+// ══════════════════════════════════════════════
+// SUIVI MENSUEL
+// ══════════════════════════════════════════════
+let monthlyYear     = new Date().getFullYear();
+let monthlyMonth    = new Date().getMonth() + 1; // 1-12
+let monthlyExpenses = [];
+let editMonthlyId   = null;
+const MONTH_NAMES   = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+
+function switchEntriesTab(tab) {
+  document.querySelectorAll('[data-etab]').forEach(b => b.classList.toggle('active', b.dataset.etab === tab));
+  document.getElementById('entries-previsionnel').style.display = tab === 'previsionnel' ? '' : 'none';
+  document.getElementById('entries-mensuel').style.display      = tab === 'mensuel'      ? '' : 'none';
+  if (tab === 'mensuel') renderMonthly();
+}
+function monthlyNavPrev() {
+  monthlyMonth--;
+  if (monthlyMonth < 1) { monthlyMonth = 12; monthlyYear--; }
+  renderMonthly();
+}
+function monthlyNavNext() {
+  monthlyMonth++;
+  if (monthlyMonth > 12) { monthlyMonth = 1; monthlyYear++; }
+  renderMonthly();
+}
+async function renderMonthly() {
+  document.getElementById('monthly-label').textContent = `${MONTH_NAMES[monthlyMonth - 1]} ${monthlyYear}`;
+  showLoading();
+  try {
+    const member = entriesMember;
+    const [stats, expenses, history] = await Promise.all([
+      API.monthlyExpenses.getStats({ year: monthlyYear, month: monthlyMonth, member }),
+      API.monthlyExpenses.getAll({ year: monthlyYear, month: monthlyMonth, member }),
+      API.monthlyExpenses.getHistory({ member }),
+    ]);
+    monthlyExpenses = expenses;
+    renderMonthlyKpis(stats);
+    renderMonthlyAuto(stats);
+    renderMonthlyManual(expenses, stats);
+    renderMonthlyHistory(history);
+  } catch(err) {
+    showApiError('Erreur chargement suivi mensuel : ' + err.message);
+  } finally { hideLoading(); }
+}
+function renderMonthlyKpis(stats) {
+  const revenu = stats.revenu, impot = stats.impot, fixe = stats.fixe;
+  const vari = stats.variable, ep = stats.epargne, loi = stats.loisir;
+  const revNet = revenu.budget - impot.budget;
+  const totalDepBudget = fixe.budget + vari.budget + loi.budget;
+  const totalDepReelle = fixe.actual + vari.actual + loi.actual;
+  const soldeReel    = revNet - totalDepReelle - ep.actual;
+  const soldeBudget  = revNet - totalDepBudget - ep.budget;
+  const pct = vari.budget > 0 ? Math.round(vari.actual / vari.budget * 100) : null;
+  const pctCol = pct === null ? 'var(--muted)' : pct > 100 ? 'var(--red)' : pct > 80 ? 'var(--amber)' : 'var(--green)';
+  document.getElementById('monthly-kpis').innerHTML = `
+    <div class="kpi-card"><div class="kpi-label">Revenus nets</div><div class="kpi-val" style="color:var(--green)">${eur(revNet)}</div><div class="kpi-sub">Auto-renseigné</div></div>
+    <div class="kpi-card"><div class="kpi-label">Charges fixes</div><div class="kpi-val" style="color:var(--red)">${eur(fixe.budget)}</div><div class="kpi-sub">Auto-renseigné</div></div>
+    <div class="kpi-card"><div class="kpi-label">Variables saisi / prévu</div><div class="kpi-val" style="color:${pctCol}">${eur(vari.actual)} <span style="font-size:var(--fs-sm);color:var(--muted)">/ ${eur(vari.budget)}</span></div><div class="kpi-sub">${pct !== null ? pct + '% du budget' : 'Aucun budget prévu'}</div></div>
+    <div class="kpi-card"><div class="kpi-label">Solde réel du mois</div><div class="kpi-val" style="color:${soldeReel >= 0 ? 'var(--green)' : 'var(--red)'}">${eur(soldeReel)}</div><div class="kpi-sub">Prévu : ${eur(soldeBudget)}</div></div>
+  `;
+}
+function renderMonthlyAuto(stats) {
+  const defs = [
+    { cat: 'revenu', label: 'Revenus',      color: '#0d9e6e', valColor: 'var(--green)' },
+    { cat: 'impot',  label: 'Impôts',        color: '#c49a00', valColor: 'var(--amber)'  },
+    { cat: 'fixe',   label: 'Charges fixes', color: '#d93535', valColor: 'var(--red)'   },
+  ];
+  const autoCatEntries = entries.filter(e => ['revenu','impot','fixe'].includes(e.cat));
+  let html = '';
+  for (const { cat, label, color, valColor } of defs) {
+    const catEntries = autoCatEntries.filter(e => e.cat === cat);
+    if (!catEntries.length) continue;
+    const total = catEntries.reduce((s, e) => s + Math.abs(e.amount), 0);
+    html += `<div style="margin-bottom:.6rem">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:2px solid ${color}30;margin-bottom:4px">
+        <span style="font-size:var(--fs-xs);font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:${color}">${label}</span>
+        <span style="font-size:var(--fs-sm);font-weight:700;color:${valColor}">${eur(total)}</span>
+      </div>
+      ${catEntries.map(e => `
+        <div style="display:flex;justify-content:space-between;padding:4px 0 4px 8px;font-size:var(--fs-sm)">
+          <span style="color:var(--muted)">${e.name}</span>
+          <span style="font-weight:600">${eur(Math.abs(e.amount))}</span>
+        </div>`).join('')}
+    </div>`;
+  }
+  document.getElementById('monthly-auto-sections').innerHTML = html || '<div class="tbl-empty">Aucune ligne budgétaire prévue</div>';
+}
+function renderMonthlyManual(expenses, stats) {
+  const vari = stats.variable;
+  const pct = vari.budget > 0 ? Math.round(vari.actual / vari.budget * 100) : null;
+  const barCol = pct === null ? 'var(--muted)' : pct > 100 ? 'var(--red)' : pct > 80 ? 'var(--amber)' : 'var(--green)';
+  const barW = pct !== null ? Math.min(pct, 100) : 0;
+  document.getElementById('monthly-manual-bar').innerHTML = vari.budget > 0 ? `
+    <div style="display:flex;justify-content:space-between;font-size:var(--fs-xs);color:var(--muted);margin-bottom:4px">
+      <span>Budget variable prévu : ${eur(vari.budget)}</span>
+      <span style="color:${barCol};font-weight:700">${pct}%</span>
+    </div>
+    <div style="height:6px;background:var(--surface2);border-radius:99px;overflow:hidden">
+      <div style="height:100%;width:${barW}%;background:${barCol};border-radius:99px;transition:width .3s"></div>
+    </div>
+    <div style="display:flex;justify-content:space-between;font-size:var(--fs-xs);color:var(--muted);margin-top:3px">
+      <span>Saisi : ${eur(vari.actual)}</span>
+      <span>Reste : ${eur(Math.max(0, vari.budget - vari.actual))}</span>
+    </div>` : '<div style="font-size:var(--fs-xs);color:var(--muted)">Aucun budget variable prévu dans le prévisionnel</div>';
+  if (!expenses.length) {
+    document.getElementById('monthly-manual-list').innerHTML = '<div class="tbl-empty" style="padding:.75rem 0">Aucune dépense saisie pour ce mois</div>';
+    return;
+  }
+  const isMobile = window.innerWidth <= 640;
+  const editIcon = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
+  const delIcon  = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>`;
+  if (isMobile) {
+    document.getElementById('monthly-manual-list').innerHTML = expenses.map(e => {
+      const c = CATS[e.cat];
+      return `<div class="entry-card" style="border-left-color:${c.hex};background:${c.bg};padding:12px 14px 10px 14px;margin-bottom:8px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
+          <span style="font-weight:700;font-size:var(--fs-base);flex:1">${e.name}</span>
+          <span style="font-weight:800;color:var(--red)">${eur(Math.abs(e.amount))}</span>
+        </div>
+        ${e.note ? `<div style="font-size:var(--fs-xs);color:var(--muted);margin-top:4px">${e.note}</div>` : ''}
+        <div style="height:1px;background:${c.hex}22;margin:8px 0 7px"></div>
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:var(--fs-xs);font-weight:700;color:${c.text};letter-spacing:.05em;text-transform:uppercase">${c.label}</span>
+          <div style="display:flex;gap:5px">
+            <button class="btn-act" onclick="openEditMonthlyExpense(${e.id})">${editIcon}</button>
+            <button class="btn-act btn-act-danger" onclick="deleteMonthlyExpense(${e.id})">${delIcon}</button>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+  } else {
+    const total = expenses.reduce((s, e) => s + Math.abs(e.amount), 0);
+    document.getElementById('monthly-manual-list').innerHTML = `
+      <div class="tbl-wrap"><table style="width:100%;table-layout:fixed">
+        <colgroup><col style="width:38%"><col style="width:18%"><col style="width:18%"><col style="width:18%"><col style="width:8%"></colgroup>
+        <thead><tr><th>Désignation</th><th>Catégorie</th><th style="text-align:right">Montant</th><th>Note</th><th></th></tr></thead>
+        <tbody>
+          ${expenses.map(e => { const c = CATS[e.cat]; return `<tr data-id="${e.id}">
+            <td style="font-weight:500">${e.name}</td>
+            <td><span class="badge" style="background:${c.bg};color:${c.text};border:${c.border}">${c.label}</span></td>
+            <td style="text-align:right;font-weight:600;color:var(--red)">${eur(Math.abs(e.amount))}</td>
+            <td style="font-size:var(--fs-xs);color:var(--muted)">${e.note || ''}</td>
+            <td><div style="display:flex;gap:4px">
+              <button class="btn-act" onclick="openEditMonthlyExpense(${e.id})">${editIcon}</button>
+              <button class="btn-act btn-act-danger" onclick="deleteMonthlyExpense(${e.id})">${delIcon}</button>
+            </div></td>
+          </tr>`; }).join('')}
+          <tr style="background:var(--surface2)">
+            <td style="font-size:var(--fs-sm);font-weight:600;color:var(--muted)">Total dépenses</td><td></td>
+            <td style="text-align:right;font-weight:700;color:var(--red)">${eur(total)}</td><td></td><td></td>
+          </tr>
+        </tbody>
+      </table></div>`;
+  }
+}
+function renderMonthlyHistory(history) {
+  if (!history.length) {
+    document.getElementById('monthly-history').innerHTML = '<div class="tbl-empty">Aucun historique disponible — commencez à saisir des dépenses</div>';
+    return;
+  }
+  document.getElementById('monthly-history').innerHTML = `
+    <div class="tbl-wrap"><table style="width:100%;table-layout:fixed">
+      <colgroup><col style="width:40%"><col style="width:35%"><col style="width:25%"></colgroup>
+      <thead><tr><th>Mois</th><th style="text-align:right">Total saisi</th><th style="text-align:right">Dépenses</th></tr></thead>
+      <tbody>
+        ${history.map(h => `<tr style="cursor:pointer" onclick="monthlyGoTo(${h.year},${h.month})">
+          <td style="font-weight:600">${MONTH_NAMES[h.month - 1]} ${h.year}</td>
+          <td style="text-align:right;color:var(--red);font-weight:600">${eur(h.total)}</td>
+          <td style="text-align:right;color:var(--muted);font-size:var(--fs-sm)">${h.count}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table></div>`;
+}
+function monthlyGoTo(year, month) { monthlyYear = year; monthlyMonth = month; renderMonthly(); }
+function openAddMonthlyExpense() {
+  editMonthlyId = null;
+  document.getElementById('modal-me-title').textContent = 'Ajouter une dépense';
+  document.getElementById('fme-name').value   = '';
+  document.getElementById('fme-amount').value = '';
+  document.getElementById('fme-cat').value    = 'variable';
+  document.getElementById('fme-note').value   = '';
+  document.getElementById('modal-monthly-expense').classList.add('open');
+}
+function openEditMonthlyExpense(id) {
+  const e = monthlyExpenses.find(x => x.id === id);
+  if (!e) return;
+  editMonthlyId = id;
+  document.getElementById('modal-me-title').textContent = 'Modifier la dépense';
+  document.getElementById('fme-name').value   = e.name;
+  document.getElementById('fme-amount').value = Math.abs(e.amount);
+  document.getElementById('fme-cat').value    = e.cat;
+  document.getElementById('fme-note').value   = e.note || '';
+  document.getElementById('modal-monthly-expense').classList.add('open');
+}
+function deleteMonthlyExpense(id) {
+  const e = monthlyExpenses.find(x => x.id === id);
+  showConfirm(`Supprimer "${e?.name || 'cette dépense'}" ?`, 'Cette dépense sera définitivement supprimée.', async () => {
+    showLoading();
+    try { await API.monthlyExpenses.delete(id); await renderMonthly(); }
+    catch(err) { showApiError('Erreur lors de la suppression : ' + err.message); }
+    finally { hideLoading(); }
+  });
+}
+document.getElementById('modal-me-cancel').onclick = () => document.getElementById('modal-monthly-expense').classList.remove('open');
+document.getElementById('modal-monthly-expense').addEventListener('click', ev => {
+  if (ev.target.id === 'modal-monthly-expense') document.getElementById('modal-monthly-expense').classList.remove('open');
+});
+document.getElementById('modal-me-save').onclick = async () => {
+  const btn    = document.getElementById('modal-me-save');
+  const name   = document.getElementById('fme-name').value.trim();
+  const amt    = parseFloat(document.getElementById('fme-amount').value);
+  const cat    = document.getElementById('fme-cat').value;
+  const note   = document.getElementById('fme-note').value.trim();
+  if (!name || isNaN(amt) || amt <= 0) return alert('Remplissez tous les champs obligatoires.');
+  const amount = -Math.abs(amt);
+  const member = entriesMember === 'Commun' ? myRole() : entriesMember;
+  document.getElementById('modal-monthly-expense').classList.remove('open');
+  btn.disabled = true; showLoading();
+  try {
+    if (editMonthlyId) {
+      await API.monthlyExpenses.update(editMonthlyId, { name, amount, cat, member, note });
+    } else {
+      await API.monthlyExpenses.create({ year: monthlyYear, month: monthlyMonth, name, amount, cat, member, note });
+    }
+    await renderMonthly();
+  } catch(err) {
+    showApiError('Erreur lors de la sauvegarde : ' + err.message);
+    document.getElementById('modal-monthly-expense').classList.add('open');
+  } finally { hideLoading(); btn.disabled = false; }
 };
 
 // ══════════════════════════════════════════════
