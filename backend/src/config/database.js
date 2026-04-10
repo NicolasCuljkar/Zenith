@@ -227,6 +227,24 @@ UPDATE households SET creator_id = (
   CREATE INDEX IF NOT EXISTS idx_me_user  ON monthly_expenses(user_id);
   CREATE INDEX IF NOT EXISTS idx_me_month ON monthly_expenses(year, month);`,
 
+  // v11 — correction table monthly_expenses (v10 ignorée silencieusement sur certains environnements)
+  `CREATE TABLE IF NOT EXISTS monthly_expenses (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    year       INTEGER NOT NULL,
+    month      INTEGER NOT NULL,
+    name       TEXT    NOT NULL,
+    amount     REAL    NOT NULL,
+    cat        TEXT    NOT NULL DEFAULT 'variable',
+    member     TEXT    NOT NULL,
+    note       TEXT,
+    created_at TEXT    NOT NULL DEFAULT (datetime('now')),
+    updated_at TEXT    NOT NULL DEFAULT (datetime('now'))
+  )`,
+
+  `CREATE INDEX IF NOT EXISTS idx_me_user  ON monthly_expenses(user_id)`,
+  `CREATE INDEX IF NOT EXISTS idx_me_month ON monthly_expenses(year, month)`,
+
 ];
 
 // ── Apply pending migrations ──────────────────────────────────────────────────
