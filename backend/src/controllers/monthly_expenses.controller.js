@@ -36,7 +36,7 @@ async function getStats(req, res, next) {
   try {
     const { member, year, month } = req.query;
     const scope = resolveUserScope(req.user.id, member);
-    res.json({ success: true, data: monthlyService.getStats({ ...scope, year, month }) });
+    res.json({ success: true, data: monthlyService.getStats({ ...scope, year, month, member }) });
   } catch (err) { next(err); }
 }
 
@@ -50,8 +50,8 @@ async function getHistory(req, res, next) {
 
 async function createExpense(req, res, next) {
   try {
-    const { year, month, name, amount, cat, member, note } = req.body;
-    const expense = monthlyService.create({ year, month, name, amount, cat, member, note }, req.user.id);
+    const { year, month, name, amount, cat, member, note, entry_id } = req.body;
+    const expense = monthlyService.create({ year, month, name, amount, cat, member, note, entry_id }, req.user.id);
     res.status(201).json({ success: true, data: expense });
   } catch (err) { next(err); }
 }

@@ -404,7 +404,7 @@ async function viewActivity(id) {
       ? `<div class="entry-group">
           <div class="entry-group-lbl">Épargne</div>
           ${d.savings.slice(0,12).map(s=>`<div class="entry-row">
-            <span class="name">${s.month} ${s.year}</span>
+            <span class="name">${s.member} — ${s.month} ${s.year}</span>
             <span class="amt" style="color:var(--blue)">${eur(s.amount)}</span>
           </div>`).join('')}
         </div>`

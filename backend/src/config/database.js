@@ -248,6 +248,9 @@ UPDATE households SET creator_id = (
   // v14 — horodatage dernière connexion
   `ALTER TABLE users ADD COLUMN last_login_at TEXT`,
 
+  // v15 — lien entry_id pour les corrections mensuelles des lignes auto (revenu/impot/fixe)
+  `ALTER TABLE monthly_expenses ADD COLUMN entry_id INTEGER`,
+
 ];
 
 // ── Apply pending migrations ──────────────────────────────────────────────────

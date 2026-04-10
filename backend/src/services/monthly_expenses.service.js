@@ -3,10 +3,10 @@
 const db             = require('../config/database');
 const entriesService = require('./entries.service');
 
-// Catégories auto-renseignées depuis les lignes budgétaires (montant prévu = réel)
+const FR_MONTHS   = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
 const AUTO_CATS   = ['revenu', 'impot', 'fixe'];
-// Catégories à saisir manuellement chaque mois
-const MANUAL_CATS = ['variable', 'epargne', 'loisir'];
+const MANUAL_CATS = ['variable', 'loisir'];
+// 'epargne' is sourced from the savings table, not monthly_expenses
 
 function httpError(message, statusCode) {
   const err = new Error(message);
@@ -14,26 +14,53 @@ function httpError(message, statusCode) {
   return err;
 }
 
+// ── Helpers ──────────────────────────────────────────────────────
+
+function buildUserWhere(filters) {
+  const cond = [];
+  const params = [];
+  if (filters.userIds && filters.userIds.length > 0) {
+    cond.push(`user_id IN (${filters.userIds.map(() => '?').join(',')})`);
+    params.push(...filters.userIds);
+  } else if (filters.userId) {
+    cond.push('user_id = ?');
+    params.push(filters.userId);
+  }
+  return { cond, params };
+}
+
+// Map<entry_id, { id, amount }> for monthly overrides of auto-cat entries
+function getOverridesMap(filters) {
+  const { cond, params } = buildUserWhere(filters);
+  cond.push('entry_id IS NOT NULL');
+  if (filters.year)  { cond.push('year = ?');  params.push(Number(filters.year));  }
+  if (filters.month) { cond.push('month = ?'); params.push(Number(filters.month)); }
+  const rows = db.prepare(`SELECT entry_id, id, amount FROM monthly_expenses WHERE ${cond.join(' AND ')}`).all(...params);
+  return new Map(rows.map(r => [r.entry_id, { id: r.id, amount: r.amount }]));
+}
+
+// Total épargne from savings table for a given month
+function getSavingsActual(filters) {
+  if (!filters.year || !filters.month) return 0;
+  const frMonth = FR_MONTHS[Number(filters.month) - 1];
+  if (!frMonth) return 0;
+  const { cond, params } = buildUserWhere(filters);
+  cond.push('year = ?', 'month = ?');
+  params.push(Number(filters.year), frMonth);
+  const row = db.prepare(`SELECT COALESCE(SUM(amount), 0) AS total FROM savings WHERE ${cond.join(' AND ')}`).get(...params);
+  return row?.total || 0;
+}
+
 // ── Lecture ──────────────────────────────────────────────────────
 
 function getAll(filters = {}) {
-  const conditions = [];
-  const params     = [];
+  const { cond, params } = buildUserWhere(filters);
 
-  if (filters.userIds && filters.userIds.length > 0) {
-    const ph = filters.userIds.map(() => '?').join(',');
-    conditions.push(`user_id IN (${ph})`);
-    params.push(...filters.userIds);
-  } else if (filters.userId) {
-    conditions.push('user_id = ?');
-    params.push(filters.userId);
-  }
+  if (filters.year)  { cond.push('year = ?');  params.push(Number(filters.year));  }
+  if (filters.month) { cond.push('month = ?'); params.push(Number(filters.month)); }
+  if (filters.cat)   { cond.push('cat = ?');   params.push(filters.cat); }
 
-  if (filters.year)  { conditions.push('year = ?');  params.push(Number(filters.year));  }
-  if (filters.month) { conditions.push('month = ?'); params.push(Number(filters.month)); }
-  if (filters.cat)   { conditions.push('cat = ?');   params.push(filters.cat); }
-
-  const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+  const where = cond.length ? `WHERE ${cond.join(' AND ')}` : '';
   return db.prepare(`
     SELECT * FROM monthly_expenses ${where}
     ORDER BY cat ASC, created_at ASC
@@ -47,19 +74,34 @@ function getById(id) {
 // Retourne les stats comparatives budget prévu vs réel pour un mois donné
 function getStats(filters = {}) {
   const entryScope = filters.userIds ? { userIds: filters.userIds } : { userId: filters.userId };
-  const allEntries = entriesService.getAll(entryScope);
+  let allEntries = entriesService.getAll(entryScope);
+
+  // Filtre par membre si vue spécifique (pas Commun/all)
+  if (filters.member && filters.member !== 'all' && filters.member !== 'Commun') {
+    allEntries = allEntries.filter(e => e.member === filters.member);
+  }
+
   const manualExpenses = getAll(filters);
+  const overrides      = getOverridesMap(filters);
+  const epargneActual  = getSavingsActual(filters);
 
   const result = {};
-  for (const cat of [...AUTO_CATS, ...MANUAL_CATS]) {
-    const budget = allEntries
-      .filter(e => e.cat === cat)
-      .reduce((s, e) => s + Math.abs(e.amount), 0);
+  for (const cat of [...AUTO_CATS, 'variable', 'epargne', 'loisir']) {
+    const catEntries = allEntries.filter(e => e.cat === cat);
+    const budget     = catEntries.reduce((s, e) => s + Math.abs(e.amount), 0);
 
-    // Les catégories auto ont actual = budget (pas de saisie manuelle)
-    const actual = AUTO_CATS.includes(cat)
-      ? budget
-      : manualExpenses.filter(e => e.cat === cat).reduce((s, e) => s + Math.abs(e.amount), 0);
+    let actual;
+    if (AUTO_CATS.includes(cat)) {
+      // Use monthly override if exists, otherwise budget
+      actual = catEntries.reduce((s, e) => {
+        const ov = overrides.get(e.id);
+        return s + (ov !== undefined ? Math.abs(ov.amount) : Math.abs(e.amount));
+      }, 0);
+    } else if (cat === 'epargne') {
+      actual = epargneActual;
+    } else {
+      actual = manualExpenses.filter(e => e.cat === cat && !e.entry_id).reduce((s, e) => s + Math.abs(e.amount), 0);
+    }
 
     result[cat] = { budget, actual, diff: budget - actual };
   }
@@ -69,19 +111,8 @@ function getStats(filters = {}) {
 
 // Historique : liste des mois ayant des données saisies
 function getHistory(filters = {}) {
-  const conditions = [];
-  const params     = [];
-
-  if (filters.userIds && filters.userIds.length > 0) {
-    const ph = filters.userIds.map(() => '?').join(',');
-    conditions.push(`user_id IN (${ph})`);
-    params.push(...filters.userIds);
-  } else if (filters.userId) {
-    conditions.push('user_id = ?');
-    params.push(filters.userId);
-  }
-
-  const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+  const { cond, params } = buildUserWhere(filters);
+  const where = cond.length ? `WHERE ${cond.join(' AND ')}` : '';
   return db.prepare(`
     SELECT year, month, COUNT(*) as count, SUM(ABS(amount)) as total
     FROM monthly_expenses ${where}
@@ -93,45 +124,52 @@ function getHistory(filters = {}) {
 
 // ── Écriture ─────────────────────────────────────────────────────
 
-function create({ year, month, name, amount, cat, member, note }, userId) {
-  if (!name || !name.trim())      throw httpError('La désignation est requise.', 400);
-  if (isNaN(Number(amount)))      throw httpError('Le montant doit être un nombre.', 400);
-  if (!MANUAL_CATS.includes(cat)) throw httpError(`Catégorie invalide pour la saisie manuelle : ${cat}`, 400);
-  if (!year || !month)            throw httpError('Année et mois requis.', 400);
+function create({ year, month, name, amount, cat, member, note, entry_id }, userId) {
+  if (!name || !name.trim())  throw httpError('La désignation est requise.', 400);
+  if (isNaN(Number(amount))) throw httpError('Le montant doit être un nombre.', 400);
+  if (!year || !month)       throw httpError('Année et mois requis.', 400);
+
+  const isAutoOverride = AUTO_CATS.includes(cat);
+  const isManual       = MANUAL_CATS.includes(cat);
+  if (!isAutoOverride && !isManual) throw httpError(`Catégorie invalide : ${cat}`, 400);
+  if (isAutoOverride && !entry_id)  throw httpError('entry_id requis pour corriger une ligne auto.', 400);
 
   const result = db.prepare(`
-    INSERT INTO monthly_expenses (user_id, year, month, name, amount, cat, member, note, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
-  `).run(userId, Number(year), Number(month), name.trim(), Number(amount), cat, member, note || null);
+    INSERT INTO monthly_expenses (user_id, year, month, name, amount, cat, member, note, entry_id, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+  `).run(userId, Number(year), Number(month), name.trim(), Number(amount), cat, member, note || null, entry_id || null);
 
   return getById(result.lastInsertRowid);
 }
 
-function update(id, { name, amount, cat, member, note }, userId) {
+function update(id, { name, amount, cat, member, note, entry_id }, userId) {
   const existing = getById(id);
-  if (!existing)                throw httpError('Dépense introuvable.', 404);
+  if (!existing)                   throw httpError('Dépense introuvable.', 404);
   if (existing.user_id !== userId) throw httpError('Non autorisé.', 403);
 
-  const updatedName   = name   !== undefined ? name.trim()    : existing.name;
-  const updatedAmount = amount !== undefined ? Number(amount) : existing.amount;
-  const updatedCat    = cat    !== undefined ? cat            : existing.cat;
-  const updatedMember = member !== undefined ? member         : existing.member;
-  const updatedNote   = note   !== undefined ? note           : existing.note;
+  const updatedName    = name      !== undefined ? name.trim()      : existing.name;
+  const updatedAmount  = amount    !== undefined ? Number(amount)   : existing.amount;
+  const updatedCat     = cat       !== undefined ? cat              : existing.cat;
+  const updatedMember  = member    !== undefined ? member           : existing.member;
+  const updatedNote    = note      !== undefined ? note             : existing.note;
+  const updatedEntryId = entry_id  !== undefined ? entry_id        : existing.entry_id;
 
-  if (!MANUAL_CATS.includes(updatedCat)) throw httpError(`Catégorie invalide : ${updatedCat}`, 400);
+  const isAutoOverride = AUTO_CATS.includes(updatedCat);
+  const isManual       = MANUAL_CATS.includes(updatedCat);
+  if (!isAutoOverride && !isManual) throw httpError(`Catégorie invalide : ${updatedCat}`, 400);
 
   db.prepare(`
     UPDATE monthly_expenses
-    SET name = ?, amount = ?, cat = ?, member = ?, note = ?, updated_at = datetime('now')
+    SET name = ?, amount = ?, cat = ?, member = ?, note = ?, entry_id = ?, updated_at = datetime('now')
     WHERE id = ?
-  `).run(updatedName, updatedAmount, updatedCat, updatedMember, updatedNote, id);
+  `).run(updatedName, updatedAmount, updatedCat, updatedMember, updatedNote, updatedEntryId, id);
 
   return getById(id);
 }
 
 function remove(id, userId) {
   const existing = getById(id);
-  if (!existing)                throw httpError('Dépense introuvable.', 404);
+  if (!existing)                   throw httpError('Dépense introuvable.', 404);
   if (existing.user_id !== userId) throw httpError('Non autorisé.', 403);
   db.prepare('DELETE FROM monthly_expenses WHERE id = ?').run(id);
   return { deleted: true };
