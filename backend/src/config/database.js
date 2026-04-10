@@ -251,6 +251,9 @@ UPDATE households SET creator_id = (
   // v15 — lien entry_id pour les corrections mensuelles des lignes auto (revenu/impot/fixe)
   `ALTER TABLE monthly_expenses ADD COLUMN entry_id INTEGER`,
 
+  // v16 — normalise last_login_at en format ISO 8601 UTC (pour parsing JS fiable)
+  `UPDATE users SET last_login_at = strftime('%Y-%m-%dT%H:%M:%SZ', last_login_at) WHERE last_login_at IS NOT NULL`,
+
 ];
 
 // ── Apply pending migrations ──────────────────────────────────────────────────

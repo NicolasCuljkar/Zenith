@@ -38,7 +38,7 @@ function getPublicUsers() {
 }
 
 function touchLastLogin(userId) {
-  try { db.prepare("UPDATE users SET last_login_at = datetime('now') WHERE id = ?").run(userId); } catch (_) {}
+  try { db.prepare("UPDATE users SET last_login_at = strftime('%Y-%m-%dT%H:%M:%SZ', 'now') WHERE id = ?").run(userId); } catch (_) {}
 }
 
 function login(email, password) {
