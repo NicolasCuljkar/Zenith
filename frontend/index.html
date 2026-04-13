@@ -3237,7 +3237,6 @@ function _renderMonthlySections(stats, expenses, history, savingsData = []) {
       const rows = autoEntries.filter(e => g.cats.includes(e.cat));
       // Dépenses exceptionnelles saisies manuellement pour ce groupe (sans entry_id)
       const extras = manualExpenses.filter(e => g.cats.includes(e.cat));
-      if (!rows.length && !extras.length) return '';
       return _monthlyAutoGroup(rows, overrides, extras, g, isMobile);
     } else {
       const rows = manualExpenses.filter(e => g.cats.includes(e.cat));
@@ -3272,6 +3271,10 @@ function _monthlyAutoGroup(rows, overrides, extras, g, isMobile) {
       ${addBtn}
     </div>
   </div>`;
+
+  if (!rows.length && !extras.length) {
+    return `<div style="margin-bottom:var(--sg)">${hdr}<div class="tbl-empty">Aucune ligne pour ce mois</div></div>`;
+  }
 
   if (isMobile) {
     return `<div style="margin-bottom:1rem">${hdr}${rows.map(e => {
