@@ -3276,11 +3276,7 @@ function _renderMonthlySections(stats, expenses, savingsData = [], entryStats = 
       </div>
     </div>`;
 
-  // ── KPIs secondaires ──
-  document.getElementById('monthly-kpis').innerHTML =
-    kpiHtml('Revenus nets', eur(revNet), 'var(--green)', `Brut ${eur(revenu.actual)} · Impôts ${eur(impot.actual)}`, null, `Revenus et impôts auto-renseignés depuis le prévisionnel`) +
-    kpiHtml('Dépenses réelles', eur(fixe.actual + vari.actual), 'var(--red)', `${depRate}% du revenu · Fixes ${eur(fixe.actual)} · Var. ${eur(vari.actual)}`, null, `Fixes : auto-renseignées · Variables : saisies manuellement`) +
-    kpiHtml('Variables', eur(vari.actual), variPctCol, `${variPct !== null ? variPct + '% du budget · ' : ''}Prévu ${eur(vari.budget)}`, variPct !== null ? variPct - 100 : null, `Budget variable prévu : ${eur(vari.budget)} · Saisi : ${eur(vari.actual)} · Reste : ${eur(Math.max(0, vari.budget - vari.actual))}`);
+  document.getElementById('monthly-kpis').innerHTML = '';
 
   // ── Sections groupées identiques au style prévisionnel ──
   const isMobile = window.innerWidth <= 640;
