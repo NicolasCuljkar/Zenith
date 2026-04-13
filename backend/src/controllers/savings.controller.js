@@ -5,9 +5,10 @@
 
 'use strict';
 
-const savingsService = require('../services/savings.service');
-const notifService   = require('../services/notifications.service');
-const sseService     = require('../services/sse.service');
+const savingsService   = require('../services/savings.service');
+const householdService = require('../services/household.service');
+const notifService     = require('../services/notifications.service');
+const sseService       = require('../services/sse.service');
 
 const MILESTONES = [5000, 10000, 20000, 30000, 50000, 75000, 100000, 150000, 200000, 300000, 500000];
 const fmt = n => Math.round(n).toLocaleString('fr-FR') + ' €';
@@ -41,8 +42,12 @@ function checkSavingsNotifications(saving, userId) {
  */
 async function listSavings(req, res, next) {
   try {
-    const { year } = req.query;
-    const savings = savingsService.getAll({ userId: req.user.id, year: year ? Number(year) : undefined });
+    const { year, member } = req.query;
+    const household = householdService.getForUser(req.user.id);
+    const scope = household && household.members.length > 0
+      ? { userIds: household.members.map(m => m.id) }
+      : { userId: req.user.id };
+    const savings = savingsService.getAll({ ...scope, year: year ? Number(year) : undefined, member });
     res.json({ success: true, data: savings });
   } catch (err) {
     next(err);

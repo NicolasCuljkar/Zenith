@@ -60,10 +60,17 @@ function getAll(filters = {}) {
   const conditions = [];
   const params     = [];
 
-  // Isolation par user_id — empêche le partage de données entre utilisateurs homonymes
-  if (filters.userId) {
+  if (filters.userIds && filters.userIds.length > 0) {
+    conditions.push(`user_id IN (${filters.userIds.map(() => '?').join(',')})`);
+    params.push(...filters.userIds);
+  } else if (filters.userId) {
     conditions.push('user_id = ?');
     params.push(filters.userId);
+  }
+
+  if (filters.member && filters.member !== 'all' && filters.member !== 'Commun') {
+    conditions.push('member = ?');
+    params.push(filters.member);
   }
 
   if (filters.year) {

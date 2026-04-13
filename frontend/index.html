@@ -3170,7 +3170,7 @@ async function renderMonthly() {
       API.monthlyExpenses.getStats({ year: monthlyYear, month: monthlyMonth, member }),
       API.monthlyExpenses.getAll({ year: monthlyYear, month: monthlyMonth, member }),
       API.monthlyExpenses.getHistory({ member }),
-      API.savings.getAll({ year: monthlyYear }),
+      API.savings.getAll({ year: monthlyYear, member }),
     ]);
     monthlyExpenses = expenses;
     // Synchronise le tableau global savings pour que openEditSaving/deleteSaving fonctionnent depuis suivi mensuel

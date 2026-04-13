@@ -45,6 +45,10 @@ function getSavingsActual(filters) {
   const frMonth = FR_MONTHS[Number(filters.month) - 1];
   if (!frMonth) return 0;
   const { cond, params } = buildUserWhere(filters);
+  if (filters.member && filters.member !== 'all' && filters.member !== 'Commun') {
+    cond.push('member = ?');
+    params.push(filters.member);
+  }
   cond.push('year = ?', 'month = ?');
   params.push(Number(filters.year), frMonth);
   const row = db.prepare(`SELECT COALESCE(SUM(amount), 0) AS total FROM savings WHERE ${cond.join(' AND ')}`).get(...params);
