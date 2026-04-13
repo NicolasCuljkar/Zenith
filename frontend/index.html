@@ -880,6 +880,7 @@ window.onerror = function(msg, src, line) {
     <div id="entries-previsionnel">
       <div id="entries-nodata" style="display:none"></div>
       <div class="kpi-grid" id="entries-summary" style="margin-bottom:1rem"></div>
+      <div id="entries-profile-wrap" style="margin-bottom:.75rem"></div>
       <div id="entries-toolbar" style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:.75rem;gap:8px">
         <div id="entries-search" style="flex:1;display:flex;flex-direction:row;gap:6px;min-width:0">
           <input type="text" id="search-input" class="inp search-inp" placeholder="Rechercher…" style="flex:1;min-width:0">
@@ -2885,6 +2886,7 @@ function renderEntries(){
   if(_noData){
     document.getElementById('entries-summary').innerHTML='';
     document.getElementById('entries-summary').style.display='none';
+    const _pwClear=document.getElementById('entries-profile-wrap');if(_pwClear)_pwClear.innerHTML='';
     document.getElementById('entries-search').style.display='none';
     document.getElementById('btn-add-entry').style.display='none';
     if(currentTab==='entries')document.getElementById('fab-entry').style.display='none';
@@ -2910,6 +2912,58 @@ function renderEntries(){
   document.getElementById('entries-summary').style.display='';
   document.getElementById('entries-toolbar').style.display='flex';
   document.getElementById('entries-search').style.display='flex';
+  // ── Carte profil (Revenus / Dépenses / Slider RAV) ──
+  {
+    const _pw = document.getElementById('entries-profile-wrap');
+    if (_pw) {
+      const _showNames = entriesMember === 'Commun' ? orderedMembers() : [entriesMember];
+      _pw.innerHTML = _showNames.map(name => {
+        const ps = calcStats(entries.filter(e => e.member === name));
+        const pct = savingPct[name] ?? 60;
+        const epC = Math.round(ps.rav * pct / 100);
+        const loiC = Math.round(ps.rav * (100 - pct) / 100);
+        const mc = getMC(name);
+        const usedPct = ps.revNet > 0 ? Math.round((ps.fix + ps.vari) / ps.revNet * 100) : 0;
+        const isMe = currentUser?.name === name;
+        return `<div class="card" style="margin-bottom:0">
+          <div style="font-size:var(--fs-title);font-weight:700;color:var(--text);letter-spacing:-.02em;margin-bottom:6px">${_showNames.length > 1 ? `<span style="color:${mc}">${name}</span> — ` : ''}Revenus</div>
+          <div class="prow"><span class="prow-lbl">Revenus bruts</span><span class="prow-val" style="color:var(--green)">${eur(ps.rev)}</span></div>
+          <div class="prow"><span class="prow-lbl">Impôts</span><span class="prow-val" style="color:var(--amber)">− ${eur(ps.tax)}</span></div>
+          <div class="prow"><span class="prow-lbl" style="font-weight:600">Revenus nets</span><span class="prow-val" style="color:var(--green)">${eur(ps.revNet)}</span></div>
+          <div style="font-size:var(--fs-title);font-weight:700;color:var(--text);letter-spacing:-.02em;margin-top:14px;margin-bottom:6px">Dépenses</div>
+          <div class="prow"><span class="prow-lbl">Dépenses fixes</span><span class="prow-val" style="color:var(--red)">− ${eur(ps.fix)}</span></div>
+          <div class="prow"><span class="prow-lbl">Dépenses variables</span><span class="prow-val" style="color:var(--red)">− ${eur(ps.vari)}</span></div>
+          <div class="prow"><span class="prow-lbl">Dépenses totales</span><span class="prow-val" style="color:var(--red)">− ${eur(ps.fix + ps.vari)}</span></div>
+          <div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:22px;margin-bottom:6px">
+            <div style="font-size:var(--fs-title);font-weight:700;color:var(--text);letter-spacing:-.02em">Répartition du reste à vivre</div>
+            <div style="font-size:var(--fs-base);font-weight:800;color:${ps.rav>=0?'var(--green)':'var(--red)'};letter-spacing:-.03em">${eur(ps.rav)}</div>
+          </div>
+          <div style="margin:12px 0 6px">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+              ${isMe ? `<div style="display:flex;gap:0;border:1px solid var(--border);border-radius:8px;overflow:hidden">
+                <button id="ep-mode-pct-${name}" onclick="setSavingMode('${name}','pct',this)" style="padding:3px 10px;font-size:var(--fs-sm);font-weight:600;border:none;cursor:pointer;font-family:inherit;transition:background .12s;background:${mc};color:#fff">%</button>
+                <button id="ep-mode-eur-${name}" onclick="setSavingMode('${name}','eur',this)" style="padding:3px 10px;font-size:var(--fs-sm);font-weight:600;border:none;cursor:pointer;font-family:inherit;transition:background .12s;background:var(--surface);color:var(--muted)">€</button>
+              </div>` : '<span></span>'}
+              <span id="pctv-${name}" style="font-size:var(--fs-md);font-weight:700;color:${mc}">${pct}%</span>
+            </div>
+            <div id="slider-pct-${name}">
+              <input type="range" min="0" max="100" step="1" value="${pct}" id="pct-${name}"
+                style="width:100%;accent-color:${mc};--accent-c:${mc};--track-right:var(--amber)"
+                ${isMe ? `oninput="savingPct['${name}']=+this.value;document.getElementById('pctv-${name}').textContent=this.value+'%';updateSplitBar('${name}',+this.value);saveData();updateSavingCalc('${name}');debouncedDashRefresh();"` : `disabled style="width:100%;accent-color:${mc};opacity:.45;pointer-events:none"`}>
+            </div>
+            <div id="slider-eur-${name}" style="display:none">
+              <input type="range" min="0" max="${Math.round(ps.rav)}" step="10" value="${epC}" id="eur-${name}"
+                style="width:100%;accent-color:${mc};--accent-c:${mc};--track-right:var(--amber)"
+                ${isMe ? `oninput="const pctVal=+this.max>0?Math.round(+this.value/+this.max*100):0;savingPct['${name}']=pctVal;document.getElementById('pct-${name}').value=pctVal;document.getElementById('pctv-${name}').textContent=parseInt(this.value).toLocaleString('fr-FR')+' €';updateSplitBar('${name}',pctVal);saveData();updateSavingCalc('${name}');debouncedDashRefresh();"` : `disabled style="width:100%;accent-color:${mc};opacity:.45;pointer-events:none"`}>
+            </div>
+          </div>
+          <div class="prow"><span class="prow-lbl" style="color:var(--blue)">→ Épargne calculée</span><span class="prow-val" style="color:var(--blue)" data-ep="${name}">${eur(epC)}</span></div>
+          <div class="prow" style="border-bottom:none"><span class="prow-lbl" style="color:var(--amber)">→ Budget loisir</span><span class="prow-val" style="color:var(--amber)" data-loi="${name}">${eur(loiC)}</span></div>
+        </div>`;
+      }).join('');
+      setTimeout(fillAllTracks, 0);
+    }
+  }
   const _canAddE=entriesMember!=='Commun'&&entriesMember===myRole();
   document.getElementById('btn-add-entry').style.display=_canAddE?'':'none';
   if(currentTab==='entries')document.getElementById('fab-entry').style.display=_canAddE?'':'none';
