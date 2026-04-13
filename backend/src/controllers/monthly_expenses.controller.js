@@ -19,7 +19,7 @@ async function listExpenses(req, res, next) {
   try {
     const { member, year, month } = req.query;
     const scope = resolveUserScope(req.user.id, member);
-    res.json({ success: true, data: monthlyService.getAll({ ...scope, year, month }) });
+    res.json({ success: true, data: monthlyService.getAll({ ...scope, year, month, member }) });
   } catch (err) { next(err); }
 }
 
