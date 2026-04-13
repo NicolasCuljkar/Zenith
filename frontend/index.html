@@ -3295,7 +3295,7 @@ function _renderMonthlySections(stats, expenses, savingsData = [], entryStats = 
   const epBudget0    = entryStats ? Math.round(entryStats.rav * (savingPct[epMember0] ?? 60) / 100) : 0;
   const revNet       = revenu.actual - impot.actual;
   const totalDepReel = fixe.actual + vari.actual + loi.actual;
-  const soldeReel    = revNet - totalDepReel - epDelta;
+  const soldeReel    = revNet - totalDepReel - Math.max(epDelta, 0);
   const revNetBudget = revenu.budget - impot.budget;
   const soldeBudget  = revNetBudget - (fixe.budget + vari.budget + loi.budget) - epBudget0;
   const depRate      = revNet > 0 ? Math.round((fixe.actual + vari.actual) / revNet * 100) : 0;
