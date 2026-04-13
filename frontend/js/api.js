@@ -455,7 +455,16 @@ const _monthlyExpenses = {
   delete(id) { return del(`/monthly-expenses/${id}`); },
 };
 
-const API = { auth: _auth, entries: _entries, savings: _savings, users: _users, bridge: _bridge, household: _household, import: _import, monthlyExpenses: _monthlyExpenses, getToken, clearAuth };
+/**
+ * expenseLabels — Désignations prédéfinies par catégorie
+ */
+const _expenseLabels = {
+  getAll(params = {})  { return get('/expense-labels', params); },
+  create(data)         { return post('/expense-labels', data); },
+  delete(id)           { return del(`/expense-labels/${id}`); },
+};
+
+const API = { auth: _auth, entries: _entries, savings: _savings, users: _users, bridge: _bridge, household: _household, import: _import, monthlyExpenses: _monthlyExpenses, expenseLabels: _expenseLabels, getToken, clearAuth };
 
 // Attach to window for global access in inline scripts
 if (typeof window !== 'undefined') {

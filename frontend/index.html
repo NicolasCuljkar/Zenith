@@ -1320,7 +1320,26 @@ window.onerror = function(msg, src, line) {
     <div class="modal-drag"></div>
     <h3 id="modal-me-title">Ajouter une dépense</h3>
     <div class="fstack">
-      <div class="fgrp"><label>Désignation</label><input type="text" id="fme-name" placeholder="ex. Courses, Essence…"></div>
+      <div class="frow" style="align-items:flex-start">
+        <div class="fgrp" style="flex:2">
+          <label>Désignation</label>
+          <div style="display:flex;gap:6px">
+            <select id="fme-name" style="flex:1"><option value="">— Sélectionner —</option></select>
+            <button type="button" class="btn-add" style="padding:8px 10px;flex-shrink:0" onclick="toggleAddLabelForm()" title="Nouvelle désignation">+</button>
+          </div>
+          <div id="fme-label-form" style="display:none;margin-top:6px">
+            <div style="display:flex;gap:6px">
+              <input type="text" id="fme-label-input" placeholder="Nouvelle désignation…" class="inp" style="flex:1" onkeydown="if(event.key==='Enter')confirmAddLabel();else if(event.key==='Escape')cancelAddLabel();">
+              <button type="button" class="btn-add" style="padding:8px 10px" onclick="confirmAddLabel()">✓</button>
+              <button type="button" class="btn" style="padding:8px 10px" onclick="cancelAddLabel()">✕</button>
+            </div>
+          </div>
+        </div>
+        <div class="fgrp" style="flex:1">
+          <label>Note</label>
+          <input type="text" id="fme-note" placeholder="Ex. Leclerc…">
+        </div>
+      </div>
       <div class="frow">
         <div class="fgrp"><label>Catégorie</label>
           <select id="fme-cat">
@@ -1333,7 +1352,6 @@ window.onerror = function(msg, src, line) {
         </div>
         <div class="fgrp"><label>Montant (€)</label><input type="number" id="fme-amount" min="0" step="0.01" placeholder="0"></div>
       </div>
-      <div class="fgrp"><label>Note (optionnel)</label><input type="text" id="fme-note" placeholder="Ex. Leclerc, Total…"></div>
     </div>
     <div class="modal-footer">
       <button class="btn" id="modal-me-cancel">Annuler</button>
@@ -3167,10 +3185,9 @@ async function renderMonthly() {
   showLoading();
   try {
     const member = entriesMember;
-    const [stats, expenses, history, savingsData] = await Promise.all([
+    const [stats, expenses, savingsData] = await Promise.all([
       API.monthlyExpenses.getStats({ year: monthlyYear, month: monthlyMonth, member }),
       API.monthlyExpenses.getAll({ year: monthlyYear, month: monthlyMonth, member }),
-      API.monthlyExpenses.getHistory({ member }),
       API.savings.getAll({ year: monthlyYear, member }),
     ]);
     monthlyExpenses = expenses;
@@ -3179,13 +3196,13 @@ async function renderMonthly() {
       const idx = savings.findIndex(x => x.id === s.id);
       if (idx >= 0) savings[idx] = s; else savings.push(s);
     });
-    _renderMonthlySections(stats, expenses, history, savingsData);
+    _renderMonthlySections(stats, expenses, savingsData);
   } catch(err) {
     showApiError('Erreur chargement suivi mensuel : ' + err.message);
   } finally { hideLoading(); }
 }
 
-function _renderMonthlySections(stats, expenses, history, savingsData = []) {
+function _renderMonthlySections(stats, expenses, savingsData = []) {
   const { revenu, impot, fixe, variable: vari, epargne: ep, loisir: loi } = stats;
   const revNet       = revenu.actual - impot.actual;
   const totalDepReel = fixe.actual + vari.actual + loi.actual;
@@ -3222,12 +3239,9 @@ function _renderMonthlySections(stats, expenses, history, savingsData = []) {
     { key:'variable',label:'Dépenses variables',cats:['variable'],     color:'#e07020', totColor:'var(--red)',   auto:false },
     { key:'loisir',  label:'Loisir',           cats:['loisir'],         color:'#f59e0b', totColor:'var(--red)',   auto:false },
     { key:'epargne', label:'Épargne',          cats:['epargne'],        color:'#2979c8', totColor:'var(--blue)',  savings:true },
-    { key:'history', label:'Historique mensuel',cats:[],                color:'#6366f1', totColor:'var(--muted)', auto:false },
   ];
 
   document.getElementById('monthly-sections').innerHTML = GROUPS.map(g => {
-    if (g.key === 'history') return _monthlyHistorySection(history, g, isMobile);
-
     if (g.savings) {
       const frMonth = MONTH_NAMES[monthlyMonth - 1];
       const savingRecord = savingsData.find(s => s.year === monthlyYear && s.month === frMonth);
@@ -3587,10 +3601,11 @@ function openMonthlyAutoOverride(entryId, overrideId) {
   document.getElementById('modal-me-title').textContent = 'Corriger pour ce mois';
   const nameEl = document.getElementById('fme-name');
   const catEl  = document.getElementById('fme-cat');
-  nameEl.value    = entry.name;
-  nameEl.readOnly = true;
-  catEl.value     = entry.cat;
-  catEl.disabled  = true;
+  nameEl.innerHTML = `<option value="${entry.name}">${entry.name}</option>`;
+  nameEl.disabled  = true;
+  catEl.value      = entry.cat;
+  catEl.disabled   = true;
+  cancelAddLabel();
   document.getElementById('fme-amount').value = Math.abs(overrideId
     ? (monthlyExpenses.find(x => x.id === overrideId)?.amount || entry.amount)
     : entry.amount);
@@ -3626,6 +3641,7 @@ function suppressMonthlyLine(entryId, name) {
   });
 }
 
+let _labelCat = 'variable';
 function openAddMonthlyExpense(defaultCat = 'variable', locked = false) {
   editMonthlyId      = null;
   editMonthlyEntryId = null;
@@ -3637,15 +3653,57 @@ function openAddMonthlyExpense(defaultCat = 'variable', locked = false) {
     loisir:   'Ajouter un loisir',
   };
   document.getElementById('modal-me-title').textContent = titles[defaultCat] || 'Ajouter une dépense';
-  const nameEl = document.getElementById('fme-name');
-  const catEl  = document.getElementById('fme-cat');
-  nameEl.readOnly = false;
-  catEl.disabled  = locked;
-  nameEl.value    = '';
+  const catEl = document.getElementById('fme-cat');
+  catEl.disabled = locked;
+  catEl.value    = defaultCat;
   document.getElementById('fme-amount').value = '';
-  catEl.value     = defaultCat;
   document.getElementById('fme-note').value   = '';
+  cancelAddLabel();
+  _loadExpenseLabels(defaultCat);
   document.getElementById('modal-monthly-expense').classList.add('open');
+}
+async function _loadExpenseLabels(cat, selectValue = '') {
+  _labelCat = cat;
+  const sel = document.getElementById('fme-name');
+  sel.disabled = false;
+  sel.innerHTML = '<option value="">— Sélectionner —</option>';
+  try {
+    const labels = await API.expenseLabels.getAll({ cat });
+    labels.forEach(l => {
+      const o = document.createElement('option');
+      o.value = l.name; o.textContent = l.name;
+      sel.appendChild(o);
+    });
+    if (selectValue) {
+      sel.value = selectValue;
+      if (sel.value !== selectValue) {
+        const o = document.createElement('option');
+        o.value = selectValue; o.textContent = selectValue;
+        sel.insertBefore(o, sel.options[1] || null);
+        sel.value = selectValue;
+      }
+    }
+  } catch(e) { console.error('Labels:', e); }
+}
+function toggleAddLabelForm() {
+  const f = document.getElementById('fme-label-form');
+  const show = f.style.display === 'none';
+  f.style.display = show ? '' : 'none';
+  if (show) document.getElementById('fme-label-input').focus();
+}
+function cancelAddLabel() {
+  document.getElementById('fme-label-form').style.display = 'none';
+  document.getElementById('fme-label-input').value = '';
+}
+async function confirmAddLabel() {
+  const input = document.getElementById('fme-label-input');
+  const name = input.value.trim();
+  if (!name) return;
+  try {
+    await API.expenseLabels.create({ cat: _labelCat, name });
+    await _loadExpenseLabels(_labelCat, name);
+    cancelAddLabel();
+  } catch(e) { showApiError('Erreur : ' + e.message); }
 }
 function openEditMonthlyExpense(id) {
   const e = monthlyExpenses.find(x => x.id === id);
@@ -3653,14 +3711,13 @@ function openEditMonthlyExpense(id) {
   editMonthlyId      = id;
   editMonthlyEntryId = e.entry_id || null;
   document.getElementById('modal-me-title').textContent = 'Modifier la dépense';
-  const nameEl = document.getElementById('fme-name');
-  const catEl  = document.getElementById('fme-cat');
-  nameEl.readOnly = false;
-  catEl.disabled  = false;
-  nameEl.value    = e.name;
+  const catEl = document.getElementById('fme-cat');
+  catEl.disabled = false;
+  catEl.value    = e.cat;
   document.getElementById('fme-amount').value = Math.abs(e.amount);
-  catEl.value     = e.cat;
   document.getElementById('fme-note').value   = e.note || '';
+  cancelAddLabel();
+  _loadExpenseLabels(e.cat, e.name);
   document.getElementById('modal-monthly-expense').classList.add('open');
 }
 function deleteMonthlyExpense(id) {
@@ -3683,7 +3740,7 @@ document.getElementById('modal-me-save').onclick = async () => {
   const catEl = document.getElementById('fme-cat');
   const cat  = catEl.value || catEl.options[catEl.selectedIndex]?.value || 'variable';
   const note = document.getElementById('fme-note').value.trim();
-  if (!name || isNaN(amt) || amt <= 0) return alert('Remplissez tous les champs obligatoires.');
+  if (!name || isNaN(amt) || amt <= 0) return alert('Sélectionnez une désignation et renseignez un montant.');
   // Revenus : montant positif ; dépenses : montant négatif
   const amount = cat === 'revenu' ? Math.abs(amt) : -Math.abs(amt);
   const member = entriesMember === 'Commun' ? myRole() : entriesMember;

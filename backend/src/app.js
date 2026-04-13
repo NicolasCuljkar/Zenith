@@ -19,6 +19,7 @@ const adminRoutes         = require('./routes/admin.routes');
 const eventsRoutes        = require('./routes/events.routes');
 const bridgeRoutes          = require('./routes/bridge.routes');
 const monthlyExpensesRoutes = require('./routes/monthly_expenses.routes');
+const expenseLabelsRoutes   = require('./routes/expense_labels.routes');
 const notifService        = require('./services/notifications.service');
 
 const { errorHandler, notFoundHandler } = require('./middleware/error.middleware');
@@ -78,6 +79,7 @@ app.use('/api/admin',         adminRoutes);
 app.use('/api/events',        eventsRoutes);
 app.use('/api/bridge',           bridgeRoutes);
 app.use('/api/monthly-expenses', monthlyExpensesRoutes);
+app.use('/api/expense-labels',  expenseLabelsRoutes);
 
 app.get('/api/health', (req, res) => {
   const db = require('./config/database');
