@@ -3279,7 +3279,7 @@ function _monthlyAutoGroup(rows, overrides, extras, g, isMobile) {
   const ADD_SVG = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`;
   const mkAdd = (cat, lbl, locked = true) => `<button class="btn-add" onclick="openAddMonthlyExpense('${cat}',${locked})" style="font-size:var(--fs-xs);padding:4px 10px;gap:4px">${ADD_SVG}${lbl}</button>`;
   let addBtn = '';
-  if (g.cats.includes('revenu')) addBtn = mkAdd('revenu','Ajouter', false);
+  if (g.cats.includes('revenu')) addBtn = `<button class="btn-add" onclick="openAddMonthlyExpense('revenu',false,['revenu','impot'])" style="font-size:var(--fs-xs);padding:4px 10px;gap:4px">${ADD_SVG}Ajouter</button>`;
   else if (g.cats.includes('fixe')) addBtn = mkAdd('fixe','Ajouter', true);
   const hdr = `<div style="display:flex;justify-content:space-between;align-items:center;padding:0 2px 6px;margin-bottom:5px;border-bottom:2px solid ${g.color}30">
     <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">
@@ -3636,7 +3636,8 @@ function suppressMonthlyLine(entryId, name) {
 }
 
 let _labelCat = 'variable';
-function openAddMonthlyExpense(defaultCat = 'variable', locked = false) {
+const CAT_LABELS = { revenu:'Revenu', impot:'Impôt', fixe:'Charge fixe', variable:'Variable', loisir:'Loisir' };
+function openAddMonthlyExpense(defaultCat = 'variable', locked = false, allowedCats = null) {
   editMonthlyId      = null;
   editMonthlyEntryId = null;
   const titles = {
@@ -3648,6 +3649,9 @@ function openAddMonthlyExpense(defaultCat = 'variable', locked = false) {
   };
   document.getElementById('modal-me-title').textContent = locked ? (titles[defaultCat] || 'Ajouter une dépense') : (defaultCat === 'revenu' ? 'Ajouter revenu / impôt exceptionnel' : (titles[defaultCat] || 'Ajouter une dépense'));
   const catEl = document.getElementById('fme-cat');
+  const allCats = ['variable','loisir','revenu','impot','fixe'];
+  const visible = allowedCats || allCats;
+  catEl.innerHTML = visible.map(c => `<option value="${c}">${CAT_LABELS[c]||c}</option>`).join('');
   catEl.disabled = locked;
   catEl.value    = defaultCat;
   document.getElementById('fme-amount').value = '';
