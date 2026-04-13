@@ -3495,16 +3495,23 @@ function _monthlyEpargneGroup(savingRecord, g, budgetTotal, actualTotal, revNet,
   const deltaDisplay = hasDelta
     ? `<span style="font-size:var(--fs-sm);font-weight:800;color:${deltaCol};letter-spacing:-.02em">${deltaStr}</span><span style="font-size:var(--fs-xs);color:var(--muted)"> vs mois préc.</span>`
     : '';
+  const pct    = budgetTotal > 0 && actualTotal != null ? Math.round(actualTotal / budgetTotal * 100) : null;
+  const pctCol = pct === null ? 'var(--muted)' : pct >= 100 ? 'var(--green)' : pct >= 70 ? 'var(--amber)' : 'var(--red)';
+  const barW   = pct !== null ? Math.min(Math.max(pct, 0), 100) : 0;
+  const subInfo = pct !== null
+    ? `<span style="font-size:var(--fs-xs);color:${pctCol};font-weight:700">${pct}%</span><span style="font-size:var(--fs-xs);color:var(--muted)">du budget ${eur(budgetTotal)}</span>`
+    : `<span style="font-size:var(--fs-xs);color:var(--muted)">Aucun budget prévisionnel</span>`;
   const hdr = `<div style="display:flex;justify-content:space-between;align-items:center;padding:0 2px 6px;margin-bottom:5px;border-bottom:2px solid ${g.color}30">
     <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">
       <span style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:${g.color}">${g.label}</span>
+      ${subInfo}
     </div>
     <div style="display:flex;align-items:center;gap:8px">
       ${deltaDisplay}
       ${addBtn}
     </div>
   </div>`;
-  const bar = '';
+  const bar = budgetTotal > 0 ? `<div style="height:4px;background:var(--surface2);border-radius:99px;overflow:hidden;margin-bottom:8px"><div style="height:100%;width:${barW}%;background:${pctCol};border-radius:99px;transition:width .3s"></div></div>` : '';
   if (!savingRecord) {
     return `<div style="margin-bottom:var(--sg)">${hdr}${bar}<div class="tbl-empty">Aucune épargne saisie pour ce mois — utilisez le bouton "Saisir"</div></div>`;
   }
