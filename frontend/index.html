@@ -1324,6 +1324,7 @@ window.onerror = function(msg, src, line) {
         <label>Désignation</label>
         <div style="display:flex;gap:6px">
           <select id="fme-name" style="flex:1;min-width:0" onchange="_syncCatFromLabel()"><option value="">— Sélectionner —</option></select>
+          <button type="button" id="fme-label-delete" class="btn" style="padding:0 12px;font-size:1rem;line-height:1;flex-shrink:0;display:none" onclick="deleteCurrentLabel()" title="Supprimer cette désignation">🗑</button>
           <button type="button" class="btn" style="padding:0 12px;font-size:1.2rem;line-height:1;flex-shrink:0" onclick="toggleAddLabelForm()" title="Nouvelle désignation">+</button>
         </div>
         <div id="fme-label-form" style="display:none;margin-top:6px">
@@ -3636,6 +3637,7 @@ function suppressMonthlyLine(entryId, name) {
 }
 
 let _labelCat = 'variable';
+let _allowedCats = null;
 const CAT_LABELS = { revenu:'Revenu', impot:'Impôt', fixe:'Charge fixe', variable:'Variable', loisir:'Loisir' };
 function openAddMonthlyExpense(defaultCat = 'variable', locked = false, allowedCats = null) {
   editMonthlyId      = null;
@@ -3657,7 +3659,10 @@ function openAddMonthlyExpense(defaultCat = 'variable', locked = false, allowedC
   document.getElementById('fme-amount').value = '';
   document.getElementById('fme-note').value   = '';
   cancelAddLabel();
-  _loadExpenseLabels(allowedCats || [defaultCat], defaultCat);
+  _allowedCats = allowedCats || [defaultCat];
+  const delBtn = document.getElementById('fme-label-delete');
+  if (delBtn) delBtn.style.display = 'none';
+  _loadExpenseLabels(_allowedCats, defaultCat);
   document.getElementById('modal-monthly-expense').classList.add('open');
 }
 async function _loadExpenseLabels(cats, selectValue = '') {
@@ -3672,7 +3677,7 @@ async function _loadExpenseLabels(cats, selectValue = '') {
       const cat = catsArr[i];
       labels.forEach(l => {
         const o = document.createElement('option');
-        o.value = l.name; o.textContent = l.name; o.dataset.cat = cat;
+        o.value = l.name; o.textContent = l.name; o.dataset.cat = cat; o.dataset.id = l.id;
         sel.appendChild(o);
       });
     });
@@ -3692,14 +3697,12 @@ async function _loadExpenseLabels(cats, selectValue = '') {
 function _syncCatFromLabel() {
   const sel = document.getElementById('fme-name');
   const opt = sel.options[sel.selectedIndex];
-  const catEl = document.getElementById('fme-cat');
   if (opt && opt.dataset.cat) {
-    catEl.value = opt.dataset.cat;
-    catEl.disabled = true;
+    document.getElementById('fme-cat').value = opt.dataset.cat;
     _labelCat = opt.dataset.cat;
-  } else {
-    catEl.disabled = false;
   }
+  const delBtn = document.getElementById('fme-label-delete');
+  if (delBtn) delBtn.style.display = (opt && opt.value) ? '' : 'none';
 }
 function toggleAddLabelForm() {
   const f = document.getElementById('fme-label-form');
@@ -3721,6 +3724,18 @@ async function confirmAddLabel() {
     cancelAddLabel();
   } catch(e) { showApiError('Erreur : ' + e.message); }
 }
+async function deleteCurrentLabel() {
+  const sel = document.getElementById('fme-name');
+  const opt = sel.options[sel.selectedIndex];
+  if (!opt || !opt.value || !opt.dataset.id) return;
+  showConfirm(`Supprimer la désignation "${opt.value}" ?`, 'Elle sera supprimée de la liste pour toutes les pages.', async () => {
+    try {
+      await API.expenseLabels.delete(Number(opt.dataset.id));
+      const cat = _labelCat;
+      await _loadExpenseLabels(Array.isArray(_allowedCats) ? _allowedCats : [cat], '');
+    } catch(e) { showApiError('Erreur : ' + e.message); }
+  });
+}
 function openEditMonthlyExpense(id) {
   const e = monthlyExpenses.find(x => x.id === id);
   if (!e) return;
@@ -3733,6 +3748,9 @@ function openEditMonthlyExpense(id) {
   document.getElementById('fme-amount').value = Math.abs(e.amount);
   document.getElementById('fme-note').value   = e.note || '';
   cancelAddLabel();
+  _allowedCats = [e.cat];
+  const delBtn2 = document.getElementById('fme-label-delete');
+  if (delBtn2) delBtn2.style.display = 'none';
   _loadExpenseLabels(e.cat, e.name);
   document.getElementById('modal-monthly-expense').classList.add('open');
 }
