@@ -1357,10 +1357,16 @@ window.onerror = function(msg, src, line) {
 </div>
 
 <!-- MONTHLY BULK DELETE BAR -->
-<div id="monthly-bulk-bar" style="display:none;position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:500;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:10px 18px;align-items:center;gap:12px;box-shadow:0 4px 24px rgba(0,0,0,.25);white-space:nowrap">
-  <span id="monthly-bulk-count" style="font-size:var(--fs-sm);font-weight:700;color:var(--fg)"></span>
-  <button class="btn" onclick="clearMonthlySelection()" style="font-size:var(--fs-xs);padding:5px 12px">Désélectionner</button>
-  <button class="btn-act btn-act-danger" onclick="deleteSelectedMonthly()" style="font-size:var(--fs-xs);padding:5px 14px">Supprimer</button>
+<div id="monthly-bulk-bar" style="display:none;position:fixed;bottom:28px;left:50%;transform:translateX(-50%);z-index:500;background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:10px 10px 10px 16px;align-items:center;gap:10px;box-shadow:0 8px 32px rgba(0,0,0,.35);white-space:nowrap;backdrop-filter:blur(8px)">
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+  <span id="monthly-bulk-count" style="font-size:var(--fs-sm);font-weight:700;color:var(--fg);min-width:120px"></span>
+  <div style="width:1px;height:20px;background:var(--border);flex-shrink:0"></div>
+  <button onclick="clearMonthlySelection()" style="font-size:var(--fs-xs);padding:6px 12px;background:none;border:none;color:var(--muted);cursor:pointer;border-radius:8px;font-weight:600;transition:color .15s" onmouseover="this.style.color='var(--fg)'" onmouseout="this.style.color='var(--muted)'">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="margin-right:5px;vertical-align:middle"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>Désélectionner
+  </button>
+  <button onclick="deleteSelectedMonthly()" style="font-size:var(--fs-xs);padding:7px 14px;background:var(--red);border:none;color:#fff;cursor:pointer;border-radius:10px;font-weight:700;display:flex;align-items:center;gap:6px;transition:opacity .15s" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>Supprimer
+  </button>
 </div>
 
 <!-- SAVING MODAL -->
