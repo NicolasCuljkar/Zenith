@@ -3330,9 +3330,6 @@ function _renderMonthlySections(stats, expenses, savingsData = [], entryStats = 
       return _monthlyManualGroup(rows, g, budgetTotal, isMobile, g.key === 'variable' ? revNet : 0);
     }
   });
-  // Insérer le slider RAV entre variable (index 2) et loisir (index 3)
-  const _epMemberSlider = entriesMember === 'Commun' ? myRole() : entriesMember;
-  groupHtmls.splice(3, 0, _monthlyRavSliderHtml(entryStats, _epMemberSlider));
   document.getElementById('monthly-sections').innerHTML = groupHtmls.join('');
 }
 
