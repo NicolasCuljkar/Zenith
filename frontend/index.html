@@ -3472,13 +3472,21 @@ function _monthlyAutoGroup(rows, overrides, extras, g, isMobile) {
       const isSuppressed = isOverridden && ov.amount === 0;
       const c = CATS[e.cat];
       const amtCol = isSuppressed ? 'var(--muted)' : e.cat === 'revenu' ? 'var(--green)' : e.cat === 'impot' ? 'var(--amber)' : 'var(--red)';
-      return `<div class="entry-card" style="border-left-color:${isSuppressed?'var(--muted)':isOverridden?'var(--amber)':c.hex};background:${isSuppressed?'var(--surface2)':c.bg};padding:13px 14px 11px 14px${isSuppressed?';opacity:.6':''}">
+      const mStatusBadge = isSuppressed
+        ? `<span style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:1px 6px;border-radius:4px;background:var(--red-bg);color:var(--red);border:1px solid #d9353533;margin-left:6px;vertical-align:middle">Supprimé</span>`
+        : isOverridden
+        ? `<span style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:1px 6px;border-radius:4px;background:#c49a0022;color:#c49a00;border:1px solid #c49a0033;margin-left:6px;vertical-align:middle">Corrigé</span>`
+        : '';
+      return `<div class="entry-card" style="border-left-color:${isSuppressed?'#d93535':isOverridden?'#c49a00':c.hex};background:${isSuppressed?'color-mix(in srgb,#d93535 6%,var(--surface))':isOverridden?'color-mix(in srgb,#c49a00 8%,var(--surface))':c.bg};padding:13px 14px 11px 14px${isSuppressed?';opacity:.7':''}">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
           ${!isSuppressed?`<input type="checkbox" class="monthly-cb monthly-cb-suppress" data-entry-id="${e.id}" ${monthlySelectedSuppress.has(e.id)?'checked':''} onchange="toggleMonthlySelectSuppress(${e.id},${ov?ov.id:'null'},this)" style="margin-top:3px;flex-shrink:0">`:''}
-          <span style="font-weight:700;font-size:var(--fs-base);flex:1;line-height:1.3;${isSuppressed?'text-decoration:line-through;color:var(--muted)':''}">${e.name}${isSuppressed?'<span style="font-size:var(--fs-xs);color:var(--muted);margin-left:5px">supprimé ce mois</span>':isOverridden?'<span style="font-size:var(--fs-xs);color:var(--amber);margin-left:5px">corrigé</span>':''}</span>
-          <span style="font-size:var(--fs-base);font-weight:800;color:${amtCol}">${isSuppressed?'—':eur(displayAmt)}</span>
+          <div style="flex:1;min-width:0">
+            <span style="font-weight:700;font-size:var(--fs-base);line-height:1.3;${isSuppressed?'text-decoration:line-through;color:var(--muted)':''}">${e.name}</span>${mStatusBadge}
+            ${isOverridden && !isSuppressed ? `<div style="font-size:10px;color:var(--muted);text-decoration:line-through;margin-top:2px">${eur(Math.abs(e.amount))}</div>` : ''}
+          </div>
+          <span style="font-size:var(--fs-base);font-weight:800;color:${amtCol};flex-shrink:0">${isSuppressed?'—':eur(displayAmt)}</span>
         </div>
-        <div style="height:1px;background:${c.hex}22;margin:9px 0 8px"></div>
+        <div style="height:1px;background:${(isSuppressed?'#d93535':isOverridden?'#c49a00':c.hex)}22;margin:9px 0 8px"></div>
         <div style="display:flex;justify-content:space-between;align-items:center">
           <span style="font-size:var(--fs-xs);font-weight:700;color:${c.text};letter-spacing:.05em;text-transform:uppercase">${c.label}</span>
           <div style="display:flex;gap:5px">
@@ -3525,11 +3533,26 @@ ${bar}    <div class="tbl-wrap"><table style="width:100%;table-layout:fixed">
           const c = CATS[e.cat];
           const ac = isSuppressed?'var(--muted)':e.cat==='revenu'?'var(--green)':e.cat==='impot'?'var(--amber)':'var(--red)';
           const canSelect = !isSuppressed;
-          return `<tr style="${isSuppressed?'opacity:.5;':''}${isOverridden&&!isSuppressed?'background:var(--amber)08;':''}">
+          const rowStyle = isSuppressed
+            ? 'box-shadow:inset 3px 0 0 #d9353566;background:color-mix(in srgb,#d93535 6%,var(--surface));opacity:.7;'
+            : isOverridden
+            ? 'box-shadow:inset 3px 0 0 #c49a00;background:color-mix(in srgb,#c49a00 8%,var(--surface));'
+            : '';
+          const statusBadge = isSuppressed
+            ? `<span style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:1px 6px;border-radius:4px;background:var(--red-bg);color:var(--red);border:1px solid #d9353533;margin-left:6px;vertical-align:middle">Supprimé</span>`
+            : isOverridden
+            ? `<span style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:1px 6px;border-radius:4px;background:#c49a0022;color:#c49a00;border:1px solid #c49a0033;margin-left:6px;vertical-align:middle">Corrigé</span>`
+            : '';
+          const amtCell = isSuppressed
+            ? `<td style="text-align:right;color:var(--muted)">—</td>`
+            : isOverridden
+            ? `<td style="text-align:right"><div style="font-size:10px;color:var(--muted);text-decoration:line-through">${eur(Math.abs(e.amount))}</div><div style="font-weight:700;color:${ac}">${eur(displayAmt)}</div></td>`
+            : `<td style="text-align:right;font-weight:600;color:${ac}">${eur(displayAmt)}</td>`;
+          return `<tr style="${rowStyle}">
             <td>${canSelect?`<input type="checkbox" class="monthly-cb monthly-cb-suppress" data-entry-id="${e.id}" data-group="${g.key}" data-ov-id="${ov?ov.id:''}" ${monthlySelectedSuppress.has(e.id)?'checked':''} onchange="toggleMonthlySelectSuppress(${e.id},${ov?ov.id:'null'},this)">`:''}</td>
-            <td style="font-weight:500;${isSuppressed?'text-decoration:line-through;color:var(--muted)':''}">${e.name}${isSuppressed?'<span style="font-size:10px;color:var(--muted);margin-left:5px">supprimé ce mois</span>':isOverridden?'<span style="font-size:10px;color:var(--amber);margin-left:5px;font-weight:600">corrigé</span>':''}</td>
+            <td style="font-weight:500;${isSuppressed?'color:var(--muted);':''}">${e.name}${statusBadge}</td>
             <td><span class="badge" style="background:${c.bg};color:${c.text};border:${c.border}">${c.label}</span></td>
-            <td style="text-align:right;font-weight:600;color:${ac}">${isSuppressed?'—':eur(displayAmt)}</td>
+            ${amtCell}
             <td><div style="display:flex;gap:3px;justify-content:flex-end">
               ${!isSuppressed?`<button class="btn-act" onclick="openMonthlyAutoOverride(${e.id},${ov?ov.id:'null'})" title="Corriger">${EDIT_ICON}</button>`:''}
               ${isOverridden ? `<button class="btn-act btn-act-danger" onclick="deleteMonthlyOverride(${ov.id})" title="${isSuppressed?'Restaurer':'Réinitialiser'}">${isSuppressed?RESTORE_ICON:DEL_ICON}</button>` : ''}
@@ -3537,9 +3560,9 @@ ${bar}    <div class="tbl-wrap"><table style="width:100%;table-layout:fixed">
             </div></td>
           </tr>`;
         }).join('')}
-        ${extras.map(e => { const c=CATS[e.cat]; const exAc=e.cat==='revenu'?'var(--green)':e.cat==='impot'?'var(--amber)':'var(--red)'; return `<tr>
+        ${extras.map(e => { const c=CATS[e.cat]; const exAc=e.cat==='revenu'?'var(--green)':e.cat==='impot'?'var(--amber)':'var(--red)'; return `<tr style="box-shadow:inset 3px 0 0 ${c.hex}66;background:color-mix(in srgb,${c.hex} 5%,var(--surface));">
           <td><input type="checkbox" class="monthly-cb" data-id="${e.id}" data-group="${g.key}" ${monthlySelected.has(e.id)?'checked':''} onchange="toggleMonthlySelect(${e.id},this)"></td>
-          <td><div style="font-weight:500">${e.name}<span style="font-size:10px;color:var(--muted);margin-left:5px">exceptionnel</span></div>${e.note?`<div style="font-size:var(--fs-xs);color:var(--muted);margin-top:2px">${e.note}</div>`:''}</td>
+          <td><div style="font-weight:500">${e.name}<span style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:1px 6px;border-radius:4px;background:var(--surface2);color:var(--muted);border:1px solid var(--border);margin-left:6px;vertical-align:middle">+ ajouté</span></div>${e.note?`<div style="font-size:var(--fs-xs);color:var(--muted);margin-top:2px">${e.note}</div>`:''}</td>
           <td><span class="badge" style="background:${c.bg};color:${c.text};border:${c.border}">${c.label}</span></td>
           <td style="text-align:right;font-weight:600;color:${exAc}">${eur(Math.abs(e.amount))}</td>
           <td><div style="display:flex;gap:3px;justify-content:flex-end">
