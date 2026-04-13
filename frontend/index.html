@@ -3233,7 +3233,7 @@ let editMonthlyId      = null;
 let editMonthlyEntryId = null; // non-null → correction d'une ligne auto
 let _monthlyAutoMap    = {};   // entry.id → entry (pour openMonthlyAutoOverride)
 let _monthlySavingRec  = null; // saving record du mois affiché (pour édition depuis suivi mensuel)
-let monthlySectionCollapsed = {}; // key → bool
+let monthlySectionCollapsed = { revenus: true, fixe: true, variable: true, loisir: true, epargne: true };
 const MONTH_NAMES   = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
 
 const EDIT_ICON    = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
