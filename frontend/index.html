@@ -2338,6 +2338,7 @@ function setEntriesMember(m){
   entriesMember=m==='all'?'Commun':m;
   renderMemberTabsFor('entries-mtabs',m,'setEntriesMember');
   setTimeout(updateMtabColors,0);renderEntries();
+  if(document.getElementById('entries-mensuel')?.style.display!=='none')renderMonthly();
 }
 function setSavingsMember(m){savingsMember=m;renderMemberTabsFor('savings-mtabs',m,'setSavingsMember');setTimeout(updateMtabColors,0);renderSavings();}
 function setAnalysisMember(m){analysisMember=m;renderMemberTabsFor('analysis-mtabs',m,'setAnalysisMember');setTimeout(updateMtabColors,0);renderAnalysis();}
