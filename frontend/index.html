@@ -3218,7 +3218,7 @@ async function renderMonthly() {
 }
 
 function _renderMonthlySections(stats, expenses, savingsData = [], entryStats = null) {
-  const { revenu, impot, fixe, variable: vari, loisir: loi } = stats;
+  const { revenu, impot, fixe, variable: vari, epargne: ep, loisir: loi } = stats;
   const frMonth      = MONTH_NAMES[monthlyMonth - 1];
   const savingRecord = savingsData.find(s => s.year === monthlyYear && s.month === frMonth);
   const epDelta      = (savingRecord && savingRecord.delta != null) ? savingRecord.delta : 0;
