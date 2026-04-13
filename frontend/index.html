@@ -3708,7 +3708,7 @@ function _monthlyEpargneGroup(savingRecord, g, budgetTotal, actualTotal, revNet,
   const deltaStr = hasDelta ? (deltaVal >= 0 ? '+' : '') + eur(deltaVal) : '—';
   const deltaCol = hasDelta ? (deltaVal >= 0 ? 'var(--green)' : 'var(--red)') : 'var(--muted)';
   const deltaDisplay = hasDelta
-    ? `<span style="font-size:var(--fs-sm);font-weight:800;color:${deltaCol};letter-spacing:-.02em">${deltaStr}</span><span style="font-size:var(--fs-xs);color:var(--muted)"> vs mois préc.</span>`
+    ? `<span style="font-size:var(--fs-sm);font-weight:800;color:${deltaCol};letter-spacing:-.02em">${deltaStr}</span>`
     : '';
   const epActual = hasDelta ? deltaVal : null;
   const pct    = budgetTotal > 0 && epActual != null ? Math.round(epActual / budgetTotal * 100) : null;
