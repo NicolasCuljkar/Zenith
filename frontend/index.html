@@ -3677,7 +3677,7 @@ function openAddMonthlyExpense(defaultCat = 'variable', locked = false, allowedC
   _allowedCats = allowedCats || [defaultCat];
   const delBtn = document.getElementById('fme-label-delete');
   if (delBtn) delBtn.style.display = 'none';
-  _loadExpenseLabels(_allowedCats, defaultCat);
+  _loadExpenseLabels(_allowedCats, '');
   document.getElementById('modal-monthly-expense').classList.add('open');
 }
 async function _loadExpenseLabels(cats, selectValue = '') {
