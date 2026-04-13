@@ -533,7 +533,7 @@ input[type=range]:hover::-moz-range-thumb{transform:scale(1.1)}
   /* entry cards on mobile */
   .entry-card{margin-bottom:8px}
   .entry-group-hdr{padding:6px 12px;margin-bottom:8px}
-  #entries-summary{grid-template-columns:repeat(3,1fr)}
+  #entries-summary{grid-template-columns:1fr}
 }
 
 /* ══ 480px — mobile standard ══ */
@@ -3079,12 +3079,39 @@ function renderEntries(){
   }
   const s=calcStats(filtered);
   const depRate=s.revNet>0?Math.round((s.fix+s.vari)/s.revNet*100):0;
-  const epRate=s.revNet>0?Math.round(s.rav*(savingPct[entriesMember==='Commun'?myRole():entriesMember]??60)/100/s.revNet*100):0;
+  const _epMember=entriesMember==='Commun'?myRole():entriesMember;
+  const epCalc=Math.round(s.rav*(savingPct[_epMember]??60)/100);
+  const loiCalc=Math.round(s.rav*(100-(savingPct[_epMember]??60))/100);
   const ravRate=s.revNet>0?Math.round(s.rav/s.revNet*100):0;
-  document.getElementById('entries-summary').innerHTML=
-    kpiHtml('Revenus nets',eur(s.revNet),'var(--green)',`Brut ${eur(s.rev)} · Impôts ${eur(s.tax)}`,null,`Taux d'imposition : ${s.rev>0?Math.round(s.tax/s.rev*100):0}% · Revenu net mensuel disponible`)+
-    kpiHtml('Dépenses',eur(s.fix+s.vari),'var(--red)',`${depRate}% du revenu · Fixes ${eur(s.fix)} · Var. ${eur(s.vari)}`,-(depRate-50),`Objectif : rester sous 50% · Économies possibles : ${eur(Math.max(0,Math.round(s.revNet*0.5-(s.fix+s.vari))))} · Fixes ${Math.round(s.fix/(s.fix+s.vari)*100)||0}% du total`)+
-    kpiHtml('Reste à vivre',eur(s.rav),s.rav>=0?'var(--blue)':'var(--red)',`${ravRate}% du revenu net`,null,`Après toutes dépenses · Réparti en épargne + loisir · ${ravRate}% du revenu net disponible librement`);
+  const heroGlow=s.rav>=0?'#0d9e6e':'#d93535';
+  const heroSign=s.rav>=0?'+':'';
+  const steps=[
+    {label:'Revenus nets', val:s.revNet,      col:'var(--green)', fmt:()=>eur(s.revNet)},
+    {label:'Dépenses',     val:s.fix+s.vari,  col:'var(--red)',   fmt:()=>`−${eur(s.fix+s.vari)}`},
+    {label:'Épargne calc.',val:epCalc,         col:'#2979c8',      fmt:()=>eur(epCalc)},
+  ];
+  const stepHtml=steps.map(st=>`
+    <div style="display:flex;flex-direction:column;align-items:center;gap:3px;min-width:0">
+      <span style="font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);white-space:nowrap">${st.label}</span>
+      <span style="font-size:var(--fs-sm);font-weight:800;color:${st.col};white-space:nowrap">${st.fmt()}</span>
+    </div>`).join(`<div style="width:1px;height:36px;background:var(--border);flex-shrink:0;align-self:center;opacity:.6"></div>`);
+  document.getElementById('entries-summary').innerHTML=`<div style="grid-column:1/-1">
+    <div style="background:linear-gradient(135deg,color-mix(in srgb,${heroGlow} 15%,var(--surface)) 0%,var(--surface) 55%);border:1.5px solid color-mix(in srgb,${heroGlow} 30%,var(--border));border-radius:18px;padding:20px 24px 18px;position:relative;overflow:hidden;box-shadow:0 4px 24px color-mix(in srgb,${heroGlow} 12%,transparent)">
+      <div style="position:absolute;top:0;left:0;width:5px;height:100%;background:linear-gradient(180deg,${heroGlow},${heroGlow}88);border-radius:18px 0 0 18px"></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px">
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)">Reste à vivre</span>
+            <span style="font-size:10px;font-weight:600;color:var(--muted);background:var(--surface2);border-radius:99px;padding:1px 8px;border:1px solid var(--border)">${ravRate}% du revenu net</span>
+          </div>
+          <div style="font-size:2.4rem;font-weight:900;color:${heroGlow};letter-spacing:-.04em;line-height:1.05">${heroSign}${eur(s.rav)}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;background:color-mix(in srgb,var(--surface2) 80%,transparent);border:1px solid var(--border);border-radius:14px;padding:12px 18px;flex-wrap:nowrap">
+          ${stepHtml}
+        </div>
+      </div>
+    </div>
+  </div>`;
 }
 ['search-input','filter-cat'].forEach(id=>{const el=document.getElementById(id);el.addEventListener('input',renderEntries);el.addEventListener('change',renderEntries);});
 function openAddEntry(){
