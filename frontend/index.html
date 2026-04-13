@@ -3260,7 +3260,8 @@ function _renderMonthlySections(stats, expenses, savingsData = [], entryStats = 
     if (g.savings) {
       const frMonth = MONTH_NAMES[monthlyMonth - 1];
       const savingRecord = savingsData.find(s => s.year === monthlyYear && s.month === frMonth);
-      const epBudget = entryStats ? Math.max(0, entryStats.rav - entryStats.loi) : ep.budget;
+      const epMember = entriesMember === 'Commun' ? myRole() : entriesMember;
+      const epBudget = entryStats ? Math.round(entryStats.rav * (savingPct[epMember] ?? 60) / 100) : ep.budget;
       return _monthlyEpargneGroup(savingRecord, g, epBudget, ep.actual, revNet, isMobile);
     }
 
