@@ -3199,10 +3199,11 @@ async function renderMonthly() {
   showLoading();
   try {
     const member = entriesMember;
-    const [stats, expenses, savingsData] = await Promise.all([
+    const [stats, expenses, savingsData, entryStats] = await Promise.all([
       API.monthlyExpenses.getStats({ year: monthlyYear, month: monthlyMonth, member }),
       API.monthlyExpenses.getAll({ year: monthlyYear, month: monthlyMonth, member }),
       API.savings.getAll({ year: monthlyYear, member }),
+      API.entries.getStats({ member }),
     ]);
     monthlyExpenses = expenses;
     // Synchronise le tableau global savings pour que openEditSaving/deleteSaving fonctionnent depuis suivi mensuel
@@ -3210,13 +3211,13 @@ async function renderMonthly() {
       const idx = savings.findIndex(x => x.id === s.id);
       if (idx >= 0) savings[idx] = s; else savings.push(s);
     });
-    _renderMonthlySections(stats, expenses, savingsData);
+    _renderMonthlySections(stats, expenses, savingsData, entryStats);
   } catch(err) {
     showApiError('Erreur chargement suivi mensuel : ' + err.message);
   } finally { hideLoading(); }
 }
 
-function _renderMonthlySections(stats, expenses, savingsData = []) {
+function _renderMonthlySections(stats, expenses, savingsData = [], entryStats = null) {
   const { revenu, impot, fixe, variable: vari, epargne: ep, loisir: loi } = stats;
   const revNet       = revenu.actual - impot.actual;
   const totalDepReel = fixe.actual + vari.actual + loi.actual;
@@ -3259,7 +3260,8 @@ function _renderMonthlySections(stats, expenses, savingsData = []) {
     if (g.savings) {
       const frMonth = MONTH_NAMES[monthlyMonth - 1];
       const savingRecord = savingsData.find(s => s.year === monthlyYear && s.month === frMonth);
-      return _monthlyEpargneGroup(savingRecord, g, ep.budget, ep.actual, revNet, isMobile);
+      const epBudget = entryStats?.ep ?? ep.budget;
+      return _monthlyEpargneGroup(savingRecord, g, epBudget, ep.actual, revNet, isMobile);
     }
 
     if (g.auto) {
