@@ -3609,17 +3609,22 @@ function openMonthlyAutoOverride(entryId, overrideId) {
   editMonthlyId      = overrideId || null;
   editMonthlyEntryId = entry.id;
   document.getElementById('modal-me-title').textContent = 'Corriger pour ce mois';
-  const nameEl = document.getElementById('fme-name');
   const catEl  = document.getElementById('fme-cat');
-  nameEl.innerHTML = `<option value="${entry.name}">${entry.name}</option>`;
-  nameEl.disabled  = true;
-  catEl.value      = entry.cat;
-  catEl.disabled   = true;
+  const isRevenu = entry.cat === 'revenu' || entry.cat === 'impot';
+  _allowedCats = isRevenu ? ['revenu', 'impot'] : [entry.cat];
+  catEl.innerHTML = _allowedCats.map(c => `<option value="${c}">${CAT_LABELS[c]||c}</option>`).join('');
+  catEl.disabled  = false;
+  catEl.value     = entry.cat;
   cancelAddLabel();
+  const delBtn = document.getElementById('fme-label-delete');
+  if (delBtn) delBtn.style.display = 'none';
+  _loadExpenseLabels(_allowedCats, entry.name);
   document.getElementById('fme-amount').value = Math.abs(overrideId
     ? (monthlyExpenses.find(x => x.id === overrideId)?.amount || entry.amount)
     : entry.amount);
-  document.getElementById('fme-note').value = '';
+  document.getElementById('fme-note').value = overrideId
+    ? (monthlyExpenses.find(x => x.id === overrideId)?.note || '')
+    : '';
   document.getElementById('modal-monthly-expense').classList.add('open');
 }
 
