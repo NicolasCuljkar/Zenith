@@ -3263,7 +3263,6 @@ function _renderMonthlySections(stats, expenses, savingsData = [], entryStats = 
         <div>
           <div style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:6px">Solde réel du mois</div>
           <div style="font-size:2.2rem;font-weight:900;color:${heroGlow};letter-spacing:-.03em;line-height:1">${heroSign}${eur(soldeReel)}</div>
-          ${vsDiff ? `<div style="margin-top:7px;font-size:var(--fs-xs);color:${vsCol};font-weight:700">${vsSign} ${vsDiff} vs budget prévu <span style="color:var(--muted);font-weight:400">(${eur(soldeBudget)})</span></div>` : ''}
         </div>
         <div style="display:flex;align-items:center;gap:10px;background:var(--surface2);border-radius:12px;padding:10px 14px;flex-wrap:wrap">
           ${stepHtml}
