@@ -3692,10 +3692,13 @@ async function _loadExpenseLabels(cats, selectValue = '') {
 function _syncCatFromLabel() {
   const sel = document.getElementById('fme-name');
   const opt = sel.options[sel.selectedIndex];
+  const catEl = document.getElementById('fme-cat');
   if (opt && opt.dataset.cat) {
-    const catEl = document.getElementById('fme-cat');
-    if (!catEl.disabled) catEl.value = opt.dataset.cat;
+    catEl.value = opt.dataset.cat;
+    catEl.disabled = true;
     _labelCat = opt.dataset.cat;
+  } else {
+    catEl.disabled = false;
   }
 }
 function toggleAddLabelForm() {
