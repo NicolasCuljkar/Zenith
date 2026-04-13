@@ -59,6 +59,9 @@ function getAll(filters = {}) {
   if (filters.year)  { cond.push('year = ?');  params.push(Number(filters.year));  }
   if (filters.month) { cond.push('month = ?'); params.push(Number(filters.month)); }
   if (filters.cat)   { cond.push('cat = ?');   params.push(filters.cat); }
+  if (filters.member && filters.member !== 'all' && filters.member !== 'Commun') {
+    cond.push('member = ?'); params.push(filters.member);
+  }
 
   const where = cond.length ? `WHERE ${cond.join(' AND ')}` : '';
   return db.prepare(`

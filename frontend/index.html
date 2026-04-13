@@ -3251,12 +3251,16 @@ function _renderMonthlySections(stats, expenses, history, savingsData = []) {
 function _monthlyAutoGroup(rows, overrides, extras, g, isMobile) {
   rows.forEach(e => { _monthlyAutoMap[e.id] = e; }); // populate lookup
   const getOv = (entryId) => overrides.find(o => Number(o.entry_id) === entryId);
-  const autoTot  = rows.reduce((s, e) => { const ov = getOv(e.id); return s + Math.abs(ov ? ov.amount : e.amount); }, 0);
-  const extraTot = extras.reduce((s, e) => s + Math.abs(e.amount), 0);
+  // Impôts se soustraient des revenus ; les autres cats s'additionnent en valeur abs
+  const catSign = cat => cat === 'impot' ? -1 : 1;
+  const autoTot  = rows.reduce((s, e) => { const ov = getOv(e.id); return s + Math.abs(ov ? ov.amount : e.amount) * catSign(e.cat); }, 0);
+  const extraTot = extras.reduce((s, e) => s + Math.abs(e.amount) * catSign(e.cat), 0);
   const tot = autoTot + extraTot;
-  // N'affiche le bouton Ajouter que pour les groupes qui acceptent des extras (fixe uniquement — pas revenus/impôts)
-  const canAdd = g.cats.includes('fixe');
-  const addBtn = canAdd ? `<button class="btn-add" onclick="openAddMonthlyExpense('fixe')" style="font-size:var(--fs-xs);padding:4px 10px;gap:4px"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Ajouter</button>` : '';
+  const ADD_SVG = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`;
+  const mkAdd = (cat, lbl) => `<button class="btn-add" onclick="openAddMonthlyExpense('${cat}')" style="font-size:var(--fs-xs);padding:4px 10px;gap:4px">${ADD_SVG}${lbl}</button>`;
+  let addBtn = '';
+  if (g.cats.includes('revenu')) addBtn = mkAdd('revenu','Revenu') + mkAdd('impot','Impôt');
+  else if (g.cats.includes('fixe')) addBtn = mkAdd('fixe','Ajouter');
   const hdr = `<div style="display:flex;justify-content:space-between;align-items:center;padding:0 2px 6px;margin-bottom:5px;border-bottom:2px solid ${g.color}30">
     <div style="display:flex;align-items:center;gap:7px">
       <span style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:${g.color}">${g.label}</span>
@@ -3288,16 +3292,17 @@ function _monthlyAutoGroup(rows, overrides, extras, g, isMobile) {
           <div style="display:flex;gap:5px">
             ${!isSuppressed?`<button class="btn-act" onclick="openMonthlyAutoOverride(${e.id},${ov?ov.id:'null'})" title="Corriger pour ce mois">${EDIT_ICON}</button>`:''}
             ${isOverridden ? `<button class="btn-act btn-act-danger" onclick="deleteMonthlyOverride(${ov.id})" title="${isSuppressed?'Restaurer':'Réinitialiser'}">${isSuppressed?RESTORE_ICON:DEL_ICON}</button>` : ''}
-            ${!isOverridden && e.cat==='fixe' ? `<button class="btn-act btn-act-danger" onclick="suppressMonthlyLine(${e.id},'${e.name.replace(/'/g,"\\'")}')" title="Supprimer ce mois">${DEL_ICON}</button>` : ''}
+            ${!isOverridden ? `<button class="btn-act btn-act-danger" onclick="suppressMonthlyLine(${e.id},'${e.name.replace(/'/g,"\\'")}')" title="Supprimer ce mois">${DEL_ICON}</button>` : ''}
           </div>
         </div>
       </div>`;
     }).join('')}${extras.map(e => {
       const c = CATS[e.cat];
+      const exAc = e.cat==='revenu'?'var(--green)':e.cat==='impot'?'var(--amber)':'var(--red)';
       return `<div class="entry-card" style="border-left-color:${c.hex};border-left-style:dashed;background:${c.bg};padding:13px 14px 11px 14px">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
           <span style="font-weight:700;font-size:var(--fs-base);flex:1;line-height:1.3">${e.name}<span style="font-size:var(--fs-xs);color:var(--muted);margin-left:5px">exceptionnel</span></span>
-          <span style="font-size:var(--fs-base);font-weight:800;color:var(--red)">${eur(Math.abs(e.amount))}</span>
+          <span style="font-size:var(--fs-base);font-weight:800;color:${exAc}">${eur(Math.abs(e.amount))}</span>
         </div>
         ${e.note ? `<div style="font-size:var(--fs-xs);color:var(--muted);margin-top:4px">${e.note}</div>` : ''}
         <div style="height:1px;background:${c.hex}22;margin:9px 0 8px"></div>
@@ -3331,14 +3336,14 @@ function _monthlyAutoGroup(rows, overrides, extras, g, isMobile) {
             <td><div style="display:flex;gap:3px;justify-content:flex-end">
               ${!isSuppressed?`<button class="btn-act" onclick="openMonthlyAutoOverride(${e.id},${ov?ov.id:'null'})" title="Corriger">${EDIT_ICON}</button>`:''}
               ${isOverridden ? `<button class="btn-act btn-act-danger" onclick="deleteMonthlyOverride(${ov.id})" title="${isSuppressed?'Restaurer':'Réinitialiser'}">${isSuppressed?RESTORE_ICON:DEL_ICON}</button>` : ''}
-              ${!isOverridden && e.cat==='fixe' ? `<button class="btn-act btn-act-danger" onclick="suppressMonthlyLine(${e.id},'${e.name.replace(/'/g,"\\'")}')" title="Supprimer ce mois">${DEL_ICON}</button>` : ''}
+              ${!isOverridden ? `<button class="btn-act btn-act-danger" onclick="suppressMonthlyLine(${e.id},'${e.name.replace(/'/g,"\\'")}')" title="Supprimer ce mois">${DEL_ICON}</button>` : ''}
             </div></td>
           </tr>`;
         }).join('')}
-        ${extras.map(e => { const c=CATS[e.cat]; return `<tr>
+        ${extras.map(e => { const c=CATS[e.cat]; const exAc=e.cat==='revenu'?'var(--green)':e.cat==='impot'?'var(--amber)':'var(--red)'; return `<tr>
           <td style="font-weight:500">${e.name}<span style="font-size:10px;color:var(--muted);margin-left:5px">exceptionnel</span></td>
           <td><span class="badge" style="background:${c.bg};color:${c.text};border:${c.border}">${c.label}</span></td>
-          <td style="text-align:right;font-weight:600;color:var(--red)">${eur(Math.abs(e.amount))}</td>
+          <td style="text-align:right;font-weight:600;color:${exAc}">${eur(Math.abs(e.amount))}</td>
           <td style="font-size:var(--fs-xs);color:var(--muted)">${e.note||''}</td>
           <td><div style="display:flex;gap:3px;justify-content:flex-end">
             <button class="btn-act" onclick="openEditMonthlyExpense(${e.id})">${EDIT_ICON}</button>
@@ -3434,15 +3439,7 @@ function _monthlyManualGroup(rows, g, budgetTotal, isMobile, revNet = 0) {
 // Groupe épargne — lié à la table savings (même données que l'onglet Épargne)
 function _monthlyEpargneGroup(savingRecord, g, budgetTotal, actualTotal, revNet, isMobile) {
   _monthlySavingRec = savingRecord || null;
-  const pct = budgetTotal > 0 ? Math.round(actualTotal / budgetTotal * 100) :
-              revNet > 0 ? Math.round(actualTotal / revNet * 100) : null;
-  const refLabel = budgetTotal > 0 ? `budget ${eur(budgetTotal)}` : `revenus nets`;
-  const pctCol = pct === null ? 'var(--muted)' : pct < 80 ? 'var(--amber)' : 'var(--green)';
-  const barW = pct !== null ? Math.min(pct, 100) : 0;
   const addBtn = `<button class="btn-add" onclick="openMonthlySaving(${monthlyYear},${monthlyMonth})" style="font-size:var(--fs-xs);padding:4px 10px;gap:4px"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>${savingRecord ? 'Modifier' : 'Saisir'}</button>`;
-  const subInfo = pct !== null
-    ? `<span style="font-size:var(--fs-xs);color:${pctCol};font-weight:700">${pct}%</span><span style="font-size:var(--fs-xs);color:var(--muted)">du ${refLabel}</span>`
-    : `<span style="font-size:var(--fs-xs);color:var(--muted)">Aucun budget prévu</span>`;
   const hasDelta = savingRecord && savingRecord.delta !== null && savingRecord.delta !== undefined;
   const deltaVal = hasDelta ? savingRecord.delta : null;
   const deltaStr = hasDelta ? (deltaVal >= 0 ? '+' : '') + eur(deltaVal) : '—';
@@ -3453,16 +3450,13 @@ function _monthlyEpargneGroup(savingRecord, g, budgetTotal, actualTotal, revNet,
   const hdr = `<div style="display:flex;justify-content:space-between;align-items:center;padding:0 2px 6px;margin-bottom:5px;border-bottom:2px solid ${g.color}30">
     <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">
       <span style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:${g.color}">${g.label}</span>
-      ${subInfo}
     </div>
     <div style="display:flex;align-items:center;gap:8px">
       ${deltaDisplay}
       ${addBtn}
     </div>
   </div>`;
-  const bar = (pct !== null) ? `<div style="height:4px;background:var(--surface2);border-radius:99px;overflow:hidden;margin-bottom:8px">
-    <div style="height:100%;width:${barW}%;background:${pctCol};border-radius:99px;transition:width .3s"></div>
-  </div>` : '';
+  const bar = '';
   if (!savingRecord) {
     return `<div style="margin-bottom:var(--sg)">${hdr}${bar}<div class="tbl-empty">Aucune épargne saisie pour ce mois — utilisez le bouton "Saisir"</div></div>`;
   }

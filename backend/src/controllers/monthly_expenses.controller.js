@@ -6,21 +6,12 @@ const householdService = require('../services/household.service');
 function resolveUserScope(userId, member) {
   const household = householdService.getForUser(userId);
 
-  // Vue Commun ou pas de filtre membre → tous les membres du foyer
-  if (!member || member === 'all' || member === 'Commun') {
-    if (household && household.members.length > 0) {
-      return { userIds: household.members.map(m => m.id) };
-    }
-    return { userId };
-  }
-
-  // Vue d'un membre spécifique → trouver son user_id dans le foyer
+  // Toujours utiliser le scope foyer complet pour que la recherche d'entrées (prévisionnel)
+  // soit cohérente avec le frontend qui charge toutes les entrées du foyer.
+  // Le filtre par membre est appliqué ensuite dans le service via filters.member.
   if (household && household.members.length > 0) {
-    const found = household.members.find(m => m.name === member);
-    if (found) return { userId: found.id };
+    return { userIds: household.members.map(m => m.id) };
   }
-
-  // Fallback : utilisateur courant
   return { userId };
 }
 
