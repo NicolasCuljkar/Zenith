@@ -3277,10 +3277,10 @@ function _monthlyAutoGroup(rows, overrides, extras, g, isMobile) {
     ? `<span style="font-size:var(--fs-xs);color:${pctCol};font-weight:700">${pct}%</span><span style="font-size:var(--fs-xs);color:var(--muted)">du budget ${eur(budgetTot)}</span>`
     : `<span style="font-size:var(--fs-xs);color:var(--muted)">Auto</span>`;
   const ADD_SVG = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`;
-  const mkAdd = (cat, lbl) => `<button class="btn-add" onclick="openAddMonthlyExpense('${cat}',true)" style="font-size:var(--fs-xs);padding:4px 10px;gap:4px">${ADD_SVG}${lbl}</button>`;
+  const mkAdd = (cat, lbl, locked = true) => `<button class="btn-add" onclick="openAddMonthlyExpense('${cat}',${locked})" style="font-size:var(--fs-xs);padding:4px 10px;gap:4px">${ADD_SVG}${lbl}</button>`;
   let addBtn = '';
-  if (g.cats.includes('revenu')) addBtn = mkAdd('revenu','Ajouter');
-  else if (g.cats.includes('fixe')) addBtn = mkAdd('fixe','Ajouter');
+  if (g.cats.includes('revenu')) addBtn = mkAdd('revenu','Ajouter', false);
+  else if (g.cats.includes('fixe')) addBtn = mkAdd('fixe','Ajouter', true);
   const hdr = `<div style="display:flex;justify-content:space-between;align-items:center;padding:0 2px 6px;margin-bottom:5px;border-bottom:2px solid ${g.color}30">
     <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">
       <span style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:${g.color}">${g.label}</span>
@@ -3646,7 +3646,7 @@ function openAddMonthlyExpense(defaultCat = 'variable', locked = false) {
     variable: 'Ajouter une dépense variable',
     loisir:   'Ajouter un loisir',
   };
-  document.getElementById('modal-me-title').textContent = titles[defaultCat] || 'Ajouter une dépense';
+  document.getElementById('modal-me-title').textContent = locked ? (titles[defaultCat] || 'Ajouter une dépense') : (defaultCat === 'revenu' ? 'Ajouter revenu / impôt exceptionnel' : (titles[defaultCat] || 'Ajouter une dépense'));
   const catEl = document.getElementById('fme-cat');
   catEl.disabled = locked;
   catEl.value    = defaultCat;
