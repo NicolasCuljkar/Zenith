@@ -3344,7 +3344,7 @@ function _monthlyAutoGroup(rows, overrides, extras, g, isMobile) {
   const barW = pct !== null ? Math.min(pct, 100) : 0;
   const bar = budgetTot > 0 ? `<div style="height:4px;background:var(--surface2);border-radius:99px;overflow:hidden;margin-bottom:8px"><div style="height:100%;width:${barW}%;background:${pctCol};border-radius:99px;transition:width .3s"></div></div>` : '';
   const subInfo = pct !== null
-    ? `<span style="font-size:var(--fs-xs);color:${pctCol};font-weight:700">${pct}%</span><span style="font-size:var(--fs-xs);color:var(--muted)">du budget ${eur(budgetTot)}</span>`
+    ? `<span style="font-size:var(--fs-xs);color:${pctCol};font-weight:700">${eur(tot)}</span><span style="font-size:var(--fs-xs);color:var(--muted)">/ ${eur(budgetTot)}</span>`
     : `<span style="font-size:var(--fs-xs);color:var(--muted)">Auto</span>`;
   const ADD_SVG = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`;
   const mkAdd = (cat, lbl, locked = true) => `<button class="btn-add" onclick="openAddMonthlyExpense('${cat}',${locked})" style="font-size:var(--fs-xs);padding:4px 10px;gap:4px">${ADD_SVG}${lbl}</button>`;
@@ -3467,7 +3467,7 @@ function _monthlyManualGroup(rows, g, budgetTotal, isMobile, revNet = 0) {
   const barW   = pct !== null ? Math.min(pct, 100) : 0;
   const addBtn = `<button class="btn-add" onclick="openAddMonthlyExpense('${g.cats[0]}',true)" style="font-size:var(--fs-xs);padding:4px 10px;gap:4px"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Ajouter</button>`;
   const subInfo = pct !== null
-    ? `<span style="font-size:var(--fs-xs);color:${pctCol};font-weight:700">${pct}%</span><span style="font-size:var(--fs-xs);color:var(--muted)">du ${refLabel}</span>`
+    ? `<span style="font-size:var(--fs-xs);color:${pctCol};font-weight:700">${eur(actualTotal)}</span><span style="font-size:var(--fs-xs);color:var(--muted)">/ ${eur(refTotal)}</span>`
     : `<span style="font-size:var(--fs-xs);color:var(--muted)">Aucune donnée</span>`;
 
   const hdr = `<div style="display:flex;justify-content:space-between;align-items:center;padding:0 2px 6px;margin-bottom:5px;border-bottom:2px solid ${g.color}30">
@@ -3556,7 +3556,7 @@ function _monthlyEpargneGroup(savingRecord, g, budgetTotal, actualTotal, revNet,
   const pctCol = pct === null ? 'var(--muted)' : pct >= 100 ? 'var(--green)' : pct >= 70 ? 'var(--amber)' : 'var(--red)';
   const barW   = pct !== null ? Math.min(Math.max(pct, 0), 100) : 0;
   const subInfo = pct !== null
-    ? `<span style="font-size:var(--fs-xs);color:${pctCol};font-weight:700">${pct}%</span><span style="font-size:var(--fs-xs);color:var(--muted)">du budget ${eur(budgetTotal)}</span>`
+    ? `<span style="font-size:var(--fs-xs);color:${pctCol};font-weight:700">${eur(epActual)}</span><span style="font-size:var(--fs-xs);color:var(--muted)">/ ${eur(budgetTotal)}</span>`
     : `<span style="font-size:var(--fs-xs);color:var(--muted)">Aucun budget prévisionnel</span>`;
   const hdr = `<div style="display:flex;justify-content:space-between;align-items:center;padding:0 2px 6px;margin-bottom:5px;border-bottom:2px solid ${g.color}30">
     <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">
