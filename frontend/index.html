@@ -3242,7 +3242,7 @@ function _renderMonthlySections(stats, expenses, history, savingsData = []) {
     } else {
       const rows = manualExpenses.filter(e => g.cats.includes(e.cat));
       const budgetTotal = g.cats.reduce((s, c) => s + (stats[c]?.budget || 0), 0);
-      return _monthlyManualGroup(rows, g, budgetTotal, isMobile, revNet);
+      return _monthlyManualGroup(rows, g, budgetTotal, isMobile, g.key === 'variable' ? revNet : 0);
     }
   }).join('');
 }
