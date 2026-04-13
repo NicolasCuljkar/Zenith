@@ -35,7 +35,7 @@ async function getHistory(req, res, next) {
   try {
     const { member } = req.query;
     const scope = resolveUserScope(req.user.id, member);
-    res.json({ success: true, data: monthlyService.getHistory(scope) });
+    res.json({ success: true, data: monthlyService.getHistory({ ...scope, member }) });
   } catch (err) { next(err); }
 }
 

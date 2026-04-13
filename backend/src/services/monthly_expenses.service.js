@@ -118,17 +118,66 @@ function getStats(filters = {}) {
   return result;
 }
 
-// Historique : liste des mois ayant des données saisies
+// Historique : total réel = fixes (prévisionnel + overrides) + variables + loisirs + épargne
 function getHistory(filters = {}) {
-  const { cond, params } = buildUserWhere(filters);
-  const where = cond.length ? `WHERE ${cond.join(' AND ')}` : '';
-  return db.prepare(`
-    SELECT year, month, COUNT(*) as count, SUM(ABS(amount)) as total
-    FROM monthly_expenses ${where}
+  const entryScope = filters.userIds ? { userIds: filters.userIds } : { userId: filters.userId };
+  let fixeEntries = entriesService.getAll(entryScope).filter(e => e.cat === 'fixe');
+  if (filters.member && filters.member !== 'all' && filters.member !== 'Commun') {
+    fixeEntries = fixeEntries.filter(e => e.member === filters.member);
+  }
+
+  // Dépenses manuelles fixes/variables/loisirs + overrides fixes
+  const { cond: expCond, params: expParams } = buildUserWhere(filters);
+  if (filters.member && filters.member !== 'all' && filters.member !== 'Commun') {
+    expCond.push('member = ?'); expParams.push(filters.member);
+  }
+  expCond.push("cat IN ('fixe','variable','loisir')");
+  const expenses = db.prepare(`
+    SELECT year, month, cat, entry_id, amount
+    FROM monthly_expenses
+    WHERE ${expCond.join(' AND ')}
+  `).all(...expParams);
+
+  // Épargne par mois
+  const { cond: savCond, params: savParams } = buildUserWhere(filters);
+  if (filters.member && filters.member !== 'all' && filters.member !== 'Commun') {
+    savCond.push('member = ?'); savParams.push(filters.member);
+  }
+  const MONTH_NUM = `CASE month WHEN 'Janvier' THEN 1 WHEN 'Février' THEN 2 WHEN 'Mars' THEN 3 WHEN 'Avril' THEN 4 WHEN 'Mai' THEN 5 WHEN 'Juin' THEN 6 WHEN 'Juillet' THEN 7 WHEN 'Août' THEN 8 WHEN 'Septembre' THEN 9 WHEN 'Octobre' THEN 10 WHEN 'Novembre' THEN 11 WHEN 'Décembre' THEN 12 END`;
+  const savings = db.prepare(`
+    SELECT year, ${MONTH_NUM} as month, SUM(amount) as total
+    FROM savings
+    WHERE ${savCond.join(' AND ')}
     GROUP BY year, month
-    ORDER BY year DESC, month DESC
-    LIMIT 24
-  `).all(...params);
+  `).all(...savParams);
+
+  // Mois distincts (union expenses + savings)
+  const monthSet = new Set();
+  expenses.forEach(e => monthSet.add(`${e.year}-${e.month}`));
+  savings.forEach(s => monthSet.add(`${s.year}-${s.month}`));
+
+  return Array.from(monthSet)
+    .map(key => {
+      const [year, month] = key.split('-').map(Number);
+      const monthExp = expenses.filter(e => e.year === year && e.month === month);
+
+      // Fixes : prévisionnel de base + overrides appliqués
+      const overrides = new Map(
+        monthExp.filter(e => e.entry_id != null).map(e => [e.entry_id, Math.abs(e.amount)])
+      );
+      const fixeActual = fixeEntries.reduce((s, e) =>
+        s + (overrides.has(e.id) ? overrides.get(e.id) : Math.abs(e.amount)), 0);
+      const fixeExtra = monthExp.filter(e => e.cat === 'fixe' && e.entry_id == null)
+        .reduce((s, e) => s + Math.abs(e.amount), 0);
+
+      const variable = monthExp.filter(e => e.cat === 'variable').reduce((s, e) => s + Math.abs(e.amount), 0);
+      const loisir   = monthExp.filter(e => e.cat === 'loisir').reduce((s, e) => s + Math.abs(e.amount), 0);
+      const epargne  = savings.find(s => s.year === year && s.month === month)?.total || 0;
+
+      return { year, month, total: fixeActual + fixeExtra + variable + loisir + epargne };
+    })
+    .sort((a, b) => b.year - a.year || b.month - a.month)
+    .slice(0, 24);
 }
 
 // ── Écriture ─────────────────────────────────────────────────────
