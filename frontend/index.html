@@ -3218,21 +3218,33 @@ async function renderMonthly() {
 }
 
 function _renderMonthlySections(stats, expenses, savingsData = [], entryStats = null) {
-  const { revenu, impot, fixe, variable: vari, epargne: ep, loisir: loi } = stats;
+  const { revenu, impot, fixe, variable: vari, loisir: loi } = stats;
+  const frMonth      = MONTH_NAMES[monthlyMonth - 1];
+  const savingRecord = savingsData.find(s => s.year === monthlyYear && s.month === frMonth);
+  const epDelta      = (savingRecord && savingRecord.delta != null) ? savingRecord.delta : 0;
+  const epMember0    = entriesMember === 'Commun' ? myRole() : entriesMember;
+  const epBudget0    = entryStats ? Math.round(entryStats.rav * (savingPct[epMember0] ?? 60) / 100) : 0;
   const revNet       = revenu.actual - impot.actual;
   const totalDepReel = fixe.actual + vari.actual + loi.actual;
-  const soldeReel    = revNet - totalDepReel - ep.actual;
-  const soldeBudget  = (revenu.budget - impot.budget) - (fixe.budget + vari.budget + loi.budget) - ep.budget;
+  const soldeReel    = revNet - totalDepReel - epDelta;
+  const revNetBudget = revenu.budget - impot.budget;
+  const soldeBudget  = revNetBudget - (fixe.budget + vari.budget + loi.budget) - epBudget0;
   const depRate      = revNet > 0 ? Math.round((fixe.actual + vari.actual) / revNet * 100) : 0;
   const variPct      = vari.budget > 0 ? Math.round(vari.actual / vari.budget * 100) : null;
   const variPctCol   = variPct === null ? 'var(--muted)' : variPct > 100 ? 'var(--red)' : variPct > 80 ? 'var(--amber)' : 'var(--green)';
+  const soldePct     = soldeBudget !== 0 ? Math.round(soldeReel / Math.abs(soldeBudget) * 100) : null;
+  const soldeCol     = soldeReel >= 0 ? 'var(--green)' : 'var(--red)';
+  const soldeDetail  = [
+    soldeBudget ? `Prévu : ${eur(soldeBudget)}` : null,
+    epDelta ? `Épargne : ${epDelta >= 0 ? '+' : ''}${eur(epDelta)}` : null,
+  ].filter(Boolean).join(' · ');
 
   // ── KPIs identiques au style prévisionnel ──
   document.getElementById('monthly-kpis').innerHTML =
     kpiHtml('Revenus nets', eur(revNet), 'var(--green)', `Brut ${eur(revenu.actual)} · Impôts ${eur(impot.actual)}`, null, `Revenus et impôts auto-renseignés depuis le prévisionnel`) +
     kpiHtml('Dépenses réelles', eur(fixe.actual + vari.actual), 'var(--red)', `${depRate}% du revenu · Fixes ${eur(fixe.actual)} · Var. ${eur(vari.actual)}`, null, `Fixes : auto-renseignées · Variables : saisies manuellement`) +
     kpiHtml('Variables', eur(vari.actual), variPctCol, `${variPct !== null ? variPct + '% du budget · ' : ''}Prévu ${eur(vari.budget)}`, variPct !== null ? variPct - 100 : null, `Budget variable prévu : ${eur(vari.budget)} · Saisi : ${eur(vari.actual)} · Reste : ${eur(Math.max(0, vari.budget - vari.actual))}`) +
-    kpiHtml('Solde réel du mois', eur(soldeReel), soldeReel >= 0 ? 'var(--green)' : 'var(--red)', `Prévu : ${eur(soldeBudget)}`, null, `Revenus nets − dépenses réelles − épargne`);
+    kpiHtml('Solde réel du mois', eur(soldeReel), soldeCol, soldeDetail || `Revenus nets − dépenses − épargne`, soldePct !== null ? soldePct - 100 : null, `Revenus nets (${eur(revNet)}) − dépenses (${eur(totalDepReel)}) − épargne du mois (${eur(epDelta)})`);
 
   // ── Sections groupées identiques au style prévisionnel ──
   const isMobile = window.innerWidth <= 640;
@@ -3327,10 +3339,9 @@ function _monthlyAutoGroup(rows, overrides, extras, g, isMobile) {
       const isSuppressed = isOverridden && ov.amount === 0;
       const c = CATS[e.cat];
       const amtCol = isSuppressed ? 'var(--muted)' : e.cat === 'revenu' ? 'var(--green)' : e.cat === 'impot' ? 'var(--amber)' : 'var(--red)';
-      const canSelectBase = !isOverridden && !isSuppressed;
       return `<div class="entry-card" style="border-left-color:${isSuppressed?'var(--muted)':isOverridden?'var(--amber)':c.hex};background:${isSuppressed?'var(--surface2)':c.bg};padding:13px 14px 11px 14px${isSuppressed?';opacity:.6':''}">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
-          ${canSelectBase?`<input type="checkbox" class="monthly-cb monthly-cb-suppress" data-entry-id="${e.id}" ${monthlySelectedSuppress.has(e.id)?'checked':''} onchange="toggleMonthlySelectSuppress(${e.id},this)" style="margin-top:3px;flex-shrink:0">`:''}
+          ${!isSuppressed?`<input type="checkbox" class="monthly-cb monthly-cb-suppress" data-entry-id="${e.id}" ${monthlySelectedSuppress.has(e.id)?'checked':''} onchange="toggleMonthlySelectSuppress(${e.id},${ov?ov.id:'null'},this)" style="margin-top:3px;flex-shrink:0">`:''}
           <span style="font-weight:700;font-size:var(--fs-base);flex:1;line-height:1.3;${isSuppressed?'text-decoration:line-through;color:var(--muted)':''}">${e.name}${isSuppressed?'<span style="font-size:var(--fs-xs);color:var(--muted);margin-left:5px">supprimé ce mois</span>':isOverridden?'<span style="font-size:var(--fs-xs);color:var(--amber);margin-left:5px">corrigé</span>':''}</span>
           <span style="font-size:var(--fs-base);font-weight:800;color:${amtCol}">${isSuppressed?'—':eur(displayAmt)}</span>
         </div>
@@ -3380,9 +3391,9 @@ function _monthlyAutoGroup(rows, overrides, extras, g, isMobile) {
           const isSuppressed = isOverridden && ov.amount === 0;
           const c = CATS[e.cat];
           const ac = isSuppressed?'var(--muted)':e.cat==='revenu'?'var(--green)':e.cat==='impot'?'var(--amber)':'var(--red)';
-          const canSelect = !isOverridden && !isSuppressed;
+          const canSelect = !isSuppressed;
           return `<tr style="${isSuppressed?'opacity:.5;':''}${isOverridden&&!isSuppressed?'background:var(--amber)08;':''}">
-            <td>${canSelect?`<input type="checkbox" class="monthly-cb monthly-cb-suppress" data-entry-id="${e.id}" data-group="${g.key}" ${monthlySelectedSuppress.has(e.id)?'checked':''} onchange="toggleMonthlySelectSuppress(${e.id},this)">`:''}</td>
+            <td>${canSelect?`<input type="checkbox" class="monthly-cb monthly-cb-suppress" data-entry-id="${e.id}" data-group="${g.key}" data-ov-id="${ov?ov.id:''}" ${monthlySelectedSuppress.has(e.id)?'checked':''} onchange="toggleMonthlySelectSuppress(${e.id},${ov?ov.id:'null'},this)">`:''}</td>
             <td style="font-weight:500;${isSuppressed?'text-decoration:line-through;color:var(--muted)':''}">${e.name}${isSuppressed?'<span style="font-size:10px;color:var(--muted);margin-left:5px">supprimé ce mois</span>':isOverridden?'<span style="font-size:10px;color:var(--amber);margin-left:5px;font-weight:600">corrigé</span>':''}</td>
             <td><span class="badge" style="background:${c.bg};color:${c.text};border:${c.border}">${c.label}</span></td>
             <td style="text-align:right;font-weight:600;color:${ac}">${isSuppressed?'—':eur(displayAmt)}</td>
@@ -3504,7 +3515,8 @@ function _monthlyEpargneGroup(savingRecord, g, budgetTotal, actualTotal, revNet,
   const deltaDisplay = hasDelta
     ? `<span style="font-size:var(--fs-sm);font-weight:800;color:${deltaCol};letter-spacing:-.02em">${deltaStr}</span><span style="font-size:var(--fs-xs);color:var(--muted)"> vs mois préc.</span>`
     : '';
-  const pct    = budgetTotal > 0 && actualTotal != null ? Math.round(actualTotal / budgetTotal * 100) : null;
+  const epActual = hasDelta ? deltaVal : null;
+  const pct    = budgetTotal > 0 && epActual != null ? Math.round(epActual / budgetTotal * 100) : null;
   const pctCol = pct === null ? 'var(--muted)' : pct >= 100 ? 'var(--green)' : pct >= 70 ? 'var(--amber)' : 'var(--red)';
   const barW   = pct !== null ? Math.min(Math.max(pct, 0), 100) : 0;
   const subInfo = pct !== null
@@ -3808,10 +3820,10 @@ function toggleMonthlySelect(id, cb) {
   else monthlySelected.delete(id);
   updateMonthlyBulkBar();
 }
-function toggleMonthlySelectSuppress(entryId, cb) {
+function toggleMonthlySelectSuppress(entryId, ovId, cb) {
   const entry = _monthlyAutoMap[entryId];
   if (!entry) return;
-  if (cb.checked) monthlySelectedSuppress.set(entryId, entry);
+  if (cb.checked) monthlySelectedSuppress.set(entryId, { entry, ovId: ovId || null });
   else monthlySelectedSuppress.delete(entryId);
   updateMonthlyBulkBar();
 }
@@ -3821,7 +3833,8 @@ function toggleMonthlySelectAll(cb, groupKey) {
     if (el.classList.contains('monthly-cb-suppress')) {
       const entryId = Number(el.dataset.entryId);
       const entry = _monthlyAutoMap[entryId];
-      if (entry) { if (cb.checked) monthlySelectedSuppress.set(entryId, entry); else monthlySelectedSuppress.delete(entryId); }
+      const ovId = el.dataset.ovId ? Number(el.dataset.ovId) : null;
+      if (entry) { if (cb.checked) monthlySelectedSuppress.set(entryId, {entry, ovId}); else monthlySelectedSuppress.delete(entryId); }
     } else {
       const id = Number(el.dataset.id);
       if (cb.checked) monthlySelected.add(id); else monthlySelected.delete(id);
@@ -3854,10 +3867,13 @@ async function deleteSelectedMonthly() {
     try {
       await Promise.all([
         ...ids.map(id => API.monthlyExpenses.delete(id)),
-        ...suppressEntries.map(e => API.monthlyExpenses.create({
-          year: monthlyYear, month: monthlyMonth,
-          name: e.name, amount: 0, cat: e.cat, member, note: null, entry_id: e.id
-        }))
+        ...suppressEntries.map(({entry, ovId}) =>
+        ovId
+          ? API.monthlyExpenses.delete(ovId).then(() =>
+              API.monthlyExpenses.create({ year: monthlyYear, month: monthlyMonth, name: entry.name, amount: 0, cat: entry.cat, member, note: null, entry_id: entry.id })
+            )
+          : API.monthlyExpenses.create({ year: monthlyYear, month: monthlyMonth, name: entry.name, amount: 0, cat: entry.cat, member, note: null, entry_id: entry.id })
+      )
       ]);
       await renderMonthly();
     } catch(err) { showApiError('Erreur : ' + err.message); }
