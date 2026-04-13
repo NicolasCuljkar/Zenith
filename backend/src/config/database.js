@@ -254,6 +254,33 @@ UPDATE households SET creator_id = (
   // v16 — normalise last_login_at en format ISO 8601 UTC (pour parsing JS fiable)
   `UPDATE users SET last_login_at = strftime('%Y-%m-%dT%H:%M:%SZ', last_login_at) WHERE last_login_at IS NOT NULL`,
 
+  // v17 — supprime le CHECK(cat IN ('variable','epargne','loisir')) de monthly_expenses
+  // La migration v10 avait une contrainte trop restrictive ; v11 (CREATE TABLE IF NOT EXISTS) était
+  // un no-op si la table existait déjà. On recrée la table sans contrainte CHECK.
+  `CREATE TABLE IF NOT EXISTS monthly_expenses_new (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    year       INTEGER NOT NULL,
+    month      INTEGER NOT NULL,
+    name       TEXT    NOT NULL,
+    amount     REAL    NOT NULL,
+    cat        TEXT    NOT NULL DEFAULT 'variable',
+    member     TEXT    NOT NULL,
+    note       TEXT,
+    entry_id   INTEGER,
+    created_at TEXT    NOT NULL DEFAULT (datetime('now')),
+    updated_at TEXT    NOT NULL DEFAULT (datetime('now'))
+  )`,
+  `INSERT OR IGNORE INTO monthly_expenses_new
+     SELECT id, user_id, year, month, name, amount, cat, member, note,
+            CASE WHEN typeof(entry_id)='integer' THEN entry_id ELSE NULL END,
+            created_at, updated_at
+     FROM monthly_expenses`,
+  `DROP TABLE monthly_expenses`,
+  `ALTER TABLE monthly_expenses_new RENAME TO monthly_expenses`,
+  `CREATE INDEX IF NOT EXISTS idx_me_user2  ON monthly_expenses(user_id)`,
+  `CREATE INDEX IF NOT EXISTS idx_me_month2 ON monthly_expenses(year, month)`,
+
 ];
 
 // ── Apply pending migrations ──────────────────────────────────────────────────
