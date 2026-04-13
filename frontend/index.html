@@ -3728,11 +3728,13 @@ async function deleteCurrentLabel() {
   const sel = document.getElementById('fme-name');
   const opt = sel.options[sel.selectedIndex];
   if (!opt || !opt.value || !opt.dataset.id) return;
-  showConfirm(`Supprimer la désignation "${opt.value}" ?`, 'Elle sera supprimée de la liste pour toutes les pages.', async () => {
+  const labelId   = Number(opt.dataset.id);
+  const labelName = opt.value;
+  const cats      = Array.isArray(_allowedCats) ? _allowedCats : [_labelCat];
+  showConfirm(`Supprimer la désignation "${labelName}" ?`, 'Elle sera supprimée de la liste pour toutes les pages.', async () => {
     try {
-      await API.expenseLabels.delete(Number(opt.dataset.id));
-      const cat = _labelCat;
-      await _loadExpenseLabels(Array.isArray(_allowedCats) ? _allowedCats : [cat], '');
+      await API.expenseLabels.delete(labelId);
+      await _loadExpenseLabels(cats, '');
     } catch(e) { showApiError('Erreur : ' + e.message); }
   });
 }

@@ -43,7 +43,9 @@ function create({ cat, name }, userId) {
 function remove(id, userId) {
   const existing = db.prepare('SELECT * FROM expense_labels WHERE id = ?').get(id);
   if (!existing) throw httpError('Désignation introuvable.', 404);
-  if (existing.user_id !== userId) throw httpError('Non autorisé.', 403);
+  // Allow any household member to delete
+  const { params } = getScopeCondition(userId);
+  if (!params.includes(existing.user_id)) throw httpError('Non autorisé.', 403);
   db.prepare('DELETE FROM expense_labels WHERE id = ?').run(id);
   return { deleted: true };
 }
