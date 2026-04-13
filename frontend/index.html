@@ -2823,55 +2823,56 @@ const DRAG_HANDLE=`<span class="drag-handle" title="Déplacer"><svg width="12" h
 
 function memberTableHtml(rows,isMobile,memberName){
   if(rows.length===0)return`<div class="tbl-empty">Aucune ligne</div>`;
-  if(!window.entriesSectionCollapsed)window.entriesSectionCollapsed={};
-  const GROUPS=[
-    {key:'revenus', label:'Revenus & Impôts', cats:['revenu','impot'],  color:'#0d9e6e', totColor:'var(--green)'},
-    {key:'depenses',label:'Dépenses',         cats:['fixe','variable'], color:'#d93535', totColor:'var(--red)'},
-    {key:'loisir',  label:'Loisir',            cats:['loisir'],          color:'#f59e0b', totColor:'var(--amber)'},
-  ];
-  const editActions=canEdit(memberName);
+  const GROUPS=[{key:'revenus',label:'Revenus & Impôts',cats:['revenu','impot']},{key:'depenses',label:'Dépenses',cats:['fixe','variable']},{key:'loisir',label:'Loisir',cats:['loisir']},{key:'epargne',label:'Épargne',cats:['epargne']}];
   return GROUPS.map(g=>{
     const gRows=getSortedGroupRows(rows.filter(e=>g.cats.includes(e.cat)));
-    if(!gRows.length)return'';
     const tot=g.key==='revenus'
       ?absSumCat(gRows,'revenu')-absSumCat(gRows,'impot')
       :gRows.reduce((s,e)=>s+Math.abs(e.amount),0);
-    const maxAmt=Math.max(...gRows.map(e=>Math.abs(e.amount)))||1;
-    const ck=memberName+'_'+g.key;
-    const isCollapsed=!!window.entriesSectionCollapsed[ck];
-    const uid=`entries-body-${memberName}-${g.key}`;
-    const rowsHtml=gRows.map(e=>{
-      const c=CATS[e.cat];
-      const amt=Math.abs(e.amount);
-      const barPct=(amt/maxAmt*100).toFixed(1);
-      const ac=e.cat==='revenu'?'var(--green)':e.cat==='impot'?'var(--amber)':g.key==='loisir'?'var(--amber)':'var(--red)';
-      const barFill=e.cat==='revenu'?'#0d9e6e':e.cat==='impot'?'#f59e0b':g.key==='loisir'?'#f59e0b':'#d93535';
-      return`<div class="entry-card" data-id="${e.id}" draggable="${editActions}" style="padding:10px 13px 9px;border-left-color:${c.hex};background:${c.bg}">
-        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:7px">
-          <span style="font-size:var(--fs-sm);font-weight:600;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;letter-spacing:-.01em">${e.name}</span>
-          <div style="display:flex;align-items:center;gap:5px;flex-shrink:0">
-            <span style="font-size:var(--fs-sm);font-weight:700;color:${ac}">${eur(amt)}</span>
-            ${editActions?`<button class="btn-act" onclick="openEditEntry(${e.id})"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="btn-act btn-act-danger" onclick="deleteEntry(${e.id})"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg></button>`:''}
-          </div>
+    const totColor=g.key==='revenus'?'var(--green)':g.key==='epargne'?'var(--blue)':'var(--red)';
+    if(g.key==='epargne') return '';
+    if(!gRows.length)return'';
+    const uid=`drag-${memberName}-${g.key}`;
+    const groupColor=g.key==='revenus'?'#0d9e6e':g.key==='depenses'?'#d93535':g.key==='loisir'?'#f59e0b':'#2979c8';
+    if(isMobile){
+      return`<div style="margin-bottom:1rem">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:0 2px 6px;margin-bottom:5px;border-bottom:2px solid ${groupColor}30">
+        <div style="display:flex;align-items:center;gap:7px">
+          <span style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:${groupColor}">${g.label}</span>
+          <span style="font-size:var(--fs-xs);color:var(--hint);background:${groupColor}18;border-radius:20px;padding:1px 7px;font-weight:700">${gRows.length}</span>
         </div>
-        <div style="height:5px;background:${barFill}22;border-radius:3px;overflow:hidden">
-          <div style="height:100%;width:${barPct}%;background:${barFill};border-radius:3px"></div>
-        </div>
-      </div>`;
-    }).join('');
-    return`<div style="margin-bottom:.75rem">
-      <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 12px;background:color-mix(in srgb,${g.color} 8%,var(--surface));border-radius:12px;cursor:pointer;user-select:none;border:1px solid color-mix(in srgb,${g.color} 20%,var(--border))" onclick="toggleEntriesSection('${memberName}','${g.key}')">
-        <div style="display:flex;align-items:center;gap:8px">
-          <span style="display:flex;align-items:center;transition:transform .2s;${isCollapsed?'transform:rotate(-90deg);':''}color:${g.color}" data-entries-collapse="${ck}">${CHEVRON_SVG}</span>
-          <span style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:${g.color}">${g.label}</span>
-          <span style="font-size:var(--fs-xs);font-weight:700;color:${g.color};background:${g.color}18;border-radius:20px;padding:1px 7px">${gRows.length}</span>
-        </div>
-        <span style="font-size:var(--fs-sm);font-weight:800;color:${g.totColor}">${eur(Math.abs(tot))}</span>
+        <span style="font-size:var(--fs-sm);font-weight:800;color:${totColor};letter-spacing:-.02em">${eur(Math.abs(tot))}</span>
       </div>
-      <div id="${uid}" style="margin-top:5px${isCollapsed?';display:none':''}">
-        <div id="drag-${memberName}-${g.key}">${rowsHtml}</div>
-        ${editActions?`<div style="display:flex;justify-content:center;margin-top:4px">${MLY_ADD_BTN(`openAddEntry()`)}</div>`:''}
-      </div>
+      <div id="${uid}">
+      ${gRows.map(e=>{const c=CATS[e.cat];const amtColor=['revenu'].includes(e.cat)?'var(--green)':['impot'].includes(e.cat)?'var(--amber)':'var(--red)';return`<div class="entry-card" data-id="${e.id}" style="border-left-color:${c.hex};background:${c.bg};padding:13px 14px 11px 14px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
+          <span style="font-weight:700;font-size:var(--fs-base);flex:1;line-height:1.3;letter-spacing:-.01em">${e.name}</span>
+          <span style="font-size:var(--fs-base);font-weight:800;color:${amtColor};flex-shrink:0;letter-spacing:-.02em">${eur(Math.abs(e.amount))}</span>
+        </div>
+        <div style="height:1px;background:${c.hex}22;margin:9px 0 8px"></div>
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:var(--fs-xs);font-weight:700;color:${c.text};letter-spacing:.05em;text-transform:uppercase">${c.label}</span>
+          ${canEdit(e.member)?`<div style="display:flex;gap:5px"><button class="btn-act" onclick="openEditEntry(${e.id})"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="btn-act btn-act-danger" onclick="deleteEntry(${e.id})"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg></button></div>`:''}
+        </div>
+      </div>`}).join('')}
+      </div></div>`;
+    }
+    return`<div style="margin-bottom:var(--sg)">
+      <div class="tbl-wrap"><table style="width:100%;table-layout:fixed">
+        <colgroup><col style="width:42%"><col style="width:23%"><col style="width:20%"><col style="width:15%"></colgroup>
+        <thead><tr><th>Désignation</th><th>Catégorie</th><th style="text-align:right">Montant</th><th></th></tr></thead>
+        <tbody id="${uid}">
+          ${gRows.map(e=>{const c=CATS[e.cat];const ac=['revenu'].includes(e.cat)?'var(--green)':['impot'].includes(e.cat)?'var(--amber)':'var(--red)';return`<tr data-id="${e.id}">
+            <td style="font-weight:500">${e.name}</td>
+            <td><span class="badge" style="background:${c.bg};color:${c.text};border:${c.border}">${c.label}</span></td>
+            <td style="text-align:right;font-weight:600;color:${ac}">${eur(Math.abs(e.amount))}</td>
+            <td><div style="display:flex;gap:4px">
+              ${canEdit(e.member)?`<button class="btn-act" onclick="openEditEntry(${e.id})"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="btn-act btn-act-danger" onclick="deleteEntry(${e.id})"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg></button>`:'<span style="display:inline-block;width:52px"></span>'}
+            </div></td>
+          </tr>`}).join('')}
+          <tr style="background:var(--surface2)"><td style="font-size:var(--fs-sm);font-weight:600;color:var(--muted)">Total ${g.label.toLowerCase()}</td><td></td><td style="text-align:right;font-weight:700;color:${totColor}">${eur(tot)}</td><td></td></tr>
+        </tbody>
+      </table></div>
     </div>`;
   }).join('');
 }
@@ -2940,29 +2941,26 @@ function renderEntries(){
       const tot1=e1.reduce((s,e)=>s+Math.abs(e.amount),0);
       const tot2=e2.reduce((s,e)=>s+Math.abs(e.amount),0);
       const tot=tot1+tot2;
-      if(!window.entriesSectionCollapsed)window.entriesSectionCollapsed={};
-      const _ck='commun_'+g.key;
-      const _isC=!!window.entriesSectionCollapsed[_ck];
-      const _uid=`entries-body-commun-${g.key}`;
-      const hdr=`<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 12px;background:color-mix(in srgb,${g.color} 8%,var(--surface));border-radius:12px;cursor:pointer;user-select:none;border:1px solid color-mix(in srgb,${g.color} 20%,var(--border))" onclick="toggleEntriesSection('commun','${g.key}')">
-        <div style="display:flex;align-items:center;gap:8px">
-          <span style="display:flex;align-items:center;transition:transform .2s;${_isC?'transform:rotate(-90deg);':''}color:${g.color}" data-entries-collapse="${_ck}">${CHEVRON_SVG}</span>
+      const hdr=`<div style="display:flex;justify-content:space-between;align-items:center;padding:0 2px 6px;margin-bottom:5px;border-bottom:2px solid ${g.color}30">
+        <div style="display:flex;align-items:center;gap:7px">
           <span style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:${g.color}">${g.label}</span>
-          <span style="font-size:var(--fs-xs);font-weight:700;color:${g.color};background:${g.color}18;border-radius:20px;padding:1px 7px">${allNames.length}</span>
+          <span style="font-size:var(--fs-xs);color:var(--hint);background:${g.color}18;border-radius:20px;padding:1px 7px;font-weight:700">${allNames.length}</span>
         </div>
-        <span style="font-size:var(--fs-sm);font-weight:800;color:${g.totColor}">${eur(Math.abs(tot))}</span>
+        <span style="font-size:var(--fs-sm);font-weight:800;color:${g.totColor};letter-spacing:-.02em">${eur(Math.abs(tot))}</span>
       </div>`;
-      const _innerContent = isMobile
-        ? allNames.map(name=>{
+      if(isMobile){
+        return`<div style="margin-bottom:1rem">
+          ${hdr}
+          ${allNames.map(name=>{
             const ea=e1.find(x=>x.name===name),eb=e2.find(x=>x.name===name);
             const c=CATS[(ea||eb)?.cat];
-            const rowTot=(Math.abs(ea?.amount||0)+Math.abs(eb?.amount||0));
+            const tot=(Math.abs(ea?.amount||0)+Math.abs(eb?.amount||0));
             const amtColor=g.key==='revenus'?'var(--green)':g.key==='epargne'?'var(--blue)':'var(--red)';
             const bothExist=!!(ea&&eb);
             return`<div class="entry-card" style="border-left-color:${c.hex};background:${c.bg};padding:13px 14px 11px 14px">
               <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
                 <span style="font-weight:700;font-size:var(--fs-base);flex:1;line-height:1.3;letter-spacing:-.01em">${name}</span>
-                <span style="font-size:var(--fs-base);font-weight:800;color:${amtColor};flex-shrink:0;letter-spacing:-.02em">${eur(rowTot)}</span>
+                <span style="font-size:var(--fs-base);font-weight:800;color:${amtColor};flex-shrink:0;letter-spacing:-.02em">${eur(tot)}</span>
               </div>
               <div style="height:1px;background:${c.hex}22;margin:9px 0 8px"></div>
               <div style="display:flex;justify-content:space-between;align-items:center">
@@ -2974,8 +2972,11 @@ function renderEntries(){
                 </div>
               </div>
             </div>`;
-          }).join('')
-        : `<div class="tbl-wrap"><table style="width:100%;table-layout:fixed">
+          }).join('')}
+        </div>`;
+      }
+      return`<div style="margin-bottom:var(--sg)">
+        <div class="tbl-wrap"><table style="width:100%;table-layout:fixed">
           <colgroup><col style="width:35%"><col style="width:15%"><col style="width:17%"><col style="width:17%"><col style="width:16%"></colgroup>
           <thead><tr>
             <th>Désignation</th><th>Catégorie</th>
@@ -3005,12 +3006,7 @@ function renderEntries(){
               <td style="text-align:right;font-weight:700;color:${g.totColor}">${eur(tot)}</td>
             </tr>
           </tbody>
-        </table></div>`;
-      return`<div style="margin-bottom:.75rem">
-        ${hdr}
-        <div id="${_uid}" style="margin-top:5px${_isC?';display:none':''}">
-          ${_innerContent}
-        </div>
+        </table></div>
       </div>`;
     }).join('');
   } else {
