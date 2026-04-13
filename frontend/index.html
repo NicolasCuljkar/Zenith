@@ -1320,24 +1320,18 @@ window.onerror = function(msg, src, line) {
     <div class="modal-drag"></div>
     <h3 id="modal-me-title">Ajouter une dépense</h3>
     <div class="fstack">
-      <div class="frow" style="align-items:flex-start">
-        <div class="fgrp" style="flex:2">
-          <label>Désignation</label>
-          <div style="display:flex;gap:6px">
-            <select id="fme-name" style="flex:1"><option value="">— Sélectionner —</option></select>
-            <button type="button" class="btn-add" style="padding:8px 10px;flex-shrink:0" onclick="toggleAddLabelForm()" title="Nouvelle désignation">+</button>
-          </div>
-          <div id="fme-label-form" style="display:none;margin-top:6px">
-            <div style="display:flex;gap:6px">
-              <input type="text" id="fme-label-input" placeholder="Nouvelle désignation…" class="inp" style="flex:1" onkeydown="if(event.key==='Enter')confirmAddLabel();else if(event.key==='Escape')cancelAddLabel();">
-              <button type="button" class="btn-add" style="padding:8px 10px" onclick="confirmAddLabel()">✓</button>
-              <button type="button" class="btn" style="padding:8px 10px" onclick="cancelAddLabel()">✕</button>
-            </div>
-          </div>
+      <div class="fgrp">
+        <label>Désignation</label>
+        <div style="display:flex;gap:6px">
+          <select id="fme-name" style="flex:1;min-width:0"><option value="">— Sélectionner —</option></select>
+          <button type="button" class="btn" style="padding:0 12px;font-size:1.2rem;line-height:1;flex-shrink:0" onclick="toggleAddLabelForm()" title="Nouvelle désignation">+</button>
         </div>
-        <div class="fgrp" style="flex:1">
-          <label>Note</label>
-          <input type="text" id="fme-note" placeholder="Ex. Leclerc…">
+        <div id="fme-label-form" style="display:none;margin-top:6px">
+          <div style="display:flex;gap:6px">
+            <input type="text" id="fme-label-input" placeholder="Nouvelle désignation…" class="inp" style="flex:1;min-width:0" onkeydown="if(event.key==='Enter')confirmAddLabel();else if(event.key==='Escape')cancelAddLabel();">
+            <button type="button" class="btn-add" style="padding:0 12px;flex-shrink:0" onclick="confirmAddLabel()">✓</button>
+            <button type="button" class="btn" style="padding:0 12px;flex-shrink:0" onclick="cancelAddLabel()">✕</button>
+          </div>
         </div>
       </div>
       <div class="frow">
@@ -1352,6 +1346,7 @@ window.onerror = function(msg, src, line) {
         </div>
         <div class="fgrp"><label>Montant (€)</label><input type="number" id="fme-amount" min="0" step="0.01" placeholder="0"></div>
       </div>
+      <div class="fgrp"><label>Note <span style="font-weight:400;color:var(--muted)">(optionnel)</span></label><input type="text" id="fme-note" placeholder="Ex. Leclerc, Total…"></div>
     </div>
     <div class="modal-footer">
       <button class="btn" id="modal-me-cancel">Annuler</button>
@@ -3369,7 +3364,7 @@ function _monthlyAutoGroup(rows, overrides, extras, g, isMobile) {
           </tr>`;
         }).join('')}
         ${extras.map(e => { const c=CATS[e.cat]; const exAc=e.cat==='revenu'?'var(--green)':e.cat==='impot'?'var(--amber)':'var(--red)'; return `<tr>
-          <td style="font-weight:500">${e.name}<span style="font-size:10px;color:var(--muted);margin-left:5px">exceptionnel</span></td>
+          <td><div style="font-weight:500">${e.name}<span style="font-size:10px;color:var(--muted);margin-left:5px">exceptionnel</span></div>${e.note?`<div style="font-size:var(--fs-xs);color:var(--muted);margin-top:2px">${e.note}</div>`:''}</td>
           <td><span class="badge" style="background:${c.bg};color:${c.text};border:${c.border}">${c.label}</span></td>
           <td style="text-align:right;font-weight:600;color:${exAc}">${eur(Math.abs(e.amount))}</td>
           <td><div style="display:flex;gap:3px;justify-content:flex-end">
@@ -3441,14 +3436,13 @@ function _monthlyManualGroup(rows, g, budgetTotal, isMobile, revNet = 0) {
 
   return `<div style="margin-bottom:var(--sg)">${hdr}${bar}
     <div class="tbl-wrap"><table style="width:100%;table-layout:fixed">
-      <colgroup><col style="width:40%"><col style="width:18%"><col style="width:22%"><col style="width:12%"><col style="width:8%"></colgroup>
-      <thead><tr><th>Désignation</th><th>Catégorie</th><th style="text-align:right">Montant</th><th>Note</th><th></th></tr></thead>
+      <colgroup><col style="width:45%"><col style="width:22%"><col style="width:23%"><col style="width:10%"></colgroup>
+      <thead><tr><th>Désignation</th><th>Catégorie</th><th style="text-align:right">Montant</th><th></th></tr></thead>
       <tbody>
         ${rows.map(e => { const c=CATS[e.cat]; return `<tr>
-          <td style="font-weight:500">${e.name}</td>
+          <td><div style="font-weight:500">${e.name}</div>${e.note?`<div style="font-size:var(--fs-xs);color:var(--muted);margin-top:2px">${e.note}</div>`:''}</td>
           <td><span class="badge" style="background:${c.bg};color:${c.text};border:${c.border}">${c.label}</span></td>
           <td style="text-align:right;font-weight:600;color:var(--red)">${eur(Math.abs(e.amount))}</td>
-          <td style="font-size:var(--fs-xs);color:var(--muted)">${e.note || ''}</td>
           <td><div style="display:flex;gap:4px">
             <button class="btn-act" onclick="openEditMonthlyExpense(${e.id})">${EDIT_ICON}</button>
             <button class="btn-act btn-act-danger" onclick="deleteMonthlyExpense(${e.id})">${DEL_ICON}</button>
@@ -3456,7 +3450,7 @@ function _monthlyManualGroup(rows, g, budgetTotal, isMobile, revNet = 0) {
         </tr>`; }).join('')}
         <tr style="background:var(--surface2)">
           <td style="font-size:var(--fs-sm);font-weight:600;color:var(--muted)">Total ${g.label.toLowerCase()}</td><td></td>
-          <td style="text-align:right;font-weight:700;color:${g.totColor}">${eur(actualTotal)}</td><td></td><td></td>
+          <td style="text-align:right;font-weight:700;color:${g.totColor}">${eur(actualTotal)}</td><td></td>
         </tr>
       </tbody>
     </table></div>
