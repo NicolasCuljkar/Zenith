@@ -880,7 +880,6 @@ window.onerror = function(msg, src, line) {
     <div id="entries-previsionnel">
       <div id="entries-nodata" style="display:none"></div>
       <div class="kpi-grid" id="entries-summary" style="margin-bottom:1rem"></div>
-      <div id="entries-profile-wrap" style="margin-bottom:.75rem"></div>
       <div id="entries-toolbar" style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:.75rem;gap:8px">
         <div id="entries-search" style="flex:1;display:flex;flex-direction:row;gap:6px;min-width:0">
           <input type="text" id="search-input" class="inp search-inp" placeholder="Rechercher…" style="flex:1;min-width:0">
@@ -894,6 +893,7 @@ window.onerror = function(msg, src, line) {
         <button class="btn-add btn-add-desktop" id="btn-add-entry"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Ajouter</button>
       </div>
       <div id="entries-sections"></div>
+      <div id="entries-profile-wrap" style="margin-top:.75rem"></div>
     </div>
 
     <!-- ── SUIVI MENSUEL ── -->
@@ -2917,50 +2917,59 @@ function renderEntries(){
     const _pw = document.getElementById('entries-profile-wrap');
     if (_pw) {
       const _showNames = entriesMember === 'Commun' ? orderedMembers() : [entriesMember];
-      _pw.innerHTML = _showNames.map(name => {
-        const ps = calcStats(entries.filter(e => e.member === name));
-        const pct = savingPct[name] ?? 60;
-        const epC = Math.round(ps.rav * pct / 100);
-        const loiC = Math.round(ps.rav * (100 - pct) / 100);
-        const mc = getMC(name);
-        const usedPct = ps.revNet > 0 ? Math.round((ps.fix + ps.vari) / ps.revNet * 100) : 0;
-        const isMe = currentUser?.name === name;
-        return `<div class="card" style="margin-bottom:0">
-          <div style="font-size:var(--fs-title);font-weight:700;color:var(--text);letter-spacing:-.02em;margin-bottom:6px">${_showNames.length > 1 ? `<span style="color:${mc}">${name}</span> — ` : ''}Revenus</div>
-          <div class="prow"><span class="prow-lbl">Revenus bruts</span><span class="prow-val" style="color:var(--green)">${eur(ps.rev)}</span></div>
-          <div class="prow"><span class="prow-lbl">Impôts</span><span class="prow-val" style="color:var(--amber)">− ${eur(ps.tax)}</span></div>
-          <div class="prow"><span class="prow-lbl" style="font-weight:600">Revenus nets</span><span class="prow-val" style="color:var(--green)">${eur(ps.revNet)}</span></div>
-          <div style="font-size:var(--fs-title);font-weight:700;color:var(--text);letter-spacing:-.02em;margin-top:14px;margin-bottom:6px">Dépenses</div>
-          <div class="prow"><span class="prow-lbl">Dépenses fixes</span><span class="prow-val" style="color:var(--red)">− ${eur(ps.fix)}</span></div>
-          <div class="prow"><span class="prow-lbl">Dépenses variables</span><span class="prow-val" style="color:var(--red)">− ${eur(ps.vari)}</span></div>
-          <div class="prow"><span class="prow-lbl">Dépenses totales</span><span class="prow-val" style="color:var(--red)">− ${eur(ps.fix + ps.vari)}</span></div>
-          <div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:22px;margin-bottom:6px">
-            <div style="font-size:var(--fs-title);font-weight:700;color:var(--text);letter-spacing:-.02em">Répartition du reste à vivre</div>
-            <div style="font-size:var(--fs-base);font-weight:800;color:${ps.rav>=0?'var(--green)':'var(--red)'};letter-spacing:-.03em">${eur(ps.rav)}</div>
-          </div>
-          <div style="margin:12px 0 6px">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-              ${isMe ? `<div style="display:flex;gap:0;border:1px solid var(--border);border-radius:8px;overflow:hidden">
-                <button id="ep-mode-pct-${name}" onclick="setSavingMode('${name}','pct',this)" style="padding:3px 10px;font-size:var(--fs-sm);font-weight:600;border:none;cursor:pointer;font-family:inherit;transition:background .12s;background:${mc};color:#fff">%</button>
-                <button id="ep-mode-eur-${name}" onclick="setSavingMode('${name}','eur',this)" style="padding:3px 10px;font-size:var(--fs-sm);font-weight:600;border:none;cursor:pointer;font-family:inherit;transition:background .12s;background:var(--surface);color:var(--muted)">€</button>
-              </div>` : '<span></span>'}
-              <span id="pctv-${name}" style="font-size:var(--fs-md);font-weight:700;color:${mc}">${pct}%</span>
+      const _collapsed = !!window._entriesProfileCollapsed;
+      const _chevron = _collapsed ? 'transform:rotate(-90deg)' : '';
+      _pw.innerHTML = `<div class="card" style="margin-bottom:0">
+        <div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer;user-select:none" onclick="toggleEntriesProfile()">
+          <span style="font-size:var(--fs-sm);font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)">Résumé budgétaire</span>
+          <button style="background:none;border:none;cursor:pointer;color:var(--muted);padding:0;display:flex;align-items:center;transition:transform .2s;${_chevron}" id="entries-profile-chevron">${CHEVRON_SVG}</button>
+        </div>
+        <div id="entries-profile-body" style="${_collapsed?'display:none':''}">
+        ${_showNames.map(name => {
+          const ps = calcStats(entries.filter(e => e.member === name));
+          const pct = savingPct[name] ?? 60;
+          const epC = Math.round(ps.rav * pct / 100);
+          const loiC = Math.round(ps.rav * (100 - pct) / 100);
+          const mc = getMC(name);
+          const isMe = currentUser?.name === name;
+          return `<div style="${_showNames.length > 1 ? 'margin-top:16px;padding-top:16px;border-top:1px solid var(--border)' : 'margin-top:14px'}">
+            <div style="font-size:var(--fs-title);font-weight:700;color:var(--text);letter-spacing:-.02em;margin-bottom:6px">${_showNames.length > 1 ? `<span style="color:${mc}">${name}</span> — ` : ''}Revenus</div>
+            <div class="prow"><span class="prow-lbl">Revenus bruts</span><span class="prow-val" style="color:var(--green)">${eur(ps.rev)}</span></div>
+            <div class="prow"><span class="prow-lbl">Impôts</span><span class="prow-val" style="color:var(--amber)">− ${eur(ps.tax)}</span></div>
+            <div class="prow"><span class="prow-lbl" style="font-weight:600">Revenus nets</span><span class="prow-val" style="color:var(--green)">${eur(ps.revNet)}</span></div>
+            <div style="font-size:var(--fs-title);font-weight:700;color:var(--text);letter-spacing:-.02em;margin-top:14px;margin-bottom:6px">Dépenses</div>
+            <div class="prow"><span class="prow-lbl">Dépenses fixes</span><span class="prow-val" style="color:var(--red)">− ${eur(ps.fix)}</span></div>
+            <div class="prow"><span class="prow-lbl">Dépenses variables</span><span class="prow-val" style="color:var(--red)">− ${eur(ps.vari)}</span></div>
+            <div class="prow"><span class="prow-lbl">Dépenses totales</span><span class="prow-val" style="color:var(--red)">− ${eur(ps.fix + ps.vari)}</span></div>
+            <div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:22px;margin-bottom:6px">
+              <div style="font-size:var(--fs-title);font-weight:700;color:var(--text);letter-spacing:-.02em">Répartition du reste à vivre</div>
+              <div style="font-size:var(--fs-base);font-weight:800;color:${ps.rav>=0?'var(--green)':'var(--red)'};letter-spacing:-.03em">${eur(ps.rav)}</div>
             </div>
-            <div id="slider-pct-${name}">
-              <input type="range" min="0" max="100" step="1" value="${pct}" id="pct-${name}"
-                style="width:100%;accent-color:${mc};--accent-c:${mc};--track-right:var(--amber)"
-                ${isMe ? `oninput="savingPct['${name}']=+this.value;document.getElementById('pctv-${name}').textContent=this.value+'%';updateSplitBar('${name}',+this.value);saveData();updateSavingCalc('${name}');debouncedDashRefresh();"` : `disabled style="width:100%;accent-color:${mc};opacity:.45;pointer-events:none"`}>
+            <div style="margin:12px 0 6px">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+                ${isMe ? `<div style="display:flex;gap:0;border:1px solid var(--border);border-radius:8px;overflow:hidden">
+                  <button id="ep-mode-pct-${name}" onclick="setSavingMode('${name}','pct',this)" style="padding:3px 10px;font-size:var(--fs-sm);font-weight:600;border:none;cursor:pointer;font-family:inherit;transition:background .12s;background:${mc};color:#fff">%</button>
+                  <button id="ep-mode-eur-${name}" onclick="setSavingMode('${name}','eur',this)" style="padding:3px 10px;font-size:var(--fs-sm);font-weight:600;border:none;cursor:pointer;font-family:inherit;transition:background .12s;background:var(--surface);color:var(--muted)">€</button>
+                </div>` : '<span></span>'}
+                <span id="pctv-${name}" style="font-size:var(--fs-md);font-weight:700;color:${mc}">${pct}%</span>
+              </div>
+              <div id="slider-pct-${name}">
+                <input type="range" min="0" max="100" step="1" value="${pct}" id="pct-${name}"
+                  style="width:100%;accent-color:${mc};--accent-c:${mc};--track-right:var(--amber)"
+                  ${isMe ? `oninput="savingPct['${name}']=+this.value;document.getElementById('pctv-${name}').textContent=this.value+'%';updateSplitBar('${name}',+this.value);saveData();updateSavingCalc('${name}');debouncedDashRefresh();"` : `disabled style="width:100%;accent-color:${mc};opacity:.45;pointer-events:none"`}>
+              </div>
+              <div id="slider-eur-${name}" style="display:none">
+                <input type="range" min="0" max="${Math.round(ps.rav)}" step="10" value="${epC}" id="eur-${name}"
+                  style="width:100%;accent-color:${mc};--accent-c:${mc};--track-right:var(--amber)"
+                  ${isMe ? `oninput="const pctVal=+this.max>0?Math.round(+this.value/+this.max*100):0;savingPct['${name}']=pctVal;document.getElementById('pct-${name}').value=pctVal;document.getElementById('pctv-${name}').textContent=parseInt(this.value).toLocaleString('fr-FR')+' €';updateSplitBar('${name}',pctVal);saveData();updateSavingCalc('${name}');debouncedDashRefresh();"` : `disabled style="width:100%;accent-color:${mc};opacity:.45;pointer-events:none"`}>
+              </div>
             </div>
-            <div id="slider-eur-${name}" style="display:none">
-              <input type="range" min="0" max="${Math.round(ps.rav)}" step="10" value="${epC}" id="eur-${name}"
-                style="width:100%;accent-color:${mc};--accent-c:${mc};--track-right:var(--amber)"
-                ${isMe ? `oninput="const pctVal=+this.max>0?Math.round(+this.value/+this.max*100):0;savingPct['${name}']=pctVal;document.getElementById('pct-${name}').value=pctVal;document.getElementById('pctv-${name}').textContent=parseInt(this.value).toLocaleString('fr-FR')+' €';updateSplitBar('${name}',pctVal);saveData();updateSavingCalc('${name}');debouncedDashRefresh();"` : `disabled style="width:100%;accent-color:${mc};opacity:.45;pointer-events:none"`}>
-            </div>
-          </div>
-          <div class="prow"><span class="prow-lbl" style="color:var(--blue)">→ Épargne calculée</span><span class="prow-val" style="color:var(--blue)" data-ep="${name}">${eur(epC)}</span></div>
-          <div class="prow" style="border-bottom:none"><span class="prow-lbl" style="color:var(--amber)">→ Budget loisir</span><span class="prow-val" style="color:var(--amber)" data-loi="${name}">${eur(loiC)}</span></div>
-        </div>`;
-      }).join('');
+            <div class="prow"><span class="prow-lbl" style="color:var(--blue)">→ Épargne calculée</span><span class="prow-val" style="color:var(--blue)" data-ep="${name}">${eur(epC)}</span></div>
+            <div class="prow" style="border-bottom:none"><span class="prow-lbl" style="color:var(--amber)">→ Budget loisir</span><span class="prow-val" style="color:var(--amber)" data-loi="${name}">${eur(loiC)}</span></div>
+          </div>`;
+        }).join('')}
+        </div>
+      </div>`;
       setTimeout(fillAllTracks, 0);
     }
   }
@@ -3976,6 +3985,13 @@ function openEditMonthlyExpense(id) {
   if (delBtn2) delBtn2.style.display = 'none';
   _loadExpenseLabels(e.cat, e.name);
   document.getElementById('modal-monthly-expense').classList.add('open');
+}
+function toggleEntriesProfile() {
+  window._entriesProfileCollapsed = !window._entriesProfileCollapsed;
+  const body = document.getElementById('entries-profile-body');
+  const btn  = document.getElementById('entries-profile-chevron');
+  if (body) body.style.display = window._entriesProfileCollapsed ? 'none' : '';
+  if (btn)  btn.style.transform = window._entriesProfileCollapsed ? 'rotate(-90deg)' : '';
 }
 function toggleMonthlySection(key) {
   monthlySectionCollapsed[key] = !monthlySectionCollapsed[key];
