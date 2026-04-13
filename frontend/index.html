@@ -941,6 +941,7 @@ window.onerror = function(msg, src, line) {
     <div style="display:none"><div id="gauge-chart-wrap"><canvas id="gauge-chart"></canvas></div><div id="radar-chart-wrap"><canvas id="radar-chart"></canvas></div></div>
     <div class="card" id="member-bars-card" style="display:none"><div class="card-head">Comparaison membres</div><div id="member-bars-wrap" style="position:relative;height:210px"><canvas id="member-bars-chart"></canvas></div></div>
     <div style="display:none"><div id="analysis-donut-wrap" style="position:relative;height:0"><canvas id="analysis-donut-chart"></canvas></div><div id="analysis-donut-legend"></div></div>
+    <div class="card" id="monthly-compare-card" style="display:none"><div class="card-head">Comparaison mensuelle</div><div id="monthly-compare-content"><div style="padding:20px;text-align:center;color:var(--muted);font-size:var(--fs-sm)">Chargement…</div></div></div>
     </div><!-- /#analysis-content -->
   </div>
 
@@ -3169,11 +3170,13 @@ let editMonthlyId      = null;
 let editMonthlyEntryId = null; // non-null → correction d'une ligne auto
 let _monthlyAutoMap    = {};   // entry.id → entry (pour openMonthlyAutoOverride)
 let _monthlySavingRec  = null; // saving record du mois affiché (pour édition depuis suivi mensuel)
+let monthlySectionCollapsed = {}; // key → bool
 const MONTH_NAMES   = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
 
 const EDIT_ICON    = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
 const DEL_ICON     = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>`;
-const RESTORE_ICON = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.5"/></svg>`;
+const RESTORE_ICON  = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.5"/></svg>`;
+const CHEVRON_SVG   = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>`;
 
 function switchEntriesTab(tab) {
   document.querySelectorAll('[data-etab]').forEach(b => b.classList.toggle('active', b.dataset.etab === tab));
@@ -3249,7 +3252,7 @@ function _renderMonthlySections(stats, expenses, savingsData = [], entryStats = 
   const steps = [
     { label: 'Revenus nets', val: revNet,        col: 'var(--green)', sign: true },
     { label: 'Dépenses',     val: totalDepReel,  col: 'var(--red)',   sign: false, prefix: '−' },
-    { label: 'Épargne',      val: epDelta,        col: epDelta >= 0 ? 'var(--green)' : 'var(--red)', sign: true },
+    { label: 'Épargne',      val: epDelta,        col: '#2979c8', sign: true },
   ];
   const stepHtml = steps.map(s => {
     const display = s.prefix
@@ -3307,7 +3310,7 @@ function _renderMonthlySections(stats, expenses, savingsData = [], entryStats = 
     { key:'epargne', label:'Épargne',          cats:['epargne'],        color:'#2979c8', totColor:'var(--blue)',  savings:true },
   ];
 
-  document.getElementById('monthly-sections').innerHTML = GROUPS.map(g => {
+  const groupHtmls = GROUPS.map(g => {
     if (g.savings) {
       const frMonth = MONTH_NAMES[monthlyMonth - 1];
       const savingRecord = savingsData.find(s => s.year === monthlyYear && s.month === frMonth);
@@ -3326,7 +3329,44 @@ function _renderMonthlySections(stats, expenses, savingsData = [], entryStats = 
       const budgetTotal = g.cats.reduce((s, c) => s + (stats[c]?.budget || 0), 0);
       return _monthlyManualGroup(rows, g, budgetTotal, isMobile, g.key === 'variable' ? revNet : 0);
     }
-  }).join('');
+  });
+  // Insérer le slider RAV entre variable (index 2) et loisir (index 3)
+  const _epMemberSlider = entriesMember === 'Commun' ? myRole() : entriesMember;
+  groupHtmls.splice(3, 0, _monthlyRavSliderHtml(entryStats, _epMemberSlider));
+  document.getElementById('monthly-sections').innerHTML = groupHtmls.join('');
+}
+
+function _monthlyRavSliderHtml(entryStats, member) {
+  const rav = entryStats ? entryStats.rav : 0;
+  if (rav <= 0) return '';
+  const pct  = savingPct[member] ?? 60;
+  const epC  = Math.round(rav * pct / 100);
+  const loiC = Math.round(rav * (100 - pct) / 100);
+  const mc   = getMC(member);
+  return `<div style="margin-bottom:var(--sg);padding:14px 16px;background:var(--surface2);border:1px solid var(--border);border-radius:12px;border-left:3px solid ${mc}">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px">
+      <div style="font-size:var(--fs-sm);font-weight:800;color:var(--text)">Répartition du reste à vivre</div>
+      <div style="font-size:var(--fs-sm);font-weight:800;color:${rav>=0?'var(--green)':'var(--red)'}">${eur(rav)}</div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:flex-end;margin-bottom:5px">
+      <span id="mly-pctv-${member}" style="font-size:var(--fs-sm);font-weight:700;color:${mc}">${pct}%</span>
+    </div>
+    <input type="range" min="0" max="100" step="1" value="${pct}" id="mly-pct-${member}"
+      style="width:100%;accent-color:${mc};--accent-c:${mc};--track-right:var(--amber)"
+      oninput="savingPct['${member}']=+this.value;document.getElementById('mly-pctv-${member}').textContent=this.value+'%';_updateMlySlider('${member}',${rav});saveData();updateSavingCalc('${member}');debouncedDashRefresh();">
+    <div style="margin-top:8px">
+      <div class="prow"><span class="prow-lbl" style="color:var(--blue)">→ Épargne calculée</span><span class="prow-val" id="mly-ep-${member}" style="color:var(--blue)">${eur(epC)}</span></div>
+      <div class="prow" style="border-bottom:none"><span class="prow-lbl" style="color:var(--amber)">→ Budget loisir</span><span class="prow-val" id="mly-loi-${member}" style="color:var(--amber)">${eur(loiC)}</span></div>
+    </div>
+  </div>`;
+}
+function _updateMlySlider(member, rav) {
+  const pct = savingPct[member] ?? 60;
+  const epEl  = document.getElementById('mly-ep-'  + member);
+  const loiEl = document.getElementById('mly-loi-' + member);
+  if (epEl)  epEl.textContent  = eur(Math.round(rav * pct / 100));
+  if (loiEl) loiEl.textContent = eur(Math.round(rav * (100 - pct) / 100));
+  fillAllTracks();
 }
 
 // Groupe auto-renseigné — avec correction mensuelle + dépenses exceptionnelles
@@ -3354,8 +3394,11 @@ function _monthlyAutoGroup(rows, overrides, extras, g, isMobile) {
   let addBtn = '';
   if (g.cats.includes('revenu')) addBtn = `<button class="btn-add" onclick="openAddMonthlyExpense('revenu',false,['revenu','impot'])" style="font-size:var(--fs-xs);padding:4px 10px;gap:4px">${ADD_SVG}Ajouter</button>`;
   else if (g.cats.includes('fixe')) addBtn = mkAdd('fixe','Ajouter', true);
+  const collapsed = !!monthlySectionCollapsed[g.key];
+  const chevronStyle = collapsed ? 'transform:rotate(-90deg);' : '';
   const hdr = `<div style="display:flex;justify-content:space-between;align-items:center;padding:0 2px 6px;margin-bottom:5px;border-bottom:2px solid ${g.color}30">
     <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">
+      <button onclick="toggleMonthlySection('${g.key}')" data-collapse-key="${g.key}" style="background:none;border:none;cursor:pointer;color:var(--muted);padding:0;display:flex;align-items:center;transition:transform .2s;${chevronStyle}">${CHEVRON_SVG}</button>
       <span style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:${g.color}">${g.label}</span>
       <span style="font-size:var(--fs-xs);color:var(--hint);background:${g.color}18;border-radius:20px;padding:1px 7px;font-weight:700">${rows.length + extras.length}</span>
       ${subInfo}
@@ -3367,11 +3410,11 @@ function _monthlyAutoGroup(rows, overrides, extras, g, isMobile) {
   </div>`;
 
   if (!rows.length && !extras.length) {
-    return `<div style="margin-bottom:var(--sg)">${hdr}${bar}<div class="tbl-empty">Aucune ligne pour ce mois</div></div>`;
+    return `<div style="margin-bottom:var(--sg)">${hdr}<div id="monthly-body-${g.key}" style="${collapsed?'display:none':''}">${bar}<div class="tbl-empty">Aucune ligne pour ce mois</div></div></div>`;
   }
 
   if (isMobile) {
-    return `<div style="margin-bottom:1rem">${hdr}${bar}${rows.map(e => {
+    return `<div style="margin-bottom:1rem">${hdr}<div id="monthly-body-${g.key}" style="${collapsed?'display:none':''}">${bar}${rows.map(e => {
       const ov = getOv(e.id);
       const displayAmt = ov ? Math.abs(ov.amount) : Math.abs(e.amount);
       const isOverridden = !!ov;
@@ -3413,10 +3456,10 @@ function _monthlyAutoGroup(rows, overrides, extras, g, isMobile) {
           </div>
         </div>
       </div>`;
-    }).join('')}</div>`;
+    }).join('')}</div></div>`;
   }
-  return `<div style="margin-bottom:var(--sg)">${hdr}${bar}
-    <div class="tbl-wrap"><table style="width:100%;table-layout:fixed">
+  return `<div style="margin-bottom:var(--sg)">${hdr}<div id="monthly-body-${g.key}" style="${collapsed?'display:none':''}">
+${bar}    <div class="tbl-wrap"><table style="width:100%;table-layout:fixed">
       <colgroup><col style="width:3%"><col style="width:42%"><col style="width:25%"><col style="width:20%"><col style="width:10%"></colgroup>
       <thead><tr>
         <th><input type="checkbox" data-group="${g.key}" onchange="toggleMonthlySelectAll(this,'${g.key}')"></th>
@@ -3456,7 +3499,7 @@ function _monthlyAutoGroup(rows, overrides, extras, g, isMobile) {
         <tr style="background:var(--surface2)"><td></td><td style="font-size:var(--fs-sm);font-weight:600;color:var(--muted)">Total ${g.label.toLowerCase()}</td><td></td><td style="text-align:right;font-weight:700;color:${g.totColor}">${eur(tot)}</td><td></td></tr>
       </tbody>
     </table></div>
-  </div>`;
+  </div></div>`;
 }
 
 // Groupe manuel (variable/loisir) avec bouton Ajouter et actions
@@ -3473,8 +3516,11 @@ function _monthlyManualGroup(rows, g, budgetTotal, isMobile, revNet = 0) {
     ? `<span style="font-size:var(--fs-xs);color:${pctCol};font-weight:700">${eur(actualTotal)}</span><span style="font-size:var(--fs-xs);color:var(--muted)">/ ${eur(refTotal)}</span>`
     : `<span style="font-size:var(--fs-xs);color:var(--muted)">Aucune donnée</span>`;
 
+  const collapsed2 = !!monthlySectionCollapsed[g.key];
+  const chevronStyle2 = collapsed2 ? 'transform:rotate(-90deg);' : '';
   const hdr = `<div style="display:flex;justify-content:space-between;align-items:center;padding:0 2px 6px;margin-bottom:5px;border-bottom:2px solid ${g.color}30">
     <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">
+      <button onclick="toggleMonthlySection('${g.key}')" data-collapse-key="${g.key}" style="background:none;border:none;cursor:pointer;color:var(--muted);padding:0;display:flex;align-items:center;transition:transform .2s;${chevronStyle2}">${CHEVRON_SVG}</button>
       <span style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:${g.color}">${g.label}</span>
       <span style="font-size:var(--fs-xs);color:var(--hint);background:${g.color}18;border-radius:20px;padding:1px 7px;font-weight:700">${rows.length}</span>
       ${subInfo}
@@ -3491,11 +3537,11 @@ function _monthlyManualGroup(rows, g, budgetTotal, isMobile, revNet = 0) {
   </div>` : '';
 
   if (!rows.length) {
-    return `<div style="margin-bottom:var(--sg)">${hdr}${bar}<div class="tbl-empty">Aucune dépense saisie pour ce mois</div></div>`;
+    return `<div style="margin-bottom:var(--sg)">${hdr}<div id="monthly-body-${g.key}" style="${collapsed2?'display:none':''}">${bar}<div class="tbl-empty">Aucune dépense saisie pour ce mois</div></div></div>`;
   }
 
   if (isMobile) {
-    return `<div style="margin-bottom:1rem">${hdr}${bar}${rows.map(e => {
+    return `<div style="margin-bottom:1rem">${hdr}<div id="monthly-body-${g.key}" style="${collapsed2?'display:none':''}">${bar}${rows.map(e => {
       const c = CATS[e.cat];
       return `<div class="entry-card" style="border-left-color:${c.hex};background:${c.bg};padding:13px 14px 11px 14px">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
@@ -3513,11 +3559,11 @@ function _monthlyManualGroup(rows, g, budgetTotal, isMobile, revNet = 0) {
           </div>
         </div>
       </div>`;
-    }).join('')}</div>`;
+    }).join('')}</div></div>`;
   }
 
-  return `<div style="margin-bottom:var(--sg)">${hdr}${bar}
-    <div class="tbl-wrap"><table style="width:100%;table-layout:fixed">
+  return `<div style="margin-bottom:var(--sg)">${hdr}<div id="monthly-body-${g.key}" style="${collapsed2?'display:none':''}">
+${bar}    <div class="tbl-wrap"><table style="width:100%;table-layout:fixed">
       <colgroup><col style="width:3%"><col style="width:42%"><col style="width:22%"><col style="width:23%"><col style="width:10%"></colgroup>
       <thead><tr>
         <th><input type="checkbox" data-group="${g.key}" onchange="toggleMonthlySelectAll(this,'${g.key}')"></th>
@@ -3540,7 +3586,7 @@ function _monthlyManualGroup(rows, g, budgetTotal, isMobile, revNet = 0) {
         </tr>
       </tbody>
     </table></div>
-  </div>`;
+  </div></div>`;
 }
 
 // Groupe épargne — lié à la table savings (même données que l'onglet Épargne)
@@ -3561,8 +3607,11 @@ function _monthlyEpargneGroup(savingRecord, g, budgetTotal, actualTotal, revNet,
   const subInfo = pct !== null
     ? `<span style="font-size:var(--fs-xs);color:${pctCol};font-weight:700">${eur(epActual)}</span><span style="font-size:var(--fs-xs);color:var(--muted)">/ ${eur(budgetTotal)}</span>`
     : `<span style="font-size:var(--fs-xs);color:var(--muted)">Aucun budget prévisionnel</span>`;
+  const collapsed3 = !!monthlySectionCollapsed[g.key];
+  const chevronStyle3 = collapsed3 ? 'transform:rotate(-90deg);' : '';
   const hdr = `<div style="display:flex;justify-content:space-between;align-items:center;padding:0 2px 6px;margin-bottom:5px;border-bottom:2px solid ${g.color}30">
     <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">
+      <button onclick="toggleMonthlySection('${g.key}')" data-collapse-key="${g.key}" style="background:none;border:none;cursor:pointer;color:var(--muted);padding:0;display:flex;align-items:center;transition:transform .2s;${chevronStyle3}">${CHEVRON_SVG}</button>
       <span style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:${g.color}">${g.label}</span>
       ${subInfo}
     </div>
@@ -3573,10 +3622,10 @@ function _monthlyEpargneGroup(savingRecord, g, budgetTotal, actualTotal, revNet,
   </div>`;
   const bar = budgetTotal > 0 ? `<div style="height:4px;background:var(--surface2);border-radius:99px;overflow:hidden;margin-bottom:8px"><div style="height:100%;width:${barW}%;background:${pctCol};border-radius:99px;transition:width .3s"></div></div>` : '';
   if (!savingRecord) {
-    return `<div style="margin-bottom:var(--sg)">${hdr}${bar}<div class="tbl-empty">Aucune épargne saisie pour ce mois — utilisez le bouton "Saisir"</div></div>`;
+    return `<div style="margin-bottom:var(--sg)">${hdr}<div id="monthly-body-${g.key}" style="${collapsed3?'display:none':''}">${bar}<div class="tbl-empty">Aucune épargne saisie pour ce mois — utilisez le bouton "Saisir"</div></div></div>`;
   }
   if (isMobile) {
-    return `<div style="margin-bottom:1rem">${hdr}${bar}<div class="entry-card" style="border-left-color:${g.color};background:${g.color}08;padding:13px 14px 11px 14px">
+    return `<div style="margin-bottom:1rem">${hdr}<div id="monthly-body-${g.key}" style="${collapsed3?'display:none':''}">${bar}<div class="entry-card" style="border-left-color:${g.color};background:${g.color}08;padding:13px 14px 11px 14px">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
         <span style="font-weight:700;font-size:var(--fs-base);flex:1;line-height:1.3">${savingRecord.member} — ${savingRecord.month} ${savingRecord.year}</span>
         <span style="font-size:var(--fs-base);font-weight:800;color:${deltaCol}">${deltaStr}</span>
@@ -3589,10 +3638,10 @@ function _monthlyEpargneGroup(savingRecord, g, budgetTotal, actualTotal, revNet,
           <button class="btn-act btn-act-danger" onclick="deleteMonthlySaving()">${DEL_ICON}</button>
         </div>
       </div>
-    </div></div>`;
+    </div></div></div>`;
   }
-  return `<div style="margin-bottom:var(--sg)">${hdr}${bar}
-    <div class="tbl-wrap"><table style="width:100%;table-layout:fixed">
+  return `<div style="margin-bottom:var(--sg)">${hdr}<div id="monthly-body-${g.key}" style="${collapsed3?'display:none':''}">
+${bar}    <div class="tbl-wrap"><table style="width:100%;table-layout:fixed">
       <colgroup><col style="width:40%"><col style="width:25%"><col style="width:27%"><col style="width:8%"></colgroup>
       <thead><tr><th>Membre</th><th>Mois</th><th style="text-align:right">Évolution vs mois préc.</th><th></th></tr></thead>
       <tbody>
@@ -3607,7 +3656,7 @@ function _monthlyEpargneGroup(savingRecord, g, budgetTotal, actualTotal, revNet,
         </tr>
       </tbody>
     </table></div>
-  </div>`;
+  </div></div>`;
 }
 
 // Section historique — même style groupe
@@ -3853,6 +3902,13 @@ function openEditMonthlyExpense(id) {
   if (delBtn2) delBtn2.style.display = 'none';
   _loadExpenseLabels(e.cat, e.name);
   document.getElementById('modal-monthly-expense').classList.add('open');
+}
+function toggleMonthlySection(key) {
+  monthlySectionCollapsed[key] = !monthlySectionCollapsed[key];
+  const body = document.getElementById('monthly-body-' + key);
+  const btn  = document.querySelector(`[data-collapse-key="${key}"]`);
+  if (body) body.style.display = monthlySectionCollapsed[key] ? 'none' : '';
+  if (btn)  btn.style.transform = monthlySectionCollapsed[key] ? 'rotate(-90deg)' : '';
 }
 function toggleMonthlySelect(id, cb) {
   if (cb.checked) monthlySelected.add(id);
@@ -4368,6 +4424,141 @@ document.getElementById('modal-saving-save').onclick=async ()=>{
 
 
 // ══════════════════════════════════════════════
+// MONTHLY COMPARISON (Analyse tab)
+// ══════════════════════════════════════════════
+async function renderMonthlyComparison(member) {
+  const card = document.getElementById('monthly-compare-card');
+  const content = document.getElementById('monthly-compare-content');
+  if (!card || !content) return;
+  card.style.display = '';
+  content.innerHTML = '<div style="padding:20px;text-align:center;color:var(--muted);font-size:var(--fs-sm)">Chargement…</div>';
+
+  // Générer les 6 derniers mois
+  const today = new Date();
+  const months = [];
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
+    months.push({ year: d.getFullYear(), month: d.getMonth() + 1 });
+  }
+
+  // Récupérer les stats pour chaque mois
+  const token = API.getToken();
+  const user = API.auth.getLocalUser();
+  if (!user) { card.style.display = 'none'; return; }
+
+  let results;
+  try {
+    results = await Promise.all(months.map(({ year, month }) =>
+      API.monthlyExpenses.getStats({ year, month, member: member === 'all' ? undefined : member })
+        .then(s => ({ year, month, stats: s }))
+        .catch(() => ({ year, month, stats: null }))
+    ));
+  } catch (e) {
+    content.innerHTML = '<div style="padding:20px;text-align:center;color:var(--muted);font-size:var(--fs-sm)">Erreur chargement</div>';
+    return;
+  }
+
+  // Calculer les métriques par mois
+  const rows = results.map(({ year, month, stats }) => {
+    if (!stats) return { year, month, revNet: null, dep: null, ep: null, solde: null };
+    const revNet = (stats.revenu?.actual || 0) - (stats.impot?.actual || 0);
+    const dep    = (stats.fixe?.actual || 0) + (stats.variable?.actual || 0) + (stats.loisir?.actual || 0);
+    const ep     = stats.epargne?.actual || 0;
+    const solde  = revNet - dep - ep;
+    return { year, month, revNet, dep, ep, solde, hasData: revNet > 0 || dep > 0 || ep !== 0 };
+  });
+
+  const dataRows = rows.filter(r => r.hasData);
+
+  // KPIs résumé
+  const last3 = dataRows.slice(-3);
+  const avgSolde3 = last3.length ? Math.round(last3.reduce((s, r) => s + r.solde, 0) / last3.length) : null;
+  const avgEpRate = dataRows.length ? Math.round(dataRows.filter(r => r.revNet > 0).reduce((s, r) => s + (r.ep / r.revNet * 100), 0) / Math.max(1, dataRows.filter(r => r.revNet > 0).length)) : null;
+  const bestMonth = dataRows.length ? dataRows.reduce((best, r) => r.solde > (best?.solde ?? -Infinity) ? r : best, null) : null;
+  const avgDep = dataRows.length ? Math.round(dataRows.reduce((s, r) => s + r.dep, 0) / dataRows.length) : null;
+
+  // Tendance solde (comparer derniers 3M vs 3M précédents)
+  const prev3 = dataRows.slice(-6, -3);
+  const avgSolde6 = prev3.length ? Math.round(prev3.reduce((s, r) => s + r.solde, 0) / prev3.length) : null;
+  const trendDir = avgSolde3 !== null && avgSolde6 !== null ? (avgSolde3 > avgSolde6 ? 1 : avgSolde3 < avgSolde6 ? -1 : 0) : null;
+  const trendCol = trendDir === 1 ? 'var(--green)' : trendDir === -1 ? 'var(--red)' : 'var(--muted)';
+  const trendArrow = trendDir === 1 ? '▲' : trendDir === -1 ? '▼' : '→';
+
+  const mLabel = (year, month) => {
+    const m = ['Jan','Fév','Mar','Avr','Mai','Juin','Juil','Aoû','Sep','Oct','Nov','Déc'][month - 1];
+    return `${m} ${year}`;
+  };
+  const colV = v => v === null ? 'var(--muted)' : v >= 0 ? 'var(--green)' : 'var(--red)';
+  const fmtV = v => v === null ? '—' : `${v >= 0 ? '+' : ''}${eur(v)}`;
+  const fmtU = v => v === null ? '—' : eur(v);
+  const fmtPct = v => v === null ? '—' : `${v >= 0 ? '+' : ''}${v}%`;
+
+  // Identifier le mois courant
+  const nowY = today.getFullYear(), nowM = today.getMonth() + 1;
+
+  const summaryHtml = `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:18px">
+    ${avgSolde3 !== null ? `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px 16px;border-left:3px solid ${colV(avgSolde3)}">
+      <div style="font-size:var(--fs-xs);color:var(--muted);font-weight:700;margin-bottom:5px">SOLDE MOY. 3 MOIS</div>
+      <div style="font-size:1.35rem;font-weight:800;color:${colV(avgSolde3)};letter-spacing:-.03em">${fmtV(avgSolde3)}</div>
+      ${trendDir !== null ? `<div style="font-size:var(--fs-xs);color:${trendCol};font-weight:700;margin-top:4px">${trendArrow} vs 3M préc.</div>` : ''}
+    </div>` : ''}
+    ${avgEpRate !== null ? `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px 16px;border-left:3px solid #2979c8">
+      <div style="font-size:var(--fs-xs);color:var(--muted);font-weight:700;margin-bottom:5px">TAUX ÉPARGNE MOY.</div>
+      <div style="font-size:1.35rem;font-weight:800;color:#2979c8;letter-spacing:-.03em">${fmtPct(avgEpRate)}</div>
+      <div style="font-size:var(--fs-xs);color:var(--muted);margin-top:4px">sur ${dataRows.filter(r=>r.revNet>0).length} mois</div>
+    </div>` : ''}
+    ${avgDep !== null ? `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px 16px;border-left:3px solid var(--red)">
+      <div style="font-size:var(--fs-xs);color:var(--muted);font-weight:700;margin-bottom:5px">DÉP. MOYENNES</div>
+      <div style="font-size:1.35rem;font-weight:800;color:var(--red);letter-spacing:-.03em">${fmtU(avgDep)}</div>
+      <div style="font-size:var(--fs-xs);color:var(--muted);margin-top:4px">/ mois</div>
+    </div>` : ''}
+    ${bestMonth ? `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px 16px;border-left:3px solid var(--green)">
+      <div style="font-size:var(--fs-xs);color:var(--muted);font-weight:700;margin-bottom:5px">MEILLEUR MOIS</div>
+      <div style="font-size:1.1rem;font-weight:800;color:var(--green);letter-spacing:-.02em">${mLabel(bestMonth.year, bestMonth.month)}</div>
+      <div style="font-size:var(--fs-xs);color:var(--muted);margin-top:4px">${fmtV(bestMonth.solde)}</div>
+    </div>` : ''}
+  </div>`;
+
+  // Tableau comparatif
+  const tableRows = rows.map(r => {
+    const isCurrent = r.year === nowY && r.month === nowM;
+    const borderStyle = isCurrent ? 'border-left:2px solid var(--blue);' : '';
+    const bg = isCurrent ? 'background:color-mix(in srgb,var(--blue) 5%,transparent);' : '';
+    if (!r.hasData) return `<tr style="${bg}${borderStyle}opacity:.45">
+      <td style="font-weight:500;${isCurrent?'color:var(--blue);font-weight:700':''}">${mLabel(r.year, r.month)}${isCurrent?'<span style="font-size:9px;font-weight:700;color:var(--blue);margin-left:5px;vertical-align:middle;border:1px solid var(--blue);border-radius:4px;padding:0 4px">EN COURS</span>':''}</td>
+      <td style="text-align:right;color:var(--muted)">—</td>
+      <td style="text-align:right;color:var(--muted)">—</td>
+      <td style="text-align:right;color:var(--muted)">—</td>
+      <td style="text-align:right;color:var(--muted)">—</td>
+      <td style="text-align:right;color:var(--muted)">—</td>
+    </tr>`;
+    const epRateStr = r.revNet > 0 ? `${Math.round(r.ep / r.revNet * 100)}%` : '—';
+    return `<tr style="${bg}${borderStyle}">
+      <td style="font-weight:600;${isCurrent?'color:var(--blue)':''}">${mLabel(r.year, r.month)}${isCurrent?'<span style="font-size:9px;font-weight:700;color:var(--blue);margin-left:5px;vertical-align:middle;border:1px solid var(--blue);border-radius:4px;padding:0 4px">EN COURS</span>':''}</td>
+      <td style="text-align:right;font-weight:600;color:var(--green)">${fmtU(r.revNet)}</td>
+      <td style="text-align:right;font-weight:600;color:var(--red)">${fmtU(r.dep)}</td>
+      <td style="text-align:right;font-weight:600;color:#2979c8">${fmtV(r.ep)}</td>
+      <td style="text-align:right;font-weight:700;color:#2979c8">${epRateStr}</td>
+      <td style="text-align:right;font-weight:800;color:${colV(r.solde)}">${fmtV(r.solde)}</td>
+    </tr>`;
+  }).join('');
+
+  content.innerHTML = summaryHtml + `
+    <div class="tbl-wrap"><table style="width:100%;table-layout:fixed">
+      <colgroup><col style="width:16%"><col style="width:17%"><col style="width:17%"><col style="width:17%"><col style="width:16%"><col style="width:17%"></colgroup>
+      <thead><tr>
+        <th>Mois</th>
+        <th style="text-align:right">Rev. nets</th>
+        <th style="text-align:right">Dépenses</th>
+        <th style="text-align:right">Épargne</th>
+        <th style="text-align:right">Taux ép.</th>
+        <th style="text-align:right">Solde</th>
+      </tr></thead>
+      <tbody>${tableRows}</tbody>
+    </table></div>`;
+}
+
+// ══════════════════════════════════════════════
 // ANALYSIS
 // ══════════════════════════════════════════════
 function renderAnalysis(){
@@ -4667,6 +4858,7 @@ function renderAnalysis(){
   }
 
   const [m1,m2]=orderedMembers();
+  renderMonthlyComparison(analysisMember);
 }
 
 // ══════════════════════════════════════════════
