@@ -3450,9 +3450,9 @@ function _monthlyAutoGroup(rows, overrides, extras, g, isMobile) {
     ? `<span style="font-size:var(--fs-xs);color:${pctCol};font-weight:700">${eur(tot)}</span><span style="font-size:var(--fs-xs);color:var(--muted)">/ ${eur(budgetTot)}</span>`
     : `<span style="font-size:var(--fs-xs);color:var(--muted)">Auto</span>`;
   const ADD_SVG = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`;
-  const mkAdd = (cat, lbl, locked = true) => `<button class="btn-add" onclick="openAddMonthlyExpense('${cat}',${locked})" style="font-size:var(--fs-xs);padding:4px 10px;gap:4px">${ADD_SVG}${lbl}</button>`;
+  const mkAdd = (cat, lbl, locked = true) => `<button class="btn-add" onclick="openAddMonthlyExpense('${cat}',${locked})">${ADD_SVG}${lbl}</button>`;
   let addBtn = '';
-  if (g.cats.includes('revenu')) addBtn = `<button class="btn-add" onclick="openAddMonthlyExpense('revenu',false,['revenu','impot'])" style="font-size:var(--fs-xs);padding:4px 10px;gap:4px">${ADD_SVG}Ajouter</button>`;
+  if (g.cats.includes('revenu')) addBtn = `<button class="btn-add" onclick="openAddMonthlyExpense('revenu',false,['revenu','impot'])">${ADD_SVG}Ajouter</button>`;
   else if (g.cats.includes('fixe')) addBtn = mkAdd('fixe','Ajouter', true);
   const collapsed = !!monthlySectionCollapsed[g.key];
   const chevronStyle = collapsed ? 'transform:rotate(-90deg);' : '';
@@ -3594,7 +3594,7 @@ function _monthlyManualGroup(rows, g, budgetTotal, isMobile, revNet = 0) {
   const pct = refTotal > 0 ? Math.round(actualTotal / refTotal * 100) : null;
   const pctCol = pct === null ? 'var(--muted)' : pct > 100 ? 'var(--red)' : pct > 80 ? 'var(--amber)' : 'var(--green)';
   const barW   = pct !== null ? Math.min(pct, 100) : 0;
-  const addBtn = `<button class="btn-add" onclick="openAddMonthlyExpense('${g.cats[0]}',true)" style="font-size:var(--fs-xs);padding:4px 10px;gap:4px"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Ajouter</button>`;
+  const addBtn = `<button class="btn-add" onclick="openAddMonthlyExpense('${g.cats[0]}',true)">${ADD_SVG}Ajouter</button>`;
   const subInfo = pct !== null
     ? `<span style="font-size:var(--fs-xs);color:${pctCol};font-weight:700">${eur(actualTotal)}</span><span style="font-size:var(--fs-xs);color:var(--muted)">/ ${eur(refTotal)}</span>`
     : `<span style="font-size:var(--fs-xs);color:var(--muted)">Aucune donnée</span>`;
@@ -3675,7 +3675,7 @@ ${bar}    <div class="tbl-wrap"><table style="width:100%;table-layout:fixed">
 // Groupe épargne — lié à la table savings (même données que l'onglet Épargne)
 function _monthlyEpargneGroup(savingRecord, g, budgetTotal, actualTotal, revNet, isMobile) {
   _monthlySavingRec = savingRecord || null;
-  const addBtn = `<button class="btn-add" onclick="openMonthlySaving(${monthlyYear},${monthlyMonth})" style="font-size:var(--fs-xs);padding:4px 10px;gap:4px"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>${savingRecord ? 'Modifier' : 'Saisir'}</button>`;
+  const addBtn = `<button class="btn-add" onclick="openMonthlySaving(${monthlyYear},${monthlyMonth})">${ADD_SVG}${savingRecord ? 'Modifier' : 'Saisir'}</button>`;
   const hasDelta = savingRecord && savingRecord.delta !== null && savingRecord.delta !== undefined;
   const deltaVal = hasDelta ? savingRecord.delta : null;
   const deltaStr = hasDelta ? (deltaVal >= 0 ? '+' : '') + eur(deltaVal) : '—';
