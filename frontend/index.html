@@ -1323,7 +1323,7 @@ window.onerror = function(msg, src, line) {
       <div class="fgrp">
         <label>Désignation</label>
         <div style="display:flex;gap:6px">
-          <select id="fme-name" style="flex:1;min-width:0"><option value="">— Sélectionner —</option></select>
+          <select id="fme-name" style="flex:1;min-width:0" onchange="_syncCatFromLabel()"><option value="">— Sélectionner —</option></select>
           <button type="button" class="btn" style="padding:0 12px;font-size:1.2rem;line-height:1;flex-shrink:0" onclick="toggleAddLabelForm()" title="Nouvelle désignation">+</button>
         </div>
         <div id="fme-label-form" style="display:none;margin-top:6px">
@@ -3657,31 +3657,46 @@ function openAddMonthlyExpense(defaultCat = 'variable', locked = false, allowedC
   document.getElementById('fme-amount').value = '';
   document.getElementById('fme-note').value   = '';
   cancelAddLabel();
-  _loadExpenseLabels(defaultCat);
+  _loadExpenseLabels(allowedCats || [defaultCat], defaultCat);
   document.getElementById('modal-monthly-expense').classList.add('open');
 }
-async function _loadExpenseLabels(cat, selectValue = '') {
-  _labelCat = cat;
+async function _loadExpenseLabels(cats, selectValue = '') {
+  const catsArr = Array.isArray(cats) ? cats : [cats];
+  _labelCat = catsArr[0];
   const sel = document.getElementById('fme-name');
   sel.disabled = false;
   sel.innerHTML = '<option value="">— Sélectionner —</option>';
   try {
-    const labels = await API.expenseLabels.getAll({ cat });
-    labels.forEach(l => {
-      const o = document.createElement('option');
-      o.value = l.name; o.textContent = l.name;
-      sel.appendChild(o);
+    const all = await Promise.all(catsArr.map(c => API.expenseLabels.getAll({ cat: c })));
+    all.forEach((labels, i) => {
+      const cat = catsArr[i];
+      labels.forEach(l => {
+        const o = document.createElement('option');
+        o.value = l.name; o.textContent = l.name; o.dataset.cat = cat;
+        sel.appendChild(o);
+      });
     });
     if (selectValue) {
       sel.value = selectValue;
       if (sel.value !== selectValue) {
         const o = document.createElement('option');
-        o.value = selectValue; o.textContent = selectValue;
+        o.value = selectValue; o.textContent = selectValue; o.dataset.cat = catsArr[0];
         sel.insertBefore(o, sel.options[1] || null);
         sel.value = selectValue;
       }
     }
+    // Sync catégorie si data-cat présent
+    _syncCatFromLabel();
   } catch(e) { console.error('Labels:', e); }
+}
+function _syncCatFromLabel() {
+  const sel = document.getElementById('fme-name');
+  const opt = sel.options[sel.selectedIndex];
+  if (opt && opt.dataset.cat) {
+    const catEl = document.getElementById('fme-cat');
+    if (!catEl.disabled) catEl.value = opt.dataset.cat;
+    _labelCat = opt.dataset.cat;
+  }
 }
 function toggleAddLabelForm() {
   const f = document.getElementById('fme-label-form');
