@@ -91,9 +91,9 @@ if (fs.existsSync(frontendPath)) {
   app.use(express.static(frontendPath));
   app.get(/^(?!\/api).*/, (req, res) => {
     const indexPath = path.join(frontendPath, 'index.html');
-    fs.existsSync(indexPath)
-      ? res.sendFile(indexPath)
-      : res.status(404).json({ success: false, error: 'Frontend introuvable.' });
+    if (!fs.existsSync(indexPath)) return res.status(404).json({ success: false, error: 'Frontend introuvable.' });
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.sendFile(indexPath);
   });
 }
 
