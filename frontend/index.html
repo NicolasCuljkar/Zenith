@@ -3249,7 +3249,7 @@ function _renderMonthlySections(stats, expenses, savingsData = [], entryStats = 
   const steps = [
     { label: 'Revenus nets', val: revNet,        col: 'var(--green)', sign: true },
     { label: 'Dépenses',     val: totalDepReel,  col: 'var(--red)',   sign: false, prefix: '−' },
-    { label: 'Épargne',      val: epDelta,        col: epDelta >= 0 ? 'var(--blue)' : 'var(--red)', sign: true },
+    { label: 'Épargne',      val: epDelta,        col: epDelta >= 0 ? 'var(--green)' : 'var(--red)', sign: true },
   ];
   const stepHtml = steps.map(s => {
     const display = s.prefix
