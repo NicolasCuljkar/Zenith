@@ -2954,14 +2954,13 @@ function memberTableHtml(rows,isMobile,memberName){
   const _calcEp=Math.max(0,Math.round(_ps.rav*_pct/100));
   const _calcLoi=Math.max(0,Math.round(_ps.rav*(100-_pct)/100));
   return GROUPS.map(g=>{
-    const gRows=getSortedGroupRows(rows.filter(e=>g.cats.includes(e.cat)));
+    let gRows=getSortedGroupRows(rows.filter(e=>g.cats.includes(e.cat)));
+    if(!gRows.length&&g.key==='epargne'&&_calcEp>0) gRows=[{name:'Épargne calculée',amount:_calcEp,cat:'epargne',_synthetic:true}];
+    if(!gRows.length&&g.key==='loisir' &&_calcLoi>0) gRows=[{name:'Budget loisir',  amount:_calcLoi,cat:'loisir', _synthetic:true}];
     const tot=g.key==='revenus'
       ?absSumCat(gRows,'revenu')-absSumCat(gRows,'impot')
       :gRows.reduce((s,e)=>s+Math.abs(e.amount),0);
-    // Pour épargne/loisir sans entrées réelles : affiche le montant calculé dans l'en-tête
-    const _calcDisplay=(g.key==='epargne'&&!gRows.length)?_calcEp:(g.key==='loisir'&&!gRows.length)?_calcLoi:null;
-    const _headerTot=_calcDisplay!=null?_calcDisplay:tot;
-    const realCount=gRows.length;
+    const rowCount=gRows.length;
     const ck=memberName+'_'+g.key;
     const collapsed=!!window.entriesSectionCollapsed[ck];
     const chevronStyle=collapsed?'transform:rotate(-90deg);':'';
@@ -2969,18 +2968,16 @@ function memberTableHtml(rows,isMobile,memberName){
     const uid=`entries-body-${memberName}-${g.key}`;
     const subInfo=gRows.length
       ?`<span style="font-size:var(--fs-xs);font-weight:700;color:${g.totColor}">${eur(Math.abs(tot))}</span>`
-      :_calcDisplay
-        ?`<span style="font-size:var(--fs-xs);font-weight:700;color:${g.totColor}">${eur(_calcDisplay)}</span><span style="font-size:var(--fs-xs);color:var(--muted);font-style:italic">calculé</span>`
-        :`<span style="font-size:var(--fs-xs);color:var(--muted)">Aucune donnée</span>`;
+      :`<span style="font-size:var(--fs-xs);color:var(--muted)">Aucune donnée</span>`;
     const hdr=`<div style="display:flex;justify-content:space-between;align-items:center;padding:0 2px 6px;margin-bottom:5px;border-bottom:2px solid ${g.color}30">
       <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">
         <button onclick="toggleEntriesSection('${memberName}','${g.key}')" data-entries-collapse="${ck}" style="background:none;border:none;cursor:pointer;color:var(--muted);padding:0;display:flex;align-items:center;transition:transform .2s;${chevronStyle}">${CHEVRON_SVG}</button>
         <span style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:${g.color}">${g.label}</span>
-        <span style="font-size:var(--fs-xs);color:var(--hint);background:${g.color}18;border-radius:20px;padding:1px 7px;font-weight:700">${realCount}</span>
+        <span style="font-size:var(--fs-xs);color:var(--hint);background:${g.color}18;border-radius:20px;padding:1px 7px;font-weight:700">${rowCount}</span>
         ${subInfo}
       </div>
       <div style="display:flex;align-items:center;gap:8px">
-        <span style="font-size:var(--fs-sm);font-weight:800;color:${g.totColor};letter-spacing:-.02em">${eur(Math.abs(_headerTot))}</span>
+        <span style="font-size:var(--fs-sm);font-weight:800;color:${g.totColor};letter-spacing:-.02em">${eur(Math.abs(tot))}</span>
         ${addBtn}
       </div>
     </div>`;
