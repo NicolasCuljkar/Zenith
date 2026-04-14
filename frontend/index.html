@@ -5615,8 +5615,8 @@ function showScreen(id){
   ['login','register','app'].forEach(s=>{document.getElementById('screen-'+s).style.display=s===id?(s==='app'?'block':'flex'):'none';});
   if(id==='login') renderQuickUsers();
   if(id==='register'){['reg-name','reg-email','reg-pwd','reg-pwd2'].forEach(i=>{const el=document.getElementById(i);if(el)el.value='';});const err=document.getElementById('reg-error');if(err)err.textContent='';}
-  if(id==='app'){updateTopbarAvatar();document.getElementById('btn-logout').style.display='';startInactivityTimer();}
-  if(id==='login'||id==='register'){document.getElementById('btn-logout').style.display='none';stopInactivityTimer();}
+  if(id==='app'){updateTopbarAvatar();document.getElementById('btn-logout').style.display='';}
+  if(id==='login'||id==='register'){document.getElementById('btn-logout').style.display='none';}
 }
 
 /**
@@ -5708,8 +5708,6 @@ function quickLogin(userId){
 }
 
 function pwdModalClose(){
-  // En mode verrou : fermer sans s'authentifier = déconnexion
-  if(_lockMode){ _lockMode=false; sessionStorage.removeItem('zenith_locked'); document.getElementById('modal-quick-pwd').style.display='none'; _setAppInert(false); _quickLoginUser=null; doLogout(); return; }
   document.getElementById('modal-quick-pwd').style.display = 'none';
   _quickLoginUser = null;
 }
@@ -5736,23 +5734,10 @@ async function pwdModalConfirm(){
     return;
   }
   const btn = document.querySelector('#modal-quick-pwd .auth-btn');
-  btn.disabled = true; btn.textContent = _lockMode ? 'Vérification…' : 'Connexion…';
+  btn.disabled = true; btn.textContent = 'Connexion…';
   try{
-    if(_lockMode){
-      // Mode verrou : juste vérifier le mot de passe, ne pas recharger les données
-      const result = await API.auth.loginById(u.id, pwd);
-      currentUser = result.user;
-      _lockMode = false;
-      sessionStorage.removeItem('zenith_locked');
-      document.getElementById('modal-quick-pwd').style.display = 'none';
-      _setAppInert(false);
-      _quickLoginUser = null;
-      _scheduleTokenExpiry();
-      startInactivityTimer();
-    } else {
-      await _doLoginWithCredentials(u.id, pwd);
-      pwdModalClose();
-    }
+    await _doLoginWithCredentials(u.id, pwd);
+    pwdModalClose();
   }catch(e){
     const errEl = document.getElementById('pwd-modal-error');
     errEl.textContent = e.message || 'Mot de passe incorrect.';
@@ -5861,7 +5846,7 @@ let _pollTimer   = null;
 let _refreshing  = false; // évite les doubles rechargements simultanés
 
 async function _refreshAndRender(showToast){
-  if(_refreshing || !currentUser || _lockMode) return;
+  if(_refreshing || !currentUser) return;
   _refreshing = true;
   try{
     await loadDataSilent();
@@ -5951,7 +5936,7 @@ function _showSyncToast(){
   }
 
   document.addEventListener('touchstart',e=>{
-    if(window.scrollY>2||e.touches.length!==1||_lockMode||!currentUser)return;
+    if(window.scrollY>2||e.touches.length!==1||!currentUser)return;
     ptrStartY=e.touches[0].clientY;
     ptrActive=true;
     ptrCommitted=false;
@@ -6012,15 +5997,12 @@ function _showSyncToast(){
  */
 async function doLogout(){
   clearTimeout(_tokenExpiryTimer);
-  disconnectSSE(); // ferme SSE + poll
-  API.auth.logout(); // clears localStorage token + user
-  localStorage.removeItem('zenith_last_activity');
+  disconnectSSE();
+  API.auth.logout();
   currentUser=null;
   currentHousehold=null;
   entries=[];
   savings=[];
-  _lockMode=false;
-  sessionStorage.removeItem('zenith_locked');
   showScreen('login');
 }
 
@@ -6032,14 +6014,7 @@ window.addEventListener('storage', e=>{
   if(e.key==='zenith_token' && !e.newValue && currentUser) doLogout();
 });
 
-// ── Auto-logout : inactivité + verrou session ────────────────────────────
-const GRACE_MS       = 10 * 60 * 1000; // 10 min de grâce avant verrou
-const IDLE_LOGOUT_MS = 30 * 60 * 1000; // 30 min sans interaction → logout complet
-
-let _inactivityTimer  = null;
 let _tokenExpiryTimer = null;
-let _hiddenAt         = null;
-let _lockMode         = false; // true = verrou actif (mot de passe requis)
 
 // ── Expiration JWT côté client ─────────────────────────────────────────────
 /** Décode le champ exp du JWT stocké (en ms). Retourne null si absent. */
@@ -6072,81 +6047,13 @@ function _scheduleTokenExpiry(){
   _tokenExpiryTimer = setTimeout(()=>{ if(currentUser) doLogout(); }, remaining);
 }
 
-function startInactivityTimer(){
-  clearTimeout(_inactivityTimer);
-  localStorage.setItem('zenith_last_activity', Date.now());
-  _inactivityTimer = setTimeout(()=>{ if(currentUser) doLogout(); }, IDLE_LOGOUT_MS);
-}
-function checkColdStartExpiry(){
-  const last = parseInt(localStorage.getItem('zenith_last_activity') || '0', 10);
-  return last > 0 && (Date.now() - last) >= IDLE_LOGOUT_MS;
-}
-function stopInactivityTimer(){
-  clearTimeout(_inactivityTimer);
-  _inactivityTimer = null;
-}
-
-// Réinitialise le timer sur toute interaction
-['click','touchstart','keydown','scroll'].forEach(evt=>
-  document.addEventListener(evt, ()=>{ if(currentUser && !_lockMode) startInactivityTimer(); }, {passive:true})
-);
-
-// Verrou quand l'appli revient au premier plan après GRACE_MS
+// Rafraîchit les données au retour au premier plan si JWT toujours valide
 document.addEventListener('visibilitychange', ()=>{
-  if(document.hidden){
-    _hiddenAt = Date.now();
-    localStorage.setItem('zenith_last_activity', _hiddenAt);
-    stopInactivityTimer();
-  } else {
-    const elapsed = _hiddenAt ? Date.now() - _hiddenAt : 0;
-    _hiddenAt = null;
-    if(!currentUser) return;
-    // Si le JWT a expiré pendant l'absence → logout complet (pas de verrou)
+  if(!document.hidden && currentUser){
     if(_isTokenExpired()){ doLogout(); return; }
-    if(elapsed >= GRACE_MS){
-      _lockMode = true;
-      _showLockScreen();
-    } else {
-      startInactivityTimer();
-      if(elapsed > 5000) _refreshAndRender(false);
-    }
+    _refreshAndRender(false);
   }
 });
-
-function _setAppInert(on){
-  document.querySelectorAll('header, main').forEach(el=>{
-    if(on) el.setAttribute('inert','');
-    else   el.removeAttribute('inert');
-  });
-}
-
-function _showLockScreen(){
-  sessionStorage.setItem('zenith_locked','1');
-  // Réutilise le modal de connexion rapide
-  const u = currentUser;
-  if(!u){ doLogout(); return; }
-  const color = getMC(u.name);
-  const photo = profilePhotos[u.name];
-  document.getElementById('pwd-modal-name').textContent = u.name;
-  document.getElementById('pwd-modal-avatar').innerHTML = photo
-    ? `<img src="${photo}" style="width:56px;height:56px;border-radius:50%;object-fit:cover;border:3px solid ${color}44">`
-    : `<div style="width:56px;height:56px;border-radius:50%;background:${color}22;color:${color};font-size:var(--fs-lg);font-weight:700;display:flex;align-items:center;justify-content:center;border:2px solid ${color}44">${u.name.charAt(0).toUpperCase()}</div>`;
-  _quickLoginUser = u;
-  const inp = document.getElementById('pwd-modal-input');
-  inp.value = '';
-  inp.type = 'password';
-  document.getElementById('pwd-modal-error').classList.remove('show');
-  document.getElementById('modal-quick-pwd').style.display = 'flex';
-  _setAppInert(true);
-  setTimeout(() => inp.focus(), 80);
-}
-// Bloque toute interaction clavier hors du modal de verrou
-document.addEventListener('keydown', e=>{
-  if(!_lockMode) return;
-  const modal = document.getElementById('modal-quick-pwd');
-  if(!modal || !modal.contains(e.target)) { e.preventDefault(); e.stopImmediatePropagation(); }
-}, true);
-// ── Fin verrou session ────────────────────────────────────────────────────
 document.getElementById('reg-pwd2').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();doRegister();}});
 
 function initUserContext(){
@@ -6588,12 +6495,7 @@ async function initApp(){
       await doLogout();
       return;
     }
-    // 2. Inactivité trop longue (cold start) → logout
-    if(checkColdStartExpiry()){
-      await doLogout();
-      return;
-    }
-    // 3. Planifier le logout automatique avant expiration du JWT
+    // 2. Planifier le logout automatique avant expiration du JWT
     _scheduleTokenExpiry();
   }
 
@@ -6611,12 +6513,6 @@ async function initApp(){
         if(sp) savingPct={...savingPct,...JSON.parse(sp)};
         if(ph) profilePhotos={...profilePhotos,...JSON.parse(ph)};
       }catch(_){}
-      // Verrou actif (ex: F5 pendant le verrou) — forcer l'authentification
-      if(sessionStorage.getItem('zenith_locked')){
-        _lockMode=true;
-        _showLockScreen();
-        return;
-      }
       // Show app screen and load data
       showScreen('app');
       try{
