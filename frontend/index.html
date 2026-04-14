@@ -904,6 +904,8 @@ window.onerror = function(msg, src, line) {
         <span id="monthly-label" style="font-size:var(--fs-base);font-weight:700;letter-spacing:-.01em;text-align:center;flex:1"></span>
         <button onclick="monthlyNavNext()" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:5px 14px;cursor:pointer;color:var(--fg);font-size:1.1rem;line-height:1;flex-shrink:0">›</button>
       </div>
+      <div id="monthly-solde-hero" style="margin-bottom:.85rem"></div>
+      <div class="kpi-grid" id="monthly-kpis" style="margin-bottom:1rem"></div>
       <div id="monthly-search-bar" style="display:flex;gap:6px;margin-bottom:.75rem">
         <input type="text" id="mly-search-input" class="inp search-inp" placeholder="Rechercher…" style="flex:1;min-width:0">
         <select id="mly-filter-cat" class="inp" style="flex-shrink:0;width:auto">
@@ -913,8 +915,6 @@ window.onerror = function(msg, src, line) {
           <option value="epargne">Épargne</option><option value="loisir">Loisir</option>
         </select>
       </div>
-      <div id="monthly-solde-hero" style="margin-bottom:.85rem"></div>
-      <div class="kpi-grid" id="monthly-kpis" style="margin-bottom:1rem"></div>
       <div id="monthly-sections"></div>
     </div>
   </div>
@@ -1479,6 +1479,7 @@ let savingsYearFilter=String(new Date().getFullYear());
 let currentTab='dashboard';
 let memberColors={Nicolas:'#3B8BD4',Carla:'#e06fa0'};
 let savingPct={Nicolas:60,Carla:50};
+let monthlyEpPct={};
 let savingsMember='all',analysisMember='all',projectionMember='all',dashboardMember='all',entriesMember='Commun',conseilsMember='all';
 let projAnnualRate=0.04; // default 4%
 let simMonthlyOverride=null;
@@ -1571,6 +1572,8 @@ async function loadData(){
     if(mc) memberColors={...memberColors,...JSON.parse(mc)};
     if(sp) savingPct={...savingPct,...JSON.parse(sp)};
     if(ph) profilePhotos={...profilePhotos,...JSON.parse(ph)};
+    const mep=localStorage.getItem('bm_monthlyEpPct');
+    if(mep) monthlyEpPct={...monthlyEpPct,...JSON.parse(mep)};
   }catch(err){console.warn('loadData prefs error',err);}
 
   if(!API.auth.isLoggedIn()){
@@ -1638,6 +1641,7 @@ function saveData(){
     localStorage.setItem('bm_memberColors',JSON.stringify(memberColors));
     localStorage.setItem('bm_savingPct',JSON.stringify(savingPct));
     localStorage.setItem('bm_photos',JSON.stringify(profilePhotos));
+    localStorage.setItem('bm_monthlyEpPct',JSON.stringify(monthlyEpPct));
   }catch(err){console.warn('saveData error',err);}
 }
 
@@ -2414,6 +2418,35 @@ function updateSplitBar(name,pct){
   const lblLoi=document.getElementById('split-lbl-loi-'+name);
   if(lblEp)lblEp.textContent='Épargne '+pct+'%';
   if(lblLoi)lblLoi.textContent='Loisir '+(100-pct)+'%';
+}
+function setMlyEpMode(key,mode){
+  const epMember=entriesMember==='Commun'?myRole():entriesMember;
+  const mc=getMC(epMember);
+  const pctVal=monthlyEpPct[key]??60;
+  const rav=+(document.getElementById('mly-ep-eur-'+key)?.max||0);
+  const epVal=Math.round(rav*pctVal/100);
+  const pctBtn=document.getElementById('mly-ep-mode-pct-'+key);
+  const eurBtn=document.getElementById('mly-ep-mode-eur-'+key);
+  if(pctBtn){pctBtn.style.background=mode==='pct'?mc:'var(--surface)';pctBtn.style.color=mode==='pct'?'#fff':'var(--muted)';}
+  if(eurBtn){eurBtn.style.background=mode==='eur'?mc:'var(--surface)';eurBtn.style.color=mode==='eur'?'#fff':'var(--muted)';}
+  const pctSlider=document.getElementById('mly-ep-slider-pct-'+key);
+  const eurSlider=document.getElementById('mly-ep-slider-eur-'+key);
+  if(pctSlider)pctSlider.style.display=mode==='pct'?'':'none';
+  if(eurSlider)eurSlider.style.display=mode==='eur'?'':'none';
+  const valEl=document.getElementById('mly-ep-pctv-'+key);
+  if(valEl)valEl.textContent=mode==='pct'?pctVal+'%':epVal.toLocaleString('fr-FR')+' €';
+  const eurInput=document.getElementById('mly-ep-eur-'+key);
+  if(eurInput)eurInput.value=epVal;
+  fillAllTracks();
+}
+function updateMlyEpCalc(key,rav){
+  const pct=monthlyEpPct[key]??60;
+  const ep=Math.max(0,Math.round(rav*pct/100));
+  const loi=Math.max(0,Math.round(rav*(100-pct)/100));
+  const epEl=document.getElementById('mly-ep-calc-'+key);
+  const loiEl=document.getElementById('mly-loi-calc-'+key);
+  if(epEl)epEl.textContent=eur(ep);
+  if(loiEl)loiEl.textContent=eur(loi);
 }
 function setSavingMode(name, mode, btn){
   const mc=getMC(name);
@@ -3339,50 +3372,68 @@ function _renderMonthlySections(stats, expenses, savingsData = [], entryStats = 
     epDelta ? `Épargne : ${epDelta >= 0 ? '+' : ''}${eur(epDelta)}` : null,
   ].filter(Boolean).join(' · ');
 
-  // ── Hero Solde réel du mois ──
-  const heroGlow  = soldeReel >= 0 ? '#0d9e6e' : '#d93535';
-  const heroSign  = soldeReel >= 0 ? '+' : '';
-  const vsSign    = soldeBudget !== 0 ? (soldeReel >= soldeBudget ? '▲' : '▼') : '';
-  const vsDiff    = soldeBudget !== 0 ? eur(Math.abs(soldeReel - soldeBudget)) : null;
-  const vsCol     = soldeReel >= soldeBudget ? 'var(--green)' : 'var(--red)';
-  const steps = [
-    { label: 'Revenus nets', val: revNet,        col: 'var(--green)', sign: true },
-    { label: 'Dépenses',     val: totalDepReel,  col: 'var(--red)',   sign: false, prefix: '−' },
-    { label: 'Épargne',      val: epDelta,        col: '#2979c8', sign: true },
-  ];
-  const stepHtml = steps.map(s => {
-    const display = s.prefix
-      ? `${s.prefix}${eur(Math.abs(s.val))}`
-      : `${s.val > 0 ? '+' : ''}${eur(s.val)}`;
-    return `
-    <div style="display:flex;flex-direction:column;align-items:center;gap:3px;min-width:0">
-      <span style="font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);white-space:nowrap">${s.label}</span>
-      <span style="font-size:var(--fs-sm);font-weight:800;color:${s.col};white-space:nowrap">${display}</span>
-    </div>`;
-  }).join(`<div style="width:1px;height:36px;background:var(--border);flex-shrink:0;align-self:center;opacity:.6"></div>`);
+  // ── KPI Mensuel (style Prévisionnel) ──
+  const mlyRavKey  = `${epMember0}_${monthlyYear}_${monthlyMonth}`;
+  const mlyPct     = monthlyEpPct[mlyRavKey] ?? (savingPct[epMember0] ?? 60);
+  const mlyRav     = revNet - fixe.actual - vari.actual;
+  const mlyEpC     = Math.max(0, Math.round(mlyRav * mlyPct / 100));
+  const mlyLoiC    = Math.max(0, Math.round(mlyRav * (100 - mlyPct) / 100));
+  const mlyRavRate = revNet > 0 ? Math.round(mlyRav / revNet * 100) : 0;
+  const mlyRavGlow = mlyRav >= 0 ? '#0d9e6e' : '#d93535';
+  const isMe       = currentUser?.name === epMember0;
+  const mc         = getMC(epMember0);
+  const mlyMaxEur  = Math.max(0, Math.round(mlyRav));
+  const mlyToggleBtns = isMe ? `<div style="display:flex;gap:0;border:1px solid var(--border);border-radius:6px;overflow:hidden"><button id="mly-ep-mode-pct-${mlyRavKey}" onclick="setMlyEpMode('${mlyRavKey}','pct')" style="padding:2px 7px;font-size:var(--fs-xs);font-weight:700;border:none;cursor:pointer;font-family:inherit;background:${mc};color:#fff">%</button><button id="mly-ep-mode-eur-${mlyRavKey}" onclick="setMlyEpMode('${mlyRavKey}','eur')" style="padding:2px 7px;font-size:var(--fs-xs);font-weight:700;border:none;cursor:pointer;font-family:inherit;background:var(--surface);color:var(--muted)">€</button></div>` : '';
+  const mlyOninputPct = !isMe ? '' : `oninput="monthlyEpPct['${mlyRavKey}']=+this.value;document.getElementById('mly-ep-pctv-${mlyRavKey}').textContent=this.value+'%';updateMlyEpCalc('${mlyRavKey}',${mlyMaxEur});saveData();fillAllTracks();"`;
+  const mlyOninputEur = !isMe ? '' : `oninput="const p=+this.max>0?Math.round(+this.value/+this.max*100):0;monthlyEpPct['${mlyRavKey}']=p;document.getElementById('mly-ep-pct-${mlyRavKey}').value=p;document.getElementById('mly-ep-pctv-${mlyRavKey}').textContent=parseInt(this.value).toLocaleString('fr-FR')+' €';updateMlyEpCalc('${mlyRavKey}',${mlyMaxEur});saveData();fillAllTracks();"`;
 
-  const monthLabel = `${MONTH_NAMES[monthlyMonth-1]} ${monthlyYear}`;
-  document.getElementById('monthly-solde-hero').innerHTML = `
-    <div style="background:linear-gradient(135deg,color-mix(in srgb,${heroGlow} 15%,var(--surface)) 0%,var(--surface) 55%);border:1.5px solid color-mix(in srgb,${heroGlow} 30%,var(--border));border-radius:18px;padding:20px 24px 18px;position:relative;overflow:hidden;box-shadow:0 4px 24px color-mix(in srgb,${heroGlow} 12%,transparent)">
-      <div style="position:absolute;top:0;left:0;width:5px;height:100%;background:linear-gradient(180deg,${heroGlow},${heroGlow}88);border-radius:18px 0 0 18px"></div>
-      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px">
-
-        <div style="display:flex;flex-direction:column;gap:4px">
-          <div style="display:flex;align-items:center;gap:8px">
-            <span style="font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)">Solde réel</span>
-            <span style="font-size:10px;font-weight:600;color:var(--muted);background:var(--surface2);border-radius:99px;padding:1px 8px;border:1px solid var(--border)">${monthLabel}</span>
-          </div>
-          <div style="font-size:2.4rem;font-weight:900;color:${heroGlow};letter-spacing:-.04em;line-height:1.05">${heroSign}${eur(soldeReel)}</div>
+  document.getElementById('monthly-solde-hero').innerHTML = `<div style="background:linear-gradient(135deg,color-mix(in srgb,${mlyRavGlow} 12%,var(--surface)) 0%,var(--surface) 50%);border:1.5px solid color-mix(in srgb,${mlyRavGlow} 25%,var(--border));border-radius:18px;padding:20px 24px;position:relative;overflow:hidden;box-shadow:0 4px 24px color-mix(in srgb,${mlyRavGlow} 10%,transparent)">
+    <div style="position:absolute;top:0;left:0;width:5px;height:100%;background:linear-gradient(180deg,${mlyRavGlow},${mlyRavGlow}88);border-radius:18px 0 0 18px"></div>
+    <div style="flex:1;min-width:260px">
+      <div style="display:flex;gap:0;flex-wrap:wrap;margin-bottom:14px">
+        <div style="flex:1;min-width:110px;padding-right:14px;border-right:1px solid var(--border)">
+          <div style="font-size:9px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--green);margin-bottom:6px">Revenus</div>
+          <div class="prow"><span class="prow-lbl">Bruts</span><span class="prow-val" style="color:var(--green)">${eur(revenu.actual)}</span></div>
+          <div class="prow"><span class="prow-lbl">Impôts</span><span class="prow-val" style="color:var(--amber)">−${eur(impot.actual)}</span></div>
+          <div class="prow"><span class="prow-lbl" style="font-weight:700">Nets</span><span class="prow-val" style="color:var(--green);font-weight:700">${eur(revNet)}</span></div>
         </div>
-
-        <div style="display:flex;align-items:center;gap:12px;background:color-mix(in srgb,var(--surface2) 80%,transparent);border:1px solid var(--border);border-radius:14px;padding:12px 18px;flex-wrap:nowrap">
-          ${stepHtml}
+        <div style="flex:1;min-width:110px;padding-left:14px">
+          <div style="font-size:9px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--red);margin-bottom:6px">Dépenses</div>
+          <div class="prow"><span class="prow-lbl">Fixes</span><span class="prow-val" style="color:var(--red)">−${eur(fixe.actual)}</span></div>
+          <div class="prow"><span class="prow-lbl">Variables</span><span class="prow-val" style="color:var(--red)">−${eur(vari.actual)}</span></div>
+          <div class="prow"><span class="prow-lbl" style="font-weight:700">Total</span><span class="prow-val" style="color:var(--red);font-weight:700">−${eur(fixe.actual + vari.actual)}</span></div>
         </div>
-
       </div>
-    </div>`;
+      <div style="border-top:1px solid var(--border);padding-top:12px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;gap:8px">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            <span style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:${mlyRavGlow}">Répartition RAV</span>
+            <span style="font-size:var(--fs-xs);font-weight:700;color:var(--muted)">${mlyRavRate}% du revenu net</span>
+            <span style="font-size:var(--fs-sm);font-weight:800;color:${mlyRavGlow};letter-spacing:-.02em">${mlyRav >= 0 ? '+' : ''}${eur(mlyRav)}</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+            ${mlyToggleBtns}
+            <span id="mly-ep-pctv-${mlyRavKey}" style="font-size:var(--fs-xs);font-weight:700;color:${mc}">${mlyPct}%</span>
+          </div>
+        </div>
+        <div id="mly-ep-slider-pct-${mlyRavKey}">
+          <input type="range" min="0" max="100" step="1" value="${mlyPct}" id="mly-ep-pct-${mlyRavKey}"
+            style="width:100%;accent-color:${mc};--accent-c:${mc};--track-right:var(--amber);${!isMe?'opacity:.45;pointer-events:none':''}"
+            ${!isMe?'disabled':mlyOninputPct}>
+        </div>
+        <div id="mly-ep-slider-eur-${mlyRavKey}" style="display:none">
+          <input type="range" min="0" max="${mlyMaxEur}" step="10" value="${mlyEpC}" id="mly-ep-eur-${mlyRavKey}"
+            style="width:100%;accent-color:${mc};--accent-c:${mc};--track-right:var(--amber);${!isMe?'opacity:.45;pointer-events:none':''}"
+            ${!isMe?'disabled':mlyOninputEur}>
+        </div>
+        <div class="prow" style="margin-top:4px"><span class="prow-lbl" style="color:var(--blue)">→ Épargne</span><span class="prow-val" style="color:var(--blue)" id="mly-ep-calc-${mlyRavKey}">${eur(mlyEpC)}</span></div>
+        <div class="prow" style="border-bottom:none"><span class="prow-lbl" style="color:var(--amber)">→ Loisir</span><span class="prow-val" style="color:var(--amber)" id="mly-loi-calc-${mlyRavKey}">${eur(mlyLoiC)}</span></div>
+      </div>
+    </div>
+  </div>`;
 
   document.getElementById('monthly-kpis').innerHTML = '';
+  setTimeout(fillAllTracks, 0);
 
   // ── Sections groupées identiques au style prévisionnel ──
   const isMobile = window.innerWidth <= 640;
