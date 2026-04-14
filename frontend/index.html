@@ -2948,8 +2948,8 @@ function memberTableHtml(rows,isMobile,memberName){
   // Default all sections to collapsed on first render
   GROUPS.forEach(g=>{const ck=memberName+'_'+g.key;if(!(ck in window.entriesSectionCollapsed))window.entriesSectionCollapsed[ck]=true;});
   const canAdd=canEdit(memberName);
-  // Montants calculés épargne/loisir depuis le slider RAV
-  const _ps=calcStats(rows);
+  // Montants calculés épargne/loisir depuis le slider RAV (toutes les entrées du membre, pas filtrées)
+  const _ps=calcStats(entries.filter(e=>e.member===memberName));
   const _pct=savingPct[memberName]??60;
   const _calcEp=Math.max(0,Math.round(_ps.rav*_pct/100));
   const _calcLoi=Math.max(0,Math.round(_ps.rav*(100-_pct)/100));
