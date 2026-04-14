@@ -2843,7 +2843,7 @@ function memberTableHtml(rows,isMobile,memberName){
     const ck=memberName+'_'+g.key;
     const collapsed=!!window.entriesSectionCollapsed[ck];
     const chevronStyle=collapsed?'transform:rotate(-90deg);':'';
-    const addBtn=canAdd?MLY_ADD_BTN(`openAddEntryForCat('${g.addCat}')`):'';
+    const addBtn='';
     const uid=`entries-body-${memberName}-${g.key}`;
     const subInfo=gRows.length
       ?`<span style="font-size:var(--fs-xs);font-weight:700;color:${g.totColor}">${eur(Math.abs(tot))}</span>`
