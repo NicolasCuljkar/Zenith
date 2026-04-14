@@ -3301,7 +3301,7 @@ function renderEntries(){
   setTimeout(fillAllTracks, 0);
 }
 ['search-input','filter-cat'].forEach(id=>{const el=document.getElementById(id);el.addEventListener('input',renderEntries);el.addEventListener('change',renderEntries);});
-['mly-search-input','mly-filter-cat'].forEach(id=>{const el=document.getElementById(id);if(el){el.addEventListener('input',()=>{if(_lastMonthlyStats)_renderMonthlySections(_lastMonthlyStats,monthlyExpenses,_lastMonthlySavings,_lastMonthlyEntryStats);});el.addEventListener('change',()=>{if(_lastMonthlyStats)_renderMonthlySections(_lastMonthlyStats,monthlyExpenses,_lastMonthlySavings,_lastMonthlyEntryStats);});}});
+['mly-search-input','mly-filter-cat'].forEach(id=>{const el=document.getElementById(id);if(el){el.addEventListener('input',()=>{if(_lastMonthlyStats)_renderMonthlySections(_lastMonthlyStats,monthlyExpenses,_lastMonthlySavings,_lastMonthlyEntryStats,_lastMlyMemberStats);});el.addEventListener('change',()=>{if(_lastMonthlyStats)_renderMonthlySections(_lastMonthlyStats,monthlyExpenses,_lastMonthlySavings,_lastMonthlyEntryStats,_lastMlyMemberStats);});}});
 function openAddEntry(){
   editEntryId=null;
   impotMode='montant';
@@ -3442,7 +3442,7 @@ document.getElementById('modal-entry-save').onclick=async ()=>{
 let monthlyYear     = new Date().getFullYear();
 let monthlyMonth    = new Date().getMonth() + 1; // 1-12
 let monthlyExpenses = [];
-let _lastMonthlyStats = null, _lastMonthlySavings = [], _lastMonthlyEntryStats = null;
+let _lastMonthlyStats = null, _lastMonthlySavings = [], _lastMonthlyEntryStats = null, _lastMlyMemberStats = null;
 let monthlySelected = new Set();
 let monthlySelectedSuppress = new Map(); // entryId → entry (lignes auto à supprimer ce mois)
 let editMonthlyId      = null;
@@ -3490,20 +3490,28 @@ async function renderMonthly() {
       API.savings.getAll({ year: monthlyYear, member }),
       API.entries.getStats({ member }),
     ]);
+    let mlyMemberStats = null;
+    if (entriesMember === 'Commun') {
+      const mems = orderedMembers();
+      if (mems.length > 0) {
+        const arr = await Promise.all(mems.map(m => API.monthlyExpenses.getStats({ year: monthlyYear, month: monthlyMonth, member: m })));
+        mlyMemberStats = Object.fromEntries(mems.map((m, i) => [m, arr[i]]));
+      }
+    }
     monthlyExpenses = expenses;
-    _lastMonthlyStats = stats; _lastMonthlySavings = savingsData; _lastMonthlyEntryStats = entryStats;
+    _lastMonthlyStats = stats; _lastMonthlySavings = savingsData; _lastMonthlyEntryStats = entryStats; _lastMlyMemberStats = mlyMemberStats;
     // Synchronise le tableau global savings pour que openEditSaving/deleteSaving fonctionnent depuis suivi mensuel
     savingsData.forEach(s => {
       const idx = savings.findIndex(x => x.id === s.id);
       if (idx >= 0) savings[idx] = s; else savings.push(s);
     });
-    _renderMonthlySections(stats, expenses, savingsData, entryStats);
+    _renderMonthlySections(stats, expenses, savingsData, entryStats, mlyMemberStats);
   } catch(err) {
     showApiError('Erreur chargement suivi mensuel : ' + err.message);
   } finally { hideLoading(); }
 }
 
-function _renderMonthlySections(stats, expenses, savingsData = [], entryStats = null) {
+function _renderMonthlySections(stats, expenses, savingsData = [], entryStats = null, mlyMemberStats = null) {
   const { revenu, impot, fixe, variable: vari, epargne: ep, loisir: loi } = stats;
   const frMonth      = MONTH_NAMES[monthlyMonth - 1];
   const savingRecord = savingsData.find(s => s.year === monthlyYear && s.month === frMonth);
@@ -3540,9 +3548,44 @@ function _renderMonthlySections(stats, expenses, savingsData = [], entryStats = 
   const mlyOninputPct = !isMe ? '' : `oninput="monthlyEpPct['${mlyRavKey}']=+this.value;document.getElementById('mly-ep-pctv-${mlyRavKey}').textContent=this.value+'%';updateMlyEpCalc('${mlyRavKey}',${mlyMaxEur});saveData();fillAllTracks();"`;
   const mlyOninputEur = !isMe ? '' : `oninput="const p=+this.max>0?Math.round(+this.value/+this.max*100):0;monthlyEpPct['${mlyRavKey}']=p;document.getElementById('mly-ep-pct-${mlyRavKey}').value=p;document.getElementById('mly-ep-pctv-${mlyRavKey}').textContent=parseInt(this.value).toLocaleString('fr-FR')+' €';updateMlyEpCalc('${mlyRavKey}',${mlyMaxEur});saveData();fillAllTracks();"`;
 
-  document.getElementById('monthly-solde-hero').innerHTML = `<div style="background:linear-gradient(135deg,color-mix(in srgb,${mlyRavGlow} 12%,var(--surface)) 0%,var(--surface) 50%);border:1.5px solid color-mix(in srgb,${mlyRavGlow} 25%,var(--border));border-radius:18px;padding:20px 24px;position:relative;overflow:hidden;box-shadow:0 4px 24px color-mix(in srgb,${mlyRavGlow} 10%,transparent)">
-    <div style="position:absolute;top:0;left:0;width:5px;height:100%;background:linear-gradient(180deg,${mlyRavGlow},${mlyRavGlow}88);border-radius:18px 0 0 18px"></div>
-    <div style="flex:1;min-width:260px">
+  let heroHtml;
+  if (entriesMember === 'Commun' && mlyMemberStats) {
+    // ── KPI Foyer (style identique Prévisionnel) ──
+    const _foyerMembers = orderedMembers();
+    const _foyerRavGlow2 = mlyRav >= 0 ? '#0d9e6e' : '#d93535';
+    const _memberRavData = _foyerMembers.map(m => {
+      const ms = mlyMemberStats[m];
+      const mRevNet = (ms?.revenu?.actual ?? 0) - (ms?.impot?.actual ?? 0);
+      const mRav    = mRevNet - (ms?.fixe?.actual ?? 0) - (ms?.variable?.actual ?? 0);
+      const mpct    = savingPct[m] ?? 60;
+      const mEp     = Math.max(0, Math.round(mRav * mpct / 100));
+      const mLoi    = Math.max(0, Math.round(mRav * (100 - mpct) / 100));
+      return { m, mEp, mLoi, mRav };
+    });
+    const _combinedEp2  = _memberRavData.reduce((s, x) => s + x.mEp, 0);
+    const _combinedLoi2 = _memberRavData.reduce((s, x) => s + x.mLoi, 0);
+    const _totalRav2    = _combinedEp2 + _combinedLoi2;
+    const _epGlobalPct2  = _totalRav2 > 0 ? Math.round(_combinedEp2 / _totalRav2 * 100) : 60;
+    const _loiGlobalPct2 = 100 - _epGlobalPct2;
+    const _memberBars2  = _memberRavData.map(({ m, mEp, mLoi, mRav }) => {
+      const mmc    = getMC(m);
+      const barW   = _totalRav2 > 0 ? Math.round((mEp + mLoi) / _totalRav2 * 100) : 0;
+      const mPhoto = users.find(u => u.name === m)?.photo;
+      const mAvatar = mPhoto
+        ? `<img src="${mPhoto}" style="width:20px;height:20px;border-radius:50%;object-fit:cover;flex-shrink:0">`
+        : `<span style="width:20px;height:20px;border-radius:50%;background:${mmc};flex-shrink:0;display:inline-block"></span>`;
+      return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:7px">
+        ${mAvatar}
+        <span style="font-size:var(--fs-sm);font-weight:700;min-width:58px;white-space:nowrap">${m}</span>
+        <div style="flex:1;background:var(--surface2);border-radius:4px;height:7px;overflow:hidden">
+          <div style="width:${barW}%;background:${mmc};height:100%;border-radius:4px;transition:width .3s"></div>
+        </div>
+        <span style="font-size:var(--fs-sm);font-weight:700;color:var(--blue);min-width:52px;text-align:right">${eur(mEp)}</span>
+        <span style="font-size:var(--fs-sm);font-weight:700;color:var(--amber);min-width:52px;text-align:right">${eur(mLoi)}</span>
+      </div>`;
+    }).join('');
+    heroHtml = `<div style="background:linear-gradient(135deg,color-mix(in srgb,${_foyerRavGlow2} 12%,var(--surface)) 0%,var(--surface) 50%);border:1.5px solid color-mix(in srgb,${_foyerRavGlow2} 25%,var(--border));border-radius:18px;padding:20px 24px;position:relative;overflow:hidden;box-shadow:0 4px 24px color-mix(in srgb,${_foyerRavGlow2} 10%,transparent)">
+      <div style="position:absolute;top:0;left:0;width:5px;height:100%;background:linear-gradient(180deg,${_foyerRavGlow2},${_foyerRavGlow2}88);border-radius:18px 0 0 18px"></div>
       <div style="display:flex;gap:0;flex-wrap:wrap;margin-bottom:14px">
         <div style="flex:1;min-width:110px;padding-right:14px;border-right:1px solid var(--border)">
           <div style="font-size:9px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--green);margin-bottom:6px">Revenus</div>
@@ -3558,32 +3601,84 @@ function _renderMonthlySections(stats, expenses, savingsData = [], entryStats = 
         </div>
       </div>
       <div style="border-top:1px solid var(--border);padding-top:12px">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;gap:8px">
-          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-            <span style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:${mlyRavGlow}">Répartition RAV</span>
-            <span style="font-size:var(--fs-xs);font-weight:700;color:var(--muted)">${mlyRavRate}% du revenu net</span>
-            <span style="font-size:var(--fs-sm);font-weight:800;color:${mlyRavGlow};letter-spacing:-.02em">${mlyRav >= 0 ? '+' : ''}${eur(mlyRav)}</span>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+          <span style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:${_foyerRavGlow2}">Répartition RAV</span>
+          <span style="font-size:var(--fs-xs);font-weight:700;color:var(--muted)">${mlyRavRate}% du revenu net</span>
+          <span style="font-size:var(--fs-sm);font-weight:800;color:${_foyerRavGlow2};letter-spacing:-.02em">${mlyRav >= 0 ? '+' : ''}${eur(mlyRav)}</span>
+        </div>
+        <div style="height:14px;border-radius:7px;overflow:hidden;display:flex;margin-bottom:5px">
+          <div style="flex:${_epGlobalPct2};background:var(--blue)"></div>
+          <div style="flex:${_loiGlobalPct2};background:var(--amber)"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:12px">
+          <span style="font-size:var(--fs-xs);font-weight:700;color:var(--blue)">Épargne ${_epGlobalPct2}%</span>
+          <span style="font-size:var(--fs-xs);font-weight:700;color:var(--amber)">Loisir ${_loiGlobalPct2}%</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <span style="font-size:9px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)">Par membre</span>
+          <div style="display:flex;gap:6px">
+            <span style="font-size:var(--fs-xs);font-weight:700;color:var(--blue);min-width:52px;text-align:right">Épargne</span>
+            <span style="font-size:var(--fs-xs);font-weight:700;color:var(--amber);min-width:52px;text-align:right">Loisir</span>
           </div>
-          <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
-            ${mlyToggleBtns}
-            <span id="mly-ep-pctv-${mlyRavKey}" style="font-size:var(--fs-xs);font-weight:700;color:${mc}">${mlyPct}%</span>
+        </div>
+        ${_memberBars2}
+        <div style="border-top:1px solid var(--border);padding-top:8px;margin-top:2px;display:flex;justify-content:space-between">
+          <span style="font-size:var(--fs-xs);font-weight:700;color:var(--muted)">Total foyer</span>
+          <div style="display:flex;gap:6px">
+            <span style="font-size:var(--fs-sm);font-weight:800;color:var(--blue);min-width:52px;text-align:right">${eur(_combinedEp2)}</span>
+            <span style="font-size:var(--fs-sm);font-weight:800;color:var(--amber);min-width:52px;text-align:right">${eur(_combinedLoi2)}</span>
           </div>
         </div>
-        <div id="mly-ep-slider-pct-${mlyRavKey}">
-          <input type="range" min="0" max="100" step="1" value="${mlyPct}" id="mly-ep-pct-${mlyRavKey}"
-            style="width:100%;accent-color:${mc};--accent-c:${mc};--track-right:var(--amber);${!isMe?'opacity:.45;pointer-events:none':''}"
-            ${!isMe?'disabled':mlyOninputPct}>
-        </div>
-        <div id="mly-ep-slider-eur-${mlyRavKey}" style="display:none">
-          <input type="range" min="0" max="${mlyMaxEur}" step="10" value="${mlyEpC}" id="mly-ep-eur-${mlyRavKey}"
-            style="width:100%;accent-color:${mc};--accent-c:${mc};--track-right:var(--amber);${!isMe?'opacity:.45;pointer-events:none':''}"
-            ${!isMe?'disabled':mlyOninputEur}>
-        </div>
-        <div class="prow" style="margin-top:4px"><span class="prow-lbl" style="color:var(--blue)">→ Épargne</span><span class="prow-val" style="color:var(--blue)" id="mly-ep-calc-${mlyRavKey}">${eur(mlyEpC)}</span></div>
-        <div class="prow" style="border-bottom:none"><span class="prow-lbl" style="color:var(--amber)">→ Loisir</span><span class="prow-val" style="color:var(--amber)" id="mly-loi-calc-${mlyRavKey}">${eur(mlyLoiC)}</span></div>
       </div>
-    </div>
-  </div>`;
+    </div>`;
+  } else {
+    // ── KPI membre individuel ──
+    heroHtml = `<div style="background:linear-gradient(135deg,color-mix(in srgb,${mlyRavGlow} 12%,var(--surface)) 0%,var(--surface) 50%);border:1.5px solid color-mix(in srgb,${mlyRavGlow} 25%,var(--border));border-radius:18px;padding:20px 24px;position:relative;overflow:hidden;box-shadow:0 4px 24px color-mix(in srgb,${mlyRavGlow} 10%,transparent)">
+      <div style="position:absolute;top:0;left:0;width:5px;height:100%;background:linear-gradient(180deg,${mlyRavGlow},${mlyRavGlow}88);border-radius:18px 0 0 18px"></div>
+      <div style="flex:1;min-width:260px">
+        <div style="display:flex;gap:0;flex-wrap:wrap;margin-bottom:14px">
+          <div style="flex:1;min-width:110px;padding-right:14px;border-right:1px solid var(--border)">
+            <div style="font-size:9px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--green);margin-bottom:6px">Revenus</div>
+            <div class="prow"><span class="prow-lbl">Bruts</span><span class="prow-val" style="color:var(--green)">${eur(revenu.actual)}</span></div>
+            <div class="prow"><span class="prow-lbl">Impôts</span><span class="prow-val" style="color:var(--amber)">−${eur(impot.actual)}</span></div>
+            <div class="prow"><span class="prow-lbl" style="font-weight:700">Nets</span><span class="prow-val" style="color:var(--green);font-weight:700">${eur(revNet)}</span></div>
+          </div>
+          <div style="flex:1;min-width:110px;padding-left:14px">
+            <div style="font-size:9px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--red);margin-bottom:6px">Dépenses</div>
+            <div class="prow"><span class="prow-lbl">Fixes</span><span class="prow-val" style="color:var(--red)">−${eur(fixe.actual)}</span></div>
+            <div class="prow"><span class="prow-lbl">Variables</span><span class="prow-val" style="color:var(--red)">−${eur(vari.actual)}</span></div>
+            <div class="prow"><span class="prow-lbl" style="font-weight:700">Total</span><span class="prow-val" style="color:var(--red);font-weight:700">−${eur(fixe.actual + vari.actual)}</span></div>
+          </div>
+        </div>
+        <div style="border-top:1px solid var(--border);padding-top:12px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;gap:8px">
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+              <span style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:${mlyRavGlow}">Répartition RAV</span>
+              <span style="font-size:var(--fs-xs);font-weight:700;color:var(--muted)">${mlyRavRate}% du revenu net</span>
+              <span style="font-size:var(--fs-sm);font-weight:800;color:${mlyRavGlow};letter-spacing:-.02em">${mlyRav >= 0 ? '+' : ''}${eur(mlyRav)}</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+              ${mlyToggleBtns}
+              <span id="mly-ep-pctv-${mlyRavKey}" style="font-size:var(--fs-xs);font-weight:700;color:${mc}">${mlyPct}%</span>
+            </div>
+          </div>
+          <div id="mly-ep-slider-pct-${mlyRavKey}">
+            <input type="range" min="0" max="100" step="1" value="${mlyPct}" id="mly-ep-pct-${mlyRavKey}"
+              style="width:100%;accent-color:${mc};--accent-c:${mc};--track-right:var(--amber);${!isMe?'opacity:.45;pointer-events:none':''}"
+              ${!isMe?'disabled':mlyOninputPct}>
+          </div>
+          <div id="mly-ep-slider-eur-${mlyRavKey}" style="display:none">
+            <input type="range" min="0" max="${mlyMaxEur}" step="10" value="${mlyEpC}" id="mly-ep-eur-${mlyRavKey}"
+              style="width:100%;accent-color:${mc};--accent-c:${mc};--track-right:var(--amber);${!isMe?'opacity:.45;pointer-events:none':''}"
+              ${!isMe?'disabled':mlyOninputEur}>
+          </div>
+          <div class="prow" style="margin-top:4px"><span class="prow-lbl" style="color:var(--blue)">→ Épargne</span><span class="prow-val" style="color:var(--blue)" id="mly-ep-calc-${mlyRavKey}">${eur(mlyEpC)}</span></div>
+          <div class="prow" style="border-bottom:none"><span class="prow-lbl" style="color:var(--amber)">→ Loisir</span><span class="prow-val" style="color:var(--amber)" id="mly-loi-calc-${mlyRavKey}">${eur(mlyLoiC)}</span></div>
+        </div>
+      </div>
+    </div>`;
+  }
+  document.getElementById('monthly-solde-hero').innerHTML = heroHtml;
 
   document.getElementById('monthly-kpis').innerHTML = '';
   setTimeout(fillAllTracks, 0);
