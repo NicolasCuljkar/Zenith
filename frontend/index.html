@@ -3168,31 +3168,54 @@ function renderEntries(){
       const mmc=getMC(m);
       return `<div class="prow"><span class="prow-lbl" style="display:flex;align-items:center;gap:5px"><span style="width:6px;height:6px;border-radius:50%;background:${mmc};flex-shrink:0"></span>${m}</span><span class="prow-val" style="display:flex;gap:6px;align-items:center"><span style="color:var(--blue)">${eur(mEp)}</span><span style="color:var(--hint);font-size:var(--fs-xs)">ép.</span><span style="color:var(--hint);font-size:10px">·</span><span style="color:var(--amber)">${eur(mLoi)}</span><span style="color:var(--hint);font-size:var(--fs-xs)">loisir</span></span></div>`;
     }).join('');
-    _memberCards = `<div style="flex:1;min-width:260px">
-      <div style="margin-bottom:14px"><span style="font-size:var(--fs-sm);font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--fg)">Foyer</span></div>
-      <div style="display:flex;gap:0;flex-wrap:wrap;margin-bottom:14px">
-        <div style="flex:1;min-width:110px;padding-right:14px;border-right:1px solid var(--border)">
-          <div style="font-size:9px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--green);margin-bottom:6px">Revenus</div>
-          <div class="prow"><span class="prow-lbl">Bruts</span><span class="prow-val" style="color:var(--green)">${eur(_foyerPs.rev)}</span></div>
-          <div class="prow"><span class="prow-lbl">Impôts</span><span class="prow-val" style="color:var(--amber)">−${eur(_foyerPs.tax)}</span></div>
-          <div class="prow"><span class="prow-lbl" style="font-weight:700">Nets</span><span class="prow-val" style="color:var(--green);font-weight:700">${eur(_foyerPs.revNet)}</span></div>
+    const _totalRav = _combinedEp + _combinedLoi;
+    const _epGlobalPct = _totalRav > 0 ? Math.round(_combinedEp / _totalRav * 100) : 60;
+    const _loiGlobalPct = 100 - _epGlobalPct;
+    const _memberBars = _foyerMembers.map(m => {
+      const ms = calcStats(entries.filter(e => e.member === m));
+      const mpct = savingPct[m] ?? 60;
+      const mEp  = Math.max(0, Math.round(ms.rav * mpct / 100));
+      const mLoi = Math.max(0, Math.round(ms.rav * (100 - mpct) / 100));
+      const mmc  = getMC(m);
+      const mRav = mEp + mLoi;
+      const barW = _totalRav > 0 ? Math.round(mRav / _totalRav * 100) : 0;
+      const mPhoto = users.find(u => u.name === m)?.photo;
+      const mAvatar = mPhoto
+        ? `<img src="${mPhoto}" style="width:20px;height:20px;border-radius:50%;object-fit:cover;flex-shrink:0">`
+        : `<span style="width:20px;height:20px;border-radius:50%;background:${mmc};flex-shrink:0;display:inline-block"></span>`;
+      return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:7px">
+        ${mAvatar}
+        <span style="font-size:var(--fs-sm);font-weight:700;min-width:58px;white-space:nowrap">${m}</span>
+        <div style="flex:1;background:var(--surface2);border-radius:4px;height:7px;overflow:hidden">
+          <div style="width:${barW}%;background:${mmc};height:100%;border-radius:4px;transition:width .3s"></div>
         </div>
-        <div style="flex:1;min-width:110px;padding-left:14px">
-          <div style="font-size:9px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--red);margin-bottom:6px">Dépenses</div>
-          <div class="prow"><span class="prow-lbl">Fixes</span><span class="prow-val" style="color:var(--red)">−${eur(_foyerPs.fix)}</span></div>
-          <div class="prow"><span class="prow-lbl">Variables</span><span class="prow-val" style="color:var(--red)">−${eur(_foyerPs.vari)}</span></div>
-          <div class="prow"><span class="prow-lbl" style="font-weight:700">Total</span><span class="prow-val" style="color:var(--red);font-weight:700">−${eur(_foyerPs.fix+_foyerPs.vari)}</span></div>
+        <span style="font-size:var(--fs-sm);font-weight:700;color:var(--blue);min-width:52px;text-align:right">${eur(mEp)}</span>
+        <span style="font-size:var(--fs-sm);font-weight:700;color:var(--amber);min-width:52px;text-align:right">${eur(mLoi)}</span>
+      </div>`;
+    }).join('');
+    _memberCards = `<div style="flex:1;min-width:260px">
+      <div style="height:14px;border-radius:7px;overflow:hidden;display:flex;margin-bottom:5px">
+        <div style="flex:${_epGlobalPct};background:var(--blue)"></div>
+        <div style="flex:${_loiGlobalPct};background:var(--amber)"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:16px">
+        <span style="font-size:var(--fs-xs);font-weight:700;color:var(--blue)">Épargne ${_epGlobalPct}%</span>
+        <span style="font-size:var(--fs-xs);font-weight:700;color:var(--amber)">Loisir ${_loiGlobalPct}%</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <span style="font-size:9px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)">Par membre</span>
+        <div style="display:flex;gap:6px">
+          <span style="font-size:var(--fs-xs);font-weight:700;color:var(--blue);min-width:52px;text-align:right">Épargne</span>
+          <span style="font-size:var(--fs-xs);font-weight:700;color:var(--amber);min-width:52px;text-align:right">Loisir</span>
         </div>
       </div>
-      <div style="border-top:1px solid var(--border);padding-top:12px">
-        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px">
-          <span style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:${_foyerRavGlow}">Répartition RAV</span>
-          <span style="font-size:var(--fs-xs);font-weight:700;color:var(--muted)">${_foyerRavRate}% du revenu net</span>
-          <span style="font-size:var(--fs-sm);font-weight:800;color:${_foyerRavGlow};letter-spacing:-.02em">${_foyerPs.rav>=0?'+':''}${eur(_foyerPs.rav)}</span>
+      ${_memberBars}
+      <div style="border-top:1px solid var(--border);padding-top:8px;margin-top:2px;display:flex;justify-content:space-between">
+        <span style="font-size:var(--fs-xs);font-weight:700;color:var(--muted)">Total foyer</span>
+        <div style="display:flex;gap:6px">
+          <span style="font-size:var(--fs-sm);font-weight:800;color:var(--blue);min-width:52px;text-align:right">${eur(_combinedEp)}</span>
+          <span style="font-size:var(--fs-sm);font-weight:800;color:var(--amber);min-width:52px;text-align:right">${eur(_combinedLoi)}</span>
         </div>
-        ${_memberRows}
-        <div class="prow" style="margin-top:6px;border-top:1px solid var(--border);padding-top:6px"><span class="prow-lbl" style="color:var(--blue);font-weight:700">→ Épargne totale</span><span class="prow-val" style="color:var(--blue);font-weight:700">${eur(_combinedEp)}</span></div>
-        <div class="prow" style="border-bottom:none"><span class="prow-lbl" style="color:var(--amber);font-weight:700">→ Loisir total</span><span class="prow-val" style="color:var(--amber);font-weight:700">${eur(_combinedLoi)}</span></div>
       </div>
     </div>`;
   } else {
