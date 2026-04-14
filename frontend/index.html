@@ -2600,14 +2600,14 @@ function renderDashboard(){
         <div id="slider-pct-${name}">
           <input type="range" min="0" max="100" step="1" value="${pct}" id="pct-${name}"
             style="width:100%;accent-color:${getMC(name)};--accent-c:${getMC(name)};--track-right:var(--amber)"
-            ${currentUser?.name===name?`oninput="savingPct['${name}']=+this.value;document.getElementById('pctv-${name}').textContent=this.value+'%';updateSplitBar('${name}',+this.value);saveData();updateSavingCalc('${name}');debouncedDashRefresh();"`:' disabled style="width:100%;accent-color:'+getMC(name)+';opacity:.45;pointer-events:none"'}>
+            ${currentUser?.name===name?`oninput="savingPct['${name}']=+this.value;document.getElementById('pctv-${name}').textContent=this.value+'%';updateSplitBar('${name}',+this.value);saveData();updateSavingCalc('${name}');debouncedDashRefresh();"`:' disabled style="width:100%;accent-color:'+getMC(name)+';pointer-events:none"'}>
         </div>
 
         <!-- Slider € mode -->
         <div id="slider-eur-${name}" style="display:none">
           <input type="range" min="0" max="${Math.round(ps.rav)}" step="10" value="${epC}" id="eur-${name}"
             style="width:100%;accent-color:${getMC(name)};--accent-c:${getMC(name)};--track-right:var(--amber)"
-            ${currentUser?.name===name?`oninput="const pctVal=+this.max>0?Math.round(+this.value/+this.max*100):0;savingPct['${name}']=pctVal;document.getElementById('pct-${name}').value=pctVal;document.getElementById('pctv-${name}').textContent=parseInt(this.value).toLocaleString('fr-FR')+' €';updateSplitBar('${name}',pctVal);saveData();updateSavingCalc('${name}');debouncedDashRefresh();"`:' disabled style="width:100%;accent-color:'+getMC(name)+';opacity:.45;pointer-events:none"'}>
+            ${currentUser?.name===name?`oninput="const pctVal=+this.max>0?Math.round(+this.value/+this.max*100):0;savingPct['${name}']=pctVal;document.getElementById('pct-${name}').value=pctVal;document.getElementById('pctv-${name}').textContent=parseInt(this.value).toLocaleString('fr-FR')+' €';updateSplitBar('${name}',pctVal);saveData();updateSavingCalc('${name}');debouncedDashRefresh();"`:' disabled style="width:100%;accent-color:'+getMC(name)+';pointer-events:none"'}>
         </div>
       </div>
       <div class="prow"><span class="prow-lbl" style="color:var(--blue)">→ Épargne calculée</span><span class="prow-val" style="color:var(--blue)" data-ep="${name}">${eur(epC)}</span></div>
@@ -3291,12 +3291,12 @@ function renderEntries(){
         </div>
         <div id="ep-slider-pct-${name}">
           <input type="range" min="0" max="100" step="1" value="${pct}" id="ep-pct-${name}"
-            style="width:100%;accent-color:${mc};--accent-c:${mc};--track-right:var(--amber);${!isMe ? 'opacity:.45;pointer-events:none' : ''}"
+            style="width:100%;accent-color:${mc};--accent-c:${mc};--track-right:var(--amber);${!isMe ? 'pointer-events:none' : ''}"
             ${!isMe ? 'disabled' : `oninput="savingPct['${name}']=+this.value;document.getElementById('ep-pctv-${name}').textContent=this.value+'%';updateSplitBar('${name}',+this.value);saveData();updateSavingCalc('${name}');debouncedDashRefresh();"`}>
         </div>
         <div id="ep-slider-eur-${name}" style="display:none">
           <input type="range" min="0" max="${Math.round(ps.rav)}" step="10" value="${epC}" id="ep-eur-${name}"
-            style="width:100%;accent-color:${mc};--accent-c:${mc};--track-right:var(--amber);${!isMe ? 'opacity:.45;pointer-events:none' : ''}"
+            style="width:100%;accent-color:${mc};--accent-c:${mc};--track-right:var(--amber);${!isMe ? 'pointer-events:none' : ''}"
             ${!isMe ? 'disabled' : `oninput="const pctVal=+this.max>0?Math.round(+this.value/+this.max*100):0;savingPct['${name}']=pctVal;document.getElementById('ep-pct-${name}').value=pctVal;document.getElementById('ep-pctv-${name}').textContent=parseInt(this.value).toLocaleString('fr-FR')+' €';updateSplitBar('${name}',pctVal);saveData();updateSavingCalc('${name}');debouncedDashRefresh();"`}>
         </div>
         <div class="prow" style="margin-top:4px"><span class="prow-lbl" style="color:var(--blue)">→ Épargne</span><span class="prow-val" style="color:var(--blue)" data-ep="${name}">${eur(epC)}</span></div>
@@ -3677,12 +3677,12 @@ function _renderMonthlySections(stats, expenses, savingsData = [], entryStats = 
           </div>
           <div id="mly-ep-slider-pct-${mlyRavKey}">
             <input type="range" min="0" max="100" step="1" value="${mlyPct}" id="mly-ep-pct-${mlyRavKey}"
-              style="width:100%;accent-color:${mc};--accent-c:${mc};--track-right:var(--amber);${!isMe?'opacity:.45;pointer-events:none':''}"
+              style="width:100%;accent-color:${mc};--accent-c:${mc};--track-right:var(--amber);${!isMe?'pointer-events:none':''}"
               ${!isMe?'disabled':mlyOninputPct}>
           </div>
           <div id="mly-ep-slider-eur-${mlyRavKey}" style="display:none">
             <input type="range" min="0" max="${mlyMaxEur}" step="10" value="${mlyEpC}" id="mly-ep-eur-${mlyRavKey}"
-              style="width:100%;accent-color:${mc};--accent-c:${mc};--track-right:var(--amber);${!isMe?'opacity:.45;pointer-events:none':''}"
+              style="width:100%;accent-color:${mc};--accent-c:${mc};--track-right:var(--amber);${!isMe?'pointer-events:none':''}"
               ${!isMe?'disabled':mlyOninputEur}>
           </div>
           <div class="prow" style="margin-top:4px"><span class="prow-lbl" style="color:var(--blue)">→ Épargne</span><span class="prow-val" style="color:var(--blue)" id="mly-ep-calc-${mlyRavKey}">${eur(mlyEpC)}</span></div>
