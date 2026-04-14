@@ -2844,11 +2844,20 @@ function memberTableHtml(rows,isMobile,memberName){
   // Default all sections to collapsed on first render
   GROUPS.forEach(g=>{const ck=memberName+'_'+g.key;if(!(ck in window.entriesSectionCollapsed))window.entriesSectionCollapsed[ck]=true;});
   const canAdd=canEdit(memberName);
+  // Montants calculés épargne/loisir depuis le slider RAV
+  const _ps=calcStats(rows);
+  const _pct=savingPct[memberName]??60;
+  const _calcEp=Math.max(0,Math.round(_ps.rav*_pct/100));
+  const _calcLoi=Math.max(0,Math.round(_ps.rav*(100-_pct)/100));
   return GROUPS.map(g=>{
-    const gRows=getSortedGroupRows(rows.filter(e=>g.cats.includes(e.cat)));
+    let gRows=getSortedGroupRows(rows.filter(e=>g.cats.includes(e.cat)));
+    // Inject synthetic row when no real entries for epargne/loisir
+    if(!gRows.length&&g.key==='epargne'&&_calcEp>0) gRows=[{name:'Épargne calculée',amount:_calcEp,cat:'epargne',_synthetic:true}];
+    if(!gRows.length&&g.key==='loisir' &&_calcLoi>0) gRows=[{name:'Budget loisir',  amount:_calcLoi,cat:'loisir', _synthetic:true}];
     const tot=g.key==='revenus'
       ?absSumCat(gRows,'revenu')-absSumCat(gRows,'impot')
       :gRows.reduce((s,e)=>s+Math.abs(e.amount),0);
+    const realCount=gRows.filter(e=>!e._synthetic).length;
     const ck=memberName+'_'+g.key;
     const collapsed=!!window.entriesSectionCollapsed[ck];
     const chevronStyle=collapsed?'transform:rotate(-90deg);':'';
@@ -2861,7 +2870,7 @@ function memberTableHtml(rows,isMobile,memberName){
       <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">
         <button onclick="toggleEntriesSection('${memberName}','${g.key}')" data-entries-collapse="${ck}" style="background:none;border:none;cursor:pointer;color:var(--muted);padding:0;display:flex;align-items:center;transition:transform .2s;${chevronStyle}">${CHEVRON_SVG}</button>
         <span style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:${g.color}">${g.label}</span>
-        <span style="font-size:var(--fs-xs);color:var(--hint);background:${g.color}18;border-radius:20px;padding:1px 7px;font-weight:700">${gRows.length}</span>
+        <span style="font-size:var(--fs-xs);color:var(--hint);background:${g.color}18;border-radius:20px;padding:1px 7px;font-weight:700">${realCount}</span>
         ${subInfo}
       </div>
       <div style="display:flex;align-items:center;gap:8px">
@@ -2870,15 +2879,15 @@ function memberTableHtml(rows,isMobile,memberName){
       </div>
     </div>`;
     if(!gRows.length)return`<div style="margin-bottom:var(--sg)">${hdr}</div>`;
-    const tableRows=gRows.map(e=>{const c=CATS[e.cat];const ac=e.cat==='revenu'?'var(--green)':e.cat==='impot'?'var(--amber)':e.cat==='epargne'?'var(--blue)':'var(--red)';return`<tr data-id="${e.id}">
+    const tableRows=gRows.map(e=>{const c=CATS[e.cat];const ac=e.cat==='revenu'?'var(--green)':e.cat==='impot'?'var(--amber)':e.cat==='epargne'?'var(--blue)':'var(--red)';return`<tr data-id="${e.id||''}">
       <td style="font-weight:500">${e.name}</td>
       <td><span class="badge" style="background:${c.bg};color:${c.text};border:${c.border}">${c.label}</span></td>
       <td style="text-align:right;font-weight:600;color:${ac}">${eur(Math.abs(e.amount))}</td>
-      <td><div style="display:flex;gap:4px">
-        ${canEdit(e.member)?`<button class="btn-act" onclick="openEditEntry(${e.id})"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="btn-act btn-act-danger" onclick="deleteEntry(${e.id})"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg></button>`:'<span style="display:inline-block;width:52px"></span>'}
+      <td><div style="display:flex;gap:4px;align-items:center">
+        ${e._synthetic?`<span style="font-size:var(--fs-xs);color:var(--muted);font-style:italic">calculé</span>`:canEdit(e.member)?`<button class="btn-act" onclick="openEditEntry(${e.id})"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="btn-act btn-act-danger" onclick="deleteEntry(${e.id})"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg></button>`:'<span style="display:inline-block;width:52px"></span>'}
       </div></td>
     </tr>`}).join('');
-    const mobileRows=gRows.map(e=>{const c=CATS[e.cat];const amtColor=e.cat==='revenu'?'var(--green)':e.cat==='impot'?'var(--amber)':e.cat==='epargne'?'var(--blue)':'var(--red)';return`<div class="entry-card" data-id="${e.id}" style="border-left-color:${c.hex};background:${c.bg};padding:13px 14px 11px 14px">
+    const mobileRows=gRows.map(e=>{const c=CATS[e.cat];const amtColor=e.cat==='revenu'?'var(--green)':e.cat==='impot'?'var(--amber)':e.cat==='epargne'?'var(--blue)':'var(--red)';return`<div class="entry-card" data-id="${e.id||''}" style="border-left-color:${c.hex};background:${c.bg};padding:13px 14px 11px 14px${e._synthetic?';opacity:.8':''}">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
         <span style="font-weight:700;font-size:var(--fs-base);flex:1;line-height:1.3;letter-spacing:-.01em">${e.name}</span>
         <span style="font-size:var(--fs-base);font-weight:800;color:${amtColor};flex-shrink:0;letter-spacing:-.02em">${eur(Math.abs(e.amount))}</span>
@@ -2886,7 +2895,7 @@ function memberTableHtml(rows,isMobile,memberName){
       <div style="height:1px;background:${c.hex}22;margin:9px 0 8px"></div>
       <div style="display:flex;justify-content:space-between;align-items:center">
         <span style="font-size:var(--fs-xs);font-weight:700;color:${c.text};letter-spacing:.05em;text-transform:uppercase">${c.label}</span>
-        ${canEdit(e.member)?`<div style="display:flex;gap:5px"><button class="btn-act" onclick="openEditEntry(${e.id})"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="btn-act btn-act-danger" onclick="deleteEntry(${e.id})"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg></button></div>`:''}
+        ${e._synthetic?`<span style="font-size:var(--fs-xs);color:var(--muted);font-style:italic">calculé</span>`:canEdit(e.member)?`<div style="display:flex;gap:5px"><button class="btn-act" onclick="openEditEntry(${e.id})"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="btn-act btn-act-danger" onclick="deleteEntry(${e.id})"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg></button></div>`:''}
       </div>
     </div>`}).join('');
     const inner=isMobile?mobileRows:`<div class="tbl-wrap"><table style="width:100%;table-layout:fixed">
