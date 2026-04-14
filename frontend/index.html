@@ -2408,29 +2408,19 @@ function updateSplitBar(name,pct){
 }
 function setSavingMode(name, mode, btn){
   const mc=getMC(name);
-  // Toggle button styles
-  const pctBtn=document.getElementById('mode-pct-'+name);
-  const eurBtn=document.getElementById('mode-eur-'+name);
-  if(pctBtn&&eurBtn){
-    pctBtn.style.background=mode==='pct'?mc:'var(--surface)';
-    pctBtn.style.color=mode==='pct'?'#fff':'var(--muted)';
-    eurBtn.style.background=mode==='eur'?mc:'var(--surface)';
-    eurBtn.style.color=mode==='eur'?'#fff':'var(--muted)';
-  }
-  // Toggle sliders
-  const pctSlider=document.getElementById('slider-pct-'+name);
-  const eurSlider=document.getElementById('slider-eur-'+name);
-  if(pctSlider) pctSlider.style.display=mode==='pct'?'':'none';
-  if(eurSlider) eurSlider.style.display=mode==='eur'?'':'none';
-  // Sync display value
   const pctVal=savingPct[name]??60;
-  const rav=+document.getElementById('eur-'+name)?.max||0;
+  const rav=+(document.getElementById('ep-eur-'+name)?.max||document.getElementById('eur-'+name)?.max||0);
   const epVal=Math.round(rav*pctVal/100);
-  const valEl=document.getElementById('pctv-'+name);
-  if(valEl) valEl.textContent=mode==='pct'?pctVal+'%':epVal.toLocaleString('fr-FR')+' €';
-  // Sync € slider to current % value
-  const eurInput=document.getElementById('eur-'+name);
-  if(eurInput) eurInput.value=epVal;
+  // Update toggle buttons in all contexts (dashboard + KPI)
+  ['mode-pct-'+name,'ep-mode-pct-'+name].forEach(id=>{const el=document.getElementById(id);if(el){el.style.background=mode==='pct'?mc:'var(--surface)';el.style.color=mode==='pct'?'#fff':'var(--muted)';}});
+  ['mode-eur-'+name,'ep-mode-eur-'+name].forEach(id=>{const el=document.getElementById(id);if(el){el.style.background=mode==='eur'?mc:'var(--surface)';el.style.color=mode==='eur'?'#fff':'var(--muted)';}});
+  // Toggle sliders in all contexts
+  ['slider-pct-'+name,'ep-slider-pct-'+name].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display=mode==='pct'?'':'none';});
+  ['slider-eur-'+name,'ep-slider-eur-'+name].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display=mode==='eur'?'':'none';});
+  // Sync display value in all contexts
+  ['pctv-'+name,'ep-pctv-'+name].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=mode==='pct'?pctVal+'%':epVal.toLocaleString('fr-FR')+' €';});
+  // Sync € slider in all contexts
+  ['eur-'+name,'ep-eur-'+name].forEach(id=>{const el=document.getElementById(id);if(el)el.value=epVal;});
   fillAllTracks();
 }
 function updateSavingCalc(name){
@@ -2438,10 +2428,12 @@ function updateSavingCalc(name){
   const pct=savingPct[name]??60;
   const ep=Math.round(sm.rav*pct/100);
   const loi=Math.round(sm.rav*(100-pct)/100);
-  const epEl=document.querySelector(`[data-ep="${name}"]`);
-  const loiEl=document.querySelector(`[data-loi="${name}"]`);
-  if(epEl) epEl.textContent=eur(ep);
-  if(loiEl) loiEl.textContent=eur(loi);
+  document.querySelectorAll(`[data-ep="${name}"]`).forEach(el=>el.textContent=eur(ep));
+  document.querySelectorAll(`[data-loi="${name}"]`).forEach(el=>el.textContent=eur(loi));
+  // Sync KPI pct display when dragging dashboard slider
+  const epPctvKpi=document.getElementById('ep-pctv-'+name);
+  if(epPctvKpi){const isEurMode=document.getElementById('ep-slider-eur-'+name)?.style.display!=='none';
+    epPctvKpi.textContent=isEurMode?ep.toLocaleString('fr-FR')+' €':pct+'%';}
 }
 function renderDashboard(){
   if(hasNoData(dashboardMember)){
@@ -2821,15 +2813,27 @@ function initDragDrop(container, memberName, groupKey){
 
 const DRAG_HANDLE=`<span class="drag-handle" title="Déplacer"><svg width="12" height="16" viewBox="0 0 12 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><line x1="4" y1="4" x2="4" y2="4"/><line x1="8" y1="4" x2="8" y2="4"/><line x1="4" y1="8" x2="4" y2="8"/><line x1="8" y1="8" x2="8" y2="8"/><line x1="4" y1="12" x2="4" y2="12"/><line x1="8" y1="12" x2="8" y2="12"/></svg></span>`;
 
+function openAddEntryForCat(cat){
+  openAddEntry();
+  if(cat==='revenu'){
+    document.getElementById('f-sign').value='pos';
+    onEntrySignChange('pos');
+  } else {
+    document.getElementById('f-cat').value=cat;
+    onEntryCatChange(cat);
+  }
+}
 function memberTableHtml(rows,isMobile,memberName){
   if(!window.entriesSectionCollapsed)window.entriesSectionCollapsed={};
   const GROUPS=[
-    {key:'revenus',  label:'Revenus & Impôts',  cats:['revenu','impot'], color:'#0d9e6e', totColor:'var(--green)'},
-    {key:'fixes',    label:'Charges fixes',      cats:['fixe'],           color:'#d93535', totColor:'var(--red)'},
-    {key:'variables',label:'Dépenses variables', cats:['variable'],       color:'#e05a2b', totColor:'var(--red)'},
-    {key:'loisir',   label:'Loisir',             cats:['loisir'],         color:'#f59e0b', totColor:'var(--amber)'},
-    {key:'epargne',  label:'Épargne',            cats:['epargne'],        color:'#2979c8', totColor:'var(--blue)'},
+    {key:'revenus',  label:'Revenus & Impôts',  cats:['revenu','impot'], color:'#0d9e6e', totColor:'var(--green)', addCat:'revenu'},
+    {key:'fixes',    label:'Charges fixes',      cats:['fixe'],           color:'#d93535', totColor:'var(--red)',   addCat:'fixe'},
+    {key:'variables',label:'Dépenses variables', cats:['variable'],       color:'#e05a2b', totColor:'var(--red)',   addCat:'variable'},
+    {key:'loisir',   label:'Loisir',             cats:['loisir'],         color:'#f59e0b', totColor:'var(--amber)', addCat:'loisir'},
+    {key:'epargne',  label:'Épargne',            cats:['epargne'],        color:'#2979c8', totColor:'var(--blue)',  addCat:'epargne'},
   ];
+  // Default all sections to collapsed on first render
+  GROUPS.forEach(g=>{const ck=memberName+'_'+g.key;if(!(ck in window.entriesSectionCollapsed))window.entriesSectionCollapsed[ck]=true;});
   const canAdd=canEdit(memberName);
   return GROUPS.map(g=>{
     const gRows=getSortedGroupRows(rows.filter(e=>g.cats.includes(e.cat)));
@@ -2839,7 +2843,7 @@ function memberTableHtml(rows,isMobile,memberName){
     const ck=memberName+'_'+g.key;
     const collapsed=!!window.entriesSectionCollapsed[ck];
     const chevronStyle=collapsed?'transform:rotate(-90deg);':'';
-    const addBtn=canAdd?MLY_ADD_BTN(`openAddEntry()`):'';
+    const addBtn=canAdd?MLY_ADD_BTN(`openAddEntryForCat('${g.addCat}')`):'';
     const uid=`entries-body-${memberName}-${g.key}`;
     const subInfo=gRows.length
       ?`<span style="font-size:var(--fs-xs);font-weight:700;color:${g.totColor}">${eur(Math.abs(tot))}</span>`
@@ -2952,6 +2956,7 @@ function renderEntries(){
       const tot=tot1+tot2;
       if(!window.entriesSectionCollapsed)window.entriesSectionCollapsed={};
       const _ck='commun_'+g.key;
+      if(!(_ck in window.entriesSectionCollapsed))window.entriesSectionCollapsed[_ck]=true;
       const _isC=!!window.entriesSectionCollapsed[_ck];
       const _uid=`entries-body-commun-${g.key}`;
       const hdr=`<div style="display:flex;justify-content:space-between;align-items:center;padding:0 2px 6px;margin-bottom:5px;border-bottom:2px solid ${g.color}30">
@@ -3036,13 +3041,7 @@ function renderEntries(){
     const ravGlow = ps.rav >= 0 ? '#0d9e6e' : '#d93535';
     const ravRate = ps.revNet > 0 ? Math.round(ps.rav / ps.revNet * 100) : 0;
     return `<div style="flex:1;min-width:260px">
-      <div style="display:flex;justify-content:${_showNames.length > 1 ? 'space-between' : 'flex-end'};align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
-        ${_showNames.length > 1 ? `<span style="font-size:var(--fs-sm);font-weight:800;color:${mc};letter-spacing:.05em;text-transform:uppercase">${name}</span>` : ''}
-        <div style="text-align:right">
-          <div style="font-size:10px;font-weight:700;color:var(--muted);margin-bottom:1px">${ravRate}% du revenu net</div>
-          <div style="font-size:1.6rem;font-weight:900;color:${ravGlow};letter-spacing:-.04em;line-height:1">${ps.rav >= 0 ? '+' : ''}${eur(ps.rav)}</div>
-        </div>
-      </div>
+      ${_showNames.length > 1 ? `<div style="margin-bottom:14px"><span style="font-size:var(--fs-sm);font-weight:800;color:${mc};letter-spacing:.05em;text-transform:uppercase">${name}</span></div>` : ''}
       <div style="display:flex;gap:0;flex-wrap:wrap;margin-bottom:14px">
         <div style="flex:1;min-width:110px;padding-right:14px;border-right:1px solid var(--border)">
           <div style="font-size:9px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--green);margin-bottom:6px">Revenus</div>
@@ -3058,25 +3057,29 @@ function renderEntries(){
         </div>
       </div>
       <div style="border-top:1px solid var(--border);padding-top:12px">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-          <div style="font-size:9px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:${ravGlow}">Répartition RAV</div>
-          <div style="display:flex;align-items:center;gap:6px">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:6px;gap:8px">
+          <div>
+            <div style="font-size:9px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:${ravGlow}">Répartition RAV</div>
+            <div style="font-size:10px;font-weight:700;color:var(--muted);margin-top:1px">${ravRate}% du revenu net</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+            <div style="font-size:1.3rem;font-weight:900;color:${ravGlow};letter-spacing:-.04em;line-height:1">${ps.rav >= 0 ? '+' : ''}${eur(ps.rav)}</div>
             ${isMe ? `<div style="display:flex;gap:0;border:1px solid var(--border);border-radius:7px;overflow:hidden">
               <button id="ep-mode-pct-${name}" onclick="setSavingMode('${name}','pct',this)" style="padding:2px 8px;font-size:var(--fs-xs);font-weight:700;border:none;cursor:pointer;font-family:inherit;background:${mc};color:#fff">%</button>
               <button id="ep-mode-eur-${name}" onclick="setSavingMode('${name}','eur',this)" style="padding:2px 8px;font-size:var(--fs-xs);font-weight:700;border:none;cursor:pointer;font-family:inherit;background:var(--surface);color:var(--muted)">€</button>
             </div>` : ''}
-            <span id="pctv-${name}" style="font-size:var(--fs-sm);font-weight:700;color:${mc}">${pct}%</span>
+            <span id="ep-pctv-${name}" style="font-size:var(--fs-sm);font-weight:700;color:${mc}">${pct}%</span>
           </div>
         </div>
-        <div id="slider-pct-${name}">
-          <input type="range" min="0" max="100" step="1" value="${pct}" id="pct-${name}"
+        <div id="ep-slider-pct-${name}">
+          <input type="range" min="0" max="100" step="1" value="${pct}" id="ep-pct-${name}"
             style="width:100%;accent-color:${mc};--accent-c:${mc};--track-right:var(--amber);${!isMe ? 'opacity:.45;pointer-events:none' : ''}"
-            ${!isMe ? 'disabled' : `oninput="savingPct['${name}']=+this.value;document.getElementById('pctv-${name}').textContent=this.value+'%';updateSplitBar('${name}',+this.value);saveData();updateSavingCalc('${name}');debouncedDashRefresh();"`}>
+            ${!isMe ? 'disabled' : `oninput="savingPct['${name}']=+this.value;document.getElementById('ep-pctv-${name}').textContent=this.value+'%';updateSplitBar('${name}',+this.value);saveData();updateSavingCalc('${name}');debouncedDashRefresh();"`}>
         </div>
-        <div id="slider-eur-${name}" style="display:none">
-          <input type="range" min="0" max="${Math.round(ps.rav)}" step="10" value="${epC}" id="eur-${name}"
+        <div id="ep-slider-eur-${name}" style="display:none">
+          <input type="range" min="0" max="${Math.round(ps.rav)}" step="10" value="${epC}" id="ep-eur-${name}"
             style="width:100%;accent-color:${mc};--accent-c:${mc};--track-right:var(--amber);${!isMe ? 'opacity:.45;pointer-events:none' : ''}"
-            ${!isMe ? 'disabled' : `oninput="const pctVal=+this.max>0?Math.round(+this.value/+this.max*100):0;savingPct['${name}']=pctVal;document.getElementById('pct-${name}').value=pctVal;document.getElementById('pctv-${name}').textContent=parseInt(this.value).toLocaleString('fr-FR')+' €';updateSplitBar('${name}',pctVal);saveData();updateSavingCalc('${name}');debouncedDashRefresh();"`}>
+            ${!isMe ? 'disabled' : `oninput="const pctVal=+this.max>0?Math.round(+this.value/+this.max*100):0;savingPct['${name}']=pctVal;document.getElementById('ep-pct-${name}').value=pctVal;document.getElementById('ep-pctv-${name}').textContent=parseInt(this.value).toLocaleString('fr-FR')+' €';updateSplitBar('${name}',pctVal);saveData();updateSavingCalc('${name}');debouncedDashRefresh();"`}>
         </div>
         <div class="prow" style="margin-top:4px"><span class="prow-lbl" style="color:var(--blue)">→ Épargne</span><span class="prow-val" style="color:var(--blue)" data-ep="${name}">${eur(epC)}</span></div>
         <div class="prow" style="border-bottom:none"><span class="prow-lbl" style="color:var(--amber)">→ Loisir</span><span class="prow-val" style="color:var(--amber)" data-loi="${name}">${eur(loiC)}</span></div>
