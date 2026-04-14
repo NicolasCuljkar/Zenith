@@ -3225,10 +3225,8 @@ function renderEntries(){
           <span style="font-size:var(--fs-xs);font-weight:700;color:var(--muted)">${_foyerRavRate}% du revenu net</span>
           <span style="font-size:var(--fs-sm);font-weight:800;color:${_foyerRavGlow};letter-spacing:-.02em">${_foyerPs.rav>=0?'+':''}${eur(_foyerPs.rav)}</span>
         </div>
-        <div style="height:14px;border-radius:7px;overflow:hidden;display:flex;margin-bottom:5px">
-          <div style="flex:${_epGlobalPct};background:var(--blue)"></div>
-          <div style="flex:${_loiGlobalPct};background:var(--amber)"></div>
-        </div>
+        <input type="range" min="0" max="100" step="1" value="${_epGlobalPct}" disabled
+          style="width:100%;accent-color:var(--blue);--accent-c:var(--blue);--track-right:var(--amber);opacity:1;margin-bottom:5px">
         <div style="display:flex;justify-content:space-between;margin-bottom:12px">
           <span style="font-size:var(--fs-xs);font-weight:700;color:var(--blue)">Épargne ${_epGlobalPct}%</span>
           <span style="font-size:var(--fs-xs);font-weight:700;color:var(--amber)">Loisir ${_loiGlobalPct}%</span>
@@ -3623,10 +3621,8 @@ function _renderMonthlySections(stats, expenses, savingsData = [], entryStats = 
           <span style="font-size:var(--fs-xs);font-weight:700;color:var(--muted)">${mlyRavRate}% du revenu net</span>
           <span style="font-size:var(--fs-sm);font-weight:800;color:${_foyerRavGlow2};letter-spacing:-.02em">${mlyRav >= 0 ? '+' : ''}${eur(mlyRav)}</span>
         </div>
-        <div style="height:14px;border-radius:7px;overflow:hidden;display:flex;margin-bottom:5px">
-          <div style="flex:${_epGlobalPct2};background:var(--blue)"></div>
-          <div style="flex:${_loiGlobalPct2};background:var(--amber)"></div>
-        </div>
+        <input type="range" min="0" max="100" step="1" value="${_epGlobalPct2}" disabled
+          style="width:100%;accent-color:var(--blue);--accent-c:var(--blue);--track-right:var(--amber);opacity:1;margin-bottom:5px">
         <div style="display:flex;justify-content:space-between;margin-bottom:12px">
           <span style="font-size:var(--fs-xs);font-weight:700;color:var(--blue)">Épargne ${_epGlobalPct2}%</span>
           <span style="font-size:var(--fs-xs);font-weight:700;color:var(--amber)">Loisir ${_loiGlobalPct2}%</span>
