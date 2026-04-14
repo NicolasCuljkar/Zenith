@@ -3054,16 +3054,33 @@ function renderEntries(){
     const [m1,m2]=orderedMembers();
     const mc1=memberColors[m1],mc2=memberColors[m2];
     const GROUPS=[
-      {key:'revenus', label:'Revenus & Impôts',cats:['revenu','impot'],  totColor:'var(--green)',color:'#0d9e6e'},
-      {key:'depenses',label:'Dépenses',         cats:['fixe','variable'], totColor:'var(--red)',  color:'#d93535'},
-      {key:'loisir',  label:'Loisir',            cats:['loisir'],          totColor:'var(--red)',  color:'#f59e0b'},
-      {key:'epargne', label:'Épargne',           cats:['epargne'],         totColor:'var(--blue)', color:'#2979c8'},
+      {key:'revenus',   label:'Revenus & Impôts',  cats:['revenu','impot'],  totColor:'var(--green)',color:'#0d9e6e'},
+      {key:'fixes',     label:'Charges fixes',      cats:['fixe'],            totColor:'var(--red)',  color:'#d93535'},
+      {key:'variables', label:'Dépenses variables', cats:['variable'],        totColor:'var(--red)',  color:'#e05a2b'},
+      {key:'loisir',    label:'Loisir',             cats:['loisir'],          totColor:'var(--amber)',color:'#f59e0b'},
+      {key:'epargne',   label:'Épargne',            cats:['epargne'],         totColor:'var(--blue)', color:'#2979c8'},
     ];
     const catOrder=['revenu','impot','fixe','variable','epargne','loisir'];
     container.innerHTML=GROUPS.map(g=>{
-      const e1=filtered.filter(e=>e.member===m1&&g.cats.includes(e.cat));
-      const e2=filtered.filter(e=>e.member===m2&&g.cats.includes(e.cat));
-      if(!e1.length&&!e2.length)return'';
+      let e1=filtered.filter(e=>e.member===m1&&g.cats.includes(e.cat));
+      let e2=filtered.filter(e=>e.member===m2&&g.cats.includes(e.cat));
+      if(!e1.length&&!e2.length){
+        if(g.key==='epargne'){
+          const ps1=calcStats(entries.filter(e=>e.member===m1)),pct1=savingPct[m1]??60;
+          const ps2=calcStats(entries.filter(e=>e.member===m2)),pct2=savingPct[m2]??60;
+          const ep1=Math.max(0,Math.round(ps1.rav*pct1/100)),ep2=Math.max(0,Math.round(ps2.rav*pct2/100));
+          if(ep1>0)e1=[{name:'Épargne calculée',amount:ep1,cat:'epargne',_synthetic:true}];
+          if(ep2>0)e2=[{name:'Épargne calculée',amount:ep2,cat:'epargne',_synthetic:true}];
+          if(!e1.length&&!e2.length)return'';
+        } else if(g.key==='loisir'){
+          const ps1=calcStats(entries.filter(e=>e.member===m1)),pct1=savingPct[m1]??60;
+          const ps2=calcStats(entries.filter(e=>e.member===m2)),pct2=savingPct[m2]??60;
+          const loi1=Math.max(0,Math.round(ps1.rav*(100-pct1)/100)),loi2=Math.max(0,Math.round(ps2.rav*(100-pct2)/100));
+          if(loi1>0)e1=[{name:'Budget loisir',amount:loi1,cat:'loisir',_synthetic:true}];
+          if(loi2>0)e2=[{name:'Budget loisir',amount:loi2,cat:'loisir',_synthetic:true}];
+          if(!e1.length&&!e2.length)return'';
+        } else { return''; }
+      }
       const allNames=[...new Set([...e1,...e2].map(e=>e.name))];
       allNames.sort((a,b)=>{
         const totalA=Math.abs(e1.find(x=>x.name===a)?.amount||0)+Math.abs(e2.find(x=>x.name===a)?.amount||0);
@@ -3086,7 +3103,7 @@ function renderEntries(){
           <button onclick="toggleEntriesSection('commun','${g.key}')" data-entries-collapse="${_ck}" style="background:none;border:none;cursor:pointer;color:var(--muted);padding:0;display:flex;align-items:center;transition:transform .2s;${_isC?'transform:rotate(-90deg);':''}">${CHEVRON_SVG}</button>
           <span style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:${g.color}">${g.label}</span>
           <span style="font-size:var(--fs-xs);color:var(--hint);background:${g.color}18;border-radius:20px;padding:1px 7px;font-weight:700">${allNames.length}</span>
-          ${allNames.length?`<span style="font-size:var(--fs-xs);font-weight:700;color:${g.totColor}">${eur(Math.abs(tot))}</span>`:`<span style="font-size:var(--fs-xs);color:var(--muted)">Aucune donnée</span>`}
+          ${allNames.length?`<span style="font-size:var(--fs-xs);font-weight:700;color:${g.totColor}">${eur(Math.abs(tot))}</span>${[...e1,...e2].some(e=>e._synthetic)?`<span style="font-size:var(--fs-xs);color:var(--muted);font-style:italic">calculé</span>`:''}`:`<span style="font-size:var(--fs-xs);color:var(--muted)">Aucune donnée</span>`}
         </div>
         <span style="font-size:var(--fs-sm);font-weight:800;color:${g.totColor};letter-spacing:-.02em">${eur(Math.abs(tot))}</span>
       </div>`;
