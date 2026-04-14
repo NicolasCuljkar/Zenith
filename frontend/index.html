@@ -2954,14 +2954,14 @@ function memberTableHtml(rows,isMobile,memberName){
   const _calcEp=Math.max(0,Math.round(_ps.rav*_pct/100));
   const _calcLoi=Math.max(0,Math.round(_ps.rav*(100-_pct)/100));
   return GROUPS.map(g=>{
-    let gRows=getSortedGroupRows(rows.filter(e=>g.cats.includes(e.cat)));
-    // Inject synthetic row when no real entries for epargne/loisir
-    if(!gRows.length&&g.key==='epargne'&&_calcEp>0) gRows=[{name:'Épargne calculée',amount:_calcEp,cat:'epargne',_synthetic:true}];
-    if(!gRows.length&&g.key==='loisir' &&_calcLoi>0) gRows=[{name:'Budget loisir',  amount:_calcLoi,cat:'loisir', _synthetic:true}];
+    const gRows=getSortedGroupRows(rows.filter(e=>g.cats.includes(e.cat)));
     const tot=g.key==='revenus'
       ?absSumCat(gRows,'revenu')-absSumCat(gRows,'impot')
       :gRows.reduce((s,e)=>s+Math.abs(e.amount),0);
-    const realCount=gRows.filter(e=>!e._synthetic).length;
+    // Pour épargne/loisir sans entrées réelles : affiche le montant calculé dans l'en-tête
+    const _calcDisplay=(g.key==='epargne'&&!gRows.length)?_calcEp:(g.key==='loisir'&&!gRows.length)?_calcLoi:null;
+    const _headerTot=_calcDisplay!=null?_calcDisplay:tot;
+    const realCount=gRows.length;
     const ck=memberName+'_'+g.key;
     const collapsed=!!window.entriesSectionCollapsed[ck];
     const chevronStyle=collapsed?'transform:rotate(-90deg);':'';
@@ -2969,7 +2969,9 @@ function memberTableHtml(rows,isMobile,memberName){
     const uid=`entries-body-${memberName}-${g.key}`;
     const subInfo=gRows.length
       ?`<span style="font-size:var(--fs-xs);font-weight:700;color:${g.totColor}">${eur(Math.abs(tot))}</span>`
-      :`<span style="font-size:var(--fs-xs);color:var(--muted)">Aucune donnée</span>`;
+      :_calcDisplay
+        ?`<span style="font-size:var(--fs-xs);font-weight:700;color:${g.totColor}">${eur(_calcDisplay)}</span><span style="font-size:var(--fs-xs);color:var(--muted);font-style:italic">calculé</span>`
+        :`<span style="font-size:var(--fs-xs);color:var(--muted)">Aucune donnée</span>`;
     const hdr=`<div style="display:flex;justify-content:space-between;align-items:center;padding:0 2px 6px;margin-bottom:5px;border-bottom:2px solid ${g.color}30">
       <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">
         <button onclick="toggleEntriesSection('${memberName}','${g.key}')" data-entries-collapse="${ck}" style="background:none;border:none;cursor:pointer;color:var(--muted);padding:0;display:flex;align-items:center;transition:transform .2s;${chevronStyle}">${CHEVRON_SVG}</button>
@@ -2978,7 +2980,7 @@ function memberTableHtml(rows,isMobile,memberName){
         ${subInfo}
       </div>
       <div style="display:flex;align-items:center;gap:8px">
-        <span style="font-size:var(--fs-sm);font-weight:800;color:${g.totColor};letter-spacing:-.02em">${eur(Math.abs(tot))}</span>
+        <span style="font-size:var(--fs-sm);font-weight:800;color:${g.totColor};letter-spacing:-.02em">${eur(Math.abs(_headerTot))}</span>
         ${addBtn}
       </div>
     </div>`;
@@ -3478,7 +3480,7 @@ function switchEntriesTab(tab) {
   document.querySelectorAll('[data-etab]').forEach(b => b.classList.toggle('active', b.dataset.etab === tab));
   document.getElementById('entries-previsionnel').style.display = tab === 'previsionnel' ? '' : 'none';
   document.getElementById('entries-mensuel').style.display      = tab === 'mensuel'      ? '' : 'none';
-  if (tab === 'mensuel') renderMonthly();
+  if (tab === 'mensuel') { document.getElementById('fab-entry').style.display = 'none'; renderMonthly(); }
 }
 function monthlyNavPrev() {
   monthlyMonth--;
