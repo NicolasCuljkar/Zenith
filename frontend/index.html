@@ -3057,18 +3057,18 @@ function renderEntries(){
         </div>
       </div>
       <div style="border-top:1px solid var(--border);padding-top:12px">
-        <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:6px;gap:8px">
-          <div>
-            <div style="font-size:9px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:${ravGlow}">Répartition RAV</div>
-            <div style="font-size:10px;font-weight:700;color:var(--muted);margin-top:1px">${ravRate}% du revenu net</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;gap:8px">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            <span style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:${ravGlow}">Répartition RAV</span>
+            <span style="font-size:var(--fs-xs);font-weight:700;color:var(--muted)">${ravRate}% du revenu net</span>
+            <span style="font-size:var(--fs-sm);font-weight:800;color:${ravGlow};letter-spacing:-.02em">${ps.rav >= 0 ? '+' : ''}${eur(ps.rav)}</span>
           </div>
           <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
-            <div style="font-size:1.3rem;font-weight:900;color:${ravGlow};letter-spacing:-.04em;line-height:1">${ps.rav >= 0 ? '+' : ''}${eur(ps.rav)}</div>
-            ${isMe ? `<div style="display:flex;gap:0;border:1px solid var(--border);border-radius:7px;overflow:hidden">
-              <button id="ep-mode-pct-${name}" onclick="setSavingMode('${name}','pct',this)" style="padding:2px 8px;font-size:var(--fs-xs);font-weight:700;border:none;cursor:pointer;font-family:inherit;background:${mc};color:#fff">%</button>
-              <button id="ep-mode-eur-${name}" onclick="setSavingMode('${name}','eur',this)" style="padding:2px 8px;font-size:var(--fs-xs);font-weight:700;border:none;cursor:pointer;font-family:inherit;background:var(--surface);color:var(--muted)">€</button>
+            ${isMe ? `<div style="display:flex;gap:0;border:1px solid var(--border);border-radius:6px;overflow:hidden">
+              <button id="ep-mode-pct-${name}" onclick="setSavingMode('${name}','pct',this)" style="padding:2px 7px;font-size:var(--fs-xs);font-weight:700;border:none;cursor:pointer;font-family:inherit;background:${mc};color:#fff">%</button>
+              <button id="ep-mode-eur-${name}" onclick="setSavingMode('${name}','eur',this)" style="padding:2px 7px;font-size:var(--fs-xs);font-weight:700;border:none;cursor:pointer;font-family:inherit;background:var(--surface);color:var(--muted)">€</button>
             </div>` : ''}
-            <span id="ep-pctv-${name}" style="font-size:var(--fs-sm);font-weight:700;color:${mc}">${pct}%</span>
+            <span id="ep-pctv-${name}" style="font-size:var(--fs-xs);font-weight:700;color:${mc}">${pct}%</span>
           </div>
         </div>
         <div id="ep-slider-pct-${name}">
