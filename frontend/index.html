@@ -853,26 +853,7 @@ window.onerror = function(msg, src, line) {
   <!-- DASHBOARD -->
   <div id="tab-dashboard" class="tab-panel active">
     <div id="dash-nodata" style="display:none"></div>
-    <div id="dash-content">
-      <div class="member-tabs" id="dash-mtabs"></div>
-      <div id="dash-alert"></div>
-      <!-- KPI row -->
-      <div class="kpi-grid" id="dash-kpis" style="margin-bottom:var(--sg)"></div>
-      <!-- Budget flow bar -->
-      <div id="dash-flow" style="margin-bottom:var(--sg)"></div>
-      <!-- Top dépenses + Projection rapide -->
-      <div id="dash-main" style="display:grid;grid-template-columns:1fr 1fr;gap:var(--sg);margin-bottom:var(--sg)">
-        <div id="top-bars" class="card" style="padding:16px 18px"></div>
-        <div id="dash-projection" class="card" style="padding:16px 18px"></div>
-      </div>
-      <!-- Profile sliders (kept for RAV adjustment) -->
-      <div class="g2" id="dash-profiles" style="margin-bottom:0"></div>
-      <div id="dash-combined" style="margin-top:var(--sg);margin-bottom:var(--sg);display:none"></div>
-      <div id="dash-charts" style="display:none">
-        <div id="donut-chart-wrap" style="display:none"><canvas id="donut-chart"></canvas></div>
-        <div id="donut-legend" style="display:none"></div>
-      </div>
-    </div><!-- /#dash-content -->
+    <div id="dash-content"></div>
   </div>
 
   <!-- ENTRIES -->
@@ -1490,6 +1471,7 @@ let memberColors={Nicolas:'#3B8BD4',Carla:'#e06fa0'};
 let savingPct={Nicolas:60,Carla:50};
 let monthlyEpPct={};
 let savingsMember='all',analysisMember='all',projectionMember='all',dashboardMember='all',entriesMember='Commun',conseilsMember='all';
+let dashYear=new Date().getFullYear(),dashMonth=new Date().getMonth()+1;
 let projAnnualRate=0.04; // default 4%
 let simMonthlyOverride=null;
 let entryOrder={}; // kept for backward compat but no longer used for sorting
@@ -2486,386 +2468,178 @@ function updateSavingCalc(name){
   if(epPctvKpi){const isEurMode=document.getElementById('ep-slider-eur-'+name)?.style.display!=='none';
     epPctvKpi.textContent=isEurMode?ep.toLocaleString('fr-FR')+' €':pct+'%';}
 }
-function renderDashboard(){
-  if(hasNoData(dashboardMember)){
-    donutChart=destroyChart(donutChart);topDonutChart=destroyChart(topDonutChart);waterfallChart=destroyChart(waterfallChart);
-    document.getElementById('dash-nodata').innerHTML=noDataBanner();
-    document.getElementById('dash-nodata').style.display='';
-    document.getElementById('dash-content').style.display='none';
-    return;
+async function renderDashboard(){
+  const nodata=document.getElementById('dash-nodata');
+  const content=document.getElementById('dash-content');
+  donutChart=destroyChart(donutChart);topDonutChart=destroyChart(topDonutChart);waterfallChart=destroyChart(waterfallChart);
+  if(!currentUser){
+    nodata.innerHTML=noDataBanner();nodata.style.display='';content.style.display='none';return;
   }
-  document.getElementById('dash-nodata').style.display='none';
-  document.getElementById('dash-content').style.display='';
-  if(!document.getElementById('donut-chart')) document.getElementById('donut-chart-wrap').innerHTML='<canvas id="donut-chart"></canvas>';
-  const s=calcStats(entries);
+  nodata.style.display='none';content.style.display='';
+  const _MN=['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+  const now=new Date();
+  const isCurrentMonth=dashYear===now.getFullYear()&&dashMonth===now.getMonth()+1;
+  const frMonth=_MN[dashMonth-1];
+  const apiParams={year:dashYear,month:dashMonth};
+  if(dashboardMember!=='all') apiParams.member=dashboardMember;
+  let mStats=null,mExpenses=[];
+  try{[mStats,mExpenses]=await Promise.all([API.monthlyExpenses.getStats(apiParams),API.monthlyExpenses.getAll(apiParams)]);}catch(e){}
+  const revA  = mStats?.revenu?.actual   ??0;
+  const taxA  = mStats?.impot?.actual    ??0;
+  const fixA  = mStats?.fixe?.actual     ??0;
+  const varA  = mStats?.variable?.actual ??0;
+  const epA   = mStats?.epargne?.actual  ??0;
+  const loiA  = mStats?.loisir?.actual   ??0;
+  const revNetA=revA-taxA, depA=fixA+varA, ravA=revNetA-depA;
+  const bStats=calcStats(dashboardMember==='all'?entries:entries.filter(e=>e.member===dashboardMember));
   const memberList=orderedMembers();
-  const statsByMember={};
-  memberList.forEach(m=>{statsByMember[m]=calcStats(entries.filter(e=>e.member===m));});
-
-  // Compute scoped épargne/rate based on active tab
-  let epScoped, revNetScoped, epRate, alertName;
-  if(dashboardMember==='all'){
-    epScoped=Math.round(memberList.reduce((sum,m)=>sum+(statsByMember[m]?.rav||0)*(savingPct[m]??60)/100,0));
-    revNetScoped=s.revNet;
-    alertName='du groupe';
-  } else {
-    const sm=statsByMember[dashboardMember]||calcStats([]);
-    epScoped=Math.round(sm.rav*(savingPct[dashboardMember]??60)/100);
-    revNetScoped=sm.revNet;
-    alertName='de '+dashboardMember;
-  }
-  const epCouple=Math.round(memberList.reduce((sum,m)=>sum+(statsByMember[m]?.rav||0)*(savingPct[m]??60)/100,0));
-  epRate=revNetScoped>0?Math.round(epScoped/revNetScoped*100):0;
-
-  const smScoped=dashboardMember==='all'?s:(statsByMember[dashboardMember]||s);
-  const depContrainte=smScoped.fix+smScoped.vari;
-  const ravScoped=smScoped.rav;
-  const depRate=revNetScoped>0?Math.round(depContrainte/revNetScoped*100):0;
-  const ravRate=revNetScoped>0?Math.round(ravScoped/revNetScoped*100):0;
-  const epBadge=epRate>=20
-    ?`<span style="font-size:var(--fs-xs);font-weight:700;padding:2px 8px;border-radius:20px;background:var(--green-bg);color:var(--green)">✓ Bon taux</span>`
-    :epRate>=10
-    ?`<span style="font-size:var(--fs-xs);font-weight:700;padding:2px 8px;border-radius:20px;background:var(--amber-bg);color:var(--amber)">Correct — viser 20%</span>`
-    :`<span style="font-size:var(--fs-xs);font-weight:700;padding:2px 8px;border-radius:20px;background:var(--red-bg);color:var(--red)">⚠ Taux bas</span>`;
-
-  const loiScopedDash=ravScoped-epScoped;
-  const joursRavD=depContrainte>0?Math.round(ravScoped/depContrainte*30):null;
-  const chargesIncompD=smScoped.tax+smScoped.fix;
-  const chargesRateD=revNetScoped>0?Math.round(chargesIncompD/revNetScoped*100):0;
-  const chargesColorD=chargesRateD<=40?'var(--green)':chargesRateD<=60?'var(--amber)':'var(--red)';
-  const libreRate=revNetScoped>0?Math.round(loiScopedDash/revNetScoped*100):0;
-  const mkBD=(txt,ok,warn)=>`<span style="font-size:var(--fs-xs);font-weight:700;padding:2px 8px;border-radius:20px;background:${ok?'var(--green-bg)':warn?'var(--amber-bg)':'var(--red-bg)'};color:${ok?'var(--green)':warn?'var(--amber)':'var(--red)'}">${txt}</span>`;
-  const chargesBadgeD=mkBD(chargesRateD<=40?'✓ Maîtrisé':chargesRateD<=60?'Modéré':'⚠ Élevé',chargesRateD<=40,chargesRateD<=60);
-
-  document.getElementById('dash-kpis').style.gridTemplateColumns='repeat(3,1fr)';
-  document.getElementById('dash-kpis').innerHTML=
-    kpiHtml('Revenus nets',eur(revNetScoped),'var(--green)',
-      dashboardMember==='all'?`Brut ${eur(s.rev)} · Impôts ${eur(s.tax)}`:`Brut ${eur(revNetScoped+smScoped.tax)} · Impôts ${eur(smScoped.tax)}`)+
-    kpiHtml('Dépenses',eur(depContrainte),'var(--red)',
-      `${depRate}% du revenu net · Fixes ${eur(smScoped.fix)} + Var. ${eur(smScoped.vari)}`)+
-    kpiHtml('Épargne calculée',eur(epScoped),epRate>=20?'var(--green)':epRate>=10?'var(--amber)':'var(--red)',
-      `${epRate}% du revenu net · ≈ ${eur(epScoped*12)} / an`,epRate-20,'',epBadge)+
-    kpiHtml('Reste à vivre',eur(ravScoped),ravScoped>=0?'var(--blue)':'var(--red)',
-      `${ravRate}% du revenu net${joursRavD!=null?' · ≈ '+joursRavD+' j de charges':''}`)+
-    kpiHtml('Charges incompressibles',eur(chargesIncompD),chargesColorD,
-      `${chargesRateD}% du revenu net · Impôts + fixes`,null,
-      `Montant non négociable chaque mois · Impôts ${eur(smScoped.tax)} + Charges fixes ${eur(smScoped.fix)} · Objectif : rester sous 40% du revenu net`,chargesBadgeD)+
-    kpiHtml('Budget libre',eur(Math.max(0,loiScopedDash)),loiScopedDash>=0?'var(--amber)':'var(--red)',
-      `${libreRate}% du revenu net · Après épargne`,null,
-      `Librement dépensable après épargne · Loisirs, sorties, imprévus · Reste à vivre ${eur(ravScoped)} − Épargne ${eur(epScoped)}`);
-
-
-  checkInAppAlerts();
-
-  const profiles=document.getElementById('dash-profiles');profiles.innerHTML='';
-  const showMembers=dashboardMember==='all'?[]:[dashboardMember];
-  profiles.style.display = 'block';
-  profiles.style.justifyContent = '';
-  showMembers.forEach(name=>{
-    const ps=calcStats(entries.filter(e=>e.member===name));
-    const pct=savingPct[name]??60;
-    const epC=Math.round(ps.rav*pct/100),loiC=Math.round(ps.rav*(100-pct)/100);
-    const usedPct=ps.revNet>0?Math.round((ps.fix+ps.vari)/ps.revNet*100):0;
-    const bc=usedPct<=50?'#0d9e6e':usedPct<=70?'#c49a00':'#d93535';
-    const bcBg=usedPct<=50?'var(--green-bg)':usedPct<=70?'var(--amber-bg)':'var(--red-bg)';
-    const bcBorder=usedPct<=50?'#0d9e6e22':usedPct<=70?'#c49a0022':'#d9353522';
-    const d=document.createElement('div');d.className='card';
-    d.innerHTML=`
-      
-      <div style="font-size:var(--fs-title);font-weight:700;color:var(--text);letter-spacing:-.02em;margin-bottom:6px">Revenus</div>
-      <div class="prow"><span class="prow-lbl">Revenus bruts</span><span class="prow-val" style="color:var(--green)">${eur(ps.rev)}</span></div>
-      <div class="prow"><span class="prow-lbl">Impôts</span><span class="prow-val" style="color:var(--amber)">− ${eur(ps.tax)}</span></div>
-      <div class="prow"><span class="prow-lbl" style="font-weight:600">Revenus nets</span><span class="prow-val" style="color:var(--green)">${eur(ps.revNet)}</span></div>
-      <div style="font-size:var(--fs-title);font-weight:700;color:var(--text);letter-spacing:-.02em;margin-top:14px;margin-bottom:6px">Dépenses</div>
-      <div class="prow"><span class="prow-lbl">Dépenses fixes</span><span class="prow-val" style="color:var(--red)">− ${eur(ps.fix)}</span></div>
-      <div class="prow"><span class="prow-lbl">Dépenses variables</span><span class="prow-val" style="color:var(--red)">− ${eur(ps.vari)}</span></div>
-      <div class="prow"><span class="prow-lbl">Dépenses totales</span><span class="prow-val" style="color:var(--red)">− ${eur(ps.fix+ps.vari)}</span></div>
-      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:22px;margin-bottom:6px">
-        <div style="font-size:var(--fs-title);font-weight:700;color:var(--text);letter-spacing:-.02em">Répartition du reste à vivre</div>
-        <div style="font-size:var(--fs-base);font-weight:800;color:${ps.rav>=0?'var(--green)':'var(--red)'};letter-spacing:-.03em">${eur(ps.rav)}</div>
-      </div>
-      <div style="margin:12px 0 6px">
-        <!-- Toggle % / € -->
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-          ${currentUser?.name===name?`<div style="display:flex;gap:0;border:1px solid var(--border);border-radius:8px;overflow:hidden">
-            <button id="mode-pct-${name}" onclick="setSavingMode('${name}','pct',this)"
-              style="padding:3px 10px;font-size:var(--fs-sm);font-weight:600;border:none;cursor:pointer;font-family:inherit;transition:background .12s;background:${getMC(name)};color:#fff">%</button>
-            <button id="mode-eur-${name}" onclick="setSavingMode('${name}','eur',this)"
-              style="padding:3px 10px;font-size:var(--fs-sm);font-weight:600;border:none;cursor:pointer;font-family:inherit;transition:background .12s;background:var(--surface);color:var(--muted)">€</button>
-          </div>`:'<span></span>'}
-          <span id="pctv-${name}" style="font-size:var(--fs-md);font-weight:700;color:${getMC(name)}">${pct}%</span>
-        </div>
-
-        <!-- Slider % mode -->
-        <div id="slider-pct-${name}">
-          <input type="range" min="0" max="100" step="1" value="${pct}" id="pct-${name}"
-            style="width:100%;accent-color:${getMC(name)};--accent-c:${getMC(name)};--track-right:var(--amber)"
-            ${currentUser?.name===name?`oninput="savingPct['${name}']=+this.value;document.getElementById('pctv-${name}').textContent=this.value+'%';updateSplitBar('${name}',+this.value);saveData();updateSavingCalc('${name}');debouncedDashRefresh();"`:' disabled style="width:100%;accent-color:'+getMC(name)+';pointer-events:none"'}>
-        </div>
-
-        <!-- Slider € mode -->
-        <div id="slider-eur-${name}" style="display:none">
-          <input type="range" min="0" max="${Math.round(ps.rav)}" step="10" value="${epC}" id="eur-${name}"
-            style="width:100%;accent-color:${getMC(name)};--accent-c:${getMC(name)};--track-right:var(--amber)"
-            ${currentUser?.name===name?`oninput="const pctVal=+this.max>0?Math.round(+this.value/+this.max*100):0;savingPct['${name}']=pctVal;document.getElementById('pct-${name}').value=pctVal;document.getElementById('pctv-${name}').textContent=parseInt(this.value).toLocaleString('fr-FR')+' €';updateSplitBar('${name}',pctVal);saveData();updateSavingCalc('${name}');debouncedDashRefresh();"`:' disabled style="width:100%;accent-color:'+getMC(name)+';pointer-events:none"'}>
+  const _epKey=m=>`${m}_${dashYear}_${dashMonth}`;
+  const _mPct =m=>monthlyEpPct[_epKey(m)]??savingPct[m]??60;
+  const _mRav =m=>calcStats(entries.filter(e=>e.member===m)).rav;
+  const _mEp  =m=>Math.max(0,Math.round(_mRav(m)*_mPct(m)/100));
+  const _mLoi =m=>Math.max(0,Math.round(_mRav(m)*(100-_mPct(m))/100));
+  const epBudget  =dashboardMember==='all'?memberList.reduce((s,m)=>s+_mEp(m),0):_mEp(dashboardMember);
+  const loiBudget =dashboardMember==='all'?memberList.reduce((s,m)=>s+_mLoi(m),0):_mLoi(dashboardMember);
+  const revBudget =mStats?.revenu?.budget   ??bStats.rev;
+  const taxBudget =mStats?.impot?.budget    ??bStats.tax;
+  const fixBudget =mStats?.fixe?.budget     ??bStats.fix;
+  const varBudget =mStats?.variable?.budget ??bStats.vari;
+  const soldeSgn=ravA>=0;
+  const soldeColor=soldeSgn?'var(--green)':'var(--red)';
+  const soldeBorder=soldeSgn?'#0d9e6e':'#d93535';
+  const epRate=revNetA>0?Math.round(epA/revNetA*100):0;
+  const epColor=epRate>=20?'var(--green)':epRate>=10?'var(--amber)':'var(--red)';
+  const depRate=revNetA>0?Math.round(depA/revNetA*100):0;
+  const depColor=depRate<=50?'var(--green)':depRate<=70?'var(--amber)':'var(--red)';
+  const mkBadge=(txt,ok,warn)=>`<span style="font-size:var(--fs-xs);font-weight:700;padding:2px 8px;border-radius:20px;background:${ok?'var(--green-bg)':warn?'var(--amber-bg)':'var(--red-bg)'};color:${ok?'var(--green)':warn?'var(--amber)':'var(--red)'}">${txt}</span>`;
+  // ── Month nav ──
+  const _monthNav=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--sg)">
+    <div class="member-tabs" id="dash-mtabs" style="margin-bottom:0"></div>
+    <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+      <button onclick="dashNavPrev()" style="width:30px;height:30px;border-radius:50%;border:1px solid var(--border);background:var(--surface);cursor:pointer;font-size:16px;color:var(--muted);display:flex;align-items:center;justify-content:center">‹</button>
+      <span style="font-size:var(--fs-sm);font-weight:700;color:var(--text);min-width:120px;text-align:center">${frMonth} ${dashYear}</span>
+      <button onclick="dashNavNext()" ${isCurrentMonth?'disabled':''} style="width:30px;height:30px;border-radius:50%;border:1px solid var(--border);background:var(--surface);cursor:pointer;font-size:16px;color:var(--muted);display:flex;align-items:center;justify-content:center;${isCurrentMonth?'opacity:.3':''}">›</button>
+    </div>
+  </div>`;
+  // ── Hero ──
+  const _hero=`<div style="background:${soldeSgn?'var(--green-bg)':'var(--red-bg)'};border:1.5px solid ${soldeBorder}44;border-radius:var(--r);padding:20px 24px;margin-bottom:var(--sg);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+    <div>
+      <div style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:${soldeBorder};margin-bottom:6px">Reste à vivre · ${frMonth} ${dashYear}</div>
+      <div style="font-size:clamp(2rem,5vw,2.8rem);font-weight:900;letter-spacing:-.04em;color:${soldeColor};line-height:1.1">${ravA>=0?'+':''}${eur(ravA)}</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:5px;text-align:right">
+      <div style="font-size:var(--fs-sm);color:var(--muted)">Revenus nets <span style="font-weight:700;color:var(--green)">${eur(revNetA)}</span></div>
+      <div style="font-size:var(--fs-sm);color:var(--muted)">Dépenses <span style="font-weight:700;color:var(--red)">−${eur(depA)}</span></div>
+      ${epA>0?`<div style="font-size:var(--fs-sm);color:var(--muted)">Épargne <span style="font-weight:700;color:var(--blue)">${eur(epA)}</span></div>`:''}
+    </div>
+  </div>`;
+  // ── KPIs ──
+  const _kpis=`<div class="kpi-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:var(--sg)">
+    ${kpiHtml('Revenus nets',eur(revNetA),'var(--green)',`Brut ${eur(revA)} · Impôts ${eur(taxA)}`)}
+    ${kpiHtml('Dépenses réelles',eur(depA),depColor,`${depRate}% du revenu net · Fixes ${eur(fixA)} + Var. ${eur(varA)}`,null,'',mkBadge(depRate<=50?'✓ Maîtrisé':depRate<=70?'Modéré':'⚠ Élevé',depRate<=50,depRate<=70))}
+    ${kpiHtml('Épargne du mois',eur(epA),epColor,`${epRate}% du revenu net · Objectif ${eur(epBudget)}`,null,'',mkBadge(epRate>=20?'✓ Bon taux':epRate>=10?'Correct':'⚠ Bas',epRate>=20,epRate>=10))}
+  </div>`;
+  // ── Flow bar ──
+  const _fTotal=Math.max(revA,1);
+  const _seg=(w,bg,lbl,v)=>w>0?`<div style="width:${w}%;background:${bg};height:100%" title="${lbl}: ${Math.round(v).toLocaleString('fr-FR')} €"></div>`:'';
+  const _leg=(col,lbl,v)=>`<span style="display:flex;align-items:center;gap:4px;font-size:var(--fs-xs);color:var(--muted)"><span style="width:8px;height:8px;border-radius:2px;background:${col};flex-shrink:0"></span>${lbl}<span style="font-weight:700;color:var(--fg)">${Math.round(v).toLocaleString('fr-FR')} €</span></span>`;
+  const tp=Math.round(taxA/_fTotal*100),fp2=Math.round(fixA/_fTotal*100),vp=Math.round(varA/_fTotal*100),epp=Math.round(epA/_fTotal*100),lp=Math.round(loiA/_fTotal*100);
+  const rp=Math.max(0,100-tp-fp2-vp-epp-lp);
+  const _flow=`<div class="card" style="padding:16px 18px;margin-bottom:var(--sg)">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <span style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)">Flux du revenu brut</span>
+      <span style="font-size:var(--fs-sm);font-weight:700;color:var(--green)">${eur(revA)}</span>
+    </div>
+    <div style="height:28px;border-radius:8px;overflow:hidden;display:flex">
+      ${_seg(tp,'#c49a00','Impôts',taxA)}${_seg(fp2,'#d93535','Fixes',fixA)}${_seg(vp,'#e05a2b','Variables',varA)}${_seg(epp,'#2979c8','Épargne',epA)}${_seg(lp,'#f59e0b','Loisir',loiA)}${_seg(rp,'#0d9e6e','RAV restant',Math.max(0,ravA-epA-loiA))}
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:8px">
+      ${_leg('#c49a00','Impôts',taxA)}${_leg('#d93535','Fixes',fixA)}${_leg('#e05a2b','Variables',varA)}${_leg('#2979c8','Épargne',epA)}${lp>0?_leg('#f59e0b','Loisir',loiA):''}${rp>0?_leg('#0d9e6e','RAV restant',Math.max(0,ravA-epA-loiA)):''}
+    </div>
+  </div>`;
+  // ── Comparatif prévu vs réel ──
+  const _crow=(lbl,act,bgt,isInc=false)=>{
+    const pct=bgt>0?Math.round(Math.min(act/bgt,1.5)*100):act>0?100:0;
+    const over=act>bgt&&bgt>0;
+    const col=isInc?(act>=bgt?'#0d9e6e':act>=bgt*.9?'#c49a00':'#d93535'):(over?'#d93535':pct>=90?'#c49a00':'#0d9e6e');
+    const colV=isInc?(act>=bgt?'var(--green)':act>=bgt*.9?'var(--amber)':'var(--red)'):(over?'var(--red)':pct>=90?'var(--amber)':'var(--green)');
+    const diff=act-bgt;
+    const diffStr=bgt>0&&diff!==0?(diff>0?`+${eur(Math.abs(diff))}`:`−${eur(Math.abs(diff))}`):'';
+    const diffCol=isInc?(diff>0?'var(--green)':'var(--red)'):(diff>0?'var(--red)':'var(--green)');
+    return `<div style="padding:8px 0;border-bottom:1px solid var(--border)">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px">
+        <span style="font-size:var(--fs-sm);color:var(--text)">${lbl}</span>
+        <div style="display:flex;align-items:center;gap:8px">
+          ${diffStr?`<span style="font-size:var(--fs-xs);color:${diffCol};font-weight:700">${diffStr}</span>`:''}
+          <span style="font-size:var(--fs-sm);font-weight:700;color:${colV}">${eur(act)}</span>
+          <span style="font-size:var(--fs-xs);color:var(--hint)">/ ${eur(bgt)}</span>
         </div>
       </div>
-      <div class="prow"><span class="prow-lbl" style="color:var(--blue)">→ Épargne calculée</span><span class="prow-val" style="color:var(--blue)" data-ep="${name}">${eur(epC)}</span></div>
-      <div class="prow" style="border-bottom:none"><span class="prow-lbl" style="color:var(--amber)">→ Budget loisir</span><span class="prow-val" style="color:var(--amber)" data-loi="${name}">${eur(loiC)}</span></div>`;
-    profiles.appendChild(d);
-  });
-
-  // Combined totals card when viewing both members
-  const combinedEl=document.getElementById('dash-combined');
-  if(combinedEl){
-    if(dashboardMember==='all'){
-      combinedEl.style.display='';
-      const sAll=calcStats(entries);
-      const epAll=Math.round(memberList.reduce((sum,m)=>sum+(statsByMember[m]?.rav||0)*(savingPct[m]??60)/100,0));
-      const loiAll=Math.round(memberList.reduce((sum,m)=>sum+(statsByMember[m]?.rav||0)*(100-(savingPct[m]??60))/100,0));
-      const usedPctAll=sAll.revNet>0?Math.round((sAll.fix+sAll.vari)/sAll.revNet*100):0;
-      const bcAll=usedPctAll<=50?'#0d9e6e':usedPctAll<=70?'#c49a00':'#d93535';
-      combinedEl.innerHTML=`<div class="card">
-        
-        <div style="display:flex;flex-direction:column;gap:0">
-          <div style="font-size:var(--fs-title);font-weight:700;color:var(--text);letter-spacing:-.02em;margin-bottom:6px">Revenus</div>
-          ${prow('Revenus bruts',eur(sAll.rev),'var(--green)')}
-          ${prow('Impôts',`− ${eur(sAll.tax)}`,'var(--amber)')}
-          <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0"><span style="font-size:var(--fs-sm);color:var(--muted);font-weight:600">Revenus nets</span><span style="font-size:var(--fs-sm);font-weight:600;color:var(--green)">${eur(sAll.revNet)}</span></div>
-          <div style="font-size:var(--fs-title);font-weight:700;color:var(--text);letter-spacing:-.02em;margin-top:14px;margin-bottom:6px">Dépenses</div>
-          ${prow('Dépenses fixes',`− ${eur(sAll.fix)}`,'var(--red)')}
-          ${prow('Dépenses variables',`− ${eur(sAll.vari)}`,'var(--red)')}
-          ${prow('Dépenses totales',`− ${eur(sAll.fix+sAll.vari)}`,'var(--red)')}
-          ${(()=>{
-            const epRateAll=sAll.rav>0?Math.round(epAll/sAll.rav*100):0;
-            const loiRateAll=100-epRateAll;
-            const epCol=epRateAll>=20?'var(--green)':epRateAll>=10?'var(--amber)':'var(--red)';
-            const epColHex=epRateAll>=20?'#0d9e6e':epRateAll>=10?'#c49a00':'#d93535';
-            const epLabel=epRateAll>=20?'Objectif atteint':epRateAll>=10?'En progression':'En dessous de l\'objectif';
-            const epIcon=epRateAll>=20?'✓':'↗';
-            const memberRows=memberList.map(m=>{
-              const sm=statsByMember[m]||calcStats([]);
-              const pct=savingPct[m]??60;
-              const mEp=Math.round(sm.rav*pct/100);
-              const mLoi=Math.round(sm.rav*(100-pct)/100);
-              const mc=getMC(m);
-              const initials=m.slice(0,1).toUpperCase();
-              const photo=profilePhotos[m];
-              const av=photo
-                ?`<img src="${photo}" style="width:22px;height:22px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1.5px solid ${mc}">`
-                :`<div style="width:22px;height:22px;border-radius:50%;background:${mc}22;border:1.5px solid ${mc};display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:${mc};flex-shrink:0">${initials}</div>`;
-              const mPct=sm.rav>0?Math.round(mEp/sm.rav*100):0;
-              return `<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border)">
-                ${av}
-                <span style="font-size:var(--fs-sm);font-weight:600;color:var(--text);min-width:60px">${m}</span>
-                <div style="flex:1;height:6px;border-radius:3px;background:var(--border);overflow:hidden">
-                  <div style="height:100%;width:${mPct}%;background:${mc};border-radius:3px;transition:width .4s"></div>
-                </div>
-                <span style="font-size:var(--fs-xs);color:var(--blue);font-weight:600;min-width:52px;text-align:right">${eur(mEp)}</span>
-                <span style="font-size:var(--fs-xs);color:var(--amber);font-weight:600;min-width:52px;text-align:right">${eur(mLoi)}</span>
-              </div>`;
-            }).join('');
-            return `
-            <div style="margin-top:20px;margin-bottom:4px">
-              <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:14px">
-                <div style="font-size:var(--fs-title);font-weight:700;color:var(--text);letter-spacing:-.02em">Reste à vivre</div>
-                <div style="font-size:var(--fs-base);font-weight:800;color:${sAll.rav>=0?'var(--blue)':'var(--red)'};letter-spacing:-.03em">${eur(sAll.rav)}</div>
-              </div>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
-                <div style="background:var(--blue-bg);border:1px solid var(--blue);border-radius:var(--r);padding:12px 14px">
-                  <div style="font-size:var(--fs-xs);font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Épargne</div>
-                  <div style="font-size:var(--fs-xl);font-weight:800;color:var(--text);letter-spacing:-.02em;line-height:1">${eur(epAll)}</div>
-                  <div style="font-size:var(--fs-xs);color:var(--muted);margin-top:5px">${epRateAll}% du reste à vivre</div>
-                </div>
-                <div style="background:var(--amber-bg);border:1px solid var(--amber);border-radius:var(--r);padding:12px 14px">
-                  <div style="font-size:var(--fs-xs);font-weight:700;color:var(--amber);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Loisir</div>
-                  <div style="font-size:var(--fs-xl);font-weight:800;color:var(--text);letter-spacing:-.02em;line-height:1">${eur(loiAll)}</div>
-                  <div style="font-size:var(--fs-xs);color:var(--muted);margin-top:5px">${loiRateAll}% du reste à vivre</div>
-                </div>
-              </div>
-              <div style="height:10px;border-radius:5px;background:var(--border);overflow:hidden;margin-bottom:4px;display:flex">
-                <div style="height:100%;width:${epRateAll}%;background:var(--blue);border-radius:5px 0 0 5px;transition:width .5s"></div>
-                <div style="height:100%;width:${loiRateAll}%;background:var(--amber);border-radius:0 5px 5px 0;transition:width .5s"></div>
-              </div>
-              <div style="display:flex;justify-content:space-between;margin-bottom:16px">
-                <span style="font-size:var(--fs-xs);color:var(--blue);font-weight:600">Épargne ${epRateAll}%</span>
-                <span style="font-size:var(--fs-xs);color:var(--amber);font-weight:600">Loisir ${loiRateAll}%</span>
-              </div>
-              <div style="font-size:var(--fs-xs);font-weight:700;color:var(--hint);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px">Par membre</div>
-              <div style="margin-bottom:4px">
-                <div style="display:flex;justify-content:flex-end;gap:0;margin-bottom:2px;padding-right:0">
-                  <span style="font-size:var(--fs-xs);color:var(--blue);font-weight:600;min-width:52px;text-align:right;margin-right:52px">Épargne</span>
-                  <span style="font-size:var(--fs-xs);color:var(--amber);font-weight:600;min-width:52px;text-align:right">Loisir</span>
-                </div>
-                ${memberRows}
-              </div>
-              <div style="display:flex;align-items:center;gap:10px;margin-top:12px;background:${epColHex}18;border:1px solid ${epColHex}55;border-radius:var(--r);padding:10px 14px">
-                <span style="font-size:18px;line-height:1">${epIcon}</span>
-                <div style="flex:1">
-                  <div style="font-size:var(--fs-xs);font-weight:700;color:${epCol}">${epLabel}</div>
-                  <div style="font-size:var(--fs-xs);color:var(--muted);margin-top:2px">Taux d'épargne commun · objectif ≥ 20%</div>
-                </div>
-                <div style="font-size:var(--fs-xl);font-weight:800;color:${epCol};letter-spacing:-.02em">${epRateAll}%</div>
-              </div>
-            </div>`;
-          })()}
-        </div>
-      </div>`;
-    } else {
-      combinedEl.style.display='none';
-    }
-  }
-  requestAnimationFrame(fillAllTracks);
-
-  donutChart=destroyChart(donutChart);
-  waterfallChart=destroyChart(waterfallChart);
-
-  const _dashChartsEl=document.getElementById('dash-charts');
-  if(_dashChartsEl) _dashChartsEl.style.display='';
-
-  // Top bars
-  const showTopAvatars=dashboardMember==='all';
-  const grouped={};
-  (dashboardMember==='all'?entries:entries.filter(e=>e.member===dashboardMember))
-    .filter(e=>['fixe','variable'].includes(e.cat))
-    .forEach(e=>{
-      const _memberPattern=users.length>0?users.map(u=>u.name).join('|'):'Nicolas|Carla';
-      const key=e.name.replace(new RegExp('\\s+('+_memberPattern+')$','i'),'').trim();
-      if(!grouped[key])grouped[key]={name:key,amount:0,members:[],cat:e.cat,byMember:{}};
-      grouped[key].amount+=Math.abs(e.amount);
-      if(!grouped[key].members.includes(e.member))grouped[key].members.push(e.member);
-      grouped[key].byMember[e.member]=(grouped[key].byMember[e.member]||0)+Math.abs(e.amount);
-    });
-  const topEntries2=Object.values(grouped).sort((a,b)=>b.amount-a.amount).slice(0,5);
-  const maxAmt2=topEntries2[0]?.amount||1;
-  const totalTopAmt=topEntries2.reduce((s,e)=>s+e.amount,0)||1;
-
-  // Top donut chart
-  function isSharedEntry(e){return e.members&&e.members.length>1;}
-
-  const topBarsHtml=topEntries2.map(e=>{
-    const isShared=e.members.length>1;
-    const m1=e.members[0], m2=isShared?e.members[1]:null;
-    const col1=getMC(m1), col2=isShared?getMC(m2):null;
-    const pct=Math.round(e.amount/totalTopAmt*100);
-    const barW=Math.round(e.amount/maxAmt2*100);
-    const a1=e.byMember[m1]||0, a2=isShared?(e.byMember[m2]||0):0;
-    const w1=e.amount>0?Math.round(a1/e.amount*barW):0;
-    const w2=isShared&&e.amount>0?Math.round(a2/e.amount*barW):0;
-    const avatars=showTopAvatars
-      ?`<div style="display:flex;flex-shrink:0;overflow:hidden;width:${isShared?'36px':'24px'}">
-          <div style="flex-shrink:0">${avatarHtml(m1,26,9)}</div>
-          ${isShared?`<div style="flex-shrink:0;margin-left:-8px">${avatarHtml(m2,26,9)}</div>`:''}
-        </div>`
-      :`<span style="width:10px;height:10px;border-radius:50%;background:${col1};flex-shrink:0;display:inline-block;box-shadow:0 0 0 2px ${col1}33"></span>`;
-    const barInner=isShared
-      ?`<div style="width:${w1}%;height:100%;background:${col1};transition:width .6s cubic-bezier(.4,0,.2,1)"></div>
-         <div style="width:${w2}%;height:100%;background:${col2};transition:width .6s cubic-bezier(.4,0,.2,1)"></div>`
-      :`<div style="width:${barW}%;height:100%;background:${col1};transition:width .6s cubic-bezier(.4,0,.2,1)"></div>`;
-    const memberBreakdown=isShared?`
-      <div style="display:flex;gap:10px;margin-top:5px">
-        <span style="display:flex;align-items:center;gap:3px;font-size:var(--fs-xs);color:${col1};font-weight:600">
-          <span style="width:6px;height:6px;border-radius:50%;background:${col1};flex-shrink:0"></span>${m1} ${eur(a1)}
-        </span>
-        <span style="display:flex;align-items:center;gap:3px;font-size:var(--fs-xs);color:${col2};font-weight:600">
-          <span style="width:6px;height:6px;border-radius:50%;background:${col2};flex-shrink:0"></span>${m2} ${eur(a2)}
-        </span>
-      </div>`:'';
-    const rankStr=`#${topEntries2.indexOf(e)+1} sur ${topEntries2.length} dépenses`;
-    const catLabel=e.cat==='fixe'?'Fixe':e.cat==='variable'?'Variable':e.cat;
-    const tooltipLines=isShared
-      ?`${catLabel} · Partagée<br>${m1} : ${eur(a1)} (${Math.round(a1/e.amount*100)}%) · ${m2} : ${eur(a2)} (${Math.round(a2/e.amount*100)}%)<br>${rankStr} · ${pct}% du total dépenses`
-      :`${catLabel} · ${m1}<br>${eur(e.amount)}/mois · ${rankStr}<br>${pct}% du total dépenses`;
-    return `<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:10px;background:var(--surface2);border:1px solid var(--border);transition:background .15s,box-shadow .15s;position:relative"
-      onmouseenter="this.style.background='var(--hover)';this.style.boxShadow='0 2px 12px rgba(0,0,0,.08)';this.querySelector('.bar-tip').style.opacity='1';this.querySelector('.bar-tip').style.transform='translateX(-50%) translateY(0)'"
-      onmouseleave="this.style.background='var(--surface2)';this.style.boxShadow='none';this.querySelector('.bar-tip').style.opacity='0';this.querySelector('.bar-tip').style.transform='translateX(-50%) translateY(-4px)'">
-      <!-- Tooltip -->
-      <div class="bar-tip" style="position:absolute;top:calc(100% + 6px);left:50%;transform:translateX(-50%) translateY(-4px);
-        background:var(--surface);border:1px solid var(--border);border-radius:10px;
-        padding:9px 13px;white-space:normal;pointer-events:none;
-        opacity:0;transition:opacity .15s,transform .15s;z-index:50;
-        box-shadow:0 8px 24px rgba(0,0,0,.15);min-width:160px;max-width:min(220px,70vw)">
-        <div style="font-size:var(--fs-sm);font-weight:700;color:var(--text);margin-bottom:4px">${e.name}</div>
-        <div style="font-size:var(--fs-sm);color:var(--muted);line-height:1.7">${tooltipLines}</div>
-      </div>
-      ${avatars}
-      <div style="flex:1;min-width:0">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-          <span style="font-size:var(--fs-sm);font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px">${e.name}</span>
-          <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
-            <span style="font-size:var(--fs-sm);font-weight:600;color:var(--muted)">${eur(e.amount)}</span>
-            <span style="font-size:var(--fs-xs);font-weight:700;color:${col1};background:${col1}18;padding:1px 6px;border-radius:20px">${pct}%</span>
-          </div>
-        </div>
-        <div style="height:4px;background:var(--border);border-radius:2px;overflow:hidden;display:flex">${barInner}</div>
-        ${memberBreakdown}
+      <div style="height:5px;background:var(--border);border-radius:3px;overflow:hidden">
+        <div style="width:${Math.min(pct,100)}%;height:100%;background:${col};border-radius:3px;transition:width .4s"></div>
       </div>
     </div>`;
-  }).join('');
+  };
+  const _comp=`<div class="card" style="padding:16px 18px">
+    <div style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:2px">Prévu vs Réel</div>
+    ${_crow('Revenus bruts',  revA, revBudget, true)}
+    ${_crow('Impôts',         taxA, taxBudget)}
+    ${_crow('Charges fixes',  fixA, fixBudget)}
+    ${_crow('Dépenses variables',varA,varBudget)}
+    ${_crow('Loisir',         loiA, loiBudget)}
+    ${_crow('Épargne',        epA,  epBudget,  true)}
+  </div>`;
   // ── Top dépenses ──
-  const _topBarsEl=document.getElementById('top-bars');
-  if(_topBarsEl){
-    const _topTitle=`<div style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:10px">Top dépenses</div>`;
-    _topBarsEl.innerHTML=topEntries2.length
-      ?_topTitle+`<div style="display:flex;flex-direction:column;gap:5px">${topBarsHtml}</div>`
-      :`<div style="font-size:var(--fs-sm);color:var(--muted)">Aucune dépense</div>`;
-  }
-
-  // ── Budget flow bar ──
-  const _flowEl=document.getElementById('dash-flow');
-  if(_flowEl){
-    const _fs=smScoped;
-    const _fTotal=Math.max(_fs.rev,1);
-    const _taxP =Math.round(_fs.tax /_fTotal*100);
-    const _fixP =Math.round(_fs.fix /_fTotal*100);
-    const _variP=Math.round(_fs.vari/_fTotal*100);
-    const _epP  =Math.round(epScoped/_fTotal*100);
-    const _loiP =Math.round((_fs.rav-epScoped>0?_fs.rav-epScoped:0)/_fTotal*100);
-    const _surpP=Math.max(0,100-_taxP-_fixP-_variP-_epP-_loiP);
-    const _seg=(w,bg,label,val)=>w>0?`<div style="width:${w}%;background:${bg};height:100%;transition:width .5s" title="${label}: ${Math.round(val).toLocaleString('fr-FR')} €"></div>`:'';
-    const _legend=(col,label,val)=>`<span style="display:flex;align-items:center;gap:4px;font-size:var(--fs-xs);color:var(--muted)"><span style="width:8px;height:8px;border-radius:2px;background:${col};flex-shrink:0"></span>${label}<span style="font-weight:700;color:var(--fg)">${Math.round(val).toLocaleString('fr-FR')} €</span></span>`;
-    _flowEl.innerHTML=`<div class="card" style="padding:16px 18px">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-        <span style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)">Répartition du revenu brut</span>
-        <span style="font-size:var(--fs-sm);font-weight:700;color:var(--green)">${eur(_fs.rev)}</span>
+  const topList=[...mExpenses].sort((a,b)=>Math.abs(b.amount)-Math.abs(a.amount)).slice(0,5);
+  const maxTop=topList[0]?Math.abs(topList[0].amount):1;
+  const _catCol={fixe:'#d93535',variable:'#e05a2b',loisir:'#f59e0b',epargne:'#2979c8'};
+  const _topRows=topList.length?topList.map(e=>{
+    const amt=Math.abs(e.amount);
+    const col=_catCol[e.cat]||'#6b7280';
+    return `<div style="padding:7px 0;border-bottom:1px solid var(--border)">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
+        <span style="font-size:var(--fs-sm);font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:150px">${e.name}</span>
+        <span style="font-size:var(--fs-sm);font-weight:700;color:${col};flex-shrink:0">${eur(amt)}</span>
       </div>
-      <div style="height:28px;border-radius:8px;overflow:hidden;display:flex;width:100%">
-        ${_seg(_taxP,'#c49a00','Impôts',_fs.tax)}
-        ${_seg(_fixP,'#d93535','Charges fixes',_fs.fix)}
-        ${_seg(_variP,'#e05a2b','Variables',_fs.vari)}
-        ${_seg(_epP,'#2979c8','Épargne',epScoped)}
-        ${_seg(_loiP,'#f59e0b','Loisir',_fs.rav-epScoped)}
-        ${_seg(_surpP,'#0d9e6e','RAV surplus',_surpP*_fTotal/100)}
-      </div>
-      <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:8px">
-        ${_legend('#c49a00','Impôts',_fs.tax)}
-        ${_legend('#d93535','Fixes',_fs.fix)}
-        ${_legend('#e05a2b','Variables',_fs.vari)}
-        ${_legend('#2979c8','Épargne',epScoped)}
-        ${_legend('#f59e0b','Loisir',Math.max(0,_fs.rav-epScoped))}
-        ${_surpP>0?_legend('#0d9e6e','Surplus',_surpP*_fTotal/100):''}
+      <div style="height:4px;background:var(--border);border-radius:2px;overflow:hidden">
+        <div style="width:${Math.round(amt/maxTop*100)}%;height:100%;background:${col};border-radius:2px;transition:width .4s"></div>
       </div>
     </div>`;
-  }
+  }).join(''):`<div style="font-size:var(--fs-sm);color:var(--hint);padding:12px 0">Aucune dépense saisie ce mois</div>`;
+  const _top=`<div class="card" style="padding:16px 18px">
+    <div style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:2px">Top dépenses</div>
+    ${_topRows}
+  </div>`;
+  // ── Projection ──
+  const _mEpProj=epA>0?epA:epBudget;
+  const _existSav=savings.filter(s=>dashboardMember==='all'||s.member===dashboardMember).reduce((sum,s)=>sum+(s.amount||0),0);
+  const _proj=`<div class="card" style="padding:16px 18px">
+    <div style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:4px">Projection épargne</div>
+    <div style="font-size:var(--fs-xs);color:var(--hint);margin-bottom:8px">Basé sur ${eur(_mEpProj)}/mois · taux 3%/an</div>
+    ${_existSav>0?`<div class="prow"><span class="prow-lbl" style="color:var(--blue)">Épargne cumulée</span><span class="prow-val" style="color:var(--blue);font-weight:700">${eur(_existSav)}</span></div>`:''}
+    ${[1,3,5,10].map(yr=>{let acc=0;for(let y=0;y<yr;y++)acc=(acc+_mEpProj*12)*(1+0.03);return`<div class="prow"><span class="prow-lbl">${yr} an${yr>1?'s':''}</span><span class="prow-val" style="color:var(--green);font-weight:700">${eur(Math.round(acc))}</span></div>`;}).join('')}
+  </div>`;
+  // ── Assemble ──
+  content.innerHTML=_monthNav+
+    `<div id="dash-alert"></div>`+
+    _hero+_kpis+_flow+
+    `<div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--sg);margin-bottom:var(--sg)">${_comp}${_top}</div>`+
+    _proj+
+    `<div id="dash-charts" style="display:none"><div id="donut-chart-wrap" style="display:none"><canvas id="donut-chart"></canvas></div><div id="donut-legend" style="display:none"></div></div>`;
+  renderMemberTabsFor('dash-mtabs',dashboardMember,'setDashboardMember');
+  setTimeout(updateMtabColors,0);
+  checkInAppAlerts();
+}
 
-  // ── Projection rapide ──
-  const _projEl=document.getElementById('dash-projection');
-  if(_projEl){
-    const _mEp=epScoped>0?epScoped:0;
-    const _rate=0.03; // 3% rendement annuel hypothétique
-    const _rows=[1,3,5,10].map(yr=>{
-      let acc=0;
-      for(let y=0;y<yr;y++) acc=(acc+_mEp*12)*(1+_rate);
-      const col=acc>0?'var(--green)':'var(--muted)';
-      return `<div class="prow"><span class="prow-lbl">${yr} an${yr>1?'s':''}</span><span class="prow-val" style="color:${col};font-weight:700">${eur(Math.round(acc))}</span></div>`;
-    }).join('');
-    const _existingSavings=savings.filter(s=>dashboardMember==='all'||s.member===dashboardMember).reduce((sum,s)=>sum+(s.amount||0),0);
-    _projEl.innerHTML=`
-      <div style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:10px">Projection épargne</div>
-      <div style="font-size:var(--fs-xs);color:var(--hint);margin-bottom:10px">Basé sur ${eur(_mEp)}/mois · taux 3%/an hypothétique</div>
-      ${_existingSavings>0?`<div class="prow"><span class="prow-lbl" style="color:var(--blue)">Épargne actuelle</span><span class="prow-val" style="color:var(--blue);font-weight:700">${eur(_existingSavings)}</span></div>`:''}
-      ${_rows}`;
-  }
+function dashNavPrev(){
+  dashMonth--;if(dashMonth<1){dashMonth=12;dashYear--;}
+  renderDashboard();
+}
+function dashNavNext(){
+  const now=new Date();
+  if(dashYear>now.getFullYear()||(dashYear===now.getFullYear()&&dashMonth>=now.getMonth()+1))return;
+  dashMonth++;if(dashMonth>12){dashMonth=1;dashYear++;}
+  renderDashboard();
 }
 
 // ══════════════════════════════════════════════
