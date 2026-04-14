@@ -904,6 +904,15 @@ window.onerror = function(msg, src, line) {
         <span id="monthly-label" style="font-size:var(--fs-base);font-weight:700;letter-spacing:-.01em;text-align:center;flex:1"></span>
         <button onclick="monthlyNavNext()" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:5px 14px;cursor:pointer;color:var(--fg);font-size:1.1rem;line-height:1;flex-shrink:0">›</button>
       </div>
+      <div id="monthly-search-bar" style="display:flex;gap:6px;margin-bottom:.75rem">
+        <input type="text" id="mly-search-input" class="inp search-inp" placeholder="Rechercher…" style="flex:1;min-width:0">
+        <select id="mly-filter-cat" class="inp" style="flex-shrink:0;width:auto">
+          <option value="">Toutes catégories</option>
+          <option value="revenu">Revenu</option><option value="impot">Impôt</option>
+          <option value="fixe">Fixe</option><option value="variable">Variable</option>
+          <option value="epargne">Épargne</option><option value="loisir">Loisir</option>
+        </select>
+      </div>
       <div id="monthly-solde-hero" style="margin-bottom:.85rem"></div>
       <div class="kpi-grid" id="monthly-kpis" style="margin-bottom:1rem"></div>
       <div id="monthly-sections"></div>
@@ -3097,6 +3106,7 @@ function renderEntries(){
   setTimeout(fillAllTracks, 0);
 }
 ['search-input','filter-cat'].forEach(id=>{const el=document.getElementById(id);el.addEventListener('input',renderEntries);el.addEventListener('change',renderEntries);});
+['mly-search-input','mly-filter-cat'].forEach(id=>{const el=document.getElementById(id);if(el){el.addEventListener('input',()=>{if(_lastMonthlyStats)_renderMonthlySections(_lastMonthlyStats,monthlyExpenses,_lastMonthlySavings,_lastMonthlyEntryStats);});el.addEventListener('change',()=>{if(_lastMonthlyStats)_renderMonthlySections(_lastMonthlyStats,monthlyExpenses,_lastMonthlySavings,_lastMonthlyEntryStats);});}});
 function openAddEntry(){
   editEntryId=null;
   impotMode='montant';
@@ -3237,6 +3247,7 @@ document.getElementById('modal-entry-save').onclick=async ()=>{
 let monthlyYear     = new Date().getFullYear();
 let monthlyMonth    = new Date().getMonth() + 1; // 1-12
 let monthlyExpenses = [];
+let _lastMonthlyStats = null, _lastMonthlySavings = [], _lastMonthlyEntryStats = null;
 let monthlySelected = new Set();
 let monthlySelectedSuppress = new Map(); // entryId → entry (lignes auto à supprimer ce mois)
 let editMonthlyId      = null;
@@ -3285,6 +3296,7 @@ async function renderMonthly() {
       API.entries.getStats({ member }),
     ]);
     monthlyExpenses = expenses;
+    _lastMonthlyStats = stats; _lastMonthlySavings = savingsData; _lastMonthlyEntryStats = entryStats;
     // Synchronise le tableau global savings pour que openEditSaving/deleteSaving fonctionnent depuis suivi mensuel
     savingsData.forEach(s => {
       const idx = savings.findIndex(x => x.id === s.id);
@@ -3377,6 +3389,13 @@ function _renderMonthlySections(stats, expenses, savingsData = [], entryStats = 
     (entriesMember === 'Commun' || e.member === entriesMember)
   );
 
+  // Recherche / filtre catégorie
+  const _mlySearch = (document.getElementById('mly-search-input')?.value || '').toLowerCase().trim();
+  const _mlyCat    = document.getElementById('mly-filter-cat')?.value || '';
+  const _filterRow = r => (!_mlySearch || (r.name||'').toLowerCase().includes(_mlySearch)) && (!_mlyCat || r.cat === _mlyCat);
+  const filteredAutoEntries  = _mlySearch || _mlyCat ? autoEntries.filter(_filterRow)    : autoEntries;
+  const filteredManualExpenses = _mlySearch || _mlyCat ? manualExpenses.filter(_filterRow) : manualExpenses;
+
   const GROUPS = [
     { key:'revenus', label:'Revenus & Impôts', cats:['revenu','impot'], color:'#0d9e6e', totColor:'var(--green)', auto:true },
     { key:'fixe',    label:'Charges fixes',    cats:['fixe'],           color:'#d93535', totColor:'var(--red)',   auto:true },
@@ -3395,12 +3414,12 @@ function _renderMonthlySections(stats, expenses, savingsData = [], entryStats = 
     }
 
     if (g.auto) {
-      const rows = autoEntries.filter(e => g.cats.includes(e.cat));
+      const rows = filteredAutoEntries.filter(e => g.cats.includes(e.cat));
       // Dépenses exceptionnelles saisies manuellement pour ce groupe (sans entry_id)
-      const extras = manualExpenses.filter(e => g.cats.includes(e.cat));
+      const extras = filteredManualExpenses.filter(e => g.cats.includes(e.cat));
       return _monthlyAutoGroup(rows, overrides, extras, g, isMobile);
     } else {
-      const rows = manualExpenses.filter(e => g.cats.includes(e.cat));
+      const rows = filteredManualExpenses.filter(e => g.cats.includes(e.cat));
       const budgetTotal = g.cats.reduce((s, c) => s + (stats[c]?.budget || 0), 0);
       return _monthlyManualGroup(rows, g, budgetTotal, isMobile, g.key === 'variable' ? revNet : 0);
     }
