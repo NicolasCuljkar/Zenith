@@ -3391,7 +3391,9 @@ function _renderMonthlySections(stats, expenses, savingsData = [], entryStats = 
           <div style="font-size:9px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--red);margin-bottom:6px">Dépenses</div>
           <div class="prow"><span class="prow-lbl">Fixes</span><span class="prow-val" style="color:var(--red)">−${eur(fixe.actual)}</span></div>
           <div class="prow"><span class="prow-lbl">Variables</span><span class="prow-val" style="color:var(--red)">−${eur(vari.actual)}</span></div>
-          <div class="prow"><span class="prow-lbl" style="font-weight:700">Total</span><span class="prow-val" style="color:var(--red);font-weight:700">−${eur(fixe.actual + vari.actual)}</span></div>
+          <div class="prow"><span class="prow-lbl">Loisir</span><span class="prow-val" style="color:var(--amber)">−${eur(loi.actual)}</span></div>
+          <div class="prow"><span class="prow-lbl">Épargne</span><span class="prow-val" style="color:var(--blue)">−${eur(ep.actual)}</span></div>
+          <div class="prow"><span class="prow-lbl" style="font-weight:700">Total</span><span class="prow-val" style="color:var(--red);font-weight:700">−${eur(fixe.actual + vari.actual + loi.actual + ep.actual)}</span></div>
         </div>
       </div>
     </div>`;
@@ -3416,7 +3418,9 @@ function _renderMonthlySections(stats, expenses, savingsData = [], entryStats = 
           <div style="font-size:9px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--red);margin-bottom:6px">Dépenses</div>
           <div class="prow"><span class="prow-lbl">Fixes</span><span class="prow-val" style="color:var(--red)">−${eur(fixe.actual)}</span></div>
           <div class="prow"><span class="prow-lbl">Variables</span><span class="prow-val" style="color:var(--red)">−${eur(vari.actual)}</span></div>
-          <div class="prow"><span class="prow-lbl" style="font-weight:700">Total</span><span class="prow-val" style="color:var(--red);font-weight:700">−${eur(fixe.actual + vari.actual)}</span></div>
+          <div class="prow"><span class="prow-lbl">Loisir</span><span class="prow-val" style="color:var(--amber)">−${eur(loi.actual)}</span></div>
+          <div class="prow"><span class="prow-lbl">Épargne</span><span class="prow-val" style="color:var(--blue)">−${eur(ep.actual)}</span></div>
+          <div class="prow"><span class="prow-lbl" style="font-weight:700">Total</span><span class="prow-val" style="color:var(--red);font-weight:700">−${eur(fixe.actual + vari.actual + loi.actual + ep.actual)}</span></div>
         </div>
       </div>
     </div>`;
