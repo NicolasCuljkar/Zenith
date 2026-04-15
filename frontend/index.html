@@ -3481,7 +3481,7 @@ function _renderMonthlySections(stats, expenses, savingsData = [], entryStats = 
     } else {
       const rows = filteredManualExpenses.filter(e => g.cats.includes(e.cat));
       const budgetTotal = g.cats.reduce((s, c) => s + (stats[c]?.budget || 0), 0);
-      return _monthlyManualGroup(rows, g, budgetTotal, isMobile, g.key === 'variable' ? revNet : 0);
+      return _monthlyManualGroup(rows, g, budgetTotal, isMobile, revNet);
     }
   });
   document.getElementById('monthly-sections').innerHTML = groupHtmls.join('');
@@ -3686,7 +3686,9 @@ function _monthlyManualGroup(rows, g, budgetTotal, isMobile, revNet = 0) {
   const addBtn = MLY_ADD_BTN(`openAddMonthlyExpense('${g.cats[0]}',true)`);
   const subInfo = pct !== null
     ? `<span style="font-size:var(--fs-xs);color:${pctCol};font-weight:700">${eur(actualTotal)}</span><span style="font-size:var(--fs-xs);color:var(--muted)">/ ${eur(refTotal)}</span>`
-    : `<span style="font-size:var(--fs-xs);color:var(--muted)">Aucune donnée</span>`;
+    : actualTotal > 0
+      ? `<span style="font-size:var(--fs-xs);color:var(--fg);font-weight:700">${eur(actualTotal)}</span>`
+      : ``;
 
   const collapsed2 = !!monthlySectionCollapsed[g.key];
   const chevronStyle2 = collapsed2 ? 'transform:rotate(-90deg);' : '';
