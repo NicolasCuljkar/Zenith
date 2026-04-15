@@ -3336,6 +3336,11 @@ function _renderMonthlySections(stats, expenses, savingsData = [], entryStats = 
   const mlyOninputPct = !isMe ? '' : `oninput="monthlyEpPct['${mlyRavKey}']=+this.value;document.getElementById('mly-ep-pctv-${mlyRavKey}').textContent=this.value+'%';updateMlyEpCalc('${mlyRavKey}',${mlyMaxEur});saveData();fillAllTracks();"`;
   const mlyOninputEur = !isMe ? '' : `oninput="const p=+this.max>0?Math.round(+this.value/+this.max*100):0;monthlyEpPct['${mlyRavKey}']=p;document.getElementById('mly-ep-pct-${mlyRavKey}').value=p;document.getElementById('mly-ep-pctv-${mlyRavKey}').textContent=parseInt(this.value).toLocaleString('fr-FR')+' €';updateMlyEpCalc('${mlyRavKey}',${mlyMaxEur});saveData();fillAllTracks();"`;
 
+  // Épargne du mois = delta (ajout ce mois), pas amount (cumul)
+  const epMonthDelta = savingsData
+    .filter(s => s.year === monthlyYear && s.month === frMonth && s.delta != null)
+    .reduce((sum, s) => sum + (s.delta || 0), 0);
+
   let heroHtml;
   if (entriesMember === 'Commun' && mlyMemberStats) {
     // ── KPI Foyer (style identique Prévisionnel) ──
@@ -3392,8 +3397,8 @@ function _renderMonthlySections(stats, expenses, savingsData = [], entryStats = 
           <div class="prow"><span class="prow-lbl">Fixes</span><span class="prow-val" style="color:var(--red)">−${eur(fixe.actual)}</span></div>
           <div class="prow"><span class="prow-lbl">Variables</span><span class="prow-val" style="color:var(--red)">−${eur(vari.actual)}</span></div>
           <div class="prow"><span class="prow-lbl">Loisir</span><span class="prow-val" style="color:var(--amber)">−${eur(loi.actual)}</span></div>
-          <div class="prow"><span class="prow-lbl">Épargne</span><span class="prow-val" style="color:var(--blue)">−${eur(ep.actual)}</span></div>
-          <div class="prow"><span class="prow-lbl" style="font-weight:700">Total</span><span class="prow-val" style="color:var(--red);font-weight:700">−${eur(fixe.actual + vari.actual + loi.actual + ep.actual)}</span></div>
+          <div class="prow"><span class="prow-lbl">Épargne</span><span class="prow-val" style="color:var(--blue)">−${eur(epMonthDelta)}</span></div>
+          <div class="prow"><span class="prow-lbl" style="font-weight:700">Total</span><span class="prow-val" style="color:var(--red);font-weight:700">−${eur(fixe.actual + vari.actual + loi.actual + epMonthDelta)}</span></div>
         </div>
       </div>
     </div>`;
@@ -3419,8 +3424,8 @@ function _renderMonthlySections(stats, expenses, savingsData = [], entryStats = 
           <div class="prow"><span class="prow-lbl">Fixes</span><span class="prow-val" style="color:var(--red)">−${eur(fixe.actual)}</span></div>
           <div class="prow"><span class="prow-lbl">Variables</span><span class="prow-val" style="color:var(--red)">−${eur(vari.actual)}</span></div>
           <div class="prow"><span class="prow-lbl">Loisir</span><span class="prow-val" style="color:var(--amber)">−${eur(loi.actual)}</span></div>
-          <div class="prow"><span class="prow-lbl">Épargne</span><span class="prow-val" style="color:var(--blue)">−${eur(ep.actual)}</span></div>
-          <div class="prow"><span class="prow-lbl" style="font-weight:700">Total</span><span class="prow-val" style="color:var(--red);font-weight:700">−${eur(fixe.actual + vari.actual + loi.actual + ep.actual)}</span></div>
+          <div class="prow"><span class="prow-lbl">Épargne</span><span class="prow-val" style="color:var(--blue)">−${eur(epMonthDelta)}</span></div>
+          <div class="prow"><span class="prow-lbl" style="font-weight:700">Total</span><span class="prow-val" style="color:var(--red);font-weight:700">−${eur(fixe.actual + vari.actual + loi.actual + epMonthDelta)}</span></div>
         </div>
       </div>
     </div>`;
