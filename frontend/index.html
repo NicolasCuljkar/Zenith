@@ -3620,7 +3620,11 @@ function _renderMonthlySections(stats, expenses, savingsData = [], entryStats = 
       return _monthlyAutoGroup(rows, overrides, extras, g, isMobile);
     } else {
       const rows = filteredManualExpenses.filter(e => g.cats.includes(e.cat)).sort((a, b) => Math.abs(b.amount) - Math.abs(a.amount));
-      const budgetTotal = g.cats.reduce((s, c) => s + (stats[c]?.budget || 0), 0);
+      let budgetTotal = g.cats.reduce((s, c) => s + (stats[c]?.budget || 0), 0);
+      if (budgetTotal === 0 && g.key === 'loisir' && entryStats) {
+        const _loiMember = entriesMember === 'Commun' ? myRole() : entriesMember;
+        budgetTotal = Math.round(entryStats.rav * (100 - (savingPct[_loiMember] ?? 60)) / 100);
+      }
       return _monthlyManualGroup(rows, g, budgetTotal, isMobile, revNet);
     }
   });
