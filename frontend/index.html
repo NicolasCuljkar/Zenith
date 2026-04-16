@@ -892,7 +892,7 @@ window.onerror = function(msg, src, line) {
       <div id="monthly-toolbar" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem;gap:8px">
         <button onclick="monthlyNavPrev()" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:5px 14px;cursor:pointer;color:var(--fg);font-size:1.1rem;line-height:1;flex-shrink:0">‹</button>
         <span id="monthly-label" style="font-size:var(--fs-base);font-weight:700;letter-spacing:-.01em;text-align:center;flex:1"></span>
-        <button onclick="monthlyNavNext()" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:5px 14px;cursor:pointer;color:var(--fg);font-size:1.1rem;line-height:1;flex-shrink:0">›</button>
+        <button id="monthly-nav-next" onclick="monthlyNavNext()" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:5px 14px;cursor:pointer;color:var(--fg);font-size:1.1rem;line-height:1;flex-shrink:0">›</button>
       </div>
       <div id="monthly-solde-hero" style="margin-bottom:.75rem"></div>
       <div class="kpi-grid" id="monthly-kpis" style="margin-bottom:0"></div>
@@ -3251,17 +3251,29 @@ function switchEntriesTab(tab) {
   document.querySelectorAll('[data-etab]').forEach(b => b.classList.toggle('active', b.dataset.etab === tab));
   document.getElementById('entries-previsionnel').style.display = tab === 'previsionnel' ? '' : 'none';
   document.getElementById('entries-mensuel').style.display      = tab === 'mensuel'      ? '' : 'none';
-  if (tab === 'mensuel') { document.getElementById('fab-entry').style.display = 'none'; renderMonthly(); }
+  if (tab === 'mensuel') { document.getElementById('fab-entry').style.display = 'none'; _updateMonthlyNavNext(); renderMonthly(); }
 }
 function monthlyNavPrev() {
   monthlyMonth--;
   if (monthlyMonth < 1) { monthlyMonth = 12; monthlyYear--; }
+  _updateMonthlyNavNext();
   renderMonthly();
 }
 function monthlyNavNext() {
+  const now = new Date();
+  if (monthlyYear > now.getFullYear() || (monthlyYear === now.getFullYear() && monthlyMonth >= now.getMonth() + 1)) return;
   monthlyMonth++;
   if (monthlyMonth > 12) { monthlyMonth = 1; monthlyYear++; }
   renderMonthly();
+}
+function _updateMonthlyNavNext() {
+  const now = new Date();
+  const btn = document.getElementById('monthly-nav-next');
+  if (!btn) return;
+  const isAtCurrent = monthlyYear > now.getFullYear() || (monthlyYear === now.getFullYear() && monthlyMonth >= now.getMonth() + 1);
+  btn.disabled = isAtCurrent;
+  btn.style.opacity = isAtCurrent ? '0.3' : '';
+  btn.style.cursor  = isAtCurrent ? 'not-allowed' : 'pointer';
 }
 
 async function renderMonthly() {
@@ -3684,11 +3696,11 @@ function _monthlyManualGroup(rows, g, budgetTotal, isMobile, revNet = 0) {
   const pctCol = pct === null ? 'var(--muted)' : pct > 100 ? 'var(--red)' : pct > 80 ? 'var(--amber)' : 'var(--green)';
   const barW   = pct !== null ? Math.min(pct, 100) : 0;
   const addBtn = MLY_ADD_BTN(`openAddMonthlyExpense('${g.cats[0]}',true)`);
-  const subInfo = pct !== null
-    ? `<span style="font-size:var(--fs-xs);color:${pctCol};font-weight:700">${eur(actualTotal)}</span><span style="font-size:var(--fs-xs);color:var(--muted)">/ ${eur(refTotal)}</span>`
-    : actualTotal > 0
-      ? `<span style="font-size:var(--fs-xs);color:var(--fg);font-weight:700">${eur(actualTotal)}</span>`
-      : ``;
+  const subInfo = rows.length === 0
+    ? `<span style="font-size:var(--fs-xs);color:var(--muted)">Aucune donnée</span>`
+    : budgetTotal > 0
+      ? `<span style="font-size:var(--fs-xs);color:${pctCol};font-weight:700">${eur(actualTotal)}</span><span style="font-size:var(--fs-xs);color:var(--muted)">/ ${eur(budgetTotal)}</span>`
+      : `<span style="font-size:var(--fs-xs);font-weight:700;color:var(--fg)">${eur(actualTotal)}</span>`;
 
   const collapsed2 = !!monthlySectionCollapsed[g.key];
   const chevronStyle2 = collapsed2 ? 'transform:rotate(-90deg);' : '';
@@ -3778,9 +3790,11 @@ function _monthlyEpargneGroup(savingRecord, g, budgetTotal, actualTotal, revNet,
   const pct    = budgetTotal > 0 && epActual != null ? Math.round(epActual / budgetTotal * 100) : null;
   const pctCol = pct === null ? 'var(--muted)' : pct >= 100 ? 'var(--green)' : pct >= 70 ? 'var(--amber)' : 'var(--red)';
   const barW   = pct !== null ? Math.min(Math.max(pct, 0), 100) : 0;
-  const subInfo = pct !== null
-    ? `<span style="font-size:var(--fs-xs);color:${pctCol};font-weight:700">${eur(epActual)}</span><span style="font-size:var(--fs-xs);color:var(--muted)">/ ${eur(budgetTotal)}</span>`
-    : `<span style="font-size:var(--fs-xs);color:var(--muted)">Aucun budget prévisionnel</span>`;
+  const subInfo = !savingRecord
+    ? `<span style="font-size:var(--fs-xs);color:var(--muted)">Aucune donnée</span>`
+    : budgetTotal > 0
+      ? `<span style="font-size:var(--fs-xs);color:${pctCol};font-weight:700">${eur(epActual)}</span><span style="font-size:var(--fs-xs);color:var(--muted)">/ ${eur(budgetTotal)}</span>`
+      : `<span style="font-size:var(--fs-xs);font-weight:700;color:var(--fg)">${eur(epActual)}</span>`;
   const collapsed3 = !!monthlySectionCollapsed[g.key];
   const chevronStyle3 = collapsed3 ? 'transform:rotate(-90deg);' : '';
   const hdr = `<div style="display:flex;justify-content:space-between;align-items:center;padding:0 2px 6px;margin-bottom:5px;border-bottom:2px solid ${g.color}30">
