@@ -2695,10 +2695,7 @@ return `<div class="ova-row" style="padding:8px 0;border-bottom:1px solid var(--
   const _trendId='dash-trend-'+Date.now();
   const _MN3=['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];
   // Filtre : dépenses réelles hors revenus/impôts, à partir du mois min
-  const _trendExp=(allMlyExp||[]).filter(e=>
-    !['revenu','impot'].includes(e.cat)&&
-    (e.year>MONTHLY_MIN_YEAR||(e.year===MONTHLY_MIN_YEAR&&e.month>=MONTHLY_MIN_MONTH))
-  );
+  const _trendExp=(allMlyExp||[]).filter(e=>!['revenu','impot'].includes(e.cat));
   // Mois disponibles triés
   const _trendMonthSet=new Set(_trendExp.map(e=>`${e.year}-${String(e.month).padStart(2,'0')}`));
   const _trendMonths=[..._trendMonthSet].sort();
