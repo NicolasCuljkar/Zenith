@@ -2624,7 +2624,9 @@ async function renderDashboard(){
     if(!_postesMap.has(k)) _postesMap.set(k,{name:k,cat:e.cat,total:0,count:0});
     const p=_postesMap.get(k); p.total+=Math.abs(e.amount); p.count++;
   }
-  const _postesRows=[..._postesMap.values()].sort((a,b)=>b.total-a.total);
+  const _postesRows=[..._postesMap.values()];
+  if(epMonthDelta>0) _postesRows.push({name:'Épargne',cat:'epargne',total:epMonthDelta,count:1});
+  _postesRows.sort((a,b)=>b.total-a.total);
   const _postesTotal=_postesRows.reduce((s,r)=>s+r.total,0);
   const _postesMax=_postesRows[0]?.total||1;
   const _catLbl={fixe:'Fixe',variable:'Variable',loisir:'Loisir',epargne:'Épargne'};
