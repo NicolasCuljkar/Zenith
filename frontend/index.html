@@ -2536,7 +2536,7 @@ async function renderDashboard(){
   const _monthNav=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--sg)">
     <div class="member-tabs" id="dash-mtabs" style="margin-bottom:0"></div>
     <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
-      <button onclick="dashNavPrev()" style="width:30px;height:30px;border-radius:50%;border:1px solid var(--border);background:var(--surface);cursor:pointer;font-size:16px;color:var(--muted);display:flex;align-items:center;justify-content:center">‹</button>
+      <button onclick="dashNavPrev()" ${dashYear===MONTHLY_MIN_YEAR&&dashMonth<=MONTHLY_MIN_MONTH?'disabled':''} style="width:30px;height:30px;border-radius:50%;border:1px solid var(--border);background:var(--surface);cursor:${dashYear===MONTHLY_MIN_YEAR&&dashMonth<=MONTHLY_MIN_MONTH?'not-allowed':'pointer'};font-size:16px;color:var(--muted);display:flex;align-items:center;justify-content:center;${dashYear===MONTHLY_MIN_YEAR&&dashMonth<=MONTHLY_MIN_MONTH?'opacity:.3':''}">‹</button>
       <span style="font-size:var(--fs-sm);font-weight:700;color:var(--text);min-width:120px;text-align:center">${frMonth} ${dashYear}</span>
       <button onclick="dashNavNext()" ${isCurrentMonth?'disabled':''} style="width:30px;height:30px;border-radius:50%;border:1px solid var(--border);background:var(--surface);cursor:pointer;font-size:16px;color:var(--muted);display:flex;align-items:center;justify-content:center;${isCurrentMonth?'opacity:.3':''}">›</button>
     </div>
@@ -2723,6 +2723,7 @@ async function renderDashboard(){
 }
 
 function dashNavPrev(){
+  if(dashYear===MONTHLY_MIN_YEAR&&dashMonth<=MONTHLY_MIN_MONTH)return;
   dashMonth--;if(dashMonth<1){dashMonth=12;dashYear--;}
   renderDashboard();
 }
