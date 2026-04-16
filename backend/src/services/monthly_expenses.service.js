@@ -51,7 +51,7 @@ function getSavingsActual(filters) {
   }
   cond.push('year = ?', 'month = ?');
   params.push(Number(filters.year), frMonth);
-  const row = db.prepare(`SELECT COALESCE(SUM(amount), 0) AS total FROM savings WHERE ${cond.join(' AND ')}`).get(...params);
+  const row = db.prepare(`SELECT COALESCE(SUM(delta), 0) AS total FROM savings WHERE ${cond.join(' AND ')} AND delta IS NOT NULL`).get(...params);
   return row?.total || 0;
 }
 

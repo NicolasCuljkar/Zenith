@@ -948,6 +948,8 @@ window.onerror = function(msg, src, line) {
     <div class="card" id="member-bars-card" style="display:none"><div class="card-head">Comparaison membres</div><div id="member-bars-wrap" style="position:relative;height:210px"><canvas id="member-bars-chart"></canvas></div></div>
     <div style="display:none"><div id="analysis-donut-wrap" style="position:relative;height:0"><canvas id="analysis-donut-chart"></canvas></div><div id="analysis-donut-legend"></div></div>
     <div class="card" id="monthly-compare-card" style="display:none"><div class="card-head">Comparaison mensuelle</div><div id="monthly-compare-content"><div style="padding:20px;text-align:center;color:var(--muted);font-size:var(--fs-sm)">Chargement…</div></div></div>
+    <div class="card" id="analysis-hist-card" style="display:none"><div class="card-head">Évolution mensuelle des dépenses</div><div id="analysis-hist-wrap" style="position:relative;height:200px"><canvas id="analysis-hist-chart"></canvas></div></div>
+    <div class="card" id="analysis-trend-card" style="display:none"><div class="card-head" id="analysis-trend-head">Évolution des dépenses clés</div><div id="analysis-trend-legend" style="display:flex;gap:10px;flex-wrap:wrap;margin:4px 0 12px"></div><div id="analysis-trend-wrap" style="position:relative;height:220px"><canvas id="analysis-trend-chart"></canvas></div></div>
     </div><!-- /#analysis-content -->
   </div>
 
@@ -2617,24 +2619,6 @@ async function renderDashboard(){
     _budgetKpiCard('Épargne',  epMonthDelta,epBudget,  '#2979c8',true),
   );
 
-  // ── Graphique évolution mensuelle (style épargne) ──
-  const _MN2=['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];
-  const _histId='dash-hist-'+Date.now();
-  // Points : mois passés (du plus ancien au plus récent) + mois courant
-  const _histPoints=[...[...pastH].reverse(), {year:dashYear,month:dashMonth,total:totalDep}];
-  const _histLabels=_histPoints.map(h=>_MN2[h.month-1]+' '+String(h.year).slice(2));
-  const _histVals=_histPoints.map(h=>h.total);
-  const _diffLabel=avgDep!==null&&totalDep>0
-    ?`<span style="font-size:var(--fs-xs);font-weight:700;padding:2px 8px;border-radius:20px;background:${totalDep<=avgDep?'var(--green-bg)':'var(--red-bg)'};color:${totalDep<=avgDep?'var(--green)':'var(--red)'}">vs moy. ${totalDep<=avgDep?'↓':'+'}${eur(Math.abs(totalDep-avgDep))}</span>`
-    :'';
-  const _hist=_histPoints.length>1?`<div class="card" style="padding:16px 18px;margin-bottom:var(--sg)">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-      <span style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)">Évolution mensuelle</span>
-      ${_diffLabel}
-    </div>
-    <div style="position:relative;height:180px"><canvas id="${_histId}"></canvas></div>
-  </div>`:'';
-
   // ── Où va l'argent ? (sans revenus) ──
   const _catColP={fixe:'#d93535',variable:'#e05a2b',loisir:'#f59e0b',epargne:'#2979c8'};
   const _depExpenses=mExpenses.filter(e=>!['revenu','impot'].includes(e.cat));
@@ -2691,157 +2675,11 @@ return `<div class="ova-row" style="padding:8px 0;border-bottom:1px solid var(--
     ${_ovaRows}
   </div>`;
 
-  // ── Top dépenses par libellé (évolution multi-courbes) ──
-  const _trendId='dash-trend-'+Date.now();
-  const _MN3=['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];
-  // Filtre : dépenses réelles hors revenus/impôts, à partir du mois min
-  const _trendExp=(allMlyExp||[]).filter(e=>!['revenu','impot'].includes(e.cat));
-  // Mois disponibles triés
-  const _trendMonthSet=new Set(_trendExp.map(e=>`${e.year}-${String(e.month).padStart(2,'0')}`));
-  const _trendMonths=[..._trendMonthSet].sort();
-  const _trendLabels=_trendMonths.map(k=>{const[y,m]=k.split('-');return _MN3[Number(m)-1]+' '+String(y).slice(2);});
-  // Groupement par libellé
-  const _trendMap=new Map();
-  for(const e of _trendExp){
-    const k=e.name.trim(); const mk=`${e.year}-${String(e.month).padStart(2,'0')}`;
-    if(!_trendMap.has(k))_trendMap.set(k,{name:k,cat:e.cat,byMonth:new Map(),total:0});
-    const r=_trendMap.get(k);
-    r.byMonth.set(mk,(r.byMonth.get(mk)||0)+Math.abs(e.amount));
-    r.total+=Math.abs(e.amount);
-  }
-  // Top 5 par total, présents sur au moins 2 mois
-  const _trendTop=[..._trendMap.values()]
-    .sort((a,b)=>b.total-a.total)
-    .slice(0,5);
-  const _trendCols=['#d93535','#2979c8','#0d9e6e','#f59e0b','#a855f7'];
-  const _trend=_trendTop.length>=1?`<div class="card" style="padding:16px 18px;margin-bottom:var(--sg)">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
-      <span style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)">Évolution des dépenses clés</span>
-    </div>
-    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px">
-      ${_trendTop.map((r,i)=>`<div style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:3px;border-radius:2px;background:${_trendCols[i]};display:inline-block"></span><span style="font-size:11px;font-weight:600;color:${_trendCols[i]}">${r.name}</span></div>`).join('')}
-    </div>
-    <div style="position:relative;height:200px"><canvas id="${_trendId}"></canvas></div>
-  </div>`:'';
-
   // ── Assemblage ──
   content.innerHTML=_monthNav+
     `<div id="dash-alert"></div>`+
-    _hero+_cats+_hist+_ova+_trend+
+    _hero+_cats+_ova+
     `<div id="dash-charts" style="display:none"></div>`;
-  // ── Init graphique évolution ──
-  if(_histPoints.length>1){
-    const ctx=document.getElementById(_histId);
-    if(ctx){
-      const col='#d93535';
-      const textColor=darkVal('#666','#999');
-      dashBarChart=destroyChart(dashBarChart);
-      dashBarChart=new Chart(ctx,{
-        type:'line',
-        plugins:[ChartDataLabels],
-        data:{
-          labels:_histLabels,
-          datasets:[{
-            data:_histVals,
-            tension:.45,fill:true,
-            borderColor:col,
-            backgroundColor:(c)=>{const{chart:{ctx:c2,chartArea}}=c;if(!chartArea)return col+'22';const g=c2.createLinearGradient(0,chartArea.top,0,chartArea.bottom);g.addColorStop(0,col+'66');g.addColorStop(1,col+'05');return g;},
-            borderWidth:2.5,
-            pointRadius:0,pointHoverRadius:5,
-            pointBackgroundColor:col,pointBorderColor:'#fff',pointBorderWidth:2,
-          }]
-        },
-        options:{
-          responsive:true,maintainAspectRatio:false,
-          interaction:{mode:'index',intersect:false},
-          layout:{padding:{top:8,right:16}},
-          plugins:{
-            legend:{display:false},
-            tooltip:{
-              backgroundColor:darkVal('rgba(255,255,255,1)','rgba(28,28,32,1)'),
-              borderColor:darkVal('rgba(0,0,0,.15)','rgba(255,255,255,.2)'),
-              borderWidth:1,titleColor:textColor,bodyColor:textColor,
-              titleFont:{size:fsPx('--fs-sm'),weight:'700'},bodyFont:{size:fsPx('--fs-xs')},
-              padding:12,cornerRadius:10,
-              callbacks:{label:c=>` Dépenses : ${eur(c.raw)}`}
-            },
-            datalabels:{
-              display:(c)=>c.raw!=null,
-              anchor:'end',align:'top',
-              formatter:(v)=>v!=null?(v/1000).toFixed(1)+'k€':'',
-              color:col,font:{size:fsPx('--fs-xs'),weight:'800'},
-              backgroundColor:darkVal('#fff','#1a1a18'),
-              borderRadius:4,padding:{top:3,bottom:3,left:6,right:6},
-              borderWidth:1,borderColor:col+'44',
-            }
-          },
-          scales:{
-            x:{grid:{display:false},ticks:{color:textColor,font:{size:fsPx('--fs-xs')},maxRotation:0},border:{display:false}},
-            y:{beginAtZero:true,ticks:{callback:v=>(v/1000).toFixed(0)+'k€',font:{size:fsPx('--fs-xs')},color:textColor,maxTicksLimit:4},grid:{color:darkVal('rgba(0,0,0,.06)','rgba(255,255,255,.06)')},border:{display:false}}
-          }
-        }
-      });
-    }
-  }
-  // ── Init graphique évolution dépenses clés ──
-  if(_trendTop.length>=1){
-    const ctx=document.getElementById(_trendId);
-    if(ctx){
-      const textColor=darkVal('#666','#999');
-      const datasets=_trendTop.map((r,i)=>{
-        const col=_trendCols[i];
-        const data=_trendMonths.map(mk=>r.byMonth.get(mk)??null);
-        return{
-          label:r.name, data,
-          type:'line', tension:.45,
-          fill:false,
-          borderColor:col,
-          backgroundColor:col+'33',
-          borderWidth:2.5,
-          pointRadius:_trendMonths.length<=1?5:0, pointHoverRadius:5,
-          pointBackgroundColor:col, pointBorderColor:'#fff', pointBorderWidth:2,
-          spanGaps:true,
-        };
-      });
-      dashDonutChart=destroyChart(dashDonutChart);
-      dashDonutChart=new Chart(ctx,{
-        type:'line',
-        plugins:[ChartDataLabels],
-        data:{labels:_trendLabels, datasets},
-        options:{
-          responsive:true, maintainAspectRatio:false,
-          interaction:{mode:'index', intersect:false},
-          layout:{padding:{top:_trendMonths.length<=1?8:24, right:20}},
-          plugins:{
-            legend:{display:false},
-            tooltip:{
-              backgroundColor:darkVal('rgba(255,255,255,1)','rgba(28,28,32,1)'),
-              borderColor:darkVal('rgba(0,0,0,.15)','rgba(255,255,255,.2)'),
-              borderWidth:1, titleColor:textColor, bodyColor:textColor,
-              titleFont:{size:fsPx('--fs-sm'),weight:'700'}, bodyFont:{size:fsPx('--fs-xs')},
-              padding:12, cornerRadius:10,
-              callbacks:{label:c=>c.raw!=null?` ${c.dataset.label} : ${eur(c.raw)}`:''}
-            },
-            datalabels:{
-              display:(c)=>c.raw!=null&&c.dataIndex===c.dataset.data.filter(v=>v!=null).length-1,
-              anchor:'end', align:'top',
-              formatter:(v)=>v!=null?(v/1000).toFixed(1)+'k€':'',
-              color:(c)=>_trendCols[c.datasetIndex]||textColor,
-              font:{size:fsPx('--fs-xs'),weight:'800'},
-              backgroundColor:darkVal('#fff','#1a1a18'),
-              borderRadius:4, padding:{top:3,bottom:3,left:6,right:6},
-              borderWidth:1,
-              borderColor:(c)=>(_trendCols[c.datasetIndex]||'#999')+'44',
-            }
-          },
-          scales:{
-            x:{grid:{display:false}, ticks:{color:textColor,font:{size:fsPx('--fs-xs')},maxRotation:0}, border:{display:false}},
-            y:{beginAtZero:true, ticks:{callback:v=>eur(v),font:{size:fsPx('--fs-xs')},color:textColor,maxTicksLimit:4}, grid:{color:darkVal('rgba(0,0,0,.06)','rgba(255,255,255,.06)')}, border:{display:false}}
-          }
-        }
-      });
-    }
-  }
   renderMemberTabsFor('dash-mtabs',dashboardMember,'setDashboardMember');
   setTimeout(updateMtabColors,0);
   checkInAppAlerts();
@@ -5004,7 +4842,7 @@ async function renderMonthlyComparison(member) {
 // ══════════════════════════════════════════════
 // ANALYSIS
 // ══════════════════════════════════════════════
-function renderAnalysis(){
+async function renderAnalysis(){
   if(hasNoData(analysisMember)){
     analysisDonut=destroyChart(analysisDonut);gaugeChart=destroyChart(gaugeChart);radarChart=destroyChart(radarChart);memberBarsChart=destroyChart(memberBarsChart);
     document.getElementById('analysis-nodata').innerHTML=noDataBanner();
@@ -5302,6 +5140,94 @@ function renderAnalysis(){
 
   const [m1,m2]=orderedMembers();
   renderMonthlyComparison(analysisMember);
+
+  // ── Graphiques évolution (fetch données réelles) ──
+  const _anaParams = analysisMember!=='all'&&analysisMember!=='Commun' ? {member:analysisMember} : {};
+  let _anaHistory=[], _anaAllExp=[];
+  try {
+    [_anaHistory, _anaAllExp] = await Promise.all([
+      API.monthlyExpenses.getHistory(_anaParams).catch(()=>[]),
+      API.monthlyExpenses.getAll(_anaParams).catch(()=>[]),
+    ]);
+  } catch(e){}
+
+  const _MNA=['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];
+  const _anaTextColor = darkVal('#666','#999');
+
+  // Graphique 1 : Évolution mensuelle
+  dashBarChart = destroyChart(dashBarChart);
+  const _histCard = document.getElementById('analysis-hist-card');
+  const _histPts = [..._anaHistory].sort((a,b)=>a.year-b.year||a.month-b.month);
+  if(_histPts.length >= 1){
+    _histCard.style.display='';
+    const _histCtx = document.getElementById('analysis-hist-chart');
+    if(_histCtx){
+      const _hcol='#d93535';
+      dashBarChart = new Chart(_histCtx,{
+        type:'line', plugins:[ChartDataLabels],
+        data:{
+          labels:_histPts.map(h=>_MNA[h.month-1]+' '+String(h.year).slice(2)),
+          datasets:[{data:_histPts.map(h=>h.total),tension:.45,fill:true,
+            borderColor:_hcol,
+            backgroundColor:(c)=>{const{chart:{ctx:c2,chartArea}}=c;if(!chartArea)return _hcol+'22';const g=c2.createLinearGradient(0,chartArea.top,0,chartArea.bottom);g.addColorStop(0,_hcol+'66');g.addColorStop(1,_hcol+'05');return g;},
+            borderWidth:2.5,pointRadius:_histPts.length<=1?5:0,pointHoverRadius:5,
+            pointBackgroundColor:_hcol,pointBorderColor:'#fff',pointBorderWidth:2,
+          }]
+        },
+        options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+          layout:{padding:{top:8,right:16}},
+          plugins:{legend:{display:false},
+            tooltip:{backgroundColor:darkVal('rgba(255,255,255,1)','rgba(28,28,32,1)'),borderColor:darkVal('rgba(0,0,0,.15)','rgba(255,255,255,.2)'),borderWidth:1,titleColor:_anaTextColor,bodyColor:_anaTextColor,titleFont:{size:fsPx('--fs-sm'),weight:'700'},bodyFont:{size:fsPx('--fs-xs')},padding:12,cornerRadius:10,callbacks:{label:c=>` Dépenses : ${eur(c.raw)}`}},
+            datalabels:{display:c=>c.raw!=null,anchor:'end',align:'top',formatter:v=>v!=null?(v/1000).toFixed(1)+'k€':'',color:_hcol,font:{size:fsPx('--fs-xs'),weight:'800'},backgroundColor:darkVal('#fff','#1a1a18'),borderRadius:4,padding:{top:3,bottom:3,left:6,right:6},borderWidth:1,borderColor:_hcol+'44'}
+          },
+          scales:{x:{grid:{display:false},ticks:{color:_anaTextColor,font:{size:fsPx('--fs-xs')},maxRotation:0},border:{display:false}},y:{beginAtZero:true,ticks:{callback:v=>(v/1000).toFixed(0)+'k€',font:{size:fsPx('--fs-xs')},color:_anaTextColor,maxTicksLimit:4},grid:{color:darkVal('rgba(0,0,0,.06)','rgba(255,255,255,.06)')},border:{display:false}}}
+        }
+      });
+    }
+  } else { _histCard.style.display='none'; }
+
+  // Graphique 2 : Évolution dépenses clés
+  dashDonutChart = destroyChart(dashDonutChart);
+  const _trendCard = document.getElementById('analysis-trend-card');
+  const _trendExpA = (_anaAllExp||[]).filter(e=>!['revenu','impot'].includes(e.cat));
+  const _trendMonthSetA = new Set(_trendExpA.map(e=>`${e.year}-${String(e.month).padStart(2,'0')}`));
+  const _trendMonthsA = [..._trendMonthSetA].sort();
+  const _trendMapA = new Map();
+  for(const e of _trendExpA){
+    const k=e.name.trim(); const mk=`${e.year}-${String(e.month).padStart(2,'0')}`;
+    if(!_trendMapA.has(k))_trendMapA.set(k,{name:k,cat:e.cat,byMonth:new Map(),total:0});
+    const r=_trendMapA.get(k); r.byMonth.set(mk,(r.byMonth.get(mk)||0)+Math.abs(e.amount)); r.total+=Math.abs(e.amount);
+  }
+  const _trendTopA = [..._trendMapA.values()].sort((a,b)=>b.total-a.total).slice(0,5);
+  const _trendColsA = ['#d93535','#2979c8','#0d9e6e','#f59e0b','#a855f7'];
+  if(_trendTopA.length >= 1){
+    _trendCard.style.display='';
+    document.getElementById('analysis-trend-legend').innerHTML = _trendTopA.map((r,i)=>
+      `<div style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:3px;border-radius:2px;background:${_trendColsA[i]};display:inline-block"></span><span style="font-size:11px;font-weight:600;color:${_trendColsA[i]}">${r.name}</span></div>`
+    ).join('');
+    const _trendLabelsA = _trendMonthsA.map(k=>{const[y,m]=k.split('-');return _MNA[Number(m)-1]+' '+String(y).slice(2);});
+    const _trendCtx = document.getElementById('analysis-trend-chart');
+    if(_trendCtx){
+      const _oneMonth = _trendMonthsA.length<=1;
+      dashDonutChart = new Chart(_trendCtx,{
+        type:'line', plugins:[ChartDataLabels],
+        data:{labels:_trendLabelsA, datasets:_trendTopA.map((r,i)=>{
+          const col=_trendColsA[i];
+          return{label:r.name,data:_trendMonthsA.map(mk=>r.byMonth.get(mk)??null),
+            tension:.45,fill:false,borderColor:col,backgroundColor:col+'33',borderWidth:2.5,
+            pointRadius:_oneMonth?5:0,pointHoverRadius:5,pointBackgroundColor:col,pointBorderColor:'#fff',pointBorderWidth:2,spanGaps:true};
+        })},
+        options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+          layout:{padding:{top:_oneMonth?8:24,right:20}},
+          plugins:{legend:{display:false},
+            tooltip:{backgroundColor:darkVal('rgba(255,255,255,1)','rgba(28,28,32,1)'),borderColor:darkVal('rgba(0,0,0,.15)','rgba(255,255,255,.2)'),borderWidth:1,titleColor:_anaTextColor,bodyColor:_anaTextColor,titleFont:{size:fsPx('--fs-sm'),weight:'700'},bodyFont:{size:fsPx('--fs-xs')},padding:12,cornerRadius:10,callbacks:{label:c=>c.raw!=null?` ${c.dataset.label} : ${eur(c.raw)}`:''}},
+            datalabels:{display:c=>c.raw!=null&&c.dataIndex===c.dataset.data.filter(v=>v!=null).length-1,anchor:'end',align:'top',formatter:v=>v!=null?(v/1000).toFixed(1)+'k€':'',color:(c)=>_trendColsA[c.datasetIndex],font:{size:fsPx('--fs-xs'),weight:'800'},backgroundColor:darkVal('#fff','#1a1a18'),borderRadius:4,padding:{top:3,bottom:3,left:6,right:6},borderWidth:1,borderColor:(c)=>(_trendColsA[c.datasetIndex]||'#999')+'44'}
+          },
+          scales:{x:{grid:{display:false},ticks:{color:_anaTextColor,font:{size:fsPx('--fs-xs')},maxRotation:0},border:{display:false}},y:{beginAtZero:true,ticks:{callback:v=>eur(v),font:{size:fsPx('--fs-xs')},color:_anaTextColor,maxTicksLimit:4},grid:{color:darkVal('rgba(0,0,0,.06)','rgba(255,255,255,.06)')},border:{display:false}}}
+        }
+      });
+    }
+  } else { _trendCard.style.display='none'; }
 }
 
 // ══════════════════════════════════════════════
