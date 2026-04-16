@@ -906,6 +906,7 @@ window.onerror = function(msg, src, line) {
         </select>
       </div>
       <div id="monthly-sections"></div>
+      <div id="monthly-postes"></div>
     </div>
   </div>
 
@@ -3497,6 +3498,68 @@ function _renderMonthlySections(stats, expenses, savingsData = [], entryStats = 
     }
   });
   document.getElementById('monthly-sections').innerHTML = groupHtmls.join('');
+  _renderMonthlyPostes(manualExpenses);
+}
+
+function _renderMonthlyPostes(manualExpenses) {
+  const el = document.getElementById('monthly-postes');
+  if (!el) return;
+
+  // Regroupe toutes les dépenses manuelles (variable + loisir) par libellé exact
+  const depenses = manualExpenses.filter(e => ['variable','loisir'].includes(e.cat));
+  if (!depenses.length) { el.innerHTML = ''; return; }
+
+  const map = new Map();
+  for (const e of depenses) {
+    const key = e.name.trim();
+    if (!map.has(key)) map.set(key, { name: key, cat: e.cat, total: 0, count: 0 });
+    const g = map.get(key);
+    g.total += Math.abs(e.amount);
+    g.count++;
+    // Si même libellé dans plusieurs cats, prend la plus fréquente
+    if (e.cat !== g.cat) g.cat = e.cat;
+  }
+
+  const rows = [...map.values()].sort((a, b) => b.total - a.total);
+  const maxTotal = rows[0]?.total || 1;
+  const grandTotal = rows.reduce((s, r) => s + r.total, 0);
+
+  const collapsed = !!monthlySectionCollapsed['postes'];
+  const chevron   = collapsed ? 'transform:rotate(-90deg);' : '';
+
+  const hdr = `<div style="display:flex;justify-content:space-between;align-items:center;padding:0 2px 6px;margin-bottom:5px;border-bottom:2px solid #7c3aed30">
+    <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">
+      <button onclick="toggleMonthlySection('postes')" data-collapse-key="postes" style="background:none;border:none;cursor:pointer;color:var(--muted);padding:0;display:flex;align-items:center;transition:transform .2s;${chevron}">${CHEVRON_SVG}</button>
+      <span style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:#7c3aed">Postes de dépenses</span>
+      <span style="font-size:var(--fs-xs);color:var(--hint);background:#7c3aed18;border-radius:20px;padding:1px 7px;font-weight:700">${rows.length}</span>
+      <span style="font-size:var(--fs-xs);color:var(--fg);font-weight:700">${eur(grandTotal)}</span>
+    </div>
+  </div>`;
+
+  const items = rows.map(r => {
+    const c = CATS[r.cat] || CATS['variable'];
+    const barPct = Math.round(r.total / maxTotal * 100);
+    return `<div style="display:flex;align-items:center;gap:10px;padding:7px 4px;border-bottom:1px solid var(--border)">
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+          <span style="font-size:var(--fs-sm);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.name}</span>
+          <span class="badge" style="background:${c.bg};color:${c.text};border:${c.border};flex-shrink:0">${c.label}</span>
+          ${r.count > 1 ? `<span style="font-size:var(--fs-xs);color:var(--muted);flex-shrink:0">×${r.count}</span>` : ''}
+        </div>
+        <div style="height:4px;background:var(--surface2);border-radius:99px;overflow:hidden">
+          <div style="height:100%;width:${barPct}%;background:#7c3aed;border-radius:99px;transition:width .3s"></div>
+        </div>
+      </div>
+      <span style="font-size:var(--fs-sm);font-weight:700;color:var(--red);flex-shrink:0;min-width:60px;text-align:right">${eur(r.total)}</span>
+    </div>`;
+  }).join('');
+
+  el.innerHTML = `<div style="margin-bottom:var(--sg)">
+    ${hdr}
+    <div id="monthly-body-postes" style="${collapsed ? 'display:none' : ''}">
+      ${items}
+    </div>
+  </div>`;
 }
 
 function _monthlyRavSliderHtml(entryStats, member) {
