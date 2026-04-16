@@ -3487,12 +3487,11 @@ function _renderMonthlySections(stats, expenses, savingsData = [], entryStats = 
     }
 
     if (g.auto) {
-      const rows = filteredAutoEntries.filter(e => g.cats.includes(e.cat));
-      // Dépenses exceptionnelles saisies manuellement pour ce groupe (sans entry_id)
-      const extras = filteredManualExpenses.filter(e => g.cats.includes(e.cat));
+      const rows   = filteredAutoEntries.filter(e => g.cats.includes(e.cat)).sort((a, b) => Math.abs(b.amount) - Math.abs(a.amount));
+      const extras = filteredManualExpenses.filter(e => g.cats.includes(e.cat)).sort((a, b) => Math.abs(b.amount) - Math.abs(a.amount));
       return _monthlyAutoGroup(rows, overrides, extras, g, isMobile);
     } else {
-      const rows = filteredManualExpenses.filter(e => g.cats.includes(e.cat));
+      const rows = filteredManualExpenses.filter(e => g.cats.includes(e.cat)).sort((a, b) => Math.abs(b.amount) - Math.abs(a.amount));
       const budgetTotal = g.cats.reduce((s, c) => s + (stats[c]?.budget || 0), 0);
       return _monthlyManualGroup(rows, g, budgetTotal, isMobile, revNet);
     }
