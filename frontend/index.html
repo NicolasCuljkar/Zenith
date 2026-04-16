@@ -3334,10 +3334,15 @@ function _renderMonthlySections(stats, expenses, savingsData = [], entryStats = 
     epDelta ? `Épargne : ${epDelta >= 0 ? '+' : ''}${eur(epDelta)}` : null,
   ].filter(Boolean).join(' · ');
 
+  // Épargne du mois = delta (ajout ce mois), pas amount (cumul)
+  const epMonthDelta = Math.max(0, savingsData
+    .filter(s => s.year === monthlyYear && s.month === frMonth && s.delta != null)
+    .reduce((sum, s) => sum + (s.delta || 0), 0));
+
   // ── KPI Mensuel (style Prévisionnel) ──
   const mlyRavKey  = `${epMember0}_${monthlyYear}_${monthlyMonth}`;
   const mlyPct     = monthlyEpPct[mlyRavKey] ?? (savingPct[epMember0] ?? 60);
-  const mlyRav     = revNet - fixe.actual - vari.actual;
+  const mlyRav     = revNet - fixe.actual - vari.actual - loi.actual - epMonthDelta;
   const mlyEpC     = Math.max(0, Math.round(mlyRav * mlyPct / 100));
   const mlyLoiC    = Math.max(0, Math.round(mlyRav * (100 - mlyPct) / 100));
   const mlyRavRate = revNet > 0 ? Math.round(mlyRav / revNet * 100) : 0;
@@ -3349,10 +3354,6 @@ function _renderMonthlySections(stats, expenses, savingsData = [], entryStats = 
   const mlyOninputPct = !isMe ? '' : `oninput="monthlyEpPct['${mlyRavKey}']=+this.value;document.getElementById('mly-ep-pctv-${mlyRavKey}').textContent=this.value+'%';updateMlyEpCalc('${mlyRavKey}',${mlyMaxEur});saveData();fillAllTracks();"`;
   const mlyOninputEur = !isMe ? '' : `oninput="const p=+this.max>0?Math.round(+this.value/+this.max*100):0;monthlyEpPct['${mlyRavKey}']=p;document.getElementById('mly-ep-pct-${mlyRavKey}').value=p;document.getElementById('mly-ep-pctv-${mlyRavKey}').textContent=parseInt(this.value).toLocaleString('fr-FR')+' €';updateMlyEpCalc('${mlyRavKey}',${mlyMaxEur});saveData();fillAllTracks();"`;
 
-  // Épargne du mois = delta (ajout ce mois), pas amount (cumul)
-  const epMonthDelta = Math.max(0, savingsData
-    .filter(s => s.year === monthlyYear && s.month === frMonth && s.delta != null)
-    .reduce((sum, s) => sum + (s.delta || 0), 0));
 
   let heroHtml;
   if (entriesMember === 'Commun' && mlyMemberStats) {
@@ -3361,8 +3362,9 @@ function _renderMonthlySections(stats, expenses, savingsData = [], entryStats = 
     const _foyerRavGlow2 = mlyRav >= 0 ? '#0d9e6e' : '#d93535';
     const _memberRavData = _foyerMembers.map(m => {
       const ms = mlyMemberStats[m];
-      const mRevNet = (ms?.revenu?.actual ?? 0) - (ms?.impot?.actual ?? 0);
-      const mRav    = mRevNet - (ms?.fixe?.actual ?? 0) - (ms?.variable?.actual ?? 0);
+      const mRevNet   = (ms?.revenu?.actual ?? 0) - (ms?.impot?.actual ?? 0);
+      const mEpDelta  = Math.max(0, savingsData.filter(s => s.year === monthlyYear && s.month === frMonth && s.member === m && s.delta != null).reduce((sum, s) => sum + (s.delta || 0), 0));
+      const mRav      = mRevNet - (ms?.fixe?.actual ?? 0) - (ms?.variable?.actual ?? 0) - (ms?.loisir?.actual ?? 0) - mEpDelta;
       const mpct    = savingPct[m] ?? 60;
       const mEp     = Math.max(0, Math.round(mRav * mpct / 100));
       const mLoi    = Math.max(0, Math.round(mRav * (100 - mpct) / 100));
