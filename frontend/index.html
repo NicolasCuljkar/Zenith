@@ -1583,14 +1583,25 @@ async function loadData(){
 
   showLoading();
   try{
-    const [apiEntries, apiSavings, apiHousehold] = await Promise.all([
+    const [apiEntries, apiSavings, apiHousehold, apiHistory] = await Promise.all([
       API.entries.getAll(),
       API.savings.getAll(),
       API.household.get().catch(() => null),
+      API.monthlyExpenses.getHistory({}).catch(() => []),
     ]);
     entries = apiEntries || [];
     savings = apiSavings || [];
     currentHousehold = apiHousehold || null;
+    // Calcule dynamiquement le premier mois avec données réelles
+    const _now = new Date();
+    if (apiHistory && apiHistory.length > 0) {
+      const _earliest = apiHistory.reduce((min, h) => (h.year < min.year || (h.year === min.year && h.month < min.month)) ? h : min, apiHistory[0]);
+      MONTHLY_MIN_YEAR  = _earliest.year;
+      MONTHLY_MIN_MONTH = _earliest.month;
+    } else {
+      MONTHLY_MIN_YEAR  = _now.getFullYear();
+      MONTHLY_MIN_MONTH = _now.getMonth() + 1;
+    }
 
     // Sync profilePhotos from user objects (photo stored in DB)
     const apiUsers = await API.auth.getUsers();
@@ -3358,7 +3369,7 @@ function switchEntriesTab(tab) {
   document.getElementById('entries-mensuel').style.display      = tab === 'mensuel'      ? '' : 'none';
   if (tab === 'mensuel') { document.getElementById('fab-entry').style.display = 'none'; _updateMonthlyNavNext(); _updateMonthlyNavPrev(); renderMonthly(); }
 }
-const MONTHLY_MIN_YEAR = 2026, MONTHLY_MIN_MONTH = 4;
+let MONTHLY_MIN_YEAR = new Date().getFullYear(), MONTHLY_MIN_MONTH = new Date().getMonth() + 1;
 function monthlyNavPrev() {
   if (monthlyYear === MONTHLY_MIN_YEAR && monthlyMonth <= MONTHLY_MIN_MONTH) return;
   monthlyMonth--;
