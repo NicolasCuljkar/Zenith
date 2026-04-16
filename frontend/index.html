@@ -2690,15 +2690,55 @@ async function renderDashboard(){
     }
   </div>`;
 
-  // ── Graphique barres : évolution 6 derniers mois ──
-  const _barId='dash-bar-'+Date.now();
-  const _barData=[...pastH].reverse(); // du plus ancien au plus récent
   const _MN2=['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];
-  const _bar=`<div class="card" style="padding:16px 18px">
-    <div style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:12px">Évolution dépenses</div>
-    ${_barData.length===0
+  const _ts=Date.now();
+
+  // ── Graphique 1 : Budget vs Réel (barres horizontales) ──
+  const _bvrId='dash-bvr-'+_ts;
+  const _bvrCats=[
+    {lbl:'Fixes',    act:fixA,        bgt:fixBudget, col:'#d93535'},
+    {lbl:'Variables',act:varA,        bgt:varBudget, col:'#e05a2b'},
+    {lbl:'Loisir',   act:loiA,        bgt:loiBudget, col:'#f59e0b'},
+    {lbl:'Épargne',  act:epMonthDelta,bgt:epBudget,  col:'#2979c8'},
+  ].filter(c=>c.act>0||c.bgt>0);
+  const _bvr=`<div class="card" style="padding:16px 18px;margin-bottom:var(--sg)">
+    <div style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:12px">Budget vs Réel · ${frMonth}</div>
+    ${_bvrCats.length===0
+      ?`<div style="font-size:var(--fs-sm);color:var(--hint);padding:10px 0;text-align:center">Aucune donnée</div>`
+      :`<div style="position:relative;height:${_bvrCats.length*52}px"><canvas id="${_bvrId}"></canvas></div>`
+    }
+  </div>`;
+
+  // ── Graphique 2 : Évolution RAV (barres empilées revenus/dépenses) ──
+  const _ravId='dash-rav-'+_ts;
+  const _ravHist=[...pastH].reverse();
+  // Approximer les revenus passés = revenu net actuel (stable en général)
+  const _rav2=`<div class="card" style="padding:16px 18px;margin-bottom:var(--sg)">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <span style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)">Dépenses vs revenu net</span>
+      <span style="font-size:11px;color:var(--hint)">${_ravHist.length} derniers mois</span>
+    </div>
+    ${_ravHist.length===0
       ?`<div style="font-size:var(--fs-sm);color:var(--hint);padding:10px 0;text-align:center">Pas assez d'historique</div>`
-      :`<div style="position:relative;height:160px"><canvas id="${_barId}"></canvas></div>`
+      :`<div style="position:relative;height:180px"><canvas id="${_ravId}"></canvas></div>`
+    }
+  </div>`;
+
+  // ── Graphique 3 : Croissance épargne cumulée ──
+  const _savId='dash-sav-'+_ts;
+  // Toutes les données savings triées par date
+  const _allSav=[...(savings||[])].filter(s=>s.amount!=null);
+  const _savByMonth=new Map();
+  for(const s of _allSav){
+    const k=`${s.year}-${String(_MN2.indexOf(s.month.substring(0,3))+1).padStart(2,'0')}`;
+    _savByMonth.set(k,(_savByMonth.get(k)||0)+(s.amount||0));
+  }
+  const _savKeys=[..._savByMonth.keys()].sort().slice(-12);
+  const _sav3=`<div class="card" style="padding:16px 18px">
+    <div style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:12px">Épargne cumulée</div>
+    ${_savKeys.length===0
+      ?`<div style="font-size:var(--fs-sm);color:var(--hint);padding:10px 0;text-align:center">Aucun enregistrement</div>`
+      :`<div style="position:relative;height:160px"><canvas id="${_savId}"></canvas></div>`
     }
   </div>`;
 
@@ -2707,7 +2747,7 @@ async function renderDashboard(){
     `<div id="dash-alert"></div>`+
     _hero+_cats+_hist+
     `<div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--sg);margin-bottom:var(--sg)">${_ova}${_donut}</div>`+
-    _bar+
+    _bvr+_rav2+_sav3+
     `<div id="dash-charts" style="display:none"><div id="donut-chart-wrap" style="display:none"><canvas id="donut-chart"></canvas></div><div id="donut-legend" style="display:none"></div></div>`;
 
   // ── Init graphiques ──
@@ -2719,27 +2759,77 @@ async function renderDashboard(){
       options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+eur(c.raw)}}}}
     });
   }
-  if(_barData.length>0){
-    const ctx=document.getElementById(_barId);
+  // Budget vs Réel (horizontal)
+  if(_bvrCats.length>0){
+    const ctx=document.getElementById(_bvrId);
     if(ctx) dashBarChart=new Chart(ctx,{
       type:'bar',
       data:{
-        labels:_barData.map(h=>_MN2[h.month-1]),
-        datasets:[{
-          data:_barData.map(h=>h.total),
-          backgroundColor:_barData.map((_,i)=>i===_barData.length-1?'#d93535aa':'#d9353555'),
-          borderRadius:6,borderSkipped:false
-        }]
+        labels:_bvrCats.map(c=>c.lbl),
+        datasets:[
+          {label:'Budget',data:_bvrCats.map(c=>c.bgt),backgroundColor:'rgba(255,255,255,0.12)',borderColor:_bvrCats.map(c=>c.col),borderWidth:2,borderRadius:4,borderSkipped:false},
+          {label:'Réel',  data:_bvrCats.map(c=>c.act),backgroundColor:_bvrCats.map(c=>c.col+'cc'),borderWidth:0,borderRadius:4,borderSkipped:false},
+        ]
       },
       options:{
-        responsive:true,maintainAspectRatio:false,
-        plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+eur(c.raw)}}},
+        indexAxis:'y',responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{labels:{color:'var(--muted)',font:{size:11},boxWidth:10}},tooltip:{callbacks:{label:c=>' '+c.dataset.label+' : '+eur(c.raw)}}},
         scales:{
-          x:{grid:{display:false},ticks:{color:'var(--muted)',font:{size:11}}},
-          y:{grid:{color:'var(--border)',drawBorder:false},ticks:{color:'var(--muted)',font:{size:11},callback:v=>eur(v)},border:{display:false}}
+          x:{grid:{color:'var(--border)'},ticks:{color:'var(--muted)',font:{size:10},callback:v=>eur(v)},border:{display:false}},
+          y:{grid:{display:false},ticks:{color:'var(--text)',font:{size:12,weight:'600'}}}
         }
       }
     });
+  }
+  // Dépenses vs revenu net historique
+  if(_ravHist.length>0){
+    const ctx=document.getElementById(_ravId);
+    if(ctx){
+      const _cols=_ravHist.map(h=>h.total<=revNetA?'#0d9e6e99':'#d9353599');
+      new Chart(ctx,{
+        type:'bar',
+        data:{
+          labels:_ravHist.map(h=>_MN2[h.month-1]+' '+String(h.year).slice(2)),
+          datasets:[
+            {label:'Dépenses',data:_ravHist.map(h=>h.total),backgroundColor:_cols,borderRadius:5,borderSkipped:false},
+          ]
+        },
+        options:{
+          responsive:true,maintainAspectRatio:false,
+          plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+eur(c.raw)}}},
+          scales:{
+            x:{grid:{display:false},ticks:{color:'var(--muted)',font:{size:10}}},
+            y:{grid:{color:'var(--border)'},ticks:{color:'var(--muted)',font:{size:10},callback:v=>eur(v)},border:{display:false}}
+          },
+          ...(revNetA>0?{plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+eur(c.raw)}},annotation:{annotations:{line1:{type:'line',yMin:revNetA,yMax:revNetA,borderColor:'#2979c8',borderWidth:1.5,borderDash:[4,4],label:{content:'Revenu net',enabled:true,position:'end',font:{size:10},color:'#2979c8',backgroundColor:'transparent'}}}}}}: {})
+        }
+      });
+    }
+  }
+  // Épargne cumulée (line)
+  if(_savKeys.length>0){
+    const ctx=document.getElementById(_savId);
+    if(ctx){
+      const _savVals=_savKeys.map(k=>_savByMonth.get(k));
+      const _savLabels=_savKeys.map(k=>{const[y,m]=k.split('-');return _MN2[Number(m)-1]+' '+String(y).slice(2);});
+      new Chart(ctx,{
+        type:'line',
+        data:{labels:_savLabels,datasets:[{
+          data:_savVals,fill:true,
+          backgroundColor:'rgba(41,121,200,0.12)',
+          borderColor:'#2979c8',borderWidth:2,
+          pointBackgroundColor:'#2979c8',pointRadius:3,tension:0.35
+        }]},
+        options:{
+          responsive:true,maintainAspectRatio:false,
+          plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+eur(c.raw)}}},
+          scales:{
+            x:{grid:{display:false},ticks:{color:'var(--muted)',font:{size:10}}},
+            y:{grid:{color:'var(--border)'},ticks:{color:'var(--muted)',font:{size:10},callback:v=>eur(v)},border:{display:false}}
+          }
+        }
+      });
+    }
   }
   renderMemberTabsFor('dash-mtabs',dashboardMember,'setDashboardMember');
   setTimeout(updateMtabColors,0);
