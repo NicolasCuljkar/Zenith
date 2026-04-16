@@ -2757,7 +2757,7 @@ return `<div class="ova-row" style="padding:8px 0;border-bottom:1px solid var(--
         options:{
           responsive:true,maintainAspectRatio:false,
           interaction:{mode:'index',intersect:false},
-          layout:{padding:{top:24,right:16}},
+          layout:{padding:{top:8,right:16}},
           plugins:{
             legend:{display:false},
             tooltip:{
@@ -2801,7 +2801,7 @@ return `<div class="ova-row" style="padding:8px 0;border-bottom:1px solid var(--
           borderColor:col,
           backgroundColor:col+'33',
           borderWidth:2.5,
-          pointRadius:0, pointHoverRadius:5,
+          pointRadius:_trendMonths.length<=1?5:0, pointHoverRadius:5,
           pointBackgroundColor:col, pointBorderColor:'#fff', pointBorderWidth:2,
           spanGaps:true,
         };
@@ -2814,7 +2814,7 @@ return `<div class="ova-row" style="padding:8px 0;border-bottom:1px solid var(--
         options:{
           responsive:true, maintainAspectRatio:false,
           interaction:{mode:'index', intersect:false},
-          layout:{padding:{top:24, right:20}},
+          layout:{padding:{top:_trendMonths.length<=1?8:24, right:20}},
           plugins:{
             legend:{display:false},
             tooltip:{
