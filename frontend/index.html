@@ -2635,8 +2635,7 @@ async function renderDashboard(){
       const pct=Math.round(r.total/_postesMax*100);
       const share=_postesTotal>0?Math.round(r.total/_postesTotal*100):0;
       const incShare=revNetA>0?Math.round(r.total/revNetA*100):null;
-      const avg=r.count>1?Math.round(r.total/r.count):null;
-      return `<div class="ova-row" style="padding:8px 0;border-bottom:1px solid var(--border);border-radius:6px;transition:background .15s;cursor:default"
+return `<div class="ova-row" style="padding:8px 0;border-bottom:1px solid var(--border);border-radius:6px;transition:background .15s;cursor:default"
         onmouseenter="this.style.background='var(--surface2)';this.querySelector('.ova-detail').style.maxHeight='40px';this.querySelector('.ova-detail').style.opacity='1'"
         onmouseleave="this.style.background='';this.querySelector('.ova-detail').style.maxHeight='0';this.querySelector('.ova-detail').style.opacity='0'">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;padding:0 6px">
@@ -2657,7 +2656,7 @@ async function renderDashboard(){
           <div style="display:flex;gap:12px;padding-top:6px;flex-wrap:wrap">
             <span style="font-size:11px;color:var(--muted)">Catégorie : <b style="color:${col}">${_catLbl[r.cat]||r.cat}</b></span>
             ${incShare!==null?`<span style="font-size:11px;color:var(--muted)">Du revenu net : <b style="color:var(--fg)">${incShare}%</b></span>`:''}
-            ${avg!==null?`<span style="font-size:11px;color:var(--muted)">Moy./occurrence : <b style="color:var(--fg)">${eur(avg)}</b></span>`:''}
+
           </div>
         </div>
       </div>`;
