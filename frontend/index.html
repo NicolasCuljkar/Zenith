@@ -2627,14 +2627,19 @@ async function renderDashboard(){
   const _postesRows=[..._postesMap.values()].sort((a,b)=>b.total-a.total);
   const _postesTotal=_postesRows.reduce((s,r)=>s+r.total,0);
   const _postesMax=_postesRows[0]?.total||1;
+  const _catLbl={fixe:'Fixe',variable:'Variable',loisir:'Loisir',epargne:'Épargne'};
   const _ovaRows=_postesRows.length===0
     ?`<div style="font-size:var(--fs-sm);color:var(--hint);padding:10px 0;text-align:center">Aucune dépense ce mois</div>`
     :_postesRows.map(r=>{
       const col=_catColP[r.cat]||'#6b7280';
       const pct=Math.round(r.total/_postesMax*100);
       const share=_postesTotal>0?Math.round(r.total/_postesTotal*100):0;
-      return `<div style="padding:8px 0;border-bottom:1px solid var(--border)">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
+      const incShare=revNetA>0?Math.round(r.total/revNetA*100):null;
+      const avg=r.count>1?Math.round(r.total/r.count):null;
+      return `<div class="ova-row" style="padding:8px 0;border-bottom:1px solid var(--border);border-radius:6px;transition:background .15s;cursor:default"
+        onmouseenter="this.style.background='var(--surface2)';this.querySelector('.ova-detail').style.maxHeight='40px';this.querySelector('.ova-detail').style.opacity='1'"
+        onmouseleave="this.style.background='';this.querySelector('.ova-detail').style.maxHeight='0';this.querySelector('.ova-detail').style.opacity='0'">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;padding:0 6px">
           <div style="display:flex;align-items:center;gap:7px;min-width:0">
             <span style="width:8px;height:8px;border-radius:50%;background:${col};flex-shrink:0"></span>
             <span style="font-size:var(--fs-sm);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.name}</span>
@@ -2645,8 +2650,15 @@ async function renderDashboard(){
             <span style="font-size:var(--fs-sm);font-weight:700;color:${col};min-width:52px;text-align:right">${eur(r.total)}</span>
           </div>
         </div>
-        <div style="height:4px;background:var(--surface2);border-radius:99px;overflow:hidden">
+        <div style="height:4px;background:var(--surface2);border-radius:99px;overflow:hidden;margin:0 6px 0 22px">
           <div style="width:${pct}%;height:100%;background:${col};border-radius:99px;transition:width .4s"></div>
+        </div>
+        <div class="ova-detail" style="max-height:0;opacity:0;overflow:hidden;transition:max-height .2s,opacity .2s;padding:0 6px">
+          <div style="display:flex;gap:12px;padding-top:6px;flex-wrap:wrap">
+            <span style="font-size:11px;color:var(--muted)">Catégorie : <b style="color:${col}">${_catLbl[r.cat]||r.cat}</b></span>
+            ${incShare!==null?`<span style="font-size:11px;color:var(--muted)">Du revenu net : <b style="color:var(--fg)">${incShare}%</b></span>`:''}
+            ${avg!==null?`<span style="font-size:11px;color:var(--muted)">Moy./occurrence : <b style="color:var(--fg)">${eur(avg)}</b></span>`:''}
+          </div>
         </div>
       </div>`;
     }).join('');
