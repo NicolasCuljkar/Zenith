@@ -947,9 +947,13 @@ window.onerror = function(msg, src, line) {
     <div style="display:none"><div id="gauge-chart-wrap"><canvas id="gauge-chart"></canvas></div><div id="radar-chart-wrap"><canvas id="radar-chart"></canvas></div></div>
     <div class="card" id="member-bars-card" style="display:none"><div class="card-head">Comparaison membres</div><div id="member-bars-wrap" style="position:relative;height:210px"><canvas id="member-bars-chart"></canvas></div></div>
     <div style="display:none"><div id="analysis-donut-wrap" style="position:relative;height:0"><canvas id="analysis-donut-chart"></canvas></div><div id="analysis-donut-legend"></div></div>
+    <div id="analysis-kpi-summary" style="display:none;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:var(--sg);margin-bottom:var(--sg)"></div>
     <div class="card" id="monthly-compare-card" style="display:none"><div class="card-head">Comparaison mensuelle</div><div id="monthly-compare-content"><div style="padding:20px;text-align:center;color:var(--muted);font-size:var(--fs-sm)">Chargement…</div></div></div>
-    <div class="card" id="analysis-hist-card" style="display:none"><div class="card-head">Évolution mensuelle des dépenses</div><div id="analysis-hist-wrap" style="position:relative;height:200px"><canvas id="analysis-hist-chart"></canvas></div></div>
+    <div class="card" id="analysis-hist-card" style="display:none"><div class="card-head">Évolution mensuelle des dépenses</div><div id="analysis-hist-legend" style="display:flex;gap:12px;flex-wrap:wrap;margin:4px 0 10px"></div><div id="analysis-hist-wrap" style="position:relative;height:200px"><canvas id="analysis-hist-chart"></canvas></div></div>
     <div class="card" id="analysis-trend-card" style="display:none"><div class="card-head" id="analysis-trend-head">Évolution des dépenses clés</div><div id="analysis-trend-legend" style="display:flex;gap:10px;flex-wrap:wrap;margin:4px 0 12px"></div><div id="analysis-trend-wrap" style="position:relative;height:220px"><canvas id="analysis-trend-chart"></canvas></div></div>
+    <div class="card" id="analysis-eprate-card" style="display:none"><div class="card-head">Taux d'épargne mensuel (%)</div><div id="analysis-eprate-wrap" style="position:relative;height:180px"><canvas id="analysis-eprate-chart"></canvas></div></div>
+    <div class="card" id="analysis-stacked-card" style="display:none"><div class="card-head">Répartition mensuelle des dépenses</div><div style="display:flex;gap:10px;flex-wrap:wrap;margin:4px 0 10px" id="analysis-stacked-legend"></div><div id="analysis-stacked-wrap" style="position:relative;height:200px"><canvas id="analysis-stacked-chart"></canvas></div></div>
+    <div class="card" id="analysis-solde-card" style="display:none"><div class="card-head">Solde mensuel</div><div id="analysis-solde-wrap" style="position:relative;height:180px"><canvas id="analysis-solde-chart"></canvas></div></div>
     </div><!-- /#analysis-content -->
   </div>
 
@@ -1473,7 +1477,8 @@ document.getElementById('modal-confirm').addEventListener('click',e=>{if(e.targe
 let nextId=200,editEntryId=null,editSavingId=null;
 let donutChart=null,barChart=null,analysisDonut=null,projChart=null,topDonutChart=null;
 let waterfallChart=null,gaugeChart=null,radarChart=null,memberBarsChart=null,placementsChart=null;
-let dashBarChart=null,dashDonutChart=null;
+let dashBarChart=null,dashDonutChart=null,ovaDashChart=null;
+let anaEprateChart=null,anaSoldeChart=null,anaStackedChart=null;
 let savingsStabActive='month';
 let savingsYearFilter=String(new Date().getFullYear());
 let currentTab='dashboard';
@@ -2547,11 +2552,11 @@ async function renderDashboard(){
   const varA  = mStats?.variable?.actual ??0;
   const loiA  = mStats?.loisir?.actual   ??0;
   const revNetA = revA - taxA;
-  // Épargne = delta mensuel uniquement (pas le cumul)
-  const epMonthDelta = Math.max(0, savingsDash
-    .filter(s=>s.year===dashYear&&s.month===frMonth&&s.delta!=null)
-    .reduce((sum,s)=>sum+(s.delta||0),0));
-  const totalDep = fixA + varA + loiA + epMonthDelta;
+  // Épargne = delta mensuel (négatif si retrait ; null-delta = 1ère entrée → fallback sur amount)
+  const epMonthDelta = savingsDash
+    .filter(s=>s.year===dashYear&&s.month===frMonth)
+    .reduce((sum,s)=>sum+(s.delta!=null?s.delta:s.amount),0);
+  const totalDep = fixA + varA + loiA + Math.max(0, epMonthDelta);
   const mlyRavD  = revNetA - totalDep;
 
   // ── Budget ──
@@ -2619,67 +2624,129 @@ async function renderDashboard(){
     _budgetKpiCard('Épargne',  epMonthDelta,epBudget,  '#2979c8',true),
   );
 
-  // ── Où va l'argent ? (sans revenus) ──
+  // ── Où va l'argent ? ──
   const _catColP={fixe:'#d93535',variable:'#e05a2b',loisir:'#f59e0b',epargne:'#2979c8'};
+  const _catLbl={fixe:'Fixes',variable:'Variables',loisir:'Loisir',epargne:'Épargne'};
   const _depExpenses=mExpenses.filter(e=>!['revenu','impot'].includes(e.cat));
   const _postesMap=new Map();
   for(const e of _depExpenses){
     const k=e.name.trim();
-    if(!_postesMap.has(k)) _postesMap.set(k,{name:k,cat:e.cat,total:0,count:0});
-    const p=_postesMap.get(k); p.total+=Math.abs(e.amount); p.count++;
+    if(!_postesMap.has(k))_postesMap.set(k,{name:k,cat:e.cat,total:0,count:0});
+    const p=_postesMap.get(k);p.total+=Math.abs(e.amount);p.count++;
   }
   const _postesRows=[..._postesMap.values()];
-  if(epMonthDelta>0) _postesRows.push({name:'Épargne',cat:'epargne',total:epMonthDelta,count:1});
+  if(epMonthDelta>0)_postesRows.push({name:'Épargne',cat:'epargne',total:epMonthDelta,count:1});
   _postesRows.sort((a,b)=>b.total-a.total);
   const _postesTotal=_postesRows.reduce((s,r)=>s+r.total,0);
-  const _postesMax=_postesRows[0]?.total||1;
-  const _catLbl={fixe:'Fixe',variable:'Variable',loisir:'Loisir',epargne:'Épargne'};
-  const _ovaRows=_postesRows.length===0
-    ?`<div style="font-size:var(--fs-sm);color:var(--hint);padding:10px 0;text-align:center">Aucune dépense ce mois</div>`
-    :_postesRows.map(r=>{
-      const col=_catColP[r.cat]||'#6b7280';
-      const pct=Math.round(r.total/_postesMax*100);
-      const share=_postesTotal>0?Math.round(r.total/_postesTotal*100):0;
-      const incShare=revNetA>0?Math.round(r.total/revNetA*100):null;
-return `<div class="ova-row" style="padding:8px 0;border-bottom:1px solid var(--border);border-radius:6px;transition:background .15s;cursor:default"
-        onmouseenter="this.style.background='var(--surface2)';this.querySelector('.ova-detail').style.maxHeight='40px';this.querySelector('.ova-detail').style.opacity='1'"
-        onmouseleave="this.style.background='';this.querySelector('.ova-detail').style.maxHeight='0';this.querySelector('.ova-detail').style.opacity='0'">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;padding:0 6px">
-          <div style="display:flex;align-items:center;gap:7px;min-width:0">
-            <span style="width:8px;height:8px;border-radius:50%;background:${col};flex-shrink:0"></span>
-            <span style="font-size:var(--fs-sm);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.name}</span>
-            ${r.count>1?`<span style="font-size:11px;color:var(--muted)">×${r.count}</span>`:''}
-          </div>
-          <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
-            <span style="font-size:11px;color:var(--muted)">${share}%</span>
-            <span style="font-size:var(--fs-sm);font-weight:700;color:${col};min-width:52px;text-align:right">${eur(r.total)}</span>
-          </div>
-        </div>
-        <div style="height:4px;background:var(--surface2);border-radius:99px;overflow:hidden;margin:0 6px 0 22px">
-          <div style="width:${pct}%;height:100%;background:${col};border-radius:99px;transition:width .4s"></div>
-        </div>
-        <div class="ova-detail" style="max-height:0;opacity:0;overflow:hidden;transition:max-height .2s,opacity .2s;padding:0 6px">
-          <div style="display:flex;gap:12px;padding-top:6px;flex-wrap:wrap">
-            <span style="font-size:11px;color:var(--muted)">Catégorie : <b style="color:${col}">${_catLbl[r.cat]||r.cat}</b></span>
-            ${incShare!==null?`<span style="font-size:11px;color:var(--muted)">Du revenu net : <b style="color:var(--fg)">${incShare}%</b></span>`:''}
 
+  // Mois précédent (pour comparaison)
+  const _pvY=dashMonth===1?dashYear-1:dashYear,_pvM=dashMonth===1?12:dashMonth-1;
+  const _pvMap=new Map();
+  for(const e of (allMlyExp||[]).filter(e=>e.year===_pvY&&e.month===_pvM&&!['revenu','impot'].includes(e.cat))){
+    const k=e.name.trim();_pvMap.set(k,(_pvMap.get(k)||0)+Math.abs(e.amount));
+  }
+
+  // Groupement par catégorie
+  const _catOrder=['fixe','variable','loisir','epargne'];
+  const _catGroups={};
+  for(const r of _postesRows){if(!_catGroups[r.cat])_catGroups[r.cat]={items:[],total:0};_catGroups[r.cat].items.push(r);_catGroups[r.cat].total+=r.total;}
+  const _catBudgets={fixe:fixBudget,variable:varBudget,loisir:loiBudget,epargne:epBudget};
+
+  const _ovaItem=(r)=>{
+    const col=_catColP[r.cat]||'#6b7280';
+    const incShare=revNetA>0?Math.round(r.total/revNetA*100):null;
+    const pvVal=_pvMap.get(r.name);
+    const diff=pvVal!==undefined?Math.round(r.total-pvVal):null;
+    const diffHtml=diff===null?''
+      :diff>0?`<span style="font-size:10px;color:var(--red);font-weight:700;white-space:nowrap">↑+${eur(Math.abs(diff))}</span>`
+      :diff<0?`<span style="font-size:10px;color:var(--green);font-weight:700;white-space:nowrap">↓−${eur(Math.abs(diff))}</span>`
+      :`<span style="font-size:10px;color:var(--muted)">→</span>`;
+    const isEp=r.cat==='epargne';
+    const clickAttr=isEp?'':`onclick="_ovaGoto('${r.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'")}')"`;
+    return `<div ${clickAttr} style="display:flex;align-items:center;justify-content:space-between;padding:7px 6px 7px 20px;border-radius:6px;cursor:${isEp?'default':'pointer'};transition:background .15s" onmouseenter="this.style.background='var(--surface2)'" onmouseleave="this.style.background=''">
+      <div style="display:flex;align-items:center;gap:7px;min-width:0;flex:1">
+        <span style="width:5px;height:5px;border-radius:50%;background:${col};flex-shrink:0;opacity:.7"></span>
+        <span style="font-size:var(--fs-sm);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.name}</span>
+        ${r.count>1?`<span style="font-size:10px;color:var(--muted)">×${r.count}</span>`:''}
+      </div>
+      <div style="display:flex;align-items:center;gap:7px;flex-shrink:0">
+        ${diffHtml}
+        ${incShare!==null?`<span style="font-size:10px;color:var(--muted)">${incShare}%&nbsp;rev.</span>`:''}
+        <span style="font-size:var(--fs-sm);font-weight:700;color:${col};min-width:52px;text-align:right">${eur(r.total)}</span>
+      </div>
+    </div>`;
+  };
+
+  const _ovaContent=_postesTotal===0
+    ?`<div style="font-size:var(--fs-sm);color:var(--hint);padding:10px 0;text-align:center">Aucune dépense ce mois</div>`
+    :_catOrder.filter(c=>_catGroups[c]).map((c,ci)=>{
+      const g=_catGroups[c],col=_catColP[c],bgt=_catBudgets[c];
+      const shareTotal=_postesTotal>0?Math.round(g.total/_postesTotal*100):0;
+      const bgtHtml=bgt>0?`<span style="font-size:10px;color:${g.total>bgt?'var(--red)':'var(--muted)'}">${eur(g.total)} / ${eur(bgt)}</span>`:'';
+      const isOpen=ci===0;
+      return `<div style="border-top:1px solid var(--border)">
+        <div onclick="_ovaToggle('${c}')" style="display:flex;align-items:center;justify-content:space-between;padding:9px 6px;cursor:pointer;transition:background .15s" onmouseenter="this.style.background='var(--surface2)'" onmouseleave="this.style.background=''">
+          <div style="display:flex;align-items:center;gap:7px">
+            <span id="ova-arrow-${c}" style="font-size:9px;color:${col};transition:transform .2s">${isOpen?'▼':'▶'}</span>
+            <span style="width:8px;height:8px;border-radius:50%;background:${col}"></span>
+            <span style="font-size:var(--fs-sm);font-weight:700;color:${col}">${_catLbl[c]}</span>
+            ${bgtHtml}
           </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-size:11px;color:var(--muted)">${shareTotal}%</span>
+            <span style="font-size:var(--fs-sm);font-weight:800;color:${col};min-width:52px;text-align:right">${eur(g.total)}</span>
+          </div>
+        </div>
+        <div id="ova-items-${c}" style="display:${isOpen?'':'none'};padding-bottom:4px">
+          ${g.items.map(r=>_ovaItem(r)).join('')}
         </div>
       </div>`;
     }).join('');
+
+  const _donutData=_catOrder.filter(c=>_catGroups[c]).map(c=>({label:_catLbl[c],val:_catGroups[c].total,col:_catColP[c]}));
+  const _ovaDonutHtml=_donutData.length>0?`<div style="display:flex;align-items:center;gap:14px;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--border)">
+    <div style="width:76px;height:76px;flex-shrink:0"><canvas id="ova-donut-chart"></canvas></div>
+    <div style="flex:1;display:flex;flex-direction:column;gap:5px">
+      ${_donutData.map(d=>`<div style="display:flex;justify-content:space-between;align-items:center"><div style="display:flex;align-items:center;gap:6px"><span style="width:7px;height:7px;border-radius:50%;background:${d.col}"></span><span style="font-size:var(--fs-xs);font-weight:600;color:${d.col}">${d.label}</span></div><span style="font-size:var(--fs-xs);font-weight:700;color:var(--fg)">${eur(d.val)}</span></div>`).join('')}
+    </div>
+  </div>`:'';
+
   const _ova=`<div class="card" style="padding:16px 18px">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
       <span style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)">Où va l'argent ?</span>
       ${_postesTotal>0?`<span style="font-size:var(--fs-sm);font-weight:700;color:var(--fg)">${eur(_postesTotal)}</span>`:''}
     </div>
-    ${_ovaRows}
+    ${_ovaDonutHtml}${_ovaContent}
   </div>`;
 
   // ── Assemblage ──
+  ovaDashChart=destroyChart(ovaDashChart);
   content.innerHTML=_monthNav+
     `<div id="dash-alert"></div>`+
     _hero+_cats+_ova+
     `<div id="dash-charts" style="display:none"></div>`;
+
+  // Init donut OVA
+  const _ovaDCtx=document.getElementById('ova-donut-chart');
+  if(_ovaDCtx&&_donutData.length>0){
+    const _tc=darkVal('#666','#999');
+    ovaDashChart=new Chart(_ovaDCtx,{
+      type:'doughnut',plugins:[ChartDataLabels],
+      data:{labels:_donutData.map(d=>d.label),datasets:[{
+        data:_donutData.map(d=>d.val),
+        backgroundColor:_donutData.map(d=>d.col+'cc'),
+        borderColor:_donutData.map(d=>d.col),
+        borderWidth:1.5,hoverOffset:4
+      }]},
+      options:{responsive:true,maintainAspectRatio:false,cutout:'62%',
+        plugins:{legend:{display:false},
+          tooltip:{backgroundColor:darkVal('rgba(255,255,255,1)','rgba(28,28,32,1)'),borderColor:darkVal('rgba(0,0,0,.15)','rgba(255,255,255,.2)'),borderWidth:1,titleColor:_tc,bodyColor:_tc,titleFont:{size:fsPx('--fs-sm'),weight:'700'},bodyFont:{size:fsPx('--fs-xs')},padding:8,cornerRadius:8,callbacks:{label:c=>` ${eur(c.raw)}`}},
+          datalabels:{display:false}
+        }
+      }
+    });
+  }
+
   renderMemberTabsFor('dash-mtabs',dashboardMember,'setDashboardMember');
   setTimeout(updateMtabColors,0);
   checkInAppAlerts();
@@ -2695,6 +2762,20 @@ function dashNavNext(){
   if(dashYear>now.getFullYear()||(dashYear===now.getFullYear()&&dashMonth>=now.getMonth()+1))return;
   dashMonth++;if(dashMonth>12){dashMonth=1;dashYear++;}
   renderDashboard();
+}
+
+function _ovaToggle(cat){
+  const el=document.getElementById('ova-items-'+cat);
+  const ar=document.getElementById('ova-arrow-'+cat);
+  if(!el)return;
+  const open=el.style.display!=='none';
+  el.style.display=open?'none':'';
+  if(ar)ar.textContent=open?'▶':'▼';
+}
+function _ovaGoto(label){
+  monthlyYear=dashYear;monthlyMonth=dashMonth;
+  showTab('entries');switchEntriesTab('mensuel');
+  setTimeout(()=>{const s=document.getElementById('mly-search-input');if(s){s.value=label;s.dispatchEvent(new Event('input'));}},150);
 }
 
 // ══════════════════════════════════════════════
@@ -3381,7 +3462,7 @@ function _renderMonthlySections(stats, expenses, savingsData = [], entryStats = 
   const { revenu, impot, fixe, variable: vari, epargne: ep, loisir: loi } = stats;
   const frMonth      = MONTH_NAMES[monthlyMonth - 1];
   const savingRecord = savingsData.find(s => s.year === monthlyYear && s.month === frMonth);
-  const epDelta      = (savingRecord && savingRecord.delta != null) ? savingRecord.delta : 0;
+  const epDelta      = savingRecord ? (savingRecord.delta != null ? savingRecord.delta : savingRecord.amount) : 0;
   const epMember0    = entriesMember === 'Commun' ? myRole() : entriesMember;
   const epBudget0    = entryStats ? Math.round(entryStats.rav * (savingPct[epMember0] ?? 60) / 100) : 0;
   const revNet       = revenu.actual - impot.actual;
@@ -3399,10 +3480,10 @@ function _renderMonthlySections(stats, expenses, savingsData = [], entryStats = 
     epDelta ? `Épargne : ${epDelta >= 0 ? '+' : ''}${eur(epDelta)}` : null,
   ].filter(Boolean).join(' · ');
 
-  // Épargne du mois = delta (ajout ce mois), pas amount (cumul)
-  const epMonthDelta = Math.max(0, savingsData
-    .filter(s => s.year === monthlyYear && s.month === frMonth && s.delta != null)
-    .reduce((sum, s) => sum + (s.delta || 0), 0));
+  // Épargne du mois = delta (négatif si retrait ; null-delta = 1ère entrée → fallback amount)
+  const epMonthDelta = savingsData
+    .filter(s => s.year === monthlyYear && s.month === frMonth)
+    .reduce((sum, s) => sum + (s.delta != null ? s.delta : s.amount), 0);
 
   // ── KPI Mensuel (style Prévisionnel) ──
   const mlyRavKey  = `${epMember0}_${monthlyYear}_${monthlyMonth}`;
@@ -3856,11 +3937,11 @@ ${bar}    <div class="tbl-wrap"><table style="width:100%;table-layout:fixed">
 function _monthlyEpargneGroup(savingRecord, g, budgetTotal, actualTotal, revNet, isMobile) {
   _monthlySavingRec = savingRecord || null;
   const addBtn = MLY_ADD_BTN(`openMonthlySaving(${monthlyYear},${monthlyMonth})`);
-  const hasDelta = savingRecord && savingRecord.delta !== null && savingRecord.delta !== undefined;
-  const deltaVal = hasDelta ? savingRecord.delta : null;
+  const hasDelta = !!savingRecord;
+  const deltaVal = savingRecord ? (savingRecord.delta != null ? savingRecord.delta : savingRecord.amount) : null;
   const deltaStr = hasDelta ? (deltaVal >= 0 ? '+' : '') + eur(deltaVal) : '—';
   const deltaCol = hasDelta ? (deltaVal >= 0 ? 'var(--green)' : 'var(--red)') : 'var(--muted)';
-  const deltaDisplay = hasDelta && deltaVal >= 0
+  const deltaDisplay = hasDelta
     ? `<span style="font-size:var(--fs-sm);font-weight:800;color:${deltaCol};letter-spacing:-.02em">${deltaStr}</span>`
     : '';
   const epActual = hasDelta ? deltaVal : null;
@@ -4401,12 +4482,15 @@ function renderSavings(){
     const trendS=latestSecond&&prevSecond?Math.round((latestSecond.amount-prevSecond.amount)/prevSecond.amount*100):null;
     const prevTotal=(prevFirst?.amount||0)+(prevSecond?.amount||0);
     const trendTotal=prevTotal>0?Math.round((totalSav-prevTotal)/prevTotal*100):null;
+    const _avgDeltaOf=ms=>{const ds=ms.flatMap(m=>savings.filter(s=>s.member===m&&s.delta!=null).map(s=>s.delta));return ds.length?Math.round(ds.reduce((a,d)=>a+d,0)/ds.length):null;};
     if(isSingle){
       const m=showMembers[0],lat=m===first?latestFirst:latestSecond,trend=m===first?trendF:trendS;
       const proj=projectionFinAnnee([m]);
+      const _avg=_avgDeltaOf([m]);
       document.getElementById('savings-kpis').innerHTML=
         kpiHtml('Épargne',lat?eur(lat.amount):'—',getMC(m),lat?`Màj ${lat.month} ${lat.year}`:'',trend)+
-        (proj?kpiHtml('Projection fin d\'année',eur(proj.projected),'var(--blue)',`Moy. ${proj.avgDelta>=0?'+':''}${eur(proj.avgDelta)}/mois · ${proj.remainingMonths} mois restants`,null):'');
+        (_avg!==null?kpiHtml('Moy. mensuelle',(_avg>=0?'+':'')+eur(_avg)+'/mois','var(--blue)',`sur ${savings.filter(s=>s.member===m&&s.delta!=null).length} mois`,null):'')+
+        (proj?kpiHtml('Projection fin d\'année',eur(proj.projected),'var(--blue)',`${proj.remainingMonths} mois restants`,null):'');
     } else {
       const proj=projectionFinAnnee(showMembers);
       const _mkpis=showMembers.map(m=>{const _l=savings.filter(s=>s.member===m).slice(-1)[0],_p=savings.filter(s=>s.member===m).slice(-2)[0],_t=_l&&_p?Math.round((_l.amount-_p.amount)/_p.amount*100):null;return kpiHtml('Épargne',_l?eur(_l.amount):'—',getMC(m),_l?`Màj ${_l.month} ${_l.year}`:'',_t);}).join('');
@@ -4414,7 +4498,9 @@ function renderSavings(){
       const _tPrev=showMembers.reduce((s,m)=>s+(savings.filter(x=>x.member===m).slice(-2)[0]?.amount||0),0);
       const _tT=_tPrev>0?Math.round((_tNow-_tPrev)/_tPrev*100):null;
       const _latLbl=showMembers.map(m=>savings.filter(s=>s.member===m).slice(-1)[0]).filter(Boolean).sort((a,b)=>b.year!==a.year?b.year-a.year:MONTHS.indexOf(b.month)-MONTHS.indexOf(a.month))[0];
-      document.getElementById('savings-kpis').innerHTML=_mkpis+kpiHtml('Total épargne',eur(_tNow),'var(--green)',_latLbl?`Màj ${_latLbl.month} ${_latLbl.year}`:'',_tT)+(proj?kpiHtml('Projection fin d\'année',eur(proj.projected),'var(--blue)',`Moy. ${proj.avgDelta>=0?'+':''}${eur(proj.avgDelta)}/mois · ${proj.remainingMonths} mois restants`,null):'');
+      const _avgAll=_avgDeltaOf(showMembers);
+      const _nMois=showMembers.flatMap(m=>savings.filter(s=>s.member===m&&s.delta!=null)).length;
+      document.getElementById('savings-kpis').innerHTML=_mkpis+kpiHtml('Total épargne',eur(_tNow),'var(--green)',_latLbl?`Màj ${_latLbl.month} ${_latLbl.year}`:'',_tT)+(_avgAll!==null?kpiHtml('Moy. mensuelle',(_avgAll>=0?'+':'')+eur(_avgAll)+'/mois','var(--blue)',`sur ${_nMois} mois`,null):'')+(proj?kpiHtml('Projection fin d\'année',eur(proj.projected),'var(--blue)',`${proj.remainingMonths} mois restants`,null):'');
     }
   }
   const _chartTitle=isYear?'Évolution annuelle':savingsYearFilter==='all'?'Évolution mensuelle':`Évolution mensuelle ${savingsYearFilter}`;
@@ -4845,6 +4931,7 @@ async function renderMonthlyComparison(member) {
 async function renderAnalysis(){
   if(hasNoData(analysisMember)){
     analysisDonut=destroyChart(analysisDonut);gaugeChart=destroyChart(gaugeChart);radarChart=destroyChart(radarChart);memberBarsChart=destroyChart(memberBarsChart);
+    anaEprateChart=destroyChart(anaEprateChart);anaSoldeChart=destroyChart(anaSoldeChart);anaStackedChart=destroyChart(anaStackedChart);
     document.getElementById('analysis-nodata').innerHTML=noDataBanner();
     document.getElementById('analysis-nodata').style.display='';
     document.getElementById('analysis-content').style.display='none';
@@ -5143,42 +5230,66 @@ async function renderAnalysis(){
 
   // ── Graphiques évolution (fetch données réelles) ──
   const _anaParams = analysisMember!=='all'&&analysisMember!=='Commun' ? {member:analysisMember} : {};
-  let _anaHistory=[], _anaAllExp=[];
+  let _anaHistory=[], _anaAllExp=[], _anaSavings=[];
   try {
-    [_anaHistory, _anaAllExp] = await Promise.all([
+    [_anaHistory, _anaAllExp, _anaSavings] = await Promise.all([
       API.monthlyExpenses.getHistory(_anaParams).catch(()=>[]),
       API.monthlyExpenses.getAll(_anaParams).catch(()=>[]),
+      API.savings.getAll(_anaParams).catch(()=>[]),
     ]);
   } catch(e){}
 
   const _MNA=['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];
   const _anaTextColor = darkVal('#666','#999');
 
-  // Graphique 1 : Évolution mensuelle
+  // Graphique 1 : Évolution mensuelle (dépenses + épargne)
   dashBarChart = destroyChart(dashBarChart);
   const _histCard = document.getElementById('analysis-hist-card');
   const _histPts = [..._anaHistory].sort((a,b)=>a.year-b.year||a.month-b.month);
+  // Épargne delta par mois
+  const FR_M_MAP={'Janvier':1,'Février':2,'Mars':3,'Avril':4,'Mai':5,'Juin':6,'Juillet':7,'Août':8,'Septembre':9,'Octobre':10,'Novembre':11,'Décembre':12};
+  const _epByMk = new Map();
+  for(const s of (_anaSavings||[])){
+    if(s.delta==null) continue;
+    const mk=`${s.year}-${String(FR_M_MAP[s.month]||0).padStart(2,'0')}`;
+    _epByMk.set(mk,(_epByMk.get(mk)||0)+s.delta);
+  }
   if(_histPts.length >= 1){
     _histCard.style.display='';
+    const _hcol='#d93535', _ecol='#2979c8';
+    const _histLabels = _histPts.map(h=>_MNA[h.month-1]+' '+String(h.year).slice(2));
+    const _histDepVals = _histPts.map(h=>h.total);
+    const _histEpVals  = _histPts.map(h=>{const mk=`${h.year}-${String(h.month).padStart(2,'0')}`;const v=_epByMk.get(mk);return(v!=null&&v>0)?v:null;});
+    const hasEpData = _histEpVals.some(v=>v!=null);
+    // Légende
+    document.getElementById('analysis-hist-legend').innerHTML =
+      `<div style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:3px;border-radius:2px;background:${_hcol};display:inline-block"></span><span style="font-size:11px;font-weight:600;color:${_hcol}">Dépenses</span></div>` +
+      (hasEpData?`<div style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:3px;border-radius:2px;background:${_ecol};display:inline-block"></span><span style="font-size:11px;font-weight:600;color:${_ecol}">Épargne</span></div>`:'');
     const _histCtx = document.getElementById('analysis-hist-chart');
     if(_histCtx){
-      const _hcol='#d93535';
+      const _single = _histPts.length<=1;
+      const _datasets = [{
+        label:'Dépenses', data:_histDepVals, tension:.45, fill:true,
+        borderColor:_hcol,
+        backgroundColor:(c)=>{const{chart:{ctx:c2,chartArea}}=c;if(!chartArea)return _hcol+'22';const g=c2.createLinearGradient(0,chartArea.top,0,chartArea.bottom);g.addColorStop(0,_hcol+'55');g.addColorStop(1,_hcol+'05');return g;},
+        borderWidth:2.5, pointRadius:_single?5:0, pointHoverRadius:5,
+        pointBackgroundColor:_hcol, pointBorderColor:'#fff', pointBorderWidth:2,
+      }];
+      if(hasEpData) _datasets.push({
+        label:'Épargne', data:_histEpVals, tension:.45, fill:false,
+        borderColor:_ecol, backgroundColor:_ecol+'33',
+        borderWidth:2.5, pointRadius:_single?5:0, pointHoverRadius:5,
+        pointBackgroundColor:_ecol, pointBorderColor:'#fff', pointBorderWidth:2,
+        spanGaps:true,
+      });
       dashBarChart = new Chart(_histCtx,{
         type:'line', plugins:[ChartDataLabels],
-        data:{
-          labels:_histPts.map(h=>_MNA[h.month-1]+' '+String(h.year).slice(2)),
-          datasets:[{data:_histPts.map(h=>h.total),tension:.45,fill:true,
-            borderColor:_hcol,
-            backgroundColor:(c)=>{const{chart:{ctx:c2,chartArea}}=c;if(!chartArea)return _hcol+'22';const g=c2.createLinearGradient(0,chartArea.top,0,chartArea.bottom);g.addColorStop(0,_hcol+'66');g.addColorStop(1,_hcol+'05');return g;},
-            borderWidth:2.5,pointRadius:_histPts.length<=1?5:0,pointHoverRadius:5,
-            pointBackgroundColor:_hcol,pointBorderColor:'#fff',pointBorderWidth:2,
-          }]
-        },
+        data:{ labels:_histLabels, datasets:_datasets },
         options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
           layout:{padding:{top:8,right:16}},
           plugins:{legend:{display:false},
-            tooltip:{backgroundColor:darkVal('rgba(255,255,255,1)','rgba(28,28,32,1)'),borderColor:darkVal('rgba(0,0,0,.15)','rgba(255,255,255,.2)'),borderWidth:1,titleColor:_anaTextColor,bodyColor:_anaTextColor,titleFont:{size:fsPx('--fs-sm'),weight:'700'},bodyFont:{size:fsPx('--fs-xs')},padding:12,cornerRadius:10,callbacks:{label:c=>` Dépenses : ${eur(c.raw)}`}},
-            datalabels:{display:c=>c.raw!=null,anchor:'end',align:'top',formatter:v=>v!=null?(v/1000).toFixed(1)+'k€':'',color:_hcol,font:{size:fsPx('--fs-xs'),weight:'800'},backgroundColor:darkVal('#fff','#1a1a18'),borderRadius:4,padding:{top:3,bottom:3,left:6,right:6},borderWidth:1,borderColor:_hcol+'44'}
+            tooltip:{backgroundColor:darkVal('rgba(255,255,255,1)','rgba(28,28,32,1)'),borderColor:darkVal('rgba(0,0,0,.15)','rgba(255,255,255,.2)'),borderWidth:1,titleColor:_anaTextColor,bodyColor:_anaTextColor,titleFont:{size:fsPx('--fs-sm'),weight:'700'},bodyFont:{size:fsPx('--fs-xs')},padding:12,cornerRadius:10,callbacks:{label:c=>c.raw!=null?` ${c.dataset.label} : ${eur(c.raw)}`:''}},
+            datalabels:{display:c=>c.raw!=null&&c.dataIndex===_histPts.length-1,anchor:'end',align:'top',formatter:v=>v!=null?(v/1000).toFixed(1)+'k€':'',color:(c)=>c.datasetIndex===0?_hcol:_ecol,font:{size:fsPx('--fs-xs'),weight:'800'},backgroundColor:darkVal('#fff','#1a1a18'),borderRadius:4,padding:{top:3,bottom:3,left:6,right:6},borderWidth:1,borderColor:(c)=>(c.datasetIndex===0?_hcol:_ecol)+'44'}
           },
           scales:{x:{grid:{display:false},ticks:{color:_anaTextColor,font:{size:fsPx('--fs-xs')},maxRotation:0},border:{display:false}},y:{beginAtZero:true,ticks:{callback:v=>(v/1000).toFixed(0)+'k€',font:{size:fsPx('--fs-xs')},color:_anaTextColor,maxTicksLimit:4},grid:{color:darkVal('rgba(0,0,0,.06)','rgba(255,255,255,.06)')},border:{display:false}}}
         }
@@ -5228,6 +5339,141 @@ async function renderAnalysis(){
       });
     }
   } else { _trendCard.style.display='none'; }
+
+  // ── Données mensuelles communes ──
+  const FR_MK={'Janvier':1,'Février':2,'Mars':3,'Avril':4,'Mai':5,'Juin':6,'Juillet':7,'Août':8,'Septembre':9,'Octobre':10,'Novembre':11,'Décembre':12};
+  const _byMkExp=new Map();
+  for(const e of (_anaAllExp||[])){
+    const mk=`${e.year}-${String(e.month).padStart(2,'0')}`;
+    if(!_byMkExp.has(mk))_byMkExp.set(mk,{revenu:0,impot:0,fixe:0,variable:0,loisir:0});
+    const r=_byMkExp.get(mk);
+    if(r[e.cat]!==undefined)r[e.cat]+=Math.abs(e.amount);
+  }
+  // _epByMk déjà calculé plus haut dans cette fonction
+  const _allMks=[...new Set([..._histPts.map(h=>`${h.year}-${String(h.month).padStart(2,'0')}`), ..._byMkExp.keys()])].sort();
+  const _MNX=['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];
+  const _mxLabels=_allMks.map(k=>{const[y,m]=k.split('-');return _MNX[Number(m)-1]+' '+String(y).slice(2);});
+  const _monthStats=_allMks.map(mk=>{
+    const exp=_byMkExp.get(mk)||{};
+    const epV=(_epByMk.get(mk)||0);
+    const revNet=(exp.revenu||0)-(exp.impot||0);
+    const dep=(exp.fixe||0)+(exp.variable||0)+(exp.loisir||0);
+    const solde=revNet-dep-(epV>0?epV:0);
+    const epRate=revNet>0?Math.round(epV/revNet*100):null;
+    return{mk,revNet,dep,fixe:exp.fixe||0,variable:exp.variable||0,loisir:exp.loisir||0,ep:epV>0?epV:0,solde,epRate,hasData:revNet>0||dep>0||epV>0};
+  });
+  const _dataStats=_monthStats.filter(r=>r.hasData);
+  const _tc=darkVal('#666','#999');
+
+  // ── KPI synthèse ──
+  const _kpiEl=document.getElementById('analysis-kpi-summary');
+  if(_dataStats.length>=1){
+    const _avgEpRate=Math.round(_dataStats.filter(r=>r.revNet>0).reduce((s,r)=>s+r.epRate,0)/Math.max(1,_dataStats.filter(r=>r.revNet>0).length));
+    const _avgDep=Math.round(_dataStats.reduce((s,r)=>s+r.dep,0)/_dataStats.length);
+    const _avgSolde=Math.round(_dataStats.reduce((s,r)=>s+r.solde,0)/_dataStats.length);
+    const _best=_dataStats.reduce((b,r)=>r.solde>(b?.solde??-Infinity)?r:b,null);
+    const _worst=_dataStats.reduce((w,r)=>r.solde<(w?.solde??Infinity)?r:w,null);
+    const _colSolde=v=>v>=0?'var(--green)':'var(--red)';
+    const _kpiCard=(lbl,val,col,sub)=>`<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;border-left:3px solid ${col}">
+      <div style="font-size:var(--fs-xs);color:var(--muted);font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:5px">${lbl}</div>
+      <div style="font-size:1.2rem;font-weight:800;color:${col};letter-spacing:-.03em">${val}</div>
+      ${sub?`<div style="font-size:var(--fs-xs);color:var(--muted);margin-top:4px">${sub}</div>`:''}
+    </div>`;
+    _kpiEl.style.display='grid';
+    _kpiEl.innerHTML=
+      _kpiCard('Taux épargne moy.',`${_avgEpRate}%`,'#2979c8',`sur ${_dataStats.filter(r=>r.revNet>0).length} mois`)+
+      _kpiCard('Dépenses moy.',eur(_avgDep)+'/mois','var(--red)',`${_dataStats.length} mois analysés`)+
+      _kpiCard('Solde moy.',(_avgSolde>=0?'+':'')+eur(_avgSolde)+'/mois',_colSolde(_avgSolde),null)+
+      (_best?_kpiCard('Meilleur mois',`${_MNX[Number(_best.mk.split('-')[1])-1]} ${_best.mk.split('-')[0]}`,'var(--green)',(_best.solde>=0?'+':'')+eur(_best.solde)):'')+
+      (_worst&&_worst!==_best?_kpiCard('Mois difficile',`${_MNX[Number(_worst.mk.split('-')[1])-1]} ${_worst.mk.split('-')[0]}`,'var(--red)',(_worst.solde>=0?'+':'')+eur(_worst.solde)):'');
+  } else { _kpiEl.style.display='none'; }
+
+  // ── Graphique taux d'épargne ──
+  anaEprateChart=destroyChart(anaEprateChart);
+  const _eprCard=document.getElementById('analysis-eprate-card');
+  const _eprPts=_monthStats.filter(r=>r.epRate!==null&&r.revNet>0);
+  if(_eprPts.length>=1){
+    _eprCard.style.display='';
+    const _ectx=document.getElementById('analysis-eprate-chart');
+    if(_ectx){
+      const _col='#2979c8';
+      anaEprateChart=new Chart(_ectx,{
+        type:'line',plugins:[ChartDataLabels],
+        data:{labels:_eprPts.map(r=>{const[y,m]=r.mk.split('-');return _MNX[Number(m)-1]+' '+String(y).slice(2);}),
+          datasets:[{label:'Taux épargne',data:_eprPts.map(r=>r.epRate),tension:.4,fill:true,
+            borderColor:_col,
+            backgroundColor:(c)=>{const{chart:{ctx:c2,chartArea}}=c;if(!chartArea)return _col+'22';const g=c2.createLinearGradient(0,chartArea.top,0,chartArea.bottom);g.addColorStop(0,_col+'55');g.addColorStop(1,_col+'05');return g;},
+            borderWidth:2.5,pointRadius:_eprPts.length<=1?5:0,pointHoverRadius:5,
+            pointBackgroundColor:_col,pointBorderColor:'#fff',pointBorderWidth:2,
+          }]},
+        options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+          layout:{padding:{top:8,right:20}},
+          plugins:{legend:{display:false},
+            tooltip:{backgroundColor:darkVal('rgba(255,255,255,1)','rgba(28,28,32,1)'),borderColor:darkVal('rgba(0,0,0,.15)','rgba(255,255,255,.2)'),borderWidth:1,titleColor:_tc,bodyColor:_tc,titleFont:{size:fsPx('--fs-sm'),weight:'700'},bodyFont:{size:fsPx('--fs-xs')},padding:12,cornerRadius:10,callbacks:{label:c=>` Taux épargne : ${c.raw}%`}},
+            datalabels:{display:c=>c.dataIndex===_eprPts.length-1,anchor:'end',align:'top',formatter:v=>`${v}%`,color:_col,font:{size:fsPx('--fs-xs'),weight:'800'},backgroundColor:darkVal('#fff','#1a1a18'),borderRadius:4,padding:{top:3,bottom:3,left:6,right:6},borderWidth:1,borderColor:_col+'44'}
+          },
+          scales:{x:{grid:{display:false},ticks:{color:_tc,font:{size:fsPx('--fs-xs')},maxRotation:0},border:{display:false}},
+            y:{beginAtZero:true,ticks:{callback:v=>v+'%',font:{size:fsPx('--fs-xs')},color:_tc,maxTicksLimit:5},grid:{color:darkVal('rgba(0,0,0,.06)','rgba(255,255,255,.06)')},border:{display:false}}}
+        }
+      });
+    }
+  } else { _eprCard.style.display='none'; }
+
+  // ── Graphique répartition empilée ──
+  anaStackedChart=destroyChart(anaStackedChart);
+  const _stCard=document.getElementById('analysis-stacked-card');
+  const _stPts=_monthStats.filter(r=>r.dep>0||r.ep>0);
+  if(_stPts.length>=1){
+    _stCard.style.display='';
+    const _stLabels=_stPts.map(r=>{const[y,m]=r.mk.split('-');return _MNX[Number(m)-1]+' '+String(y).slice(2);});
+    const _stCats=[{k:'fixe',lbl:'Fixes',col:'#d93535'},{k:'variable',lbl:'Variables',col:'#e05a2b'},{k:'loisir',lbl:'Loisir',col:'#f59e0b'},{k:'ep',lbl:'Épargne',col:'#2979c8'}];
+    document.getElementById('analysis-stacked-legend').innerHTML=_stCats.map(c=>`<div style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:8px;border-radius:2px;background:${c.col};display:inline-block"></span><span style="font-size:11px;font-weight:600;color:${c.col}">${c.lbl}</span></div>`).join('');
+    const _stCtx=document.getElementById('analysis-stacked-chart');
+    if(_stCtx){
+      anaStackedChart=new Chart(_stCtx,{
+        type:'bar',plugins:[ChartDataLabels],
+        data:{labels:_stLabels,datasets:_stCats.map(c=>({label:c.lbl,data:_stPts.map(r=>r[c.k]||0),backgroundColor:c.col+'cc',borderColor:c.col,borderWidth:0,borderRadius:2,stack:'s'}))},
+        options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+          layout:{padding:{top:4,right:4}},
+          plugins:{legend:{display:false},
+            tooltip:{backgroundColor:darkVal('rgba(255,255,255,1)','rgba(28,28,32,1)'),borderColor:darkVal('rgba(0,0,0,.15)','rgba(255,255,255,.2)'),borderWidth:1,titleColor:_tc,bodyColor:_tc,titleFont:{size:fsPx('--fs-sm'),weight:'700'},bodyFont:{size:fsPx('--fs-xs')},padding:12,cornerRadius:10,callbacks:{label:c=>c.raw>0?` ${c.dataset.label} : ${eur(c.raw)}`:''}},
+            datalabels:{display:false}
+          },
+          scales:{x:{stacked:true,grid:{display:false},ticks:{color:_tc,font:{size:fsPx('--fs-xs')},maxRotation:0},border:{display:false}},
+            y:{stacked:true,beginAtZero:true,ticks:{callback:v=>(v/1000).toFixed(0)+'k€',font:{size:fsPx('--fs-xs')},color:_tc,maxTicksLimit:4},grid:{color:darkVal('rgba(0,0,0,.06)','rgba(255,255,255,.06)')},border:{display:false}}}
+        }
+      });
+    }
+  } else { _stCard.style.display='none'; }
+
+  // ── Graphique solde mensuel ──
+  anaSoldeChart=destroyChart(anaSoldeChart);
+  const _slCard=document.getElementById('analysis-solde-card');
+  const _slPts=_monthStats.filter(r=>r.hasData);
+  if(_slPts.length>=1){
+    _slCard.style.display='';
+    const _slCtx=document.getElementById('analysis-solde-chart');
+    if(_slCtx){
+      anaSoldeChart=new Chart(_slCtx,{
+        type:'bar',plugins:[ChartDataLabels],
+        data:{labels:_slPts.map(r=>{const[y,m]=r.mk.split('-');return _MNX[Number(m)-1]+' '+String(y).slice(2);}),
+          datasets:[{label:'Solde',data:_slPts.map(r=>r.solde),
+            backgroundColor:_slPts.map(r=>r.solde>=0?'#0d9e6ecc':'#d93535cc'),
+            borderColor:_slPts.map(r=>r.solde>=0?'#0d9e6e':'#d93535'),
+            borderWidth:0,borderRadius:4
+          }]},
+        options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+          layout:{padding:{top:4,right:4}},
+          plugins:{legend:{display:false},
+            tooltip:{backgroundColor:darkVal('rgba(255,255,255,1)','rgba(28,28,32,1)'),borderColor:darkVal('rgba(0,0,0,.15)','rgba(255,255,255,.2)'),borderWidth:1,titleColor:_tc,bodyColor:_tc,titleFont:{size:fsPx('--fs-sm'),weight:'700'},bodyFont:{size:fsPx('--fs-xs')},padding:12,cornerRadius:10,callbacks:{label:c=>` Solde : ${c.raw>=0?'+':''}${eur(c.raw)}`}},
+            datalabels:{display:false}
+          },
+          scales:{x:{grid:{display:false},ticks:{color:_tc,font:{size:fsPx('--fs-xs')},maxRotation:0},border:{display:false}},
+            y:{ticks:{callback:v=>eur(v),font:{size:fsPx('--fs-xs')},color:_tc,maxTicksLimit:4},grid:{color:darkVal('rgba(0,0,0,.06)','rgba(255,255,255,.06)')},border:{display:false}}}
+        }
+      });
+    }
+  } else { _slCard.style.display='none'; }
 }
 
 // ══════════════════════════════════════════════
@@ -6012,7 +6258,7 @@ async function _refreshAndRender(showToast){
     renderDashboard();
     if(currentTab==='entries')    renderEntries();
     if(currentTab==='savings')    renderSavings();
-    if(currentTab==='analysis')   renderAnalysis();
+    if(currentTab==='analysis' && showToast) renderAnalysis();
     if(currentTab==='projection') renderProjection();
     if(showToast) _showSyncToast();
   }finally{ _refreshing = false; }
@@ -6057,7 +6303,7 @@ function disconnectSSE(){
 function _startPoll(){
   _stopPoll();
   // Polling toutes les 30 s en filet de sécurité (si SSE manque un événement)
-  _pollTimer = setInterval(()=>{ _refreshAndRender(false); }, 30000);
+  _pollTimer = setInterval(()=>{ _refreshAndRender(false); }, 120000);
 }
 function _stopPoll(){ clearInterval(_pollTimer); _pollTimer = null; }
 
