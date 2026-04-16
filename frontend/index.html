@@ -956,6 +956,7 @@ window.onerror = function(msg, src, line) {
     <div id="proj-nodata" style="display:none"></div>
     <div id="proj-content">
     <div class="member-tabs" id="proj-mtabs"></div>
+    <div id="proj-budget-kpis" style="margin-bottom:var(--sg)"></div>
     <div class="kpi-grid" id="proj-kpis"></div>
     <div class="card" id="proj-chart-card"><div class="card-head">Projection épargne cumulée sur 10 ans</div><div id="proj-chart-wrap" style="position:relative;height:280px"><canvas id="proj-chart"></canvas></div></div>
     <div class="g2" id="proj-sim-cards">
@@ -1693,6 +1694,31 @@ const kpiHtml=(label,value,color,sub='',trend=null,tip='',badge='')=>{
   </div>`;
 };
 function destroyChart(c){if(c){try{c.destroy()}catch(e){}}return null;}
+
+// Carte budget KPI réutilisable (Fixes/Variables/Loisir/Épargne)
+function _budgetKpiCard(lbl, act, bgt, col, isEp=false) {
+  const pct = bgt>0 ? Math.round(act/bgt*100) : null;
+  const pc  = pct===null ? 'var(--muted)' : isEp
+    ? (pct>=100?'var(--green)':pct>=70?'var(--amber)':'var(--red)')
+    : (pct>100?'var(--red)':pct>85?'var(--amber)':'var(--green)');
+  const bw  = pct!==null ? Math.min(pct,100) : 0;
+  const diff= bgt>0 ? act-bgt : null;
+  const ds  = diff!==null ? (diff>0?`+${eur(Math.abs(diff))}`:`−${eur(Math.abs(diff))}`) : null;
+  const dc  = diff===null?'':isEp?(diff>=0?'var(--green)':'var(--red)'):(diff>0?'var(--red)':'var(--green)');
+  return `<div class="card" style="padding:14px 16px">
+    <div style="font-size:10px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:${col};margin-bottom:8px">${lbl}</div>
+    <div style="font-size:1.5rem;font-weight:900;letter-spacing:-.03em;color:var(--fg);line-height:1">${eur(act)}</div>
+    ${bgt>0
+      ? `<div style="font-size:var(--fs-xs);color:var(--muted);margin:4px 0 8px">/ ${eur(bgt)} ${ds?`<span style="color:${dc};font-weight:700">${ds}</span>`:''}</div>`
+      : `<div style="font-size:var(--fs-xs);color:var(--hint);margin:4px 0 8px">aucun budget</div>`}
+    <div style="height:5px;background:var(--surface2);border-radius:99px;overflow:hidden">
+      <div style="width:${bw}%;height:100%;background:${pct!==null?pc:col};border-radius:99px;transition:width .4s"></div>
+    </div>
+    ${pct!==null?`<div style="font-size:11px;font-weight:700;color:${pc};margin-top:5px">${pct}%</div>`:''}
+  </div>`;
+}
+const _budgetKpiGrid = (...cards) =>
+  `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:var(--sg);margin-bottom:var(--sg)">${cards.join('')}</div>`;
 
 // ── Helpers état vide ────────────────────────────────────────────
 function hasNoData(member){
@@ -2584,30 +2610,12 @@ async function renderDashboard(){
   </div>`;
 
   // ── 4 cartes budget ──
-  const _cc=(lbl,act,bgt,col,isEp=false)=>{
-    const pct=bgt>0?Math.round(act/bgt*100):null;
-    const pc=pct===null?'var(--muted)':isEp?(pct>=100?'var(--green)':pct>=70?'var(--amber)':'var(--red)'):(pct>100?'var(--red)':pct>85?'var(--amber)':'var(--green)');
-    const bw=pct!==null?Math.min(pct,100):0;
-    const diff=bgt>0?act-bgt:null;
-    const ds=diff!==null?(diff>0?`+${eur(Math.abs(diff))}`:`−${eur(Math.abs(diff))}`):null;
-    const dc=diff===null?'':isEp?(diff>=0?'var(--green)':'var(--red)'):(diff>0?'var(--red)':'var(--green)');
-    return `<div class="card" style="padding:14px 16px">
-      <div style="font-size:10px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:${col};margin-bottom:8px">${lbl}</div>
-      <div style="font-size:1.5rem;font-weight:900;letter-spacing:-.03em;color:var(--fg);line-height:1">${eur(act)}</div>
-      ${bgt>0?`<div style="font-size:var(--fs-xs);color:var(--muted);margin:4px 0 8px">/ ${eur(bgt)} ${ds?`<span style="color:${dc};font-weight:700">${ds}</span>`:''}</div>`:
-              `<div style="font-size:var(--fs-xs);color:var(--hint);margin:4px 0 8px">aucun budget</div>`}
-      <div style="height:5px;background:var(--surface2);border-radius:99px;overflow:hidden">
-        <div style="width:${bw}%;height:100%;background:${pct!==null?pc:col};border-radius:99px;transition:width .4s"></div>
-      </div>
-      ${pct!==null?`<div style="font-size:11px;font-weight:700;color:${pc};margin-top:5px">${pct}%</div>`:''}
-    </div>`;
-  };
-  const _cats=`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:var(--sg);margin-bottom:var(--sg)">
-    ${_cc('Fixes',       fixA,fixBudget,       '#d93535')}
-    ${_cc('Variables',   varA,varBudget,        '#e05a2b')}
-    ${_cc('Loisir',      loiA,loiBudget,        '#f59e0b')}
-    ${_cc('Épargne',     epMonthDelta,epBudget, '#2979c8',true)}
-  </div>`;
+  const _cats=_budgetKpiGrid(
+    _budgetKpiCard('Fixes',    fixA,        fixBudget, '#d93535'),
+    _budgetKpiCard('Variables',varA,        varBudget, '#e05a2b'),
+    _budgetKpiCard('Loisir',   loiA,        loiBudget, '#f59e0b'),
+    _budgetKpiCard('Épargne',  epMonthDelta,epBudget,  '#2979c8',true),
+  );
 
   // ── Graphique évolution mensuelle (style épargne) ──
   const _MN2=['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];
@@ -2706,11 +2714,10 @@ return `<div class="ova-row" style="padding:8px 0;border-bottom:1px solid var(--
   }
   // Top 5 par total, présents sur au moins 2 mois
   const _trendTop=[..._trendMap.values()]
-    .filter(r=>r.byMonth.size>=2)
     .sort((a,b)=>b.total-a.total)
     .slice(0,5);
   const _trendCols=['#d93535','#2979c8','#0d9e6e','#f59e0b','#a855f7'];
-  const _trend=_trendTop.length>=2?`<div class="card" style="padding:16px 18px;margin-bottom:var(--sg)">
+  const _trend=_trendTop.length>=1?`<div class="card" style="padding:16px 18px;margin-bottom:var(--sg)">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
       <span style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)">Évolution des dépenses clés</span>
     </div>
@@ -2780,7 +2787,7 @@ return `<div class="ova-row" style="padding:8px 0;border-bottom:1px solid var(--
     }
   }
   // ── Init graphique évolution dépenses clés ──
-  if(_trendTop.length>=2){
+  if(_trendTop.length>=1){
     const ctx=document.getElementById(_trendId);
     if(ctx){
       const textColor=darkVal('#666','#999');
@@ -3670,7 +3677,14 @@ function _renderMonthlySections(stats, expenses, savingsData = [], entryStats = 
   }
   document.getElementById('monthly-solde-hero').innerHTML = heroHtml;
 
-  document.getElementById('monthly-kpis').innerHTML = '';
+  const loiBudgetMly = loi.budget > 0 ? loi.budget
+    : (entryStats ? Math.round(entryStats.rav * (100-(savingPct[epMember0]??60)) / 100) : 0);
+  document.getElementById('monthly-kpis').innerHTML = _budgetKpiGrid(
+    _budgetKpiCard('Fixes',    fixe.actual,   fixe.budget,  '#d93535'),
+    _budgetKpiCard('Variables',vari.actual,   vari.budget,  '#e05a2b'),
+    _budgetKpiCard('Loisir',   loi.actual,    loiBudgetMly, '#f59e0b'),
+    _budgetKpiCard('Épargne',  epMonthDelta,  epBudget0,    '#2979c8',true),
+  );
   setTimeout(fillAllTracks, 0);
 
   // ── Sections groupées identiques au style prévisionnel ──
@@ -5312,6 +5326,16 @@ function renderProjection(){
   const curSav=scopedMembers.reduce((sum,m)=>sum+(savings.filter(r=>r.member===m).slice(-1)[0]?.amount||0),0);
   const monthly=Math.round(scopedMembers.reduce((sum,m)=>{const sm=calcStats(entries.filter(e=>e.member===m));return sum+sm.rav*(savingPct[m]??60)/100;},0));
   const revScoped=scopedMembers.reduce((sum,m)=>sum+calcStats(entries.filter(e=>e.member===m)).revNet,0);
+  // KPI budget prévisionnel
+  const _projStats=scopedMembers.reduce((acc,m)=>{const s=calcStats(entries.filter(e=>e.member===m));acc.fix+=s.fix;acc.vari+=s.vari;acc.rav+=s.rav;return acc;},{fix:0,vari:0,rav:0});
+  const _projEp=monthly;
+  const _projLoi=Math.round(scopedMembers.reduce((s,m)=>{const sm=calcStats(entries.filter(e=>e.member===m));return s+sm.rav*(100-(savingPct[m]??60))/100;},0));
+  document.getElementById('proj-budget-kpis').innerHTML=_budgetKpiGrid(
+    _budgetKpiCard('Fixes',    _projStats.fix,  0, '#d93535'),
+    _budgetKpiCard('Variables',_projStats.vari, 0, '#e05a2b'),
+    _budgetKpiCard('Loisir',   _projLoi,        0, '#f59e0b'),
+    _budgetKpiCard('Épargne',  _projEp,         0, '#2979c8',true),
+  );
   const annualRate=projAnnualRate,years=10;
   const projLabels=Array.from({length:years+1},(_,i)=>i===0?'Auj.':`+${i}a`);
   const noInterest=[],withInterest=[];
