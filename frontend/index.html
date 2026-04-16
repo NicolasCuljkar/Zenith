@@ -896,7 +896,7 @@ window.onerror = function(msg, src, line) {
     <div id="entries-mensuel" style="display:none">
       <!-- Navigateur de mois (style toolbar) -->
       <div id="monthly-toolbar" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem;gap:8px">
-        <button onclick="monthlyNavPrev()" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:5px 14px;cursor:pointer;color:var(--fg);font-size:1.1rem;line-height:1;flex-shrink:0">‹</button>
+        <button id="monthly-nav-prev" onclick="monthlyNavPrev()" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:5px 14px;cursor:pointer;color:var(--fg);font-size:1.1rem;line-height:1;flex-shrink:0">‹</button>
         <span id="monthly-label" style="font-size:var(--fs-base);font-weight:700;letter-spacing:-.01em;text-align:center;flex:1"></span>
         <button id="monthly-nav-next" onclick="monthlyNavNext()" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:5px 14px;cursor:pointer;color:var(--fg);font-size:1.1rem;line-height:1;flex-shrink:0">›</button>
       </div>
@@ -3342,12 +3342,15 @@ function switchEntriesTab(tab) {
   document.querySelectorAll('[data-etab]').forEach(b => b.classList.toggle('active', b.dataset.etab === tab));
   document.getElementById('entries-previsionnel').style.display = tab === 'previsionnel' ? '' : 'none';
   document.getElementById('entries-mensuel').style.display      = tab === 'mensuel'      ? '' : 'none';
-  if (tab === 'mensuel') { document.getElementById('fab-entry').style.display = 'none'; _updateMonthlyNavNext(); renderMonthly(); }
+  if (tab === 'mensuel') { document.getElementById('fab-entry').style.display = 'none'; _updateMonthlyNavNext(); _updateMonthlyNavPrev(); renderMonthly(); }
 }
+const MONTHLY_MIN_YEAR = 2026, MONTHLY_MIN_MONTH = 4;
 function monthlyNavPrev() {
+  if (monthlyYear === MONTHLY_MIN_YEAR && monthlyMonth <= MONTHLY_MIN_MONTH) return;
   monthlyMonth--;
   if (monthlyMonth < 1) { monthlyMonth = 12; monthlyYear--; }
   _updateMonthlyNavNext();
+  _updateMonthlyNavPrev();
   renderMonthly();
 }
 function monthlyNavNext() {
@@ -3365,6 +3368,14 @@ function _updateMonthlyNavNext() {
   btn.disabled = isAtCurrent;
   btn.style.opacity = isAtCurrent ? '0.3' : '';
   btn.style.cursor  = isAtCurrent ? 'not-allowed' : 'pointer';
+}
+function _updateMonthlyNavPrev() {
+  const btn = document.getElementById('monthly-nav-prev');
+  if (!btn) return;
+  const isAtMin = monthlyYear < MONTHLY_MIN_YEAR || (monthlyYear === MONTHLY_MIN_YEAR && monthlyMonth <= MONTHLY_MIN_MONTH);
+  btn.disabled = isAtMin;
+  btn.style.opacity = isAtMin ? '0.3' : '';
+  btn.style.cursor  = isAtMin ? 'not-allowed' : 'pointer';
 }
 
 async function renderMonthly() {
