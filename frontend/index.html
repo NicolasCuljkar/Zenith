@@ -2528,7 +2528,7 @@ async function renderDashboard(){
   const varBudget = mStats?.variable?.budget ??bStats.vari;
 
   // ── Historique : moyenne des 6 derniers mois (hors mois courant) ──
-  const pastH = (dashHistory||[]).filter(h=>!(h.year===dashYear&&h.month===dashMonth)).slice(0,6);
+  const pastH = (dashHistory||[]).filter(h=>!(h.year===dashYear&&h.month===dashMonth)&&(h.year>MONTHLY_MIN_YEAR||(h.year===MONTHLY_MIN_YEAR&&h.month>=MONTHLY_MIN_MONTH))).slice(0,6);
   const avgDep = pastH.length>0 ? Math.round(pastH.reduce((s,h)=>s+h.total,0)/pastH.length) : null;
   const prevH  = pastH[0] ?? null; // mois précédent
 
