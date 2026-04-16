@@ -1470,6 +1470,7 @@ document.getElementById('modal-confirm').addEventListener('click',e=>{if(e.targe
 let nextId=200,editEntryId=null,editSavingId=null;
 let donutChart=null,barChart=null,analysisDonut=null,projChart=null,topDonutChart=null;
 let waterfallChart=null,gaugeChart=null,radarChart=null,memberBarsChart=null,placementsChart=null;
+let dashBarChart=null,dashDonutChart=null;
 let savingsStabActive='month';
 let savingsYearFilter=String(new Date().getFullYear());
 let currentTab='dashboard';
@@ -2479,6 +2480,7 @@ async function renderDashboard(){
   const nodata=document.getElementById('dash-nodata');
   const content=document.getElementById('dash-content');
   donutChart=destroyChart(donutChart);topDonutChart=destroyChart(topDonutChart);waterfallChart=destroyChart(waterfallChart);
+  dashBarChart=destroyChart(dashBarChart);dashDonutChart=destroyChart(dashDonutChart);
   if(!currentUser){
     nodata.innerHTML=noDataBanner();nodata.style.display='';content.style.display='none';return;
   }
@@ -2666,47 +2668,79 @@ async function renderDashboard(){
     ${_ovaRows}
   </div>`;
 
-  // ── Top 5 dépenses ──
-  const topList=[...mExpenses].filter(e=>!['revenu','impot'].includes(e.cat)).sort((a,b)=>Math.abs(b.amount)-Math.abs(a.amount)).slice(0,5);
-  const maxTop=topList[0]?Math.abs(topList[0].amount):1;
-  const _topRows=topList.length?topList.map(e=>{
-    const amt=Math.abs(e.amount); const col=_catColP[e.cat]||'#6b7280';
-    return `<div style="padding:7px 0;border-bottom:1px solid var(--border)">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
-        <span style="font-size:var(--fs-sm);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:160px">${e.name}</span>
-        <span style="font-size:var(--fs-sm);font-weight:700;color:${col};flex-shrink:0">${eur(amt)}</span>
-      </div>
-      <div style="height:4px;background:var(--surface2);border-radius:2px;overflow:hidden">
-        <div style="width:${Math.round(amt/maxTop*100)}%;height:100%;background:${col};border-radius:2px;transition:width .4s"></div>
-      </div>
-    </div>`;
-  }).join(''):`<div style="font-size:var(--fs-sm);color:var(--hint);padding:10px 0">Aucune dépense ce mois</div>`;
-  const _top=`<div class="card" style="padding:16px 18px">
-    <div style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:10px">Top 5 dépenses</div>
-    ${_topRows}
+  // ── Graphique donut : répartition du mois ──
+  const _donutId='dash-donut-'+Date.now();
+  const _donutData=[
+    {lbl:'Fixes',    val:fixA,        col:'#d93535'},
+    {lbl:'Variables',val:varA,        col:'#e05a2b'},
+    {lbl:'Loisir',   val:loiA,        col:'#f59e0b'},
+    {lbl:'Épargne',  val:epMonthDelta,col:'#2979c8'},
+  ].filter(d=>d.val>0);
+  const _donut=`<div class="card" style="padding:16px 18px">
+    <div style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:12px">Répartition · ${frMonth}</div>
+    ${_donutData.length===0
+      ?`<div style="font-size:var(--fs-sm);color:var(--hint);padding:10px 0;text-align:center">Aucune dépense ce mois</div>`
+      :`<div style="position:relative;height:160px"><canvas id="${_donutId}"></canvas></div>
+        <div style="display:flex;flex-direction:column;gap:5px;margin-top:12px">
+          ${_donutData.map(d=>`<div style="display:flex;justify-content:space-between;align-items:center">
+            <div style="display:flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:50%;background:${d.col};flex-shrink:0"></span><span style="font-size:var(--fs-xs);color:var(--text)">${d.lbl}</span></div>
+            <span style="font-size:var(--fs-xs);font-weight:700;color:${d.col}">${eur(d.val)}</span>
+          </div>`).join('')}
+        </div>`
+    }
   </div>`;
 
-  // ── Projection épargne ──
-  const _mEpProj=epMonthDelta>0?epMonthDelta:epBudget;
-  const _existSav=savings.filter(s=>dashboardMember==='all'||s.member===dashboardMember).reduce((sum,s)=>sum+(s.amount||0),0);
-  const _proj=`<div class="card" style="padding:16px 18px;margin-bottom:var(--sg)">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
-      <span style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)">Projection épargne</span>
-      ${_existSav>0?`<span style="font-size:var(--fs-sm);font-weight:700;color:var(--blue)">${eur(_existSav)} cumulé</span>`:''}
-    </div>
-    <div style="font-size:var(--fs-xs);color:var(--hint);margin-bottom:10px">Basé sur ${eur(_mEpProj)}/mois · taux 3%/an</div>
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">
-      ${[1,3,5,10].map(yr=>{let acc=_existSav;for(let y=0;y<yr;y++)acc=(acc+_mEpProj*12)*(1+0.03);return`<div style="background:var(--surface2);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;font-weight:700;color:var(--muted);margin-bottom:4px">${yr} an${yr>1?'s':''}</div><div style="font-size:var(--fs-sm);font-weight:800;color:var(--green)">${eur(Math.round(acc))}</div></div>`;}).join('')}
-    </div>
+  // ── Graphique barres : évolution 6 derniers mois ──
+  const _barId='dash-bar-'+Date.now();
+  const _barData=[...pastH].reverse(); // du plus ancien au plus récent
+  const _MN2=['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];
+  const _bar=`<div class="card" style="padding:16px 18px">
+    <div style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:12px">Évolution dépenses</div>
+    ${_barData.length===0
+      ?`<div style="font-size:var(--fs-sm);color:var(--hint);padding:10px 0;text-align:center">Pas assez d'historique</div>`
+      :`<div style="position:relative;height:160px"><canvas id="${_barId}"></canvas></div>`
+    }
   </div>`;
 
   // ── Assemblage ──
   content.innerHTML=_monthNav+
     `<div id="dash-alert"></div>`+
     _hero+_cats+_hist+
-    `<div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--sg);margin-bottom:var(--sg)">${_ova}${_top}</div>`+
-    _proj+
+    `<div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--sg);margin-bottom:var(--sg)">${_ova}${_donut}</div>`+
+    _bar+
     `<div id="dash-charts" style="display:none"><div id="donut-chart-wrap" style="display:none"><canvas id="donut-chart"></canvas></div><div id="donut-legend" style="display:none"></div></div>`;
+
+  // ── Init graphiques ──
+  if(_donutData.length>0){
+    const ctx=document.getElementById(_donutId);
+    if(ctx) dashDonutChart=new Chart(ctx,{
+      type:'doughnut',
+      data:{labels:_donutData.map(d=>d.lbl),datasets:[{data:_donutData.map(d=>d.val),backgroundColor:_donutData.map(d=>d.col),borderWidth:0,hoverOffset:6}]},
+      options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+eur(c.raw)}}}}
+    });
+  }
+  if(_barData.length>0){
+    const ctx=document.getElementById(_barId);
+    if(ctx) dashBarChart=new Chart(ctx,{
+      type:'bar',
+      data:{
+        labels:_barData.map(h=>_MN2[h.month-1]),
+        datasets:[{
+          data:_barData.map(h=>h.total),
+          backgroundColor:_barData.map((_,i)=>i===_barData.length-1?'#d93535aa':'#d9353555'),
+          borderRadius:6,borderSkipped:false
+        }]
+      },
+      options:{
+        responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+eur(c.raw)}}},
+        scales:{
+          x:{grid:{display:false},ticks:{color:'var(--muted)',font:{size:11}}},
+          y:{grid:{color:'var(--border)',drawBorder:false},ticks:{color:'var(--muted)',font:{size:11},callback:v=>eur(v)},border:{display:false}}
+        }
+      }
+    });
+  }
   renderMemberTabsFor('dash-mtabs',dashboardMember,'setDashboardMember');
   setTimeout(updateMtabColors,0);
   checkInAppAlerts();
