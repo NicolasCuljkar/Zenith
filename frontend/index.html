@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-<meta name="theme-color" content="#f0f2f8">
+<meta name="theme-color" content="#f0f2f8" id="meta-theme-color">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Zénith">
@@ -666,7 +666,13 @@ html.light .auth-screen{background:radial-gradient(ellipse at 30% 20%,rgba(59,13
 html.light .auth-card{box-shadow:0 4px 40px rgba(0,0,0,.08)}
 
 </style>
-<script>(function(){if(localStorage.getItem('zenith_theme')!=='dark')document.documentElement.classList.add('light');})();</script>
+<script>(function(){
+  const isDark=localStorage.getItem('zenith_theme')==='dark';
+  if(!isDark)document.documentElement.classList.add('light');
+  document.documentElement.style.colorScheme=isDark?'dark':'light';
+  const m=document.getElementById('meta-theme-color');
+  if(m)m.setAttribute('content',isDark?'#1a1a2e':'#f0f2f8');
+})();</script>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
@@ -1902,6 +1908,7 @@ function toggleTheme(){
   document.documentElement.classList.toggle('light');
   const isLight=document.documentElement.classList.contains('light');
   localStorage.setItem('zenith_theme',isLight?'light':'dark');
+  document.documentElement.style.colorScheme=isLight?'light':'dark';
   const meta=document.querySelector('meta[name="theme-color"]');
   if(meta) meta.setAttribute('content',isLight?'#f0f2f8':'#1a1a2e');
   updateThemeLabel();
@@ -2482,36 +2489,47 @@ async function renderDashboard(){
   const frMonth=_MN[dashMonth-1];
   const apiParams={year:dashYear,month:dashMonth};
   if(dashboardMember!=='all') apiParams.member=dashboardMember;
-  let mStats=null,mExpenses=[];
-  try{[mStats,mExpenses]=await Promise.all([API.monthlyExpenses.getStats(apiParams),API.monthlyExpenses.getAll(apiParams)]);}catch(e){}
+  const savingsParams=dashboardMember!=='all'?{year:dashYear,member:dashboardMember}:{year:dashYear};
+  const histParams=dashboardMember!=='all'?{member:dashboardMember}:{};
+  let mStats=null,mExpenses=[],savingsDash=[],dashHistory=[];
+  try{[mStats,mExpenses,savingsDash,dashHistory]=await Promise.all([
+    API.monthlyExpenses.getStats(apiParams),
+    API.monthlyExpenses.getAll(apiParams),
+    API.savings.getAll(savingsParams),
+    API.monthlyExpenses.getHistory(histParams).catch(()=>[]),
+  ]);}catch(e){}
+  // ── Valeurs réelles ──
   const revA  = mStats?.revenu?.actual   ??0;
   const taxA  = mStats?.impot?.actual    ??0;
   const fixA  = mStats?.fixe?.actual     ??0;
   const varA  = mStats?.variable?.actual ??0;
-  const epA   = mStats?.epargne?.actual  ??0;
   const loiA  = mStats?.loisir?.actual   ??0;
-  const revNetA=revA-taxA, depA=fixA+varA, ravA=revNetA-depA;
-  const bStats=calcStats(dashboardMember==='all'?entries:entries.filter(e=>e.member===dashboardMember));
-  const memberList=orderedMembers();
-  const _epKey=m=>`${m}_${dashYear}_${dashMonth}`;
-  const _mPct =m=>monthlyEpPct[_epKey(m)]??savingPct[m]??60;
-  const _mRav =m=>calcStats(entries.filter(e=>e.member===m)).rav;
-  const _mEp  =m=>Math.max(0,Math.round(_mRav(m)*_mPct(m)/100));
-  const _mLoi =m=>Math.max(0,Math.round(_mRav(m)*(100-_mPct(m))/100));
-  const epBudget  =dashboardMember==='all'?memberList.reduce((s,m)=>s+_mEp(m),0):_mEp(dashboardMember);
-  const loiBudget =dashboardMember==='all'?memberList.reduce((s,m)=>s+_mLoi(m),0):_mLoi(dashboardMember);
-  const revBudget =mStats?.revenu?.budget   ??bStats.rev;
-  const taxBudget =mStats?.impot?.budget    ??bStats.tax;
-  const fixBudget =mStats?.fixe?.budget     ??bStats.fix;
-  const varBudget =mStats?.variable?.budget ??bStats.vari;
-  const soldeSgn=ravA>=0;
-  const soldeColor=soldeSgn?'var(--green)':'var(--red)';
-  const soldeBorder=soldeSgn?'#0d9e6e':'#d93535';
-  const epRate=revNetA>0?Math.round(epA/revNetA*100):0;
-  const epColor=epRate>=20?'var(--green)':epRate>=10?'var(--amber)':'var(--red)';
-  const depRate=revNetA>0?Math.round(depA/revNetA*100):0;
-  const depColor=depRate<=50?'var(--green)':depRate<=70?'var(--amber)':'var(--red)';
-  const mkBadge=(txt,ok,warn)=>`<span style="font-size:var(--fs-xs);font-weight:700;padding:2px 8px;border-radius:20px;background:${ok?'var(--green-bg)':warn?'var(--amber-bg)':'var(--red-bg)'};color:${ok?'var(--green)':warn?'var(--amber)':'var(--red)'}">${txt}</span>`;
+  const revNetA = revA - taxA;
+  // Épargne = delta mensuel uniquement (pas le cumul)
+  const epMonthDelta = Math.max(0, savingsDash
+    .filter(s=>s.year===dashYear&&s.month===frMonth&&s.delta!=null)
+    .reduce((sum,s)=>sum+(s.delta||0),0));
+  const totalDep = fixA + varA + loiA + epMonthDelta;
+  const mlyRavD  = revNetA - totalDep;
+
+  // ── Budget ──
+  const bStats    = calcStats(dashboardMember==='all'?entries:entries.filter(e=>e.member===dashboardMember));
+  const memberList= orderedMembers();
+  const _epKey    = m=>`${m}_${dashYear}_${dashMonth}`;
+  const _mPct     = m=>monthlyEpPct[_epKey(m)]??savingPct[m]??60;
+  const _mRav     = m=>calcStats(entries.filter(e=>e.member===m)).rav;
+  const _mEp      = m=>Math.max(0,Math.round(_mRav(m)*_mPct(m)/100));
+  const _mLoi     = m=>Math.max(0,Math.round(_mRav(m)*(100-_mPct(m))/100));
+  const epBudget  = dashboardMember==='all'?memberList.reduce((s,m)=>s+_mEp(m),0):_mEp(dashboardMember);
+  const loiBudget = dashboardMember==='all'?memberList.reduce((s,m)=>s+_mLoi(m),0):_mLoi(dashboardMember);
+  const fixBudget = mStats?.fixe?.budget     ??bStats.fix;
+  const varBudget = mStats?.variable?.budget ??bStats.vari;
+
+  // ── Historique : moyenne des 6 derniers mois (hors mois courant) ──
+  const pastH = (dashHistory||[]).filter(h=>!(h.year===dashYear&&h.month===dashMonth)).slice(0,6);
+  const avgDep = pastH.length>0 ? Math.round(pastH.reduce((s,h)=>s+h.total,0)/pastH.length) : null;
+  const prevH  = pastH[0] ?? null; // mois précédent
+
   // ── Month nav ──
   const _monthNav=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--sg)">
     <div class="member-tabs" id="dash-mtabs" style="margin-bottom:0"></div>
@@ -2521,152 +2539,173 @@ async function renderDashboard(){
       <button onclick="dashNavNext()" ${isCurrentMonth?'disabled':''} style="width:30px;height:30px;border-radius:50%;border:1px solid var(--border);background:var(--surface);cursor:pointer;font-size:16px;color:var(--muted);display:flex;align-items:center;justify-content:center;${isCurrentMonth?'opacity:.3':''}">›</button>
     </div>
   </div>`;
-  // ── Hero ──
-  const _hero=`<div style="background:${soldeSgn?'var(--green-bg)':'var(--red-bg)'};border:1.5px solid ${soldeBorder}44;border-radius:var(--r);padding:20px 24px;margin-bottom:var(--sg);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
-    <div>
-      <div style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:${soldeBorder};margin-bottom:6px">Reste à vivre · ${frMonth} ${dashYear}</div>
-      <div style="font-size:clamp(2rem,5vw,2.8rem);font-weight:900;letter-spacing:-.04em;color:${soldeColor};line-height:1.1">${ravA>=0?'+':''}${eur(ravA)}</div>
+
+  // ── Hero RAV (identique suivi mensuel) ──
+  const _ravGlow  = mlyRavD>=0?'#0d9e6e':'#d93535';
+  const _ravColor = mlyRavD>=0?'var(--green)':'var(--red)';
+  const _ravRate  = revNetA>0?Math.round(mlyRavD/revNetA*100):0;
+  const _hero=`<div style="background:linear-gradient(135deg,color-mix(in srgb,${_ravGlow} 12%,var(--surface)) 0%,var(--surface) 50%);border:1.5px solid color-mix(in srgb,${_ravGlow} 25%,var(--border));border-radius:18px;padding:20px 24px;position:relative;overflow:hidden;box-shadow:0 4px 24px color-mix(in srgb,${_ravGlow} 10%,transparent);margin-bottom:var(--sg)">
+    <div style="position:absolute;top:0;left:0;width:5px;height:100%;background:linear-gradient(180deg,${_ravGlow},${_ravGlow}88);border-radius:18px 0 0 18px"></div>
+    <div style="margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border)">
+      <div style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:${_ravGlow};margin-bottom:4px">Reste à vivre · ${frMonth} ${dashYear}</div>
+      <div style="font-size:clamp(1.8rem,4vw,2.5rem);font-weight:900;letter-spacing:-.04em;color:${_ravColor};line-height:1.1">${mlyRavD>=0?'+':''}${eur(mlyRavD)}</div>
+      <div style="font-size:var(--fs-xs);color:var(--muted);margin-top:4px">${_ravRate}% du revenu net</div>
     </div>
-    <div style="display:flex;flex-direction:column;gap:5px;text-align:right">
-      <div style="font-size:var(--fs-sm);color:var(--muted)">Revenus nets <span style="font-weight:700;color:var(--green)">${eur(revNetA)}</span></div>
-      <div style="font-size:var(--fs-sm);color:var(--muted)">Dépenses <span style="font-weight:700;color:var(--red)">−${eur(depA)}</span></div>
-      ${epA>0?`<div style="font-size:var(--fs-sm);color:var(--muted)">Épargne <span style="font-weight:700;color:var(--blue)">${eur(epA)}</span></div>`:''}
-    </div>
-  </div>`;
-  // ── KPIs ──
-  const _kpis=`<div class="kpi-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:var(--sg)">
-    ${kpiHtml('Revenus nets',eur(revNetA),'var(--green)',`Brut ${eur(revA)} · Impôts ${eur(taxA)}`)}
-    ${kpiHtml('Dépenses réelles',eur(depA),depColor,`${depRate}% du revenu net · Fixes ${eur(fixA)} + Var. ${eur(varA)}`,null,'',mkBadge(depRate<=50?'✓ Maîtrisé':depRate<=70?'Modéré':'⚠ Élevé',depRate<=50,depRate<=70))}
-    ${kpiHtml('Épargne du mois',eur(epA),epColor,`${epRate}% du revenu net · Objectif ${eur(epBudget)}`,null,'',mkBadge(epRate>=20?'✓ Bon taux':epRate>=10?'Correct':'⚠ Bas',epRate>=20,epRate>=10))}
-  </div>`;
-  // ── Flow bar ──
-  const _fTotal=Math.max(revA,1);
-  const _seg=(w,bg,lbl,v)=>w>0?`<div style="width:${w}%;background:${bg};height:100%" title="${lbl}: ${Math.round(v).toLocaleString('fr-FR')} €"></div>`:'';
-  const _leg=(col,lbl,v)=>`<span style="display:flex;align-items:center;gap:4px;font-size:var(--fs-xs);color:var(--muted)"><span style="width:8px;height:8px;border-radius:2px;background:${col};flex-shrink:0"></span>${lbl}<span style="font-weight:700;color:var(--fg)">${Math.round(v).toLocaleString('fr-FR')} €</span></span>`;
-  const tp=Math.round(taxA/_fTotal*100),fp2=Math.round(fixA/_fTotal*100),vp=Math.round(varA/_fTotal*100),epp=Math.round(epA/_fTotal*100),lp=Math.round(loiA/_fTotal*100);
-  const rp=Math.max(0,100-tp-fp2-vp-epp-lp);
-  const _flow=`<div class="card" style="padding:16px 18px;margin-bottom:var(--sg)">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-      <span style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)">Flux du revenu brut</span>
-      <span style="font-size:var(--fs-sm);font-weight:700;color:var(--green)">${eur(revA)}</span>
-    </div>
-    <div style="height:28px;border-radius:8px;overflow:hidden;display:flex">
-      ${_seg(tp,'#c49a00','Impôts',taxA)}${_seg(fp2,'#d93535','Fixes',fixA)}${_seg(vp,'#e05a2b','Variables',varA)}${_seg(epp,'#2979c8','Épargne',epA)}${_seg(lp,'#f59e0b','Loisir',loiA)}${_seg(rp,'#0d9e6e','RAV restant',Math.max(0,ravA-epA-loiA))}
-    </div>
-    <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:8px">
-      ${_leg('#c49a00','Impôts',taxA)}${_leg('#d93535','Fixes',fixA)}${_leg('#e05a2b','Variables',varA)}${_leg('#2979c8','Épargne',epA)}${lp>0?_leg('#f59e0b','Loisir',loiA):''}${rp>0?_leg('#0d9e6e','RAV restant',Math.max(0,ravA-epA-loiA)):''}
+    <div style="display:flex;gap:0;flex-wrap:wrap">
+      <div style="flex:1;min-width:110px;padding-right:14px;border-right:1px solid var(--border)">
+        <div style="font-size:9px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--green);margin-bottom:6px">Revenus</div>
+        <div class="prow"><span class="prow-lbl">Bruts</span><span class="prow-val" style="color:var(--green)">${eur(revA)}</span></div>
+        <div class="prow"><span class="prow-lbl">Impôts</span><span class="prow-val" style="color:var(--amber)">−${eur(taxA)}</span></div>
+        <div class="prow"><span class="prow-lbl" style="font-weight:700">Nets</span><span class="prow-val" style="color:var(--green);font-weight:700">${eur(revNetA)}</span></div>
+      </div>
+      <div style="flex:1;min-width:110px;padding-left:14px">
+        <div style="font-size:9px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--red);margin-bottom:6px">Dépenses</div>
+        <div class="prow"><span class="prow-lbl">Fixes</span><span class="prow-val" style="color:var(--red)">−${eur(fixA)}</span></div>
+        <div class="prow"><span class="prow-lbl">Variables</span><span class="prow-val" style="color:var(--red)">−${eur(varA)}</span></div>
+        <div class="prow"><span class="prow-lbl">Loisir</span><span class="prow-val" style="color:var(--amber)">−${eur(loiA)}</span></div>
+        ${epMonthDelta>0?`<div class="prow"><span class="prow-lbl">Épargne</span><span class="prow-val" style="color:var(--blue)">−${eur(epMonthDelta)}</span></div>`:''}
+        <div class="prow"><span class="prow-lbl" style="font-weight:700">Total</span><span class="prow-val" style="color:var(--red);font-weight:700">−${eur(totalDep)}</span></div>
+      </div>
     </div>
   </div>`;
-  // ── Comparatif prévu vs réel ──
-  const _crow=(lbl,act,bgt,isInc=false)=>{
-    const pct=bgt>0?Math.round(Math.min(act/bgt,1.5)*100):act>0?100:0;
-    const over=act>bgt&&bgt>0;
-    const col=isInc?(act>=bgt?'#0d9e6e':act>=bgt*.9?'#c49a00':'#d93535'):(over?'#d93535':pct>=90?'#c49a00':'#0d9e6e');
-    const colV=isInc?(act>=bgt?'var(--green)':act>=bgt*.9?'var(--amber)':'var(--red)'):(over?'var(--red)':pct>=90?'var(--amber)':'var(--green)');
-    const diff=act-bgt;
-    const diffStr=bgt>0&&diff!==0?(diff>0?`+${eur(Math.abs(diff))}`:`−${eur(Math.abs(diff))}`):'';
-    const diffCol=isInc?(diff>0?'var(--green)':'var(--red)'):(diff>0?'var(--red)':'var(--green)');
+
+  // ── 4 cartes budget ──
+  const _cc=(lbl,act,bgt,col,isEp=false)=>{
+    const pct=bgt>0?Math.round(act/bgt*100):null;
+    const pc=pct===null?'var(--muted)':isEp?(pct>=100?'var(--green)':pct>=70?'var(--amber)':'var(--red)'):(pct>100?'var(--red)':pct>85?'var(--amber)':'var(--green)');
+    const bw=pct!==null?Math.min(pct,100):0;
+    const diff=bgt>0?act-bgt:null;
+    const ds=diff!==null?(diff>0?`+${eur(Math.abs(diff))}`:`−${eur(Math.abs(diff))}`):null;
+    const dc=diff===null?'':isEp?(diff>=0?'var(--green)':'var(--red)'):(diff>0?'var(--red)':'var(--green)');
+    return `<div class="card" style="padding:14px 16px">
+      <div style="font-size:10px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:${col};margin-bottom:8px">${lbl}</div>
+      <div style="font-size:1.5rem;font-weight:900;letter-spacing:-.03em;color:var(--fg);line-height:1">${eur(act)}</div>
+      ${bgt>0?`<div style="font-size:var(--fs-xs);color:var(--muted);margin:4px 0 8px">/ ${eur(bgt)} ${ds?`<span style="color:${dc};font-weight:700">${ds}</span>`:''}</div>`:
+              `<div style="font-size:var(--fs-xs);color:var(--hint);margin:4px 0 8px">aucun budget</div>`}
+      <div style="height:5px;background:var(--surface2);border-radius:99px;overflow:hidden">
+        <div style="width:${bw}%;height:100%;background:${pct!==null?pc:col};border-radius:99px;transition:width .4s"></div>
+      </div>
+      ${pct!==null?`<div style="font-size:11px;font-weight:700;color:${pc};margin-top:5px">${pct}%</div>`:''}
+    </div>`;
+  };
+  const _cats=`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:var(--sg);margin-bottom:var(--sg)">
+    ${_cc('Fixes',       fixA,fixBudget,       '#d93535')}
+    ${_cc('Variables',   varA,varBudget,        '#e05a2b')}
+    ${_cc('Loisir',      loiA,loiBudget,        '#f59e0b')}
+    ${_cc('Épargne',     epMonthDelta,epBudget, '#2979c8',true)}
+  </div>`;
+
+  // ── Comparaison historique ──
+  const _dHistRow=(lbl,cur,avg,col)=>{
+    if(avg===null) return '';
+    const d=cur-avg, dOk=d<=0, dStr=(d>0?'+':'')+eur(d);
+    const maxV=Math.max(cur,avg,1);
     return `<div style="padding:8px 0;border-bottom:1px solid var(--border)">
-      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
         <span style="font-size:var(--fs-sm);color:var(--text)">${lbl}</span>
-        <div style="display:flex;align-items:center;gap:8px">
-          ${diffStr?`<span style="font-size:var(--fs-xs);color:${diffCol};font-weight:700">${diffStr}</span>`:''}
-          <span style="font-size:var(--fs-sm);font-weight:700;color:${colV}">${eur(act)}</span>
-          <span style="font-size:var(--fs-xs);color:var(--hint)">/ ${eur(bgt)}</span>
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="font-size:11px;color:${dOk?'var(--green)':'var(--red)'};font-weight:700">${dStr}</span>
+          <span style="font-size:var(--fs-sm);font-weight:700;color:var(--fg)">${eur(cur)}</span>
+          <span style="font-size:var(--fs-xs);color:var(--hint)">moy. ${eur(avg)}</span>
         </div>
       </div>
-      <div style="height:5px;background:var(--border);border-radius:3px;overflow:hidden">
-        <div style="width:${Math.min(pct,100)}%;height:100%;background:${col};border-radius:3px;transition:width .4s"></div>
+      <div style="display:flex;gap:3px;height:5px;border-radius:99px;overflow:hidden">
+        <div style="width:${Math.round(cur/maxV*100)}%;background:${col};border-radius:99px;transition:width .4s"></div>
       </div>
     </div>`;
   };
-  const _comp=`<div class="card" style="padding:16px 18px">
-    <div style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:2px">Prévu vs Réel</div>
-    ${_crow('Revenus bruts',  revA, revBudget, true)}
-    ${_crow('Impôts',         taxA, taxBudget)}
-    ${_crow('Charges fixes',  fixA, fixBudget)}
-    ${_crow('Dépenses variables',varA,varBudget)}
-    ${_crow('Loisir',         loiA, loiBudget)}
-    ${_crow('Épargne',        epA,  epBudget,  true)}
-  </div>`;
-  // ── Top dépenses ──
-  const topList=[...mExpenses].sort((a,b)=>Math.abs(b.amount)-Math.abs(a.amount)).slice(0,5);
-  const maxTop=topList[0]?Math.abs(topList[0].amount):1;
-  const _catCol={fixe:'#d93535',variable:'#e05a2b',loisir:'#f59e0b',epargne:'#2979c8'};
-  const _topRows=topList.length?topList.map(e=>{
-    const amt=Math.abs(e.amount);
-    const col=_catCol[e.cat]||'#6b7280';
-    return `<div style="padding:7px 0;border-bottom:1px solid var(--border)">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
-        <span style="font-size:var(--fs-sm);font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:150px">${e.name}</span>
-        <span style="font-size:var(--fs-sm);font-weight:700;color:${col};flex-shrink:0">${eur(amt)}</span>
-      </div>
-      <div style="height:4px;background:var(--border);border-radius:2px;overflow:hidden">
-        <div style="width:${Math.round(amt/maxTop*100)}%;height:100%;background:${col};border-radius:2px;transition:width .4s"></div>
-      </div>
-    </div>`;
-  }).join(''):`<div style="font-size:var(--fs-sm);color:var(--hint);padding:12px 0">Aucune dépense saisie ce mois</div>`;
-  const _top=`<div class="card" style="padding:16px 18px">
-    <div style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:2px">Top dépenses</div>
-    ${_topRows}
-  </div>`;
-  // ── Où va l'argent ──
+  const _hist=avgDep!==null?`<div class="card" style="padding:16px 18px;margin-bottom:var(--sg)">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <span style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)">vs moyenne ${pastH.length} derniers mois</span>
+      ${totalDep>0&&avgDep>0?`<span style="font-size:var(--fs-xs);font-weight:700;padding:2px 8px;border-radius:20px;background:${totalDep<=avgDep?'var(--green-bg)':'var(--red-bg)'};color:${totalDep<=avgDep?'var(--green)':'var(--red)'}">Total ${totalDep<=avgDep?'↓':'+'}${eur(Math.abs(totalDep-avgDep))}</span>`:''}
+    </div>
+    ${_dHistRow('Total dépenses',totalDep,avgDep,'var(--red)')}
+    ${prevH?`<div style="padding:8px 0"><div style="display:flex;justify-content:space-between"><span style="font-size:var(--fs-xs);color:var(--muted)">Mois précédent</span><span style="font-size:var(--fs-xs);font-weight:700;color:var(--fg)">${eur(prevH.total)}</span></div></div>`:''}
+  </div>`:'';
+
+  // ── Où va l'argent ? (sans revenus) ──
   const _catColP={fixe:'#d93535',variable:'#e05a2b',loisir:'#f59e0b',epargne:'#2979c8'};
+  const _depExpenses=mExpenses.filter(e=>!['revenu','impot'].includes(e.cat));
   const _postesMap=new Map();
-  for(const e of mExpenses){
+  for(const e of _depExpenses){
     const k=e.name.trim();
     if(!_postesMap.has(k)) _postesMap.set(k,{name:k,cat:e.cat,total:0,count:0});
-    const p=_postesMap.get(k);
-    p.total+=Math.abs(e.amount);p.count++;
+    const p=_postesMap.get(k); p.total+=Math.abs(e.amount); p.count++;
   }
   const _postesRows=[..._postesMap.values()].sort((a,b)=>b.total-a.total);
   const _postesTotal=_postesRows.reduce((s,r)=>s+r.total,0);
   const _postesMax=_postesRows[0]?.total||1;
-  const _ovaHtml=_postesRows.length===0
-    ? `<div style="font-size:var(--fs-sm);color:var(--hint);padding:10px 0;text-align:center">Aucune dépense saisie ce mois</div>`
-    : _postesRows.map(r=>{
-        const col=_catColP[r.cat]||'#6b7280';
-        const pct=Math.round(r.total/_postesMax*100);
-        const share=_postesTotal>0?Math.round(r.total/_postesTotal*100):0;
-        return `<div style="padding:9px 0;border-bottom:1px solid var(--border)">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
-            <div style="display:flex;align-items:center;gap:7px;min-width:0">
-              <span style="width:8px;height:8px;border-radius:50%;background:${col};flex-shrink:0"></span>
-              <span style="font-size:var(--fs-sm);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.name}</span>
-              ${r.count>1?`<span style="font-size:11px;color:var(--muted);flex-shrink:0">×${r.count}</span>`:''}
-            </div>
-            <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
-              <span style="font-size:11px;color:var(--muted)">${share}%</span>
-              <span style="font-size:var(--fs-sm);font-weight:700;color:${col};min-width:52px;text-align:right">${eur(r.total)}</span>
-            </div>
+  const _ovaRows=_postesRows.length===0
+    ?`<div style="font-size:var(--fs-sm);color:var(--hint);padding:10px 0;text-align:center">Aucune dépense ce mois</div>`
+    :_postesRows.map(r=>{
+      const col=_catColP[r.cat]||'#6b7280';
+      const pct=Math.round(r.total/_postesMax*100);
+      const share=_postesTotal>0?Math.round(r.total/_postesTotal*100):0;
+      return `<div style="padding:8px 0;border-bottom:1px solid var(--border)">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
+          <div style="display:flex;align-items:center;gap:7px;min-width:0">
+            <span style="width:8px;height:8px;border-radius:50%;background:${col};flex-shrink:0"></span>
+            <span style="font-size:var(--fs-sm);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.name}</span>
+            ${r.count>1?`<span style="font-size:11px;color:var(--muted)">×${r.count}</span>`:''}
           </div>
-          <div style="height:5px;background:var(--surface2);border-radius:99px;overflow:hidden">
-            <div style="width:${pct}%;height:100%;background:${col};border-radius:99px;transition:width .4s"></div>
+          <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+            <span style="font-size:11px;color:var(--muted)">${share}%</span>
+            <span style="font-size:var(--fs-sm);font-weight:700;color:${col};min-width:52px;text-align:right">${eur(r.total)}</span>
           </div>
-        </div>`;
-      }).join('');
-  const _ova=`<div class="card" style="padding:16px 18px;margin-bottom:var(--sg)">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        </div>
+        <div style="height:4px;background:var(--surface2);border-radius:99px;overflow:hidden">
+          <div style="width:${pct}%;height:100%;background:${col};border-radius:99px;transition:width .4s"></div>
+        </div>
+      </div>`;
+    }).join('');
+  const _ova=`<div class="card" style="padding:16px 18px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
       <span style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)">Où va l'argent ?</span>
       ${_postesTotal>0?`<span style="font-size:var(--fs-sm);font-weight:700;color:var(--fg)">${eur(_postesTotal)}</span>`:''}
     </div>
-    ${_ovaHtml}
+    ${_ovaRows}
   </div>`;
-  // ── Projection ──
-  const _mEpProj=epA>0?epA:epBudget;
+
+  // ── Top 5 dépenses ──
+  const topList=[...mExpenses].filter(e=>!['revenu','impot'].includes(e.cat)).sort((a,b)=>Math.abs(b.amount)-Math.abs(a.amount)).slice(0,5);
+  const maxTop=topList[0]?Math.abs(topList[0].amount):1;
+  const _topRows=topList.length?topList.map(e=>{
+    const amt=Math.abs(e.amount); const col=_catColP[e.cat]||'#6b7280';
+    return `<div style="padding:7px 0;border-bottom:1px solid var(--border)">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+        <span style="font-size:var(--fs-sm);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:160px">${e.name}</span>
+        <span style="font-size:var(--fs-sm);font-weight:700;color:${col};flex-shrink:0">${eur(amt)}</span>
+      </div>
+      <div style="height:4px;background:var(--surface2);border-radius:2px;overflow:hidden">
+        <div style="width:${Math.round(amt/maxTop*100)}%;height:100%;background:${col};border-radius:2px;transition:width .4s"></div>
+      </div>
+    </div>`;
+  }).join(''):`<div style="font-size:var(--fs-sm);color:var(--hint);padding:10px 0">Aucune dépense ce mois</div>`;
+  const _top=`<div class="card" style="padding:16px 18px">
+    <div style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:10px">Top 5 dépenses</div>
+    ${_topRows}
+  </div>`;
+
+  // ── Projection épargne ──
+  const _mEpProj=epMonthDelta>0?epMonthDelta:epBudget;
   const _existSav=savings.filter(s=>dashboardMember==='all'||s.member===dashboardMember).reduce((sum,s)=>sum+(s.amount||0),0);
-  const _proj=`<div class="card" style="padding:16px 18px">
-    <div style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:4px">Projection épargne</div>
-    <div style="font-size:var(--fs-xs);color:var(--hint);margin-bottom:8px">Basé sur ${eur(_mEpProj)}/mois · taux 3%/an</div>
-    ${_existSav>0?`<div class="prow"><span class="prow-lbl" style="color:var(--blue)">Épargne cumulée</span><span class="prow-val" style="color:var(--blue);font-weight:700">${eur(_existSav)}</span></div>`:''}
-    ${[1,3,5,10].map(yr=>{let acc=0;for(let y=0;y<yr;y++)acc=(acc+_mEpProj*12)*(1+0.03);return`<div class="prow"><span class="prow-lbl">${yr} an${yr>1?'s':''}</span><span class="prow-val" style="color:var(--green);font-weight:700">${eur(Math.round(acc))}</span></div>`;}).join('')}
+  const _proj=`<div class="card" style="padding:16px 18px;margin-bottom:var(--sg)">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+      <span style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)">Projection épargne</span>
+      ${_existSav>0?`<span style="font-size:var(--fs-sm);font-weight:700;color:var(--blue)">${eur(_existSav)} cumulé</span>`:''}
+    </div>
+    <div style="font-size:var(--fs-xs);color:var(--hint);margin-bottom:10px">Basé sur ${eur(_mEpProj)}/mois · taux 3%/an</div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">
+      ${[1,3,5,10].map(yr=>{let acc=_existSav;for(let y=0;y<yr;y++)acc=(acc+_mEpProj*12)*(1+0.03);return`<div style="background:var(--surface2);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;font-weight:700;color:var(--muted);margin-bottom:4px">${yr} an${yr>1?'s':''}</div><div style="font-size:var(--fs-sm);font-weight:800;color:var(--green)">${eur(Math.round(acc))}</div></div>`;}).join('')}
+    </div>
   </div>`;
-  // ── Assemble ──
+
+  // ── Assemblage ──
   content.innerHTML=_monthNav+
     `<div id="dash-alert"></div>`+
-    _hero+_kpis+_flow+
-    `<div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--sg);margin-bottom:var(--sg)">${_comp}${_top}</div>`+
-    _ova+_proj+
+    _hero+_cats+_hist+
+    `<div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--sg);margin-bottom:var(--sg)">${_ova}${_top}</div>`+
+    _proj+
     `<div id="dash-charts" style="display:none"><div id="donut-chart-wrap" style="display:none"><canvas id="donut-chart"></canvas></div><div id="donut-legend" style="display:none"></div></div>`;
   renderMemberTabsFor('dash-mtabs',dashboardMember,'setDashboardMember');
   setTimeout(updateMtabColors,0);
