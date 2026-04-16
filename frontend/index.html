@@ -2504,12 +2504,13 @@ async function renderDashboard(){
   if(dashboardMember!=='all') apiParams.member=dashboardMember;
   const savingsParams=dashboardMember!=='all'?{year:dashYear,member:dashboardMember}:{year:dashYear};
   const histParams=dashboardMember!=='all'?{member:dashboardMember}:{};
-  let mStats=null,mExpenses=[],savingsDash=[],dashHistory=[];
-  try{[mStats,mExpenses,savingsDash,dashHistory]=await Promise.all([
+  let mStats=null,mExpenses=[],savingsDash=[],dashHistory=[],allMlyExp=[];
+  try{[mStats,mExpenses,savingsDash,dashHistory,allMlyExp]=await Promise.all([
     API.monthlyExpenses.getStats(apiParams),
     API.monthlyExpenses.getAll(apiParams),
     API.savings.getAll(savingsParams),
     API.monthlyExpenses.getHistory(histParams).catch(()=>[]),
+    API.monthlyExpenses.getAll(histParams).catch(()=>[]),
   ]);}catch(e){}
   // ── Valeurs réelles ──
   const revA  = mStats?.revenu?.actual   ??0;
@@ -2682,10 +2683,47 @@ return `<div class="ova-row" style="padding:8px 0;border-bottom:1px solid var(--
     ${_ovaRows}
   </div>`;
 
+  // ── Top dépenses par libellé (évolution multi-courbes) ──
+  const _trendId='dash-trend-'+Date.now();
+  const _MN3=['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];
+  // Filtre : dépenses réelles hors revenus/impôts, à partir du mois min
+  const _trendExp=(allMlyExp||[]).filter(e=>
+    !['revenu','impot'].includes(e.cat)&&
+    (e.year>MONTHLY_MIN_YEAR||(e.year===MONTHLY_MIN_YEAR&&e.month>=MONTHLY_MIN_MONTH))
+  );
+  // Mois disponibles triés
+  const _trendMonthSet=new Set(_trendExp.map(e=>`${e.year}-${String(e.month).padStart(2,'0')}`));
+  const _trendMonths=[..._trendMonthSet].sort();
+  const _trendLabels=_trendMonths.map(k=>{const[y,m]=k.split('-');return _MN3[Number(m)-1]+' '+String(y).slice(2);});
+  // Groupement par libellé
+  const _trendMap=new Map();
+  for(const e of _trendExp){
+    const k=e.name.trim(); const mk=`${e.year}-${String(e.month).padStart(2,'0')}`;
+    if(!_trendMap.has(k))_trendMap.set(k,{name:k,cat:e.cat,byMonth:new Map(),total:0});
+    const r=_trendMap.get(k);
+    r.byMonth.set(mk,(r.byMonth.get(mk)||0)+Math.abs(e.amount));
+    r.total+=Math.abs(e.amount);
+  }
+  // Top 5 par total, présents sur au moins 2 mois
+  const _trendTop=[..._trendMap.values()]
+    .filter(r=>r.byMonth.size>=2)
+    .sort((a,b)=>b.total-a.total)
+    .slice(0,5);
+  const _trendCols=['#d93535','#2979c8','#0d9e6e','#f59e0b','#a855f7'];
+  const _trend=_trendTop.length>=2?`<div class="card" style="padding:16px 18px;margin-bottom:var(--sg)">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+      <span style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)">Évolution des dépenses clés</span>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px">
+      ${_trendTop.map((r,i)=>`<div style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:3px;border-radius:2px;background:${_trendCols[i]};display:inline-block"></span><span style="font-size:11px;font-weight:600;color:${_trendCols[i]}">${r.name}</span></div>`).join('')}
+    </div>
+    <div style="position:relative;height:200px"><canvas id="${_trendId}"></canvas></div>
+  </div>`:'';
+
   // ── Assemblage ──
   content.innerHTML=_monthNav+
     `<div id="dash-alert"></div>`+
-    _hero+_cats+_hist+_ova+
+    _hero+_cats+_hist+_ova+_trend+
     `<div id="dash-charts" style="display:none"></div>`;
   // ── Init graphique évolution ──
   if(_histPoints.length>1){
@@ -2736,6 +2774,65 @@ return `<div class="ova-row" style="padding:8px 0;border-bottom:1px solid var(--
           scales:{
             x:{grid:{display:false},ticks:{color:textColor,font:{size:fsPx('--fs-xs')},maxRotation:0},border:{display:false}},
             y:{beginAtZero:true,ticks:{callback:v=>(v/1000).toFixed(0)+'k€',font:{size:fsPx('--fs-xs')},color:textColor,maxTicksLimit:4},grid:{color:darkVal('rgba(0,0,0,.06)','rgba(255,255,255,.06)')},border:{display:false}}
+          }
+        }
+      });
+    }
+  }
+  // ── Init graphique évolution dépenses clés ──
+  if(_trendTop.length>=2){
+    const ctx=document.getElementById(_trendId);
+    if(ctx){
+      const textColor=darkVal('#666','#999');
+      const datasets=_trendTop.map((r,i)=>{
+        const col=_trendCols[i];
+        const data=_trendMonths.map(mk=>r.byMonth.get(mk)??null);
+        return{
+          label:r.name, data,
+          type:'line', tension:.45,
+          fill:false,
+          borderColor:col,
+          backgroundColor:col+'33',
+          borderWidth:2.5,
+          pointRadius:0, pointHoverRadius:5,
+          pointBackgroundColor:col, pointBorderColor:'#fff', pointBorderWidth:2,
+          spanGaps:true,
+        };
+      });
+      dashDonutChart=destroyChart(dashDonutChart);
+      dashDonutChart=new Chart(ctx,{
+        type:'line',
+        plugins:[ChartDataLabels],
+        data:{labels:_trendLabels, datasets},
+        options:{
+          responsive:true, maintainAspectRatio:false,
+          interaction:{mode:'index', intersect:false},
+          layout:{padding:{top:24, right:20}},
+          plugins:{
+            legend:{display:false},
+            tooltip:{
+              backgroundColor:darkVal('rgba(255,255,255,1)','rgba(28,28,32,1)'),
+              borderColor:darkVal('rgba(0,0,0,.15)','rgba(255,255,255,.2)'),
+              borderWidth:1, titleColor:textColor, bodyColor:textColor,
+              titleFont:{size:fsPx('--fs-sm'),weight:'700'}, bodyFont:{size:fsPx('--fs-xs')},
+              padding:12, cornerRadius:10,
+              callbacks:{label:c=>c.raw!=null?` ${c.dataset.label} : ${eur(c.raw)}`:''}
+            },
+            datalabels:{
+              display:(c)=>c.raw!=null&&c.dataIndex===c.dataset.data.filter(v=>v!=null).length-1,
+              anchor:'end', align:'top',
+              formatter:(v)=>v!=null?(v/1000).toFixed(1)+'k€':'',
+              color:(c)=>_trendCols[c.datasetIndex]||textColor,
+              font:{size:fsPx('--fs-xs'),weight:'800'},
+              backgroundColor:darkVal('#fff','#1a1a18'),
+              borderRadius:4, padding:{top:3,bottom:3,left:6,right:6},
+              borderWidth:1,
+              borderColor:(c)=>(_trendCols[c.datasetIndex]||'#999')+'44',
+            }
+          },
+          scales:{
+            x:{grid:{display:false}, ticks:{color:textColor,font:{size:fsPx('--fs-xs')},maxRotation:0}, border:{display:false}},
+            y:{beginAtZero:true, ticks:{callback:v=>eur(v),font:{size:fsPx('--fs-xs')},color:textColor,maxTicksLimit:4}, grid:{color:darkVal('rgba(0,0,0,.06)','rgba(255,255,255,.06)')}, border:{display:false}}
           }
         }
       });
