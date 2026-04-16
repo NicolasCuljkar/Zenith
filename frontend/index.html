@@ -2597,32 +2597,22 @@ async function renderDashboard(){
     ${_cc('Épargne',     epMonthDelta,epBudget, '#2979c8',true)}
   </div>`;
 
-  // ── Comparaison historique ──
-  const _dHistRow=(lbl,cur,avg,col)=>{
-    if(avg===null) return '';
-    const d=cur-avg, dOk=d<=0, dStr=(d>0?'+':'')+eur(d);
-    const maxV=Math.max(cur,avg,1);
-    return `<div style="padding:8px 0;border-bottom:1px solid var(--border)">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-        <span style="font-size:var(--fs-sm);color:var(--text)">${lbl}</span>
-        <div style="display:flex;align-items:center;gap:10px">
-          <span style="font-size:11px;color:${dOk?'var(--green)':'var(--red)'};font-weight:700">${dStr}</span>
-          <span style="font-size:var(--fs-sm);font-weight:700;color:var(--fg)">${eur(cur)}</span>
-          <span style="font-size:var(--fs-xs);color:var(--hint)">moy. ${eur(avg)}</span>
-        </div>
-      </div>
-      <div style="display:flex;gap:3px;height:5px;border-radius:99px;overflow:hidden">
-        <div style="width:${Math.round(cur/maxV*100)}%;background:${col};border-radius:99px;transition:width .4s"></div>
-      </div>
-    </div>`;
-  };
-  const _hist=avgDep!==null?`<div class="card" style="padding:16px 18px;margin-bottom:var(--sg)">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-      <span style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)">vs moyenne ${pastH.length} derniers mois</span>
-      ${totalDep>0&&avgDep>0?`<span style="font-size:var(--fs-xs);font-weight:700;padding:2px 8px;border-radius:20px;background:${totalDep<=avgDep?'var(--green-bg)':'var(--red-bg)'};color:${totalDep<=avgDep?'var(--green)':'var(--red)'}">Total ${totalDep<=avgDep?'↓':'+'}${eur(Math.abs(totalDep-avgDep))}</span>`:''}
+  // ── Graphique évolution mensuelle (style épargne) ──
+  const _MN2=['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];
+  const _histId='dash-hist-'+Date.now();
+  // Points : mois passés (du plus ancien au plus récent) + mois courant
+  const _histPoints=[...[...pastH].reverse(), {year:dashYear,month:dashMonth,total:totalDep}];
+  const _histLabels=_histPoints.map(h=>_MN2[h.month-1]+' '+String(h.year).slice(2));
+  const _histVals=_histPoints.map(h=>h.total);
+  const _diffLabel=avgDep!==null&&totalDep>0
+    ?`<span style="font-size:var(--fs-xs);font-weight:700;padding:2px 8px;border-radius:20px;background:${totalDep<=avgDep?'var(--green-bg)':'var(--red-bg)'};color:${totalDep<=avgDep?'var(--green)':'var(--red)'}">vs moy. ${totalDep<=avgDep?'↓':'+'}${eur(Math.abs(totalDep-avgDep))}</span>`
+    :'';
+  const _hist=_histPoints.length>1?`<div class="card" style="padding:16px 18px;margin-bottom:var(--sg)">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <span style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)">Évolution mensuelle</span>
+      ${_diffLabel}
     </div>
-    ${_dHistRow('Total dépenses',totalDep,avgDep,'var(--red)')}
-    ${prevH?`<div style="padding:8px 0"><div style="display:flex;justify-content:space-between"><span style="font-size:var(--fs-xs);color:var(--muted)">Mois précédent</span><span style="font-size:var(--fs-xs);font-weight:700;color:var(--fg)">${eur(prevH.total)}</span></div></div>`:''}
+    <div style="position:relative;height:180px"><canvas id="${_histId}"></canvas></div>
   </div>`:'';
 
   // ── Où va l'argent ? (sans revenus) ──
@@ -2673,6 +2663,60 @@ async function renderDashboard(){
     `<div id="dash-alert"></div>`+
     _hero+_cats+_hist+_ova+
     `<div id="dash-charts" style="display:none"></div>`;
+  // ── Init graphique évolution ──
+  if(_histPoints.length>1){
+    const ctx=document.getElementById(_histId);
+    if(ctx){
+      const col='#d93535';
+      const textColor=darkVal('#666','#999');
+      dashBarChart=destroyChart(dashBarChart);
+      dashBarChart=new Chart(ctx,{
+        type:'line',
+        plugins:[ChartDataLabels],
+        data:{
+          labels:_histLabels,
+          datasets:[{
+            data:_histVals,
+            tension:.45,fill:true,
+            borderColor:col,
+            backgroundColor:(c)=>{const{chart:{ctx:c2,chartArea}}=c;if(!chartArea)return col+'22';const g=c2.createLinearGradient(0,chartArea.top,0,chartArea.bottom);g.addColorStop(0,col+'66');g.addColorStop(1,col+'05');return g;},
+            borderWidth:2.5,
+            pointRadius:0,pointHoverRadius:5,
+            pointBackgroundColor:col,pointBorderColor:'#fff',pointBorderWidth:2,
+          }]
+        },
+        options:{
+          responsive:true,maintainAspectRatio:false,
+          interaction:{mode:'index',intersect:false},
+          layout:{padding:{top:24,right:16}},
+          plugins:{
+            legend:{display:false},
+            tooltip:{
+              backgroundColor:darkVal('rgba(255,255,255,1)','rgba(28,28,32,1)'),
+              borderColor:darkVal('rgba(0,0,0,.15)','rgba(255,255,255,.2)'),
+              borderWidth:1,titleColor:textColor,bodyColor:textColor,
+              titleFont:{size:fsPx('--fs-sm'),weight:'700'},bodyFont:{size:fsPx('--fs-xs')},
+              padding:12,cornerRadius:10,
+              callbacks:{label:c=>` Dépenses : ${eur(c.raw)}`}
+            },
+            datalabels:{
+              display:(c)=>c.raw!=null,
+              anchor:'end',align:'top',
+              formatter:(v)=>v!=null?(v/1000).toFixed(1)+'k€':'',
+              color:col,font:{size:fsPx('--fs-xs'),weight:'800'},
+              backgroundColor:darkVal('#fff','#1a1a18'),
+              borderRadius:4,padding:{top:3,bottom:3,left:6,right:6},
+              borderWidth:1,borderColor:col+'44',
+            }
+          },
+          scales:{
+            x:{grid:{display:false},ticks:{color:textColor,font:{size:fsPx('--fs-xs')},maxRotation:0},border:{display:false}},
+            y:{beginAtZero:true,ticks:{callback:v=>(v/1000).toFixed(0)+'k€',font:{size:fsPx('--fs-xs')},color:textColor,maxTicksLimit:4},grid:{color:darkVal('rgba(0,0,0,.06)','rgba(255,255,255,.06)')},border:{display:false}}
+          }
+        }
+      });
+    }
+  }
   renderMemberTabsFor('dash-mtabs',dashboardMember,'setDashboardMember');
   setTimeout(updateMtabColors,0);
   checkInAppAlerts();
