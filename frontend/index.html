@@ -1705,7 +1705,7 @@ const kpiHtml=(label,value,color,sub='',trend=null,tip='',badge='')=>{
 function destroyChart(c){if(c){try{c.destroy()}catch(e){}}return null;}
 
 // Carte budget KPI réutilisable (Fixes/Variables/Loisir/Épargne)
-function _budgetKpiCard(lbl, act, bgt, col, isEp=false) {
+function _budgetKpiCard(lbl, act, bgt, col, isEp=false, excl=0) {
   const pct = bgt>0 ? Math.round(act/bgt*100) : null;
   const pc  = pct===null ? 'var(--muted)' : isEp
     ? (pct>=100?'var(--green)':pct>=70?'var(--amber)':'var(--red)')
@@ -1724,6 +1724,7 @@ function _budgetKpiCard(lbl, act, bgt, col, isEp=false) {
       <div style="width:${bw}%;height:100%;background:${pct!==null?pc:col};border-radius:99px;transition:width .4s"></div>
     </div>
     ${pct!==null?`<div style="font-size:11px;font-weight:700;color:${pc};margin-top:5px">${pct}%</div>`:''}
+    ${excl>0?`<div style="font-size:var(--fs-xs);color:var(--amber);margin-top:5px;padding-top:5px;border-top:1px dashed color-mix(in srgb,var(--amber) 30%,var(--border))">+${eur(excl)} exceptionnel</div>`:''}
   </div>`;
 }
 function _retraitKpiCard(amount, balBefore, balAfter) {
@@ -2643,10 +2644,13 @@ async function renderDashboard(){
   </div>`;
 
   // ── 4 cartes budget ──
+  const _dExclFixe = mExpenses.filter(e=>e.is_exceptional&&e.cat==='fixe').reduce((s,e)=>s+Math.abs(e.amount),0);
+  const _dExclVar  = mExpenses.filter(e=>e.is_exceptional&&e.cat==='variable').reduce((s,e)=>s+Math.abs(e.amount),0);
+  const _dExclLoi  = mExpenses.filter(e=>e.is_exceptional&&e.cat==='loisir').reduce((s,e)=>s+Math.abs(e.amount),0);
   const _cats=_budgetKpiGrid(
-    _budgetKpiCard('Fixes',    fixA,        fixBudget, '#d93535'),
-    _budgetKpiCard('Variables',varA,        varBudget, '#e05a2b'),
-    _budgetKpiCard('Loisir',   loiA,        loiBudget, '#f59e0b'),
+    _budgetKpiCard('Fixes',    fixA,        fixBudget, '#d93535', false, _dExclFixe),
+    _budgetKpiCard('Variables',varA,        varBudget, '#e05a2b', false, _dExclVar),
+    _budgetKpiCard('Loisir',   loiA,        loiBudget, '#f59e0b', false, _dExclLoi),
     epMonthDelta<0?_retraitKpiCard(epMonthDelta,_balBefore,_balAfter):_budgetKpiCard('Épargne',epMonthDelta,epBudget,'#2979c8',true),
   );
 
@@ -3666,10 +3670,13 @@ function _renderMonthlySections(stats, expenses, savingsData = [], entryStats = 
 
   const loiBudgetMly = loi.budget > 0 ? loi.budget
     : (entryStats ? Math.round(entryStats.rav * (100-(savingPct[epMember0]??60)) / 100) : 0);
+  const _exclFixe = expenses.filter(e=>e.is_exceptional&&e.cat==='fixe').reduce((s,e)=>s+Math.abs(e.amount),0);
+  const _exclVar  = expenses.filter(e=>e.is_exceptional&&e.cat==='variable').reduce((s,e)=>s+Math.abs(e.amount),0);
+  const _exclLoi  = expenses.filter(e=>e.is_exceptional&&e.cat==='loisir').reduce((s,e)=>s+Math.abs(e.amount),0);
   document.getElementById('monthly-kpis').innerHTML =
-    _budgetKpiCard('Fixes',    fixe.actual,   fixe.budget,  '#d93535') +
-    _budgetKpiCard('Variables',vari.actual,   vari.budget,  '#e05a2b') +
-    _budgetKpiCard('Loisir',   loi.actual,    loiBudgetMly, '#f59e0b') +
+    _budgetKpiCard('Fixes',    fixe.actual,   fixe.budget,  '#d93535', false, _exclFixe) +
+    _budgetKpiCard('Variables',vari.actual,   vari.budget,  '#e05a2b', false, _exclVar) +
+    _budgetKpiCard('Loisir',   loi.actual,    loiBudgetMly, '#f59e0b', false, _exclLoi) +
     (epMonthDelta<0?_retraitKpiCard(epMonthDelta,_mlyBalBefore,_mlyBalAfter):_budgetKpiCard('Épargne',epMonthDelta,epBudget0,'#2979c8',true));
   setTimeout(fillAllTracks, 0);
 
