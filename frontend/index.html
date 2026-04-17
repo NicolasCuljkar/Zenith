@@ -5272,16 +5272,17 @@ async function renderAnalysis(){
   } else { _kpiEl.style.display='none'; }
 
   // ── Règle 50/30/20 (données réelles moyennées) ──
-  if (_dataStats.length > 0) {
-    const _fn  = _dataStats.length;
-    const _fnR = _dataStats.filter(r=>r.revNet>0).length||1;
-    const _fAvgRevBrut = Math.round(_dataStats.reduce((s,r)=>s+((_byMkExp.get(r.mk)||{}).revenu||0),0)/_fnR);
-    const _fAvgTax     = Math.round(_dataStats.reduce((s,r)=>s+((_byMkExp.get(r.mk)||{}).impot||0),0)/_fnR);
-    const _fAvgRevNet  = Math.round(_dataStats.filter(r=>r.revNet>0).reduce((s,r)=>s+r.revNet,0)/_fnR);
-    const _fAvgFixe    = Math.round(_dataStats.reduce((s,r)=>s+r.fixe,0)/_fn);
-    const _fAvgVar     = Math.round(_dataStats.reduce((s,r)=>s+r.variable,0)/_fn);
-    const _fAvgLoisir  = Math.round(_dataStats.reduce((s,r)=>s+r.loisir,0)/_fn);
-    const _fAvgEp      = Math.round(_dataStats.reduce((s,r)=>s+r.ep,0)/_fn);
+  const _flowStats = _dataStats.filter(r => r.variable > 0 || r.loisir > 0);
+  if (_flowStats.length > 0) {
+    const _fn  = _flowStats.length;
+    const _fnR = _flowStats.filter(r=>r.revNet>0).length||1;
+    const _fAvgRevBrut = Math.round(_flowStats.reduce((s,r)=>s+((_byMkExp.get(r.mk)||{}).revenu||0),0)/_fnR);
+    const _fAvgTax     = Math.round(_flowStats.reduce((s,r)=>s+((_byMkExp.get(r.mk)||{}).impot||0),0)/_fnR);
+    const _fAvgRevNet  = Math.round(_flowStats.filter(r=>r.revNet>0).reduce((s,r)=>s+r.revNet,0)/_fnR);
+    const _fAvgFixe    = Math.round(_flowStats.reduce((s,r)=>s+r.fixe,0)/_fn);
+    const _fAvgVar     = Math.round(_flowStats.reduce((s,r)=>s+r.variable,0)/_fn);
+    const _fAvgLoisir  = Math.round(_flowStats.reduce((s,r)=>s+r.loisir,0)/_fn);
+    const _fAvgEp      = Math.round(_flowStats.reduce((s,r)=>s+r.ep,0)/_fn);
     const _fDepStrict  = _fAvgFixe + _fAvgVar;
     const _fBase       = _fAvgRevNet||1;
     const _fRNeeds     = Math.round(_fDepStrict/_fBase*100);
