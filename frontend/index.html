@@ -2653,7 +2653,7 @@ async function renderDashboard(){
   // ── Où va l'argent ? ──
   const _catColP={fixe:'#d93535',variable:'#e05a2b',loisir:'#f59e0b',epargne:'#2979c8'};
   const _catLbl={fixe:'Fixes',variable:'Variables',loisir:'Loisir',epargne:'Épargne'};
-  const _depExpenses=mExpenses.filter(e=>!['revenu','impot'].includes(e.cat));
+  const _depExpenses=mExpenses.filter(e=>!['revenu','impot'].includes(e.cat)&&!e.is_exceptional);
   const _postesMap=new Map();
   for(const e of _depExpenses){
     const k=e.name.trim();
@@ -3768,7 +3768,7 @@ function _monthlyAutoGroup(rows, overrides, extras, g, isMobile) {
   // Impôts se soustraient des revenus ; les autres cats s'additionnent en valeur abs
   const catSign = cat => cat === 'impot' ? -1 : 1;
   const autoTot  = rows.reduce((s, e) => { const ov = getOv(e.id); return s + Math.abs(ov ? ov.amount : e.amount) * catSign(e.cat); }, 0);
-  const extraTot = extras.reduce((s, e) => s + Math.abs(e.amount) * catSign(e.cat), 0);
+  const extraTot = extras.filter(e=>!e.is_exceptional).reduce((s, e) => s + Math.abs(e.amount) * catSign(e.cat), 0);
   const tot = autoTot + extraTot;
   const budgetTot = rows.reduce((s, e) => s + Math.abs(e.amount) * catSign(e.cat), 0);
   const pct = budgetTot > 0 ? Math.round(tot / budgetTot * 100) : null;
@@ -3921,7 +3921,7 @@ ${bar}    <div class="tbl-wrap"><table style="width:100%;table-layout:fixed">
 
 // Groupe manuel (variable/loisir) avec bouton Ajouter et actions
 function _monthlyManualGroup(rows, g, budgetTotal, isMobile, revNet = 0) {
-  const actualTotal = rows.reduce((s, e) => s + Math.abs(e.amount), 0);
+  const actualTotal = rows.filter(e=>!e.is_exceptional).reduce((s, e) => s + Math.abs(e.amount), 0);
   // % du budget si budget défini, sinon % des revenus nets
   const refTotal = budgetTotal > 0 ? budgetTotal : revNet;
   const refLabel = budgetTotal > 0 ? `budget ${eur(budgetTotal)}` : `revenus nets`;
