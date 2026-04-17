@@ -281,6 +281,9 @@ UPDATE households SET creator_id = (
   `CREATE INDEX IF NOT EXISTS idx_me_user2  ON monthly_expenses(user_id)`,
   `CREATE INDEX IF NOT EXISTS idx_me_month2 ON monthly_expenses(year, month)`,
 
+  // v19 — dépenses exceptionnelles : exclues des stats/graphiques
+  `ALTER TABLE monthly_expenses ADD COLUMN is_exceptional INTEGER NOT NULL DEFAULT 0`,
+
   // v18 — désignations prédéfinies par catégorie (pour KPIs et cohérence des libellés)
   `CREATE TABLE IF NOT EXISTS expense_labels (
     id         INTEGER PRIMARY KEY AUTOINCREMENT,

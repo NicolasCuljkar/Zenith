@@ -104,12 +104,12 @@ function getStats(filters = {}) {
         const ov = overrides.get(e.id);
         return s + (ov !== undefined ? Math.abs(ov.amount) : Math.abs(e.amount));
       }, 0);
-      // Plus dépenses exceptionnelles pour ce cat (sans entry_id)
-      actual += manualExpenses.filter(e => e.cat === cat && !e.entry_id).reduce((s, e) => s + Math.abs(e.amount), 0);
+      // Plus dépenses exceptionnelles pour ce cat (sans entry_id, hors marquées exceptionnelles)
+      actual += manualExpenses.filter(e => e.cat === cat && !e.entry_id && !e.is_exceptional).reduce((s, e) => s + Math.abs(e.amount), 0);
     } else if (cat === 'epargne') {
       actual = epargneActual;
     } else {
-      actual = manualExpenses.filter(e => e.cat === cat && !e.entry_id).reduce((s, e) => s + Math.abs(e.amount), 0);
+      actual = manualExpenses.filter(e => e.cat === cat && !e.entry_id && !e.is_exceptional).reduce((s, e) => s + Math.abs(e.amount), 0);
     }
 
     result[cat] = { budget, actual, diff: budget - actual };
@@ -131,7 +131,7 @@ function getHistory(filters = {}) {
   if (filters.member && filters.member !== 'all' && filters.member !== 'Commun') {
     expCond.push('member = ?'); expParams.push(filters.member);
   }
-  expCond.push("cat IN ('fixe','variable','loisir')");
+  expCond.push("cat IN ('fixe','variable','loisir')", 'is_exceptional = 0');
   const expenses = db.prepare(`
     SELECT year, month, cat, entry_id, amount
     FROM monthly_expenses
@@ -200,25 +200,26 @@ function create({ year, month, name, amount, cat, member, note, entry_id }, user
   return getById(result.lastInsertRowid);
 }
 
-function update(id, { name, amount, cat, member, note, entry_id }, userId) {
+function update(id, { name, amount, cat, member, note, entry_id, is_exceptional }, userId) {
   const existing = getById(id);
   if (!existing)                   throw httpError('Dépense introuvable.', 404);
   if (existing.user_id !== userId) throw httpError('Non autorisé.', 403);
 
-  const updatedName    = name      !== undefined ? name.trim()      : existing.name;
-  const updatedAmount  = amount    !== undefined ? Number(amount)   : existing.amount;
-  const updatedCat     = cat       !== undefined ? cat              : existing.cat;
-  const updatedMember  = member    !== undefined ? member           : existing.member;
-  const updatedNote    = note      !== undefined ? note             : existing.note;
-  const updatedEntryId = entry_id  !== undefined ? entry_id        : existing.entry_id;
+  const updatedName        = name           !== undefined ? name.trim()           : existing.name;
+  const updatedAmount      = amount         !== undefined ? Number(amount)        : existing.amount;
+  const updatedCat         = cat            !== undefined ? cat                   : existing.cat;
+  const updatedMember      = member         !== undefined ? member                : existing.member;
+  const updatedNote        = note           !== undefined ? note                  : existing.note;
+  const updatedEntryId     = entry_id       !== undefined ? entry_id             : existing.entry_id;
+  const updatedExceptional = is_exceptional !== undefined ? (is_exceptional?1:0) : existing.is_exceptional;
 
   if (!AUTO_CATS.includes(updatedCat) && !MANUAL_CATS.includes(updatedCat)) throw httpError(`Catégorie invalide : ${updatedCat}`, 400);
 
   db.prepare(`
     UPDATE monthly_expenses
-    SET name = ?, amount = ?, cat = ?, member = ?, note = ?, entry_id = ?, updated_at = datetime('now')
+    SET name = ?, amount = ?, cat = ?, member = ?, note = ?, entry_id = ?, is_exceptional = ?, updated_at = datetime('now')
     WHERE id = ?
-  `).run(updatedName, updatedAmount, updatedCat, updatedMember, updatedNote, updatedEntryId, id);
+  `).run(updatedName, updatedAmount, updatedCat, updatedMember, updatedNote, updatedEntryId, updatedExceptional, id);
 
   return getById(id);
 }

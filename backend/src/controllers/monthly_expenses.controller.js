@@ -49,8 +49,8 @@ async function createExpense(req, res, next) {
 
 async function updateExpense(req, res, next) {
   try {
-    const { name, amount, cat, member, note } = req.body;
-    const expense = monthlyService.update(Number(req.params.id), { name, amount, cat, member, note }, req.user.id);
+    const { name, amount, cat, member, note, is_exceptional } = req.body;
+    const expense = monthlyService.update(Number(req.params.id), { name, amount, cat, member, note, is_exceptional }, req.user.id);
     res.json({ success: true, data: expense });
   } catch (err) { next(err); }
 }
