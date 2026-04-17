@@ -5290,7 +5290,7 @@ async function renderAnalysis(){
     const _fScopedE = analysisMember==='all' ? entries : entries.filter(e=>e.member===analysisMember);
     const _fAllFixe = _fScopedE.filter(e=>e.cat==='fixe')
       .map(e=>({label:e.name,value:Math.abs(e.amount),color:'#d93535',_group:'Charges fixes'}))
-      .sort((a,b)=>b.value-a.value);
+      .sort((a,b)=>b.value-a.value).slice(0,3);
     const _fFixeTotal = _fAllFixe.reduce((s,e)=>s+e.value,0);
     // Variables + Loisir : tous les postes par moyenne mensuelle réelle
     const _fExpMap=new Map();
@@ -5300,8 +5300,8 @@ async function renderAnalysis(){
       if(!_fExpMap.has(k))_fExpMap.set(k,{name:e.name.trim(),cat:e.cat,total:0,mks:new Set()});
       const r=_fExpMap.get(k);r.total+=Math.abs(e.amount);r.mks.add(`${e.year}-${e.month}`);
     }
-    const _fAllVar =[..._fExpMap.values()].filter(r=>r.cat==='variable').map(r=>({label:r.name,value:Math.round(r.total/Math.max(r.mks.size,1)),color:'#e07020',_group:'Variables'})).sort((a,b)=>b.value-a.value);
-    const _fAllLoisir=[..._fExpMap.values()].filter(r=>r.cat==='loisir').map(r=>({label:r.name,value:Math.round(r.total/Math.max(r.mks.size,1)),color:'#f59e0b',_group:'Loisir'})).sort((a,b)=>b.value-a.value);
+    const _fAllVar =[..._fExpMap.values()].filter(r=>r.cat==='variable').map(r=>({label:r.name,value:Math.round(r.total/Math.max(r.mks.size,1)),color:'#e07020',_group:'Variables'})).sort((a,b)=>b.value-a.value).slice(0,3);
+    const _fAllLoisir=[..._fExpMap.values()].filter(r=>r.cat==='loisir').map(r=>({label:r.name,value:Math.round(r.total/Math.max(r.mks.size,1)),color:'#f59e0b',_group:'Loisir'})).sort((a,b)=>b.value-a.value).slice(0,3);
     const _fDepStrict  = _fFixeTotal + _fAvgVar;
     const _fBase       = _fAvgRevNet||1;
     const _fRNeeds     = Math.round(_fDepStrict/_fBase*100);
