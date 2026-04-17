@@ -295,6 +295,9 @@ UPDATE households SET creator_id = (
   // v19 — dépenses exceptionnelles : exclues des stats/graphiques
   `ALTER TABLE monthly_expenses ADD COLUMN is_exceptional INTEGER NOT NULL DEFAULT 0`,
 
+  // v25 — correctif : is_exceptional non appliqué sur Railway (migration v19 ignorée car index mal placé)
+  `ALTER TABLE monthly_expenses ADD COLUMN is_exceptional INTEGER NOT NULL DEFAULT 0`,
+
 ];
 
 // ── Apply pending migrations ──────────────────────────────────────────────────
@@ -309,7 +312,13 @@ if (currentVersion < migrations.length) {
   }
 
   for (let i = currentVersion; i < migrations.length; i++) {
-    db.exec(migrations[i]);
+    try {
+      db.exec(migrations[i]);
+    } catch (err) {
+      // Ignore "duplicate column name" — migration déjà appliquée partiellement
+      if (!err.message || !err.message.includes('duplicate column name')) throw err;
+      console.log(`[DB] Migration v${i + 1} ignorée (colonne déjà présente)`);
+    }
     db.exec(`PRAGMA user_version = ${i + 1}`);
     console.log(`[DB] Migration v${i + 1} appliquée`);
   }
