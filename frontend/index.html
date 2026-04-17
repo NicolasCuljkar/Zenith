@@ -5276,17 +5276,29 @@ async function renderAnalysis(){
   } else { _kpiEl.style.display='none'; }
 
   // ── Règle 50/30/20 (données réelles si dispo, sinon prévisionnel) ──
-  const _flowStats = _dataStats.filter(r => r.variable > 0 || r.loisir > 0);
+  // Base : tous les mois ayant des dépenses OU un mouvement épargne (positif ou négatif)
+  const _flow50Base = _monthStats.filter(r => r.hasData || _epByMk.has(r.mk));
+  const _flowStats = _flow50Base.filter(r => r.variable > 0 || r.loisir > 0);
   const _hasRealFlow = _flowStats.length > 0;
   {
     const _fn  = _flowStats.length;
+    const _f50n = _flow50Base.length > 0 ? _flow50Base.length : 1;
     // Revenus : depuis les entrées budget (les salaires ne changent pas mois par mois)
     const _fAvgRevNet  = s.revNet;
     const _fAvgRevBrut = s.rev;
-    // Dépenses : réelles si dispo, sinon prévisionnel
-    const _fAvgVar    = _hasRealFlow ? Math.round(_flowStats.reduce((s,r)=>s+r.variable,0)/_fn) : s.vari;
-    const _fAvgLoisir = _hasRealFlow ? Math.round(_flowStats.reduce((s,r)=>s+r.loisir,0)/_fn)   : loiScoped;
-    const _fAvgEp     = _hasRealFlow ? Math.round(_flowStats.reduce((s,r)=>s+r.ep,0)/_fn)        : epScoped;
+    // Dépenses : pour chaque mois, réel si dispo sinon prévisionnel — moyenne sur tous les mois analysés
+    const _fAvgVar    = _flow50Base.length > 0
+      ? Math.round(_flow50Base.reduce((acc,r)=>acc+(r.variable>0?r.variable:s.vari),0)/_f50n)
+      : s.vari;
+    const _fAvgLoisir = _flow50Base.length > 0
+      ? Math.round(_flow50Base.reduce((acc,r)=>acc+(r.loisir>0?r.loisir:loiScoped),0)/_f50n)
+      : loiScoped;
+    const _fAvgEp     = _flow50Base.length > 0
+      ? Math.round(_flow50Base.reduce((acc,r)=>{
+          const realEp=_epByMk.has(r.mk)?(_epByMk.get(r.mk)||0):null;
+          return acc+(realEp!==null?realEp:epScoped);
+        },0)/_f50n)
+      : epScoped;
     // Fixes : toutes les entrées budget
     const _fScopedE = analysisMember==='all' ? entries : entries.filter(e=>e.member===analysisMember);
     const _fAllFixe = _fScopedE.filter(e=>e.cat==='fixe')
@@ -5352,7 +5364,7 @@ async function renderAnalysis(){
       return`<div class="rb"><div style="height:3px;background:${b.color}"></div><div class="rb-head"><div style="display:flex;align-items:flex-start;justify-content:space-between;gap:6px;margin-bottom:10px"><div><div style="font-size:var(--fs-sm);font-weight:700;color:var(--text);margin-bottom:1px">${b.label}</div><div class="rb-sublabel" style="font-size:var(--fs-xs);color:var(--hint)">${b.sublabel}</div></div><div class="rb-ideal" style="font-size:var(--fs-xs);color:var(--hint);white-space:nowrap;padding-top:2px">obj. ${b.ideal}%</div></div><div style="display:flex;align-items:baseline;gap:8px;margin-bottom:8px"><span class="rb-pct" style="font-size:1.8rem;font-weight:800;line-height:1;color:${pctColor};font-variant-numeric:tabular-nums;letter-spacing:-.04em">${b.realPct>0?b.realPct+'%':'—'}</span>${b.realAmt>0?`<span class="rb-amt" style="font-size:var(--fs-sm);color:var(--muted)">${eur(b.realAmt)}</span>`:''}</div><span class="rb-status" style="font-size:var(--fs-xs);font-weight:600;padding:3px 10px;border-radius:20px;background:${statusBg};color:${statusColor}">${statusText}</span></div><div class="rb-bar"><div class="rb-fill" style="width:${fillW}%;background:${over?'var(--red)':b.color}"></div></div>${items?`<div class="rb-items-block">${items}</div>`:''}</div>`;
     }).join('');
     document.getElementById('analysis-flow').innerHTML=`
-      <div style="font-size:var(--fs-xs);color:var(--muted);margin-bottom:16px">${_hasRealFlow?`Dépenses sur <strong style="color:var(--text)">${_fn}</strong> mois`:`<span style="color:var(--amber)">Prévisionnel</span> — aucune dépense réelle enregistrée`} · Rev. nets <strong style="color:var(--text)">${eur(_fAvgRevNet)}</strong>/mois</div>
+      <div style="font-size:var(--fs-xs);color:var(--muted);margin-bottom:16px">${_flow50Base.length>0?`Moyenne sur <strong style="color:var(--text)">${_flow50Base.length}</strong> mois${_hasRealFlow&&_fn<_flow50Base.length?` <span style="color:var(--amber)">(${_flow50Base.length-_fn} mois complétés par prévisionnel)</span>`:!_hasRealFlow?' <span style="color:var(--amber)">(prévisionnel)</span>':''}`:`<span style="color:var(--amber)">Prévisionnel</span> — aucune donnée réelle`} · Rev. nets <strong style="color:var(--text)">${eur(_fAvgRevNet)}</strong>/mois</div>
       <div style="display:flex;gap:2px;height:10px;border-radius:8px;overflow:hidden;margin-bottom:10px">${_fTopBar}</div>
       <div style="display:flex;flex-wrap:wrap;gap:8px 16px;margin-bottom:4px">${_fTopLegend}</div>
       <div class="rb-grid">${_fRbHtml}</div>
