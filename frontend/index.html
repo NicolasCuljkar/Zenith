@@ -5321,9 +5321,12 @@ async function renderAnalysis(){
       : _fScopedE.filter(e=>e.cat==='loisir').map(e=>({label:e.name,value:Math.abs(e.amount),color:'#f59e0b',_group:'Loisir'})).sort((a,b)=>b.value-a.value).slice(0,3);
     const _fDepStrict  = _fFixeTotal + _fAvgVar;
     const _fBase       = _fAvgRevNet||1;
-    const _fRNeeds     = Math.round(_fDepStrict/_fBase*100);
-    const _fRWants     = Math.round(_fAvgLoisir/_fBase*100);
-    const _fRSaves     = Math.round(_fAvgEp/_fBase*100);
+    // Largest-remainder rounding : garantit que needs+wants+saves = somme arrondie (≤100 si budget équilibré)
+    const _fRawPcts    = [_fDepStrict/_fBase*100, _fAvgLoisir/_fBase*100, _fAvgEp/_fBase*100];
+    const _fFloors     = _fRawPcts.map(v=>Math.floor(v));
+    const _fRem        = Math.round(_fRawPcts.reduce((s,v)=>s+v,0))-_fFloors.reduce((s,v)=>s+v,0);
+    _fRawPcts.map((v,i)=>({i,f:v-_fFloors[i]})).sort((a,b)=>b.f-a.f).slice(0,Math.max(0,_fRem)).forEach(r=>_fFloors[r.i]++);
+    const [_fRNeeds,_fRWants,_fRSaves] = _fFloors;
     const _fRUnalloc   = Math.max(0,100-_fRNeeds-_fRWants-_fRSaves);
     const _fBuckets=[
       {label:'Besoins', sublabel:'Loyer · charges · impôts',ideal:50,color:'#d93535',realPct:_fRNeeds,realAmt:_fDepStrict,items:[..._fAllFixe,..._fAllVar]},
