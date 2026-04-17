@@ -954,6 +954,7 @@ window.onerror = function(msg, src, line) {
     <div class="card" id="analysis-eprate-card" style="display:none"><div class="card-head">Taux d'épargne mensuel (%)</div><div id="analysis-eprate-wrap" style="position:relative;height:180px"><canvas id="analysis-eprate-chart"></canvas></div></div>
     <div class="card" id="analysis-stacked-card" style="display:none"><div class="card-head">Répartition mensuelle des dépenses</div><div style="display:flex;gap:10px;flex-wrap:wrap;margin:4px 0 10px" id="analysis-stacked-legend"></div><div id="analysis-stacked-wrap" style="position:relative;height:200px"><canvas id="analysis-stacked-chart"></canvas></div></div>
     <div class="card" id="analysis-solde-card" style="display:none"><div class="card-head">Solde mensuel</div><div id="analysis-solde-wrap" style="position:relative;height:180px"><canvas id="analysis-solde-chart"></canvas></div></div>
+    <div class="card" id="analysis-avg-card" style="display:none"><div class="card-head">Coût mensuel moyen par poste</div><div style="font-size:var(--fs-xs);color:var(--muted);margin:-4px 0 10px">Variables &amp; Loisir — moyenne sur les mois où la dépense est présente</div><div id="analysis-avg-content"></div></div>
     </div><!-- /#analysis-content -->
   </div>
 
@@ -2634,6 +2635,14 @@ async function renderDashboard(){
     if(!_postesMap.has(k))_postesMap.set(k,{name:k,cat:e.cat,total:0,count:0});
     const p=_postesMap.get(k);p.total+=Math.abs(e.amount);p.count++;
   }
+  // Ajoute les entrées fixes budgétaires sans override ce mois
+  const _overriddenIds=new Set(mExpenses.filter(e=>e.entry_id).map(e=>e.entry_id));
+  const _fixeBase=entries.filter(e=>e.cat==='fixe'&&!_overriddenIds.has(e.id)&&(dashboardMember==='all'||e.member===dashboardMember));
+  for(const fe of _fixeBase){
+    const k=fe.name.trim();
+    if(!_postesMap.has(k))_postesMap.set(k,{name:k,cat:'fixe',total:0,count:0});
+    const p=_postesMap.get(k);p.total+=Math.abs(fe.amount);p.count++;
+  }
   const _postesRows=[..._postesMap.values()];
   if(epMonthDelta>0)_postesRows.push({name:'Épargne',cat:'epargne',total:epMonthDelta,count:1});
   _postesRows.sort((a,b)=>b.total-a.total);
@@ -2683,7 +2692,7 @@ async function renderDashboard(){
       const g=_catGroups[c],col=_catColP[c],bgt=_catBudgets[c];
       const shareTotal=_postesTotal>0?Math.round(g.total/_postesTotal*100):0;
       const bgtHtml=bgt>0?`<span style="font-size:10px;color:${g.total>bgt?'var(--red)':'var(--muted)'}">${eur(g.total)} / ${eur(bgt)}</span>`:'';
-      const isOpen=ci===0;
+      const isOpen=false;
       return `<div style="border-top:1px solid var(--border)">
         <div onclick="_ovaToggle('${c}')" style="display:flex;align-items:center;justify-content:space-between;padding:9px 6px;cursor:pointer;transition:background .15s" onmouseenter="this.style.background='var(--surface2)'" onmouseleave="this.style.background=''">
           <div style="display:flex;align-items:center;gap:7px">
@@ -5474,6 +5483,51 @@ async function renderAnalysis(){
       });
     }
   } else { _slCard.style.display='none'; }
+
+  // ── Coût mensuel moyen par poste (variable + loisir) ──
+  const _avgCard=document.getElementById('analysis-avg-card');
+  const _avgExp=(_anaAllExp||[]).filter(e=>['variable','loisir'].includes(e.cat));
+  const _avgMap=new Map();
+  for(const e of _avgExp){
+    const k=e.name.trim();
+    const mk=`${e.year}-${String(e.month).padStart(2,'0')}`;
+    if(!_avgMap.has(k))_avgMap.set(k,{name:k,cat:e.cat,byMonth:new Map(),total:0});
+    const r=_avgMap.get(k);
+    r.byMonth.set(mk,(r.byMonth.get(mk)||0)+Math.abs(e.amount));
+    r.total+=Math.abs(e.amount);
+  }
+  const _avgRows=[..._avgMap.values()]
+    .map(r=>({...r,months:r.byMonth.size,avg:Math.round(r.total/r.byMonth.size)}))
+    .sort((a,b)=>b.avg-a.avg)
+    .slice(0,15);
+  if(_avgRows.length>=1){
+    _avgCard.style.display='';
+    const _maxAvg=_avgRows[0].avg;
+    const _avgCatCol={variable:'#e05a2b',loisir:'#f59e0b'};
+    const _avgCatLbl={variable:'Variable',loisir:'Loisir'};
+    document.getElementById('analysis-avg-content').innerHTML=_avgRows.map(r=>{
+      const col=_avgCatCol[r.cat]||'#6b7280';
+      const barW=Math.round(r.avg/_maxAvg*100);
+      const totalMonths=_allMks.length||1;
+      const freq=Math.round(r.months/totalMonths*100);
+      return `<div style="padding:8px 0;border-bottom:1px solid var(--border)">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
+          <div style="display:flex;align-items:center;gap:7px;min-width:0;flex:1">
+            <span style="width:7px;height:7px;border-radius:50%;background:${col};flex-shrink:0"></span>
+            <span style="font-size:var(--fs-sm);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.name}</span>
+            <span style="font-size:10px;padding:1px 6px;border-radius:20px;background:${col}22;color:${col};font-weight:700;flex-shrink:0">${_avgCatLbl[r.cat]}</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+            <span style="font-size:10px;color:var(--muted)">${r.months} mois · ${freq}%</span>
+            <span style="font-size:var(--fs-sm);font-weight:800;color:${col};min-width:68px;text-align:right">${eur(r.avg)}/mois</span>
+          </div>
+        </div>
+        <div style="height:4px;background:var(--surface2);border-radius:99px;overflow:hidden;margin:0 0 0 14px">
+          <div style="width:${barW}%;height:100%;background:${col};border-radius:99px;transition:width .4s"></div>
+        </div>
+      </div>`;
+    }).join('');
+  } else { _avgCard.style.display='none'; }
 }
 
 // ══════════════════════════════════════════════
