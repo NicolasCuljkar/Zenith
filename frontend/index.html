@@ -5278,10 +5278,9 @@ async function renderAnalysis(){
   const _flowStats = _dataStats.filter(r => r.variable > 0 || r.loisir > 0);
   if (_flowStats.length > 0) {
     const _fn  = _flowStats.length;
-    const _fnR = _flowStats.filter(r=>r.revNet>0).length||1;
-    const _fAvgRevBrut = Math.round(_flowStats.reduce((s,r)=>s+((_byMkExp.get(r.mk)||{}).revenu||0),0)/_fnR);
-    const _fAvgTax     = Math.round(_flowStats.reduce((s,r)=>s+((_byMkExp.get(r.mk)||{}).impot||0),0)/_fnR);
-    const _fAvgRevNet  = Math.round(_flowStats.filter(r=>r.revNet>0).reduce((s,r)=>s+r.revNet,0)/_fnR);
+    // Revenus : depuis les entrées budget (les salaires ne changent pas mois par mois)
+    const _fAvgRevNet  = s.revNet;
+    const _fAvgRevBrut = s.rev;
     const _fAvgFixe    = Math.round(_flowStats.reduce((s,r)=>s+r.fixe,0)/_fn);
     const _fAvgVar     = Math.round(_flowStats.reduce((s,r)=>s+r.variable,0)/_fn);
     const _fAvgLoisir  = Math.round(_flowStats.reduce((s,r)=>s+r.loisir,0)/_fn);
@@ -5347,7 +5346,7 @@ async function renderAnalysis(){
       return`<div class="rb"><div style="height:3px;background:${b.color}"></div><div class="rb-head"><div style="display:flex;align-items:flex-start;justify-content:space-between;gap:6px;margin-bottom:10px"><div><div style="font-size:var(--fs-sm);font-weight:700;color:var(--text);margin-bottom:1px">${b.label}</div><div class="rb-sublabel" style="font-size:var(--fs-xs);color:var(--hint)">${b.sublabel}</div></div><div class="rb-ideal" style="font-size:var(--fs-xs);color:var(--hint);white-space:nowrap;padding-top:2px">obj. ${b.ideal}%</div></div><div style="display:flex;align-items:baseline;gap:8px;margin-bottom:8px"><span class="rb-pct" style="font-size:1.8rem;font-weight:800;line-height:1;color:${pctColor};font-variant-numeric:tabular-nums;letter-spacing:-.04em">${b.realPct>0?b.realPct+'%':'—'}</span>${b.realAmt>0?`<span class="rb-amt" style="font-size:var(--fs-sm);color:var(--muted)">${eur(b.realAmt)}</span>`:''}</div><span class="rb-status" style="font-size:var(--fs-xs);font-weight:600;padding:3px 10px;border-radius:20px;background:${statusBg};color:${statusColor}">${statusText}</span></div><div class="rb-bar"><div class="rb-fill" style="width:${fillW}%;background:${over?'var(--red)':b.color}"></div></div>${items?`<div class="rb-items-block">${items}</div>`:''}</div>`;
     }).join('');
     document.getElementById('analysis-flow').innerHTML=`
-      <div style="font-size:var(--fs-xs);color:var(--muted);margin-bottom:16px">Moyenne sur <strong style="color:var(--text)">${_fn}</strong> mois · Rev. nets moy. <strong style="color:var(--text)">${eur(_fAvgRevNet)}</strong></div>
+      <div style="font-size:var(--fs-xs);color:var(--muted);margin-bottom:16px">Dépenses sur <strong style="color:var(--text)">${_fn}</strong> mois · Rev. nets <strong style="color:var(--text)">${eur(_fAvgRevNet)}</strong>/mois</div>
       <div style="display:flex;gap:2px;height:10px;border-radius:8px;overflow:hidden;margin-bottom:10px">${_fTopBar}</div>
       <div style="display:flex;flex-wrap:wrap;gap:8px 16px;margin-bottom:4px">${_fTopLegend}</div>
       <div class="rb-grid">${_fRbHtml}</div>
