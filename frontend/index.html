@@ -5259,9 +5259,8 @@ async function renderAnalysis(){
   const FR_M_MAP={'Janvier':1,'Février':2,'Mars':3,'Avril':4,'Mai':5,'Juin':6,'Juillet':7,'Août':8,'Septembre':9,'Octobre':10,'Novembre':11,'Décembre':12};
   const _epByMk = new Map();
   for(const s of (_anaSavings||[])){
-    if(s.delta==null) continue;
     const mk=`${s.year}-${String(FR_M_MAP[s.month]||0).padStart(2,'0')}`;
-    _epByMk.set(mk,(_epByMk.get(mk)||0)+s.delta);
+    _epByMk.set(mk,(_epByMk.get(mk)||0)+(s.delta!=null?s.delta:s.amount));
   }
   if(_histPts.length >= 1){
     _histCard.style.display='';
@@ -5367,7 +5366,7 @@ async function renderAnalysis(){
     const epV=(_epByMk.get(mk)||0);
     const revNet=(exp.revenu||0)-(exp.impot||0);
     const dep=(exp.fixe||0)+(exp.variable||0)+(exp.loisir||0);
-    const solde=revNet-dep-(epV>0?epV:0);
+    const solde=revNet-dep-epV;
     const epRate=revNet>0?Math.round(epV/revNet*100):null;
     return{mk,revNet,dep,fixe:exp.fixe||0,variable:exp.variable||0,loisir:exp.loisir||0,ep:epV>0?epV:0,solde,epRate,hasData:revNet>0||dep>0||epV>0};
   });
