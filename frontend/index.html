@@ -2644,7 +2644,8 @@ async function renderDashboard(){
     const p=_postesMap.get(k);p.total+=Math.abs(fe.amount);p.count++;
   }
   const _postesRows=[..._postesMap.values()];
-  if(epMonthDelta>0)_postesRows.push({name:'Épargne',cat:'epargne',total:epMonthDelta,count:1});
+  const _hasSavRec=savingsDash.some(s=>s.year===dashYear&&s.month===frMonth);
+  if(_hasSavRec)_postesRows.push({name:epMonthDelta<0?'Retrait épargne':'Épargne',cat:'epargne',total:epMonthDelta,count:1});
   _postesRows.sort((a,b)=>b.total-a.total);
   const _postesTotal=_postesRows.reduce((s,r)=>s+r.total,0);
 
@@ -2662,16 +2663,18 @@ async function renderDashboard(){
   const _catBudgets={fixe:fixBudget,variable:varBudget,loisir:loiBudget,epargne:epBudget};
 
   const _ovaItem=(r)=>{
-    const col=_catColP[r.cat]||'#6b7280';
-    const incShare=revNetA>0?Math.round(r.total/revNetA*100):null;
+    const isNeg=r.total<0;
+    const col=isNeg?'var(--red)':(_catColP[r.cat]||'#6b7280');
+    const incShare=!isNeg&&revNetA>0?Math.round(r.total/revNetA*100):null;
     const pvVal=_pvMap.get(r.name);
-    const diff=pvVal!==undefined?Math.round(r.total-pvVal):null;
+    const diff=!isNeg&&pvVal!==undefined?Math.round(r.total-pvVal):null;
     const diffHtml=diff===null?''
       :diff>0?`<span style="font-size:10px;color:var(--red);font-weight:700;white-space:nowrap">↑+${eur(Math.abs(diff))}</span>`
       :diff<0?`<span style="font-size:10px;color:var(--green);font-weight:700;white-space:nowrap">↓−${eur(Math.abs(diff))}</span>`
       :`<span style="font-size:10px;color:var(--muted)">→</span>`;
     const isEp=r.cat==='epargne';
     const clickAttr=isEp?'':`onclick="_ovaGoto('${r.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'")}')"`;
+    const amtStr=isNeg?`−${eur(Math.abs(r.total))}`:eur(r.total);
     return `<div ${clickAttr} style="display:flex;align-items:center;justify-content:space-between;padding:7px 6px 7px 20px;border-radius:6px;cursor:${isEp?'default':'pointer'};transition:background .15s" onmouseenter="this.style.background='var(--surface2)'" onmouseleave="this.style.background=''">
       <div style="display:flex;align-items:center;gap:7px;min-width:0;flex:1">
         <span style="width:5px;height:5px;border-radius:50%;background:${col};flex-shrink:0;opacity:.7"></span>
@@ -2681,7 +2684,7 @@ async function renderDashboard(){
       <div style="display:flex;align-items:center;gap:7px;flex-shrink:0">
         ${diffHtml}
         ${incShare!==null?`<span style="font-size:10px;color:var(--muted)">${incShare}%&nbsp;rev.</span>`:''}
-        <span style="font-size:var(--fs-sm);font-weight:700;color:${col};min-width:52px;text-align:right">${eur(r.total)}</span>
+        <span style="font-size:var(--fs-sm);font-weight:700;color:${col};min-width:52px;text-align:right">${amtStr}</span>
       </div>
     </div>`;
   };
