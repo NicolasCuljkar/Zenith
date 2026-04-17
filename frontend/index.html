@@ -942,12 +942,11 @@ window.onerror = function(msg, src, line) {
     <div id="analysis-nodata" style="display:none"></div>
     <div id="analysis-content">
     <div class="member-tabs" id="analysis-mtabs"></div>
-    <div class="kpi-grid" id="analysis-kpis"></div>
-    <div class="card"><div class="card-head">Où va chaque euro · Règle 50/30/20</div><div id="analysis-flow"></div></div>
+    <div id="analysis-kpi-summary" style="display:none;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:var(--sg);margin-bottom:var(--sg)"></div>
+    <div class="card"><div class="card-head">Règle 50/30/20</div><div id="analysis-flow"></div></div>
     <div style="display:none"><div id="gauge-chart-wrap"><canvas id="gauge-chart"></canvas></div><div id="radar-chart-wrap"><canvas id="radar-chart"></canvas></div></div>
     <div class="card" id="member-bars-card" style="display:none"><div class="card-head">Comparaison membres</div><div id="member-bars-wrap" style="position:relative;height:210px"><canvas id="member-bars-chart"></canvas></div></div>
     <div style="display:none"><div id="analysis-donut-wrap" style="position:relative;height:0"><canvas id="analysis-donut-chart"></canvas></div><div id="analysis-donut-legend"></div></div>
-    <div id="analysis-kpi-summary" style="display:none;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:var(--sg);margin-bottom:var(--sg)"></div>
     <div class="card" id="monthly-compare-card" style="display:none"><div class="card-head">Comparaison mensuelle</div><div id="monthly-compare-content"><div style="padding:20px;text-align:center;color:var(--muted);font-size:var(--fs-sm)">Chargement…</div></div></div>
     <div class="card" id="analysis-hist-card" style="display:none"><div class="card-head">Évolution mensuelle des dépenses</div><div id="analysis-hist-legend" style="display:flex;gap:12px;flex-wrap:wrap;margin:4px 0 10px"></div><div id="analysis-hist-wrap" style="position:relative;height:200px"><canvas id="analysis-hist-chart"></canvas></div></div>
     <div class="card" id="analysis-trend-card" style="display:none"><div class="card-head" id="analysis-trend-head">Évolution des dépenses clés</div><div id="analysis-trend-legend" style="display:flex;gap:10px;flex-wrap:wrap;margin:4px 0 12px"></div><div id="analysis-trend-wrap" style="position:relative;height:220px"><canvas id="analysis-trend-chart"></canvas></div></div>
@@ -5025,191 +5024,7 @@ async function renderAnalysis(){
     const pctS=savingPct[analysisMember]??60;epScoped=Math.round(s.rav*pctS/100);loiScoped=Math.round(s.rav*(100-pctS)/100);
   }
   const depStrict=s.fix+s.vari;
-  const epRateCalc=s.revNet>0?Math.round(epScoped/s.revNet*100):0;
-
-  // ── Score santé financière /100 ──
-  const fixRate=s.revNet>0?Math.round(s.fix/s.revNet*100):0;
-  const depRate=s.revNet>0?Math.round(depStrict/s.revNet*100):0;
-  const scoreSav=Math.min(40,epRateCalc*2);
-  const scoreRig=fixRate<=30?30:fixRate<=50?Math.round(30-(fixRate-30)*0.75):0;
-  const scoreDep=depRate<=50?30:depRate<=70?Math.round(30-(depRate-50)*1.5):0;
-  const healthScore=scoreSav+scoreRig+scoreDep;
-  const scoreColor=healthScore>=80?'var(--green)':healthScore>=60?'var(--blue)':healthScore>=40?'var(--amber)':'var(--red)';
-  const scoreLabel=healthScore>=80?'Excellent':healthScore>=60?'Bon':healthScore>=40?'Correct':'À améliorer';
-  const scoreTip=`Épargne (${scoreSav}/40 pts) : taux d'épargne actuel ${epRateCalc}% — objectif ≥ 20% · Flexibilité (${scoreRig}/30 pts) : charges fixes ${fixRate}% du revenu net — objectif ≤ 30% · Dépenses (${scoreDep}/30 pts) : solde après dépenses et épargne — positif = bonne gestion · Score global : ≥ 75 excellent · ≥ 50 à surveiller · < 50 situation tendue`;
-
-  // ── Badges ──
-  const mkBadge=(txt,ok,warn)=>`<span style="font-size:var(--fs-xs);font-weight:700;padding:2px 8px;border-radius:20px;background:${ok?'var(--green-bg)':warn?'var(--amber-bg)':'var(--red-bg)'};color:${ok?'var(--green)':warn?'var(--amber)':'var(--red)'}">${txt}</span>`;
-  const scoreBadge=mkBadge(scoreLabel,healthScore>=80,healthScore>=40);
-  const epBadge=mkBadge(epRateCalc>=20?'✓ Objectif atteint':epRateCalc>=10?'Viser 20%':'⚠ Taux bas',epRateCalc>=20,epRateCalc>=10);
-  const fixRigidLabel=fixRate<=30?'Flexible':fixRate<=50?'Modérée':'Rigide';
-  const rigBadge=mkBadge(fixRigidLabel,fixRate<=30,fixRate<=50);
-  const rigidColor=fixRate<=30?'var(--green)':fixRate<=50?'var(--amber)':'var(--red)';
-
-  // ── KPI content ──
-  const epSub=analysisMember==='all'
-    ?`du revenu net · ${me} ${eur(epByM[me]||0)} · ${other} ${eur(epByM[other]||0)}`
-    :`du revenu net · objectif 20%`;
-
-  // ── Jours couverts par l'épargne ──
-  const latestSav=m=>{const ms=savings.filter(x=>x.member===m);if(!ms.length)return 0;ms.sort((a,b)=>b.year-a.year||MONTHS.indexOf(b.month)-MONTHS.indexOf(a.month));return ms[0].amount||0;};
-  const totalSavAna=analysisMember==='all'?memberList.reduce((sum,m)=>sum+latestSav(m),0):latestSav(analysisMember);
-  const joursAna=depStrict>0?Math.round(totalSavAna/depStrict*30):null;
-  const jValA=joursAna!=null?joursAna+' j':'—';
-  const jColA=joursAna==null?'var(--muted)':joursAna>=90?'var(--green)':joursAna>=30?'var(--amber)':'var(--red)';
-  const jBadgeA=joursAna==null?'':mkBadge(joursAna>=90?'✓ Matelas solide':joursAna>=30?'Objectif : 3 mois':'⚠ Constituez un matelas',joursAna>=90,joursAna>=30);
-
-  // ── KPIs supplémentaires ──
-  const contrRate=s.revNet>0?Math.round((s.tax+s.fix)/s.revNet*100):0;
-  const contrColor=contrRate<=35?'var(--green)':contrRate<=55?'var(--amber)':'var(--red)';
-  const contrBadge=mkBadge(contrRate<=35?'✓ Maîtrisé':contrRate<=55?'Modéré':'⚠ Élevé',contrRate<=35,contrRate<=55);
-  const capRateA=s.revNet>0?Math.round(s.rav/s.revNet*100):0;
-  const capColorA=capRateA>=30?'var(--green)':capRateA>=15?'var(--amber)':'var(--red)';
-  const capBadgeA=mkBadge(capRateA>=30?'✓ Bonne marge':capRateA>=15?'Marge réduite':'⚠ Très contraint',capRateA>=30,capRateA>=15);
-
-  document.getElementById('analysis-kpis').style.gridTemplateColumns='repeat(3,1fr)';
-  document.getElementById('analysis-kpis').innerHTML=
-    kpiHtml('Score santé',healthScore+' / 100',scoreColor,`Épargne ${scoreSav}pt · Flexibilité ${scoreRig}pt · Dépenses ${scoreDep}pt`,null,scoreTip,scoreBadge)+
-    kpiHtml("Taux d'épargne",epRateCalc+'%',epRateCalc>=20?'var(--green)':epRateCalc>=10?'var(--amber)':'var(--red)',epSub,epRateCalc-20,`Épargne mensuelle : ${eur(epScoped)} · En 10 ans avec intérêts : ${eur(Math.round(epScoped*12*10*1.04))} estimé`,epBadge)+
-    kpiHtml('Rigidité budgétaire',fixRate+'%',rigidColor,`Charges fixes : ${eur(s.fix)} · ${100-fixRate}% de liberté`,null,`Charges fixes vs revenu net · Objectif ≤ 30% · En dessous : budget flexible, au-dessus : contraintes fortes`,rigBadge)+
-    kpiHtml('Jours couverts',jValA,jColA,
-      joursAna!=null?`${joursAna} j / 90 j · ${Math.min(Math.round(joursAna/90*100),100)}% de l'objectif`:'Aucune épargne enregistrée',null,
-      `Épargne totale ÷ dépenses mensuelles · Objectif recommandé : 3 mois (90 j) · Permet de tenir sans revenus`,jBadgeA)+
-    kpiHtml('Coefficient de contrainte',contrRate+'%',contrColor,`Impôts ${eur(s.tax)} + Fixes ${eur(s.fix)} · Non négociable`,null,`Part du revenu net bloquée par impôts + charges fixes · Impossible à réduire à court terme · Objectif : rester sous 35%`,contrBadge)+
-    kpiHtml('Marge budgétaire',capRateA+'%',capColorA,`${eur(s.rav)} disponible après dépenses`,null,`% du revenu net disponible après toutes les dépenses contraintes · Divisé en épargne ${eur(epScoped)} et loisirs ${eur(loiScoped)} · Plus c'est élevé, plus le budget est sain`,capBadgeA);
-
-  // ── Où va chaque euro? ──
-  const flowBase=s.rev||1;
-  const flowSegs=[
-    {label:'Impôts',value:s.tax,color:'#c49a00'},
-    {label:'Charges fixes',value:s.fix,color:'#d93535'},
-    {label:'Variables',value:s.vari,color:'#e07020'},
-    {label:'Épargne',value:epScoped,color:'#2979c8'},
-    {label:'Loisir',value:loiScoped,color:'#f59e0b'},
-  ].filter(d=>d.value>0);
-  const flowAlloc=flowSegs.reduce((acc,d)=>acc+d.value,0);
-  const flowUnalloc=Math.max(0,s.rev-flowAlloc);
-  if(flowUnalloc>1)flowSegs.push({label:'Non alloué',value:flowUnalloc,color:'rgba(160,160,160,.3)'});
-  const n=flowSegs.length;
-  const flowBar=flowSegs.map((d,i)=>{
-    const r=(i===0?'border-radius:10px 0 0 10px;':'')+(i===n-1?'border-radius:0 10px 10px 0;':'');
-    const pct=Math.round(d.value/flowBase*100);
-    return`<div class="flow-seg" data-label="${d.label}" data-val="${d.value}" data-pct="${pct}" data-color="${d.color}" style="flex:${d.value};background:${d.color};height:100%;min-width:4px;cursor:pointer;transition:filter .18s;${r}"></div>`;
-  }).join('');
-  const flowLegend=flowSegs.map(d=>{
-    const pct=Math.round(d.value/flowBase*100);
-    return`<div class="flow-leg-item" data-label="${d.label}" data-color="${d.color}" style="--c:${d.color}">
-      <span class="flow-leg-accent" style="background:${d.color}"></span>
-      <div class="flow-leg-body">
-        <div class="flow-leg-label">${d.label}</div>
-        <div class="flow-leg-vp">
-          <div class="flow-leg-value">${eur(d.value)}</div>
-          <div class="flow-leg-pct" style="color:${d.color}">${pct}%</div>
-        </div>
-        <div class="flow-leg-bar"><div class="flow-leg-bar-fill" style="width:${pct}%;background:${d.color}"></div></div>
-      </div>
-    </div>`;
-  }).join('');
-  const baseDesc=s.rev>0?`${eur(s.rev)} brut`:`${eur(s.revNet)} net`;
-  // ── 50/30/20 buckets ──
-  const base=s.revNet||1;
-  const rNeeds=Math.round(depStrict/base*100),rWants=Math.round(loiScoped/base*100),rSaves=Math.round(epScoped/base*100);
-  const rUnalloc=Math.max(0,100-rNeeds-rWants-rSaves);
-
-  const _scopedE=analysisMember==='all'?entries:entries.filter(e=>e.member===analysisMember);
-  const top3Fixe=_scopedE.filter(e=>e.cat==='fixe').sort((a,b)=>Math.abs(b.amount)-Math.abs(a.amount)).slice(0,3)
-    .map(e=>({label:e.name,value:Math.abs(e.amount),color:'#d93535',_group:'Charges fixes'}));
-  const top3Vari=_scopedE.filter(e=>e.cat==='variable').sort((a,b)=>Math.abs(b.amount)-Math.abs(a.amount)).slice(0,3)
-    .map(e=>({label:e.name,value:Math.abs(e.amount),color:'#e07020',_group:'Variables'}));
-
-  const buckets=[
-    {label:'Besoins',    sublabel:'Loyer · charges · impôts', ideal:50, color:'#d93535', realPct:rNeeds, realAmt:depStrict,
-     items:[...top3Fixe, ...top3Vari]},
-    {label:'Envies',     sublabel:'Loisirs · sorties', ideal:30, color:'#f59e0b', realPct:rWants, realAmt:loiScoped,
-     items:flowSegs.filter(d=>d.label==='Loisir')},
-    {label:'Épargne',   sublabel:'Livret · investissements', ideal:20, color:'#2979c8', realPct:rSaves, realAmt:epScoped,
-     items:flowSegs.filter(d=>d.label==='Épargne')},
-  ];
-
-  // Barre 3 segments (1 par bucket)
-  const topSegs=[
-    {label:'Besoins',    val:rNeeds,    color:'#d93535'},
-    {label:'Envies',     val:rWants,    color:'#f59e0b'},
-    {label:'Épargne',   val:rSaves,    color:'#2979c8'},
-    ...(rUnalloc>0?[{label:'Non alloué',val:rUnalloc,color:'var(--border)'}]:[]),
-  ].filter(d=>d.val>0);
-  const nb=topSegs.length;
-  const topBar=topSegs.map((d,i)=>{
-    const r=(i===0?'border-radius:8px 0 0 8px;':'')+(i===nb-1?'border-radius:0 8px 8px 0;':'');
-    return`<div style="flex:${d.val};background:${d.color};height:100%;${r}" title="${d.label} — ${d.val}%"></div>`;
-  }).join('');
-  const topLegend=topSegs.map(d=>`<span style="display:inline-flex;align-items:center;gap:5px;font-size:var(--fs-xs);color:var(--muted)"><span style="width:8px;height:8px;border-radius:2px;background:${d.color};display:inline-block;flex-shrink:0"></span>${d.label}&thinsp;<strong style="color:var(--text)">${d.val}%</strong></span>`).join('');
-
-  const rbHtml=buckets.map(b=>{
-    const over=b.realPct>b.ideal, ok=b.realPct>0&&!over;
-    const idealAmt=Math.round(base*b.ideal/100);
-    const diff=Math.abs(b.realAmt-idealAmt);
-    const statusBg=over?'var(--red-bg)':ok?'var(--green-bg)':'var(--surface)';
-    const statusColor=over?'var(--red)':ok?'var(--green)':'var(--hint)';
-    const statusText=over?`▲ ${eur(diff)} de trop`:ok?`✓ ${eur(diff)} de marge`:`—`;
-    const pctColor=over?'var(--red)':ok?b.color:'var(--hint)';
-    const fillW=b.ideal>0?Math.min(b.realPct/b.ideal*100,100):0;
-    const hasGroups=b.items.some(it=>it._group);
-    let _gtrack=null;
-    const items=!b.items.length
-      ?(b.realAmt===0?`<div style="padding:8px 16px;font-size:var(--fs-sm);color:var(--hint);border-top:1px solid var(--border)">Aucune donnée</div>`:'')
-      :b.items.map((it,idx)=>{
-        const p=Math.round(it.value/flowBase*100);
-        const barW=Math.min(100,Math.round(it.value/(b.realAmt||1)*100));
-        let out='';
-        if(hasGroups&&it._group!==_gtrack){
-          _gtrack=it._group;
-          out+=`<div style="padding:10px 16px 6px;border-top:1px solid var(--border);display:flex;align-items:center;gap:8px">
-            <span style="display:inline-block;width:3px;height:13px;border-radius:2px;background:${it.color};flex-shrink:0"></span>
-            <span style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--hint)">${it._group}</span>
-          </div>`;
-        }
-        const btop=!hasGroups&&idx===0?'border-top:1px solid var(--border);':'';
-        out+=`<div style="padding:5px 16px 8px;${btop}">
-          <div style="display:flex;align-items:baseline;gap:6px;margin-bottom:5px">
-            <span style="flex:1;font-size:var(--fs-sm);color:var(--text);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${it.label}</span>
-            <span style="font-size:var(--fs-sm);font-weight:700;color:var(--text);flex-shrink:0">${eur(it.value)}</span>
-            <span style="font-size:var(--fs-xs);color:var(--hint);width:28px;text-align:right;flex-shrink:0">${p}%</span>
-          </div>
-          <div style="height:3px;background:var(--border);border-radius:2px;overflow:hidden">
-            <div style="width:${barW}%;height:100%;background:${it.color};border-radius:2px;transition:width .6s ease"></div>
-          </div>
-        </div>`;
-        return out;
-      }).join('');
-    return`<div class="rb">
-      <div style="height:3px;background:${b.color}"></div>
-      <div class="rb-head">
-        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:6px;margin-bottom:10px">
-          <div>
-            <div style="font-size:var(--fs-sm);font-weight:700;color:var(--text);margin-bottom:1px">${b.label}</div>
-            <div class="rb-sublabel" style="font-size:var(--fs-xs);color:var(--hint)">${b.sublabel}</div>
-          </div>
-          <div class="rb-ideal" style="font-size:var(--fs-xs);color:var(--hint);white-space:nowrap;padding-top:2px">obj. ${b.ideal}%</div>
-        </div>
-        <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:8px">
-          <span class="rb-pct" style="font-size:1.8rem;font-weight:800;line-height:1;color:${pctColor};font-variant-numeric:tabular-nums;letter-spacing:-.04em">${b.realPct>0?b.realPct+'%':'—'}</span>
-          ${b.realAmt>0?`<span class="rb-amt" style="font-size:var(--fs-sm);color:var(--muted)">${eur(b.realAmt)}</span>`:''}
-        </div>
-        <span class="rb-status" style="font-size:var(--fs-xs);font-weight:600;padding:3px 10px;border-radius:20px;background:${statusBg};color:${statusColor}">${statusText}</span>
-      </div>
-      <div class="rb-bar"><div class="rb-fill" style="width:${fillW}%;background:${over?'var(--red)':b.color}"></div></div>
-      ${items?`<div class="rb-items-block">${items}</div>`:''}
-    </div>`;
-  }).join('');
-
-  document.getElementById('analysis-flow').innerHTML=`
-    <div style="font-size:var(--fs-sm);color:var(--muted);margin-bottom:16px">Revenus bruts <strong style="color:var(--text)">${baseDesc}</strong> · nets <strong style="color:var(--text)">${eur(s.revNet)}</strong>.</div>
-    <div style="display:flex;gap:2px;height:10px;border-radius:8px;overflow:hidden;margin-bottom:10px">${topBar}</div>
-    <div style="display:flex;flex-wrap:wrap;gap:8px 16px;margin-bottom:4px">${topLegend}</div>
-    <div class="rb-grid">${rbHtml}</div>
-    ${rUnalloc>0?`<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--green-bg);border:1px solid var(--green);border-radius:10px;margin-top:12px"><div style="width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0"></div><span style="font-size:var(--fs-sm);font-weight:700;color:var(--green)">${rUnalloc}% non alloué · ${eur(Math.round(s.revNet*rUnalloc/100))}</span><span style="font-size:var(--fs-xs);color:var(--muted);margin-left:4px">à placer en épargne</span></div>`:''}
-  `;
+  // ── Où va chaque euro? (rendu après fetch données réelles) ──
 
 
   // ── Donut répartition dépenses ──
@@ -5455,6 +5270,81 @@ async function renderAnalysis(){
       (_best?_kpiCard('Meilleur mois',`${_MNX[Number(_best.mk.split('-')[1])-1]} ${_best.mk.split('-')[0]}`,'var(--green)',(_best.solde>=0?'+':'')+eur(_best.solde)):'')+
       (_worst&&_worst!==_best?_kpiCard('Mois difficile',`${_MNX[Number(_worst.mk.split('-')[1])-1]} ${_worst.mk.split('-')[0]}`,'var(--red)',(_worst.solde>=0?'+':'')+eur(_worst.solde)):'');
   } else { _kpiEl.style.display='none'; }
+
+  // ── Règle 50/30/20 (données réelles moyennées) ──
+  if (_dataStats.length > 0) {
+    const _fn  = _dataStats.length;
+    const _fnR = _dataStats.filter(r=>r.revNet>0).length||1;
+    const _fAvgRevBrut = Math.round(_dataStats.reduce((s,r)=>s+((_byMkExp.get(r.mk)||{}).revenu||0),0)/_fnR);
+    const _fAvgTax     = Math.round(_dataStats.reduce((s,r)=>s+((_byMkExp.get(r.mk)||{}).impot||0),0)/_fnR);
+    const _fAvgRevNet  = Math.round(_dataStats.filter(r=>r.revNet>0).reduce((s,r)=>s+r.revNet,0)/_fnR);
+    const _fAvgFixe    = Math.round(_dataStats.reduce((s,r)=>s+r.fixe,0)/_fn);
+    const _fAvgVar     = Math.round(_dataStats.reduce((s,r)=>s+r.variable,0)/_fn);
+    const _fAvgLoisir  = Math.round(_dataStats.reduce((s,r)=>s+r.loisir,0)/_fn);
+    const _fAvgEp      = Math.round(_dataStats.reduce((s,r)=>s+r.ep,0)/_fn);
+    const _fDepStrict  = _fAvgFixe + _fAvgVar;
+    const _fBase       = _fAvgRevNet||1;
+    const _fRNeeds     = Math.round(_fDepStrict/_fBase*100);
+    const _fRWants     = Math.round(_fAvgLoisir/_fBase*100);
+    const _fRSaves     = Math.round(_fAvgEp/_fBase*100);
+    const _fRUnalloc   = Math.max(0,100-_fRNeeds-_fRWants-_fRSaves);
+    // Top postes par moyenne mensuelle
+    const _fExpMap=new Map();
+    for(const e of (_anaAllExp||[])){
+      if(!['fixe','variable'].includes(e.cat))continue;
+      const k=e.name.trim()+'|'+e.cat;
+      if(!_fExpMap.has(k))_fExpMap.set(k,{name:e.name.trim(),cat:e.cat,total:0,mks:new Set()});
+      const r=_fExpMap.get(k);r.total+=Math.abs(e.amount);r.mks.add(`${e.year}-${e.month}`);
+    }
+    const _fNMks=_allMks.length||1;
+    const _fTop3Fixe=[..._fExpMap.values()].filter(r=>r.cat==='fixe').map(r=>({label:r.name,value:Math.round(r.total/Math.max(r.mks.size,1)),color:'#d93535',_group:'Charges fixes'})).sort((a,b)=>b.value-a.value).slice(0,3);
+    const _fTop3Var =[..._fExpMap.values()].filter(r=>r.cat==='variable').map(r=>({label:r.name,value:Math.round(r.total/Math.max(r.mks.size,1)),color:'#e07020',_group:'Variables'})).sort((a,b)=>b.value-a.value).slice(0,3);
+    const _fBuckets=[
+      {label:'Besoins', sublabel:'Loyer · charges · impôts',ideal:50,color:'#d93535',realPct:_fRNeeds,realAmt:_fDepStrict,items:[..._fTop3Fixe,..._fTop3Var]},
+      {label:'Envies',  sublabel:'Loisirs · sorties',        ideal:30,color:'#f59e0b',realPct:_fRWants, realAmt:_fAvgLoisir, items:[]},
+      {label:'Épargne', sublabel:'Livret · investissements', ideal:20,color:'#2979c8',realPct:_fRSaves, realAmt:_fAvgEp,     items:[]},
+    ];
+    const _fTopSegs=[
+      {label:'Besoins',val:_fRNeeds,color:'#d93535'},
+      {label:'Envies', val:_fRWants,color:'#f59e0b'},
+      {label:'Épargne',val:_fRSaves,color:'#2979c8'},
+      ...(_fRUnalloc>0?[{label:'Non alloué',val:_fRUnalloc,color:'var(--border)'}]:[]),
+    ].filter(d=>d.val>0);
+    const _fNb=_fTopSegs.length;
+    const _fTopBar=_fTopSegs.map((d,i)=>{const r=(i===0?'border-radius:8px 0 0 8px;':'')+(i===_fNb-1?'border-radius:0 8px 8px 0;':'');return`<div style="flex:${d.val};background:${d.color};height:100%;${r}" title="${d.label} — ${d.val}%"></div>`;}).join('');
+    const _fTopLegend=_fTopSegs.map(d=>`<span style="display:inline-flex;align-items:center;gap:5px;font-size:var(--fs-xs);color:var(--muted)"><span style="width:8px;height:8px;border-radius:2px;background:${d.color};display:inline-block;flex-shrink:0"></span>${d.label}&thinsp;<strong style="color:var(--text)">${d.val}%</strong></span>`).join('');
+    const _fRbHtml=_fBuckets.map(b=>{
+      const over=b.realPct>b.ideal,ok=b.realPct>0&&!over;
+      const idealAmt=Math.round(_fBase*b.ideal/100);
+      const diff=Math.abs(b.realAmt-idealAmt);
+      const statusBg=over?'var(--red-bg)':ok?'var(--green-bg)':'var(--surface)';
+      const statusColor=over?'var(--red)':ok?'var(--green)':'var(--hint)';
+      const statusText=over?`▲ ${eur(diff)} de trop`:ok?`✓ ${eur(diff)} de marge`:`—`;
+      const pctColor=over?'var(--red)':ok?b.color:'var(--hint)';
+      const fillW=b.ideal>0?Math.min(b.realPct/b.ideal*100,100):0;
+      const hasGroups=b.items.some(it=>it._group);
+      let _gt=null;
+      const items=!b.items.length
+        ?(b.realAmt===0?`<div style="padding:8px 16px;font-size:var(--fs-sm);color:var(--hint);border-top:1px solid var(--border)">Aucune donnée</div>`:'')
+        :b.items.map((it,idx)=>{
+          const p=Math.round(it.value/(_fAvgRevBrut||1)*100);
+          const barW=Math.min(100,Math.round(it.value/(b.realAmt||1)*100));
+          let out='';
+          if(hasGroups&&it._group!==_gt){_gt=it._group;out+=`<div style="padding:10px 16px 6px;border-top:1px solid var(--border);display:flex;align-items:center;gap:8px"><span style="display:inline-block;width:3px;height:13px;border-radius:2px;background:${it.color};flex-shrink:0"></span><span style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--hint)">${it._group}</span></div>`;}
+          const btop=!hasGroups&&idx===0?'border-top:1px solid var(--border);':'';
+          out+=`<div style="padding:5px 16px 8px;${btop}"><div style="display:flex;align-items:baseline;gap:6px;margin-bottom:5px"><span style="flex:1;font-size:var(--fs-sm);color:var(--text);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${it.label}</span><span style="font-size:var(--fs-sm);font-weight:700;color:var(--text);flex-shrink:0">${eur(it.value)}</span><span style="font-size:var(--fs-xs);color:var(--hint);width:28px;text-align:right;flex-shrink:0">${p}%</span></div><div style="height:3px;background:var(--border);border-radius:2px;overflow:hidden"><div style="width:${barW}%;height:100%;background:${it.color};border-radius:2px;transition:width .6s ease"></div></div></div>`;
+          return out;
+        }).join('');
+      return`<div class="rb"><div style="height:3px;background:${b.color}"></div><div class="rb-head"><div style="display:flex;align-items:flex-start;justify-content:space-between;gap:6px;margin-bottom:10px"><div><div style="font-size:var(--fs-sm);font-weight:700;color:var(--text);margin-bottom:1px">${b.label}</div><div class="rb-sublabel" style="font-size:var(--fs-xs);color:var(--hint)">${b.sublabel}</div></div><div class="rb-ideal" style="font-size:var(--fs-xs);color:var(--hint);white-space:nowrap;padding-top:2px">obj. ${b.ideal}%</div></div><div style="display:flex;align-items:baseline;gap:8px;margin-bottom:8px"><span class="rb-pct" style="font-size:1.8rem;font-weight:800;line-height:1;color:${pctColor};font-variant-numeric:tabular-nums;letter-spacing:-.04em">${b.realPct>0?b.realPct+'%':'—'}</span>${b.realAmt>0?`<span class="rb-amt" style="font-size:var(--fs-sm);color:var(--muted)">${eur(b.realAmt)}</span>`:''}</div><span class="rb-status" style="font-size:var(--fs-xs);font-weight:600;padding:3px 10px;border-radius:20px;background:${statusBg};color:${statusColor}">${statusText}</span></div><div class="rb-bar"><div class="rb-fill" style="width:${fillW}%;background:${over?'var(--red)':b.color}"></div></div>${items?`<div class="rb-items-block">${items}</div>`:''}</div>`;
+    }).join('');
+    document.getElementById('analysis-flow').innerHTML=`
+      <div style="font-size:var(--fs-xs);color:var(--muted);margin-bottom:16px">Moyenne sur <strong style="color:var(--text)">${_fn}</strong> mois · Rev. nets moy. <strong style="color:var(--text)">${eur(_fAvgRevNet)}</strong></div>
+      <div style="display:flex;gap:2px;height:10px;border-radius:8px;overflow:hidden;margin-bottom:10px">${_fTopBar}</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px 16px;margin-bottom:4px">${_fTopLegend}</div>
+      <div class="rb-grid">${_fRbHtml}</div>
+      ${_fRUnalloc>0?`<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--green-bg);border:1px solid var(--green);border-radius:10px;margin-top:12px"><div style="width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0"></div><span style="font-size:var(--fs-sm);font-weight:700;color:var(--green)">${_fRUnalloc}% non alloué · ${eur(Math.round(_fBase*_fRUnalloc/100))}</span><span style="font-size:var(--fs-xs);color:var(--muted);margin-left:4px">à placer en épargne</span></div>`:''}
+    `;
+  }
 
   // ── Graphique taux d'épargne ──
   anaEprateChart=destroyChart(anaEprateChart);
