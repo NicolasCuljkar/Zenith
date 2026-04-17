@@ -5292,15 +5292,16 @@ async function renderAnalysis(){
       .map(e=>({label:e.name,value:Math.abs(e.amount),color:'#d93535',_group:'Charges fixes'}))
       .sort((a,b)=>b.value-a.value);
     const _fFixeTotal = _fAllFixe.reduce((s,e)=>s+e.value,0);
-    // Variables : top postes par moyenne mensuelle réelle
+    // Variables + Loisir : tous les postes par moyenne mensuelle réelle
     const _fExpMap=new Map();
     for(const e of (_anaAllExp||[])){
-      if(e.cat!=='variable')continue;
-      const k=e.name.trim();
-      if(!_fExpMap.has(k))_fExpMap.set(k,{name:k,total:0,mks:new Set()});
+      if(!['variable','loisir'].includes(e.cat))continue;
+      const k=e.name.trim()+'|'+e.cat;
+      if(!_fExpMap.has(k))_fExpMap.set(k,{name:e.name.trim(),cat:e.cat,total:0,mks:new Set()});
       const r=_fExpMap.get(k);r.total+=Math.abs(e.amount);r.mks.add(`${e.year}-${e.month}`);
     }
-    const _fTop3Var=[..._fExpMap.values()].map(r=>({label:r.name,value:Math.round(r.total/Math.max(r.mks.size,1)),color:'#e07020',_group:'Variables'})).sort((a,b)=>b.value-a.value).slice(0,3);
+    const _fAllVar =[..._fExpMap.values()].filter(r=>r.cat==='variable').map(r=>({label:r.name,value:Math.round(r.total/Math.max(r.mks.size,1)),color:'#e07020',_group:'Variables'})).sort((a,b)=>b.value-a.value);
+    const _fAllLoisir=[..._fExpMap.values()].filter(r=>r.cat==='loisir').map(r=>({label:r.name,value:Math.round(r.total/Math.max(r.mks.size,1)),color:'#f59e0b',_group:'Loisir'})).sort((a,b)=>b.value-a.value);
     const _fDepStrict  = _fFixeTotal + _fAvgVar;
     const _fBase       = _fAvgRevNet||1;
     const _fRNeeds     = Math.round(_fDepStrict/_fBase*100);
@@ -5308,8 +5309,8 @@ async function renderAnalysis(){
     const _fRSaves     = Math.round(_fAvgEp/_fBase*100);
     const _fRUnalloc   = Math.max(0,100-_fRNeeds-_fRWants-_fRSaves);
     const _fBuckets=[
-      {label:'Besoins', sublabel:'Loyer · charges · impôts',ideal:50,color:'#d93535',realPct:_fRNeeds,realAmt:_fDepStrict,items:[..._fAllFixe,..._fTop3Var]},
-      {label:'Envies',  sublabel:'Loisirs · sorties',        ideal:30,color:'#f59e0b',realPct:_fRWants, realAmt:_fAvgLoisir, items:[]},
+      {label:'Besoins', sublabel:'Loyer · charges · impôts',ideal:50,color:'#d93535',realPct:_fRNeeds,realAmt:_fDepStrict,items:[..._fAllFixe,..._fAllVar]},
+      {label:'Envies',  sublabel:'Loisirs · sorties',        ideal:30,color:'#f59e0b',realPct:_fRWants, realAmt:_fAvgLoisir, items:_fAllLoisir},
       {label:'Épargne', sublabel:'Livret · investissements', ideal:20,color:'#2979c8',realPct:_fRSaves, realAmt:_fAvgEp,     items:[]},
     ];
     const _fTopSegs=[
