@@ -5254,6 +5254,8 @@ async function renderAnalysis(){
     const _avgEpRate=Math.round(_dataStats.filter(r=>r.revNet>0).reduce((s,r)=>s+r.epRate,0)/Math.max(1,_dataStats.filter(r=>r.revNet>0).length));
     const _avgDep=Math.round(_dataStats.reduce((s,r)=>s+r.dep,0)/_dataStats.length);
     const _avgSolde=Math.round(_dataStats.reduce((s,r)=>s+r.solde,0)/_dataStats.length);
+    const _avgRevNet=Math.round(_dataStats.filter(r=>r.revNet>0).reduce((s,r)=>s+r.revNet,0)/Math.max(1,_dataStats.filter(r=>r.revNet>0).length));
+    const _annualNet=_avgRevNet*12;
     const _best=_dataStats.reduce((b,r)=>r.solde>(b?.solde??-Infinity)?r:b,null);
     const _worst=_dataStats.reduce((w,r)=>r.solde<(w?.solde??Infinity)?r:w,null);
     const _colSolde=v=>v>=0?'var(--green)':'var(--red)';
@@ -5264,6 +5266,7 @@ async function renderAnalysis(){
     </div>`;
     _kpiEl.style.display='grid';
     _kpiEl.innerHTML=
+      (_avgRevNet>0?_kpiCard('Salaire net annuel',eur(_annualNet),'var(--green)',`${eur(_avgRevNet)}/mois en moy.`):'')+
       _kpiCard('Taux épargne moy.',`${_avgEpRate}%`,'#2979c8',`sur ${_dataStats.filter(r=>r.revNet>0).length} mois`)+
       _kpiCard('Dépenses moy.',eur(_avgDep)+'/mois','var(--red)',`${_dataStats.length} mois analysés`)+
       _kpiCard('Solde moy.',(_avgSolde>=0?'+':'')+eur(_avgSolde)+'/mois',_colSolde(_avgSolde),null)+
