@@ -5251,10 +5251,11 @@ async function renderAnalysis(){
   // ── KPI synthèse ──
   const _kpiEl=document.getElementById('analysis-kpi-summary');
   if(_dataStats.length>=1){
-    const _avgEpRate=Math.round(_dataStats.filter(r=>r.revNet>0).reduce((s,r)=>s+r.epRate,0)/Math.max(1,_dataStats.filter(r=>r.revNet>0).length));
-    const _avgDep=Math.round(_dataStats.reduce((s,r)=>s+r.dep,0)/_dataStats.length);
-    const _avgSolde=Math.round(_dataStats.reduce((s,r)=>s+r.solde,0)/_dataStats.length);
-    const _avgRevNet=Math.round(_dataStats.filter(r=>r.revNet>0).reduce((s,r)=>s+r.revNet,0)/Math.max(1,_dataStats.filter(r=>r.revNet>0).length));
+    const _avgEp=Math.round(_dataStats.reduce((acc,r)=>acc+r.ep,0)/_dataStats.length);
+    const _avgEpRate=s.revNet>0?Math.round(_avgEp/s.revNet*100):0;
+    const _avgDep=Math.round(_dataStats.reduce((acc,r)=>acc+r.dep,0)/_dataStats.length);
+    const _avgSolde=Math.round(_dataStats.reduce((acc,r)=>acc+r.solde,0)/_dataStats.length);
+    const _avgRevNet=s.revNet;
     const _annualNet=_avgRevNet*12;
     const _best=_dataStats.reduce((b,r)=>r.solde>(b?.solde??-Infinity)?r:b,null);
     const _worst=_dataStats.reduce((w,r)=>r.solde<(w?.solde??Infinity)?r:w,null);
@@ -5267,31 +5268,32 @@ async function renderAnalysis(){
     _kpiEl.style.display='grid';
     _kpiEl.innerHTML=
       (_avgRevNet>0?_kpiCard('Salaire net annuel',eur(_annualNet),'var(--green)',`${eur(_avgRevNet)}/mois en moy.`):'')+
-      _kpiCard('Taux épargne moy.',`${_avgEpRate}%`,'#2979c8',`sur ${_dataStats.filter(r=>r.revNet>0).length} mois`)+
+      _kpiCard('Taux épargne moy.',`${_avgEpRate}%`,'#2979c8',`sur ${_dataStats.length} mois`)+
       _kpiCard('Dépenses moy.',eur(_avgDep)+'/mois','var(--red)',`${_dataStats.length} mois analysés`)+
       _kpiCard('Solde moy.',(_avgSolde>=0?'+':'')+eur(_avgSolde)+'/mois',_colSolde(_avgSolde),null)+
       (_best?_kpiCard('Meilleur mois',`${_MNX[Number(_best.mk.split('-')[1])-1]} ${_best.mk.split('-')[0]}`,'var(--green)',(_best.solde>=0?'+':'')+eur(_best.solde)):'')+
       (_worst&&_worst!==_best?_kpiCard('Mois difficile',`${_MNX[Number(_worst.mk.split('-')[1])-1]} ${_worst.mk.split('-')[0]}`,'var(--red)',(_worst.solde>=0?'+':'')+eur(_worst.solde)):'');
   } else { _kpiEl.style.display='none'; }
 
-  // ── Règle 50/30/20 (données réelles moyennées) ──
+  // ── Règle 50/30/20 (données réelles si dispo, sinon prévisionnel) ──
   const _flowStats = _dataStats.filter(r => r.variable > 0 || r.loisir > 0);
-  if (_flowStats.length > 0) {
+  const _hasRealFlow = _flowStats.length > 0;
+  {
     const _fn  = _flowStats.length;
     // Revenus : depuis les entrées budget (les salaires ne changent pas mois par mois)
     const _fAvgRevNet  = s.revNet;
     const _fAvgRevBrut = s.rev;
-    const _fAvgFixe    = Math.round(_flowStats.reduce((s,r)=>s+r.fixe,0)/_fn);
-    const _fAvgVar     = Math.round(_flowStats.reduce((s,r)=>s+r.variable,0)/_fn);
-    const _fAvgLoisir  = Math.round(_flowStats.reduce((s,r)=>s+r.loisir,0)/_fn);
-    const _fAvgEp      = Math.round(_flowStats.reduce((s,r)=>s+r.ep,0)/_fn);
-    // Fixes : toutes les entrées budget (pas monthly_expenses) + montant réel si override
+    // Dépenses : réelles si dispo, sinon prévisionnel
+    const _fAvgVar    = _hasRealFlow ? Math.round(_flowStats.reduce((s,r)=>s+r.variable,0)/_fn) : s.vari;
+    const _fAvgLoisir = _hasRealFlow ? Math.round(_flowStats.reduce((s,r)=>s+r.loisir,0)/_fn)   : loiScoped;
+    const _fAvgEp     = _hasRealFlow ? Math.round(_flowStats.reduce((s,r)=>s+r.ep,0)/_fn)        : epScoped;
+    // Fixes : toutes les entrées budget
     const _fScopedE = analysisMember==='all' ? entries : entries.filter(e=>e.member===analysisMember);
     const _fAllFixe = _fScopedE.filter(e=>e.cat==='fixe')
       .map(e=>({label:e.name,value:Math.abs(e.amount),color:'#d93535',_group:'Charges fixes'}))
       .sort((a,b)=>b.value-a.value).slice(0,3);
     const _fFixeTotal = _fAllFixe.reduce((s,e)=>s+e.value,0);
-    // Variables + Loisir : tous les postes par moyenne mensuelle réelle
+    // Variables + Loisir : réels si dispo, sinon entrées budget
     const _fExpMap=new Map();
     for(const e of (_anaAllExp||[])){
       if(!['variable','loisir'].includes(e.cat))continue;
@@ -5299,8 +5301,12 @@ async function renderAnalysis(){
       if(!_fExpMap.has(k))_fExpMap.set(k,{name:e.name.trim(),cat:e.cat,total:0,mks:new Set()});
       const r=_fExpMap.get(k);r.total+=Math.abs(e.amount);r.mks.add(`${e.year}-${e.month}`);
     }
-    const _fAllVar =[..._fExpMap.values()].filter(r=>r.cat==='variable').map(r=>({label:r.name,value:Math.round(r.total/Math.max(r.mks.size,1)),color:'#e07020',_group:'Variables'})).sort((a,b)=>b.value-a.value).slice(0,3);
-    const _fAllLoisir=[..._fExpMap.values()].filter(r=>r.cat==='loisir').map(r=>({label:r.name,value:Math.round(r.total/Math.max(r.mks.size,1)),color:'#f59e0b',_group:'Loisir'})).sort((a,b)=>b.value-a.value).slice(0,3);
+    const _fAllVar = _hasRealFlow
+      ? [..._fExpMap.values()].filter(r=>r.cat==='variable').map(r=>({label:r.name,value:Math.round(r.total/Math.max(r.mks.size,1)),color:'#e07020',_group:'Variables'})).sort((a,b)=>b.value-a.value).slice(0,3)
+      : _fScopedE.filter(e=>e.cat==='variable').map(e=>({label:e.name,value:Math.abs(e.amount),color:'#e07020',_group:'Variables'})).sort((a,b)=>b.value-a.value).slice(0,3);
+    const _fAllLoisir = _hasRealFlow
+      ? [..._fExpMap.values()].filter(r=>r.cat==='loisir').map(r=>({label:r.name,value:Math.round(r.total/Math.max(r.mks.size,1)),color:'#f59e0b',_group:'Loisir'})).sort((a,b)=>b.value-a.value).slice(0,3)
+      : _fScopedE.filter(e=>e.cat==='loisir').map(e=>({label:e.name,value:Math.abs(e.amount),color:'#f59e0b',_group:'Loisir'})).sort((a,b)=>b.value-a.value).slice(0,3);
     const _fDepStrict  = _fFixeTotal + _fAvgVar;
     const _fBase       = _fAvgRevNet||1;
     const _fRNeeds     = Math.round(_fDepStrict/_fBase*100);
@@ -5346,7 +5352,7 @@ async function renderAnalysis(){
       return`<div class="rb"><div style="height:3px;background:${b.color}"></div><div class="rb-head"><div style="display:flex;align-items:flex-start;justify-content:space-between;gap:6px;margin-bottom:10px"><div><div style="font-size:var(--fs-sm);font-weight:700;color:var(--text);margin-bottom:1px">${b.label}</div><div class="rb-sublabel" style="font-size:var(--fs-xs);color:var(--hint)">${b.sublabel}</div></div><div class="rb-ideal" style="font-size:var(--fs-xs);color:var(--hint);white-space:nowrap;padding-top:2px">obj. ${b.ideal}%</div></div><div style="display:flex;align-items:baseline;gap:8px;margin-bottom:8px"><span class="rb-pct" style="font-size:1.8rem;font-weight:800;line-height:1;color:${pctColor};font-variant-numeric:tabular-nums;letter-spacing:-.04em">${b.realPct>0?b.realPct+'%':'—'}</span>${b.realAmt>0?`<span class="rb-amt" style="font-size:var(--fs-sm);color:var(--muted)">${eur(b.realAmt)}</span>`:''}</div><span class="rb-status" style="font-size:var(--fs-xs);font-weight:600;padding:3px 10px;border-radius:20px;background:${statusBg};color:${statusColor}">${statusText}</span></div><div class="rb-bar"><div class="rb-fill" style="width:${fillW}%;background:${over?'var(--red)':b.color}"></div></div>${items?`<div class="rb-items-block">${items}</div>`:''}</div>`;
     }).join('');
     document.getElementById('analysis-flow').innerHTML=`
-      <div style="font-size:var(--fs-xs);color:var(--muted);margin-bottom:16px">Dépenses sur <strong style="color:var(--text)">${_fn}</strong> mois · Rev. nets <strong style="color:var(--text)">${eur(_fAvgRevNet)}</strong>/mois</div>
+      <div style="font-size:var(--fs-xs);color:var(--muted);margin-bottom:16px">${_hasRealFlow?`Dépenses sur <strong style="color:var(--text)">${_fn}</strong> mois`:`<span style="color:var(--amber)">Prévisionnel</span> — aucune dépense réelle enregistrée`} · Rev. nets <strong style="color:var(--text)">${eur(_fAvgRevNet)}</strong>/mois</div>
       <div style="display:flex;gap:2px;height:10px;border-radius:8px;overflow:hidden;margin-bottom:10px">${_fTopBar}</div>
       <div style="display:flex;flex-wrap:wrap;gap:8px 16px;margin-bottom:4px">${_fTopLegend}</div>
       <div class="rb-grid">${_fRbHtml}</div>
