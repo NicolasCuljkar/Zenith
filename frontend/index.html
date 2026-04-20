@@ -3666,7 +3666,7 @@ function _renderMonthlySections(stats, expenses, savingsData = [], entryStats = 
       <div style="font-size:var(--fs-xs);color:var(--fg);line-height:1.5">${_mlyConsecutive?'Attention — votre épargne diminue depuis plusieurs mois. ':''}Vous avez puisé <b>${eur(Math.abs(epDelta))}</b> dans votre épargne${_mlyBalBefore!==null&&_mlyBalAfter!==null?` (solde\u00a0: ${eur(_mlyBalBefore)} → <b>${eur(_mlyBalAfter)}</b>)`:''}.</div>
     </div>
   </div>` : '';
-  document.getElementById('monthly-solde-hero').innerHTML = heroHtml + _mlyRetBanner;
+  document.getElementById('monthly-solde-hero').innerHTML = heroHtml;
 
   const loiBudgetMly = loi.budget > 0 ? loi.budget
     : (entryStats ? Math.round(entryStats.rav * (100-(savingPct[epMember0]??60)) / 100) : 0);
@@ -3674,6 +3674,7 @@ function _renderMonthlySections(stats, expenses, savingsData = [], entryStats = 
   const _exclVar  = expenses.filter(e=>e.is_exceptional&&e.cat==='variable').reduce((s,e)=>s+Math.abs(e.amount),0);
   const _exclLoi  = expenses.filter(e=>e.is_exceptional&&e.cat==='loisir').reduce((s,e)=>s+Math.abs(e.amount),0);
   document.getElementById('monthly-kpis').innerHTML =
+    _mlyRetBanner +
     _budgetKpiCard('Fixes',    fixe.actual,   fixe.budget,  '#d93535', false, _exclFixe) +
     _budgetKpiCard('Variables',vari.actual,   vari.budget,  '#e05a2b', false, _exclVar) +
     _budgetKpiCard('Loisir',   loi.actual,    loiBudgetMly, '#f59e0b', false, _exclLoi) +
