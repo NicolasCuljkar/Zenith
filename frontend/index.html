@@ -392,18 +392,6 @@ html.light .mtab-all.active{background:var(--mc-all-bg,linear-gradient(90deg,rgb
 .cswatch.sel{border-color:var(--text)}
 
 /* ── Alert ── */
-/* ── Projection simulator ── */
-.sim-horizon-btns{display:flex;flex-wrap:wrap;gap:6px}
-.sim-h-btn{padding:5px 12px;border-radius:20px;border:1.5px solid var(--border);background:var(--surface);color:var(--muted);font-size:var(--fs-sm);font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s;white-space:nowrap}
-.sim-h-btn.active{background:var(--blue);color:#fff;border-color:var(--blue)}
-html.dark .sim-h-btn{background:var(--surface2)}
-html.dark .sim-h-btn.active{background:var(--blue);color:#fff}
-.sim-results{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px}
-.sim-card{border-radius:var(--r);padding:14px}
-.sim-card-label{font-size:var(--fs-sm);font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px}
-.sim-card-value{font-size:var(--fs-lg);font-weight:700;letter-spacing:-.02em}
-.sim-card-sub{font-size:var(--fs-sm);margin-top:4px;opacity:.85}
-@media(max-width:400px){.sim-results{grid-template-columns:1fr}}
 .topbar-tooltip{
   display:none;position:absolute;bottom:calc(100% + 8px);left:0;
   background:var(--surface);border:1px solid var(--border);border-radius:var(--r);
@@ -562,11 +550,10 @@ input[type=range]:hover::-moz-range-thumb{transform:scale(1.1)}
   /* sim */
   .sim-card-value{font-size:var(--fs-base)}
   /* charts */
-  #donut-chart-wrap,#proj-chart-wrap{height:210px!important}
+  #donut-chart-wrap{height:210px!important}
   #bar-chart-wrap{height:160px!important}
   /* specific grids overrides */
-  #conseils-steps{grid-template-columns:1fr!important}
-  #goal-btns{grid-template-columns:repeat(5,1fr)!important}
+#goal-btns{grid-template-columns:repeat(5,1fr)!important}
   #horizon-btns{grid-template-columns:repeat(4,1fr)!important}
   #goal-result-stats{grid-template-columns:1fr 1fr!important}
 }
@@ -854,8 +841,6 @@ window.onerror = function(msg, src, line) {
     <button class="tab" data-tab="entries">Lignes budgétaires</button>
     <button class="tab" data-tab="savings">Épargne</button>
     <button class="tab" data-tab="analysis">Analyse</button>
-    <button class="tab" data-tab="projection" style="display:none">Projection</button>
-    <button class="tab" data-tab="conseils" style="display:none">Conseils</button>
   </div>
 
   <!-- DASHBOARD -->
@@ -960,103 +945,6 @@ window.onerror = function(msg, src, line) {
     </div><!-- /#analysis-content -->
   </div>
 
-  <!-- PROJECTION -->
-  <div id="tab-projection" class="tab-panel">
-    <div id="proj-nodata" style="display:none"></div>
-    <div id="proj-content">
-    <div class="member-tabs" id="proj-mtabs"></div>
-    <div class="kpi-grid" id="proj-budget-kpis" style="margin-bottom:var(--sg)"></div>
-    <div class="kpi-grid" id="proj-kpis"></div>
-    <div class="card" id="proj-chart-card"><div class="card-head">Projection épargne cumulée sur 10 ans</div><div id="proj-chart-wrap" style="position:relative;height:280px"><canvas id="proj-chart"></canvas></div></div>
-    <div class="g2" id="proj-sim-cards">
-      <div class="card"><div class="card-head">Objectif épargne</div><div id="proj-goal"></div></div>
-      <div class="card"><div class="card-head">Simulation mensuelle</div><div id="proj-sim"></div></div>
-    </div>
-    </div><!-- /#proj-content -->
-  </div>
-
-<!-- ══════════════════ CONSEILS ══════════════════ -->
-<div id="tab-conseils" class="tab-panel">
-  <div id="conseils-nodata" style="display:none"></div>
-  <div id="conseils-content">
-  <!-- Onglets membres -->
-  <div class="member-tabs" id="conseils-mtabs"></div>
-
-  <!-- KPIs dynamiques -->
-  <div class="kpi-grid" id="conseils-kpis" style="margin-bottom:var(--sg);margin-top:0"></div>
-
-  <!-- Parcours en 3 étapes — horizontal pills -->
-  <div id="conseils-steps" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:1rem">
-    <div style="background:linear-gradient(135deg,#0d9e6e18,#0d9e6e08);border:1px solid #0d9e6e44;border-radius:var(--rl);padding:14px 12px;text-align:center">
-      <div style="width:36px;height:36px;border-radius:50%;background:#0d9e6e;color:#fff;font-size:var(--fs-base);font-weight:800;display:flex;align-items:center;justify-content:center;margin:0 auto 10px">1</div>
-      <div style="font-size:var(--fs-sm);font-weight:700;margin-bottom:4px;color:var(--text)">Sécurité</div>
-      <div style="font-size:var(--fs-xs);color:var(--muted);line-height:1.4">Livret A / LDDS<br>3–6 mois de dépenses</div>
-    </div>
-    <div style="background:linear-gradient(135deg,#2979c818,#2979c808);border:1px solid #2979c844;border-radius:var(--rl);padding:14px 12px;text-align:center">
-      <div style="width:36px;height:36px;border-radius:50%;background:#2979c8;color:#fff;font-size:var(--fs-base);font-weight:800;display:flex;align-items:center;justify-content:center;margin:0 auto 10px">2</div>
-      <div style="font-size:var(--fs-sm);font-weight:700;margin-bottom:4px;color:var(--text)">Croissance</div>
-      <div style="font-size:var(--fs-xs);color:var(--muted);line-height:1.4">PEA + ETF monde<br>Horizon 5–10 ans</div>
-    </div>
-    <div style="background:linear-gradient(135deg,#7c52d418,#7c52d408);border:1px solid #7c52d444;border-radius:var(--rl);padding:14px 12px;text-align:center">
-      <div style="width:36px;height:36px;border-radius:50%;background:#7c52d4;color:#fff;font-size:var(--fs-base);font-weight:800;display:flex;align-items:center;justify-content:center;margin:0 auto 10px">3</div>
-      <div style="font-size:var(--fs-sm);font-weight:700;margin-bottom:4px;color:var(--text)">Revenus</div>
-      <div style="font-size:var(--fs-xs);color:var(--muted);line-height:1.4">SCPI · Dividendes<br>Rentes mensuelles</div>
-    </div>
-  </div>
-
-  <!-- Stratégies -->
-  <div style="font-size:var(--fs-title);font-weight:700;letter-spacing:-.02em;color:var(--text);margin-bottom:.6rem">Stratégies pour votre profil</div>
-  <div style="display:flex;flex-direction:column;gap:.6rem;margin-bottom:var(--sg)" id="conseil-cards"></div>
-
-  <!-- Enveloppes fiscales -->
-  <div style="font-size:var(--fs-title);font-weight:700;letter-spacing:-.02em;color:var(--text);margin-bottom:.6rem">Enveloppes fiscales</div>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin-bottom:var(--sg)">
-
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:14px;display:flex;gap:12px;align-items:flex-start">
-      <div style="width:36px;height:36px;border-radius:10px;background:#0d9e6e18;display:flex;align-items:center;justify-content:center;font-size:var(--fs-lg);flex-shrink:0">📗</div>
-      <div>
-        <div style="font-size:var(--fs-title);font-weight:700;letter-spacing:-.02em;margin-bottom:1px">Livret A</div>
-        <div style="font-size:var(--fs-sm);color:#0d9e6e;font-weight:600;margin-bottom:4px">3% · Sans risque</div>
-        <div style="font-size:var(--fs-sm);color:var(--muted);line-height:1.4">Plafond 22 950 €. Disponible immédiatement, exonéré d'impôt.</div>
-      </div>
-    </div>
-
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:14px;display:flex;gap:12px;align-items:flex-start">
-      <div style="width:36px;height:36px;border-radius:10px;background:#2979c818;display:flex;align-items:center;justify-content:center;font-size:var(--fs-lg);flex-shrink:0">📘</div>
-      <div>
-        <div style="font-size:var(--fs-title);font-weight:700;letter-spacing:-.02em;margin-bottom:1px">PEA</div>
-        <div style="font-size:var(--fs-sm);color:#2979c8;font-weight:600;margin-bottom:4px">Exonéré IR après 5 ans</div>
-        <div style="font-size:var(--fs-sm);color:var(--muted);line-height:1.4">Plafond 150 000 €. ETF monde, meilleure enveloppe long terme.</div>
-      </div>
-    </div>
-
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:14px;display:flex;gap:12px;align-items:flex-start">
-      <div style="width:36px;height:36px;border-radius:10px;background:#7c52d418;display:flex;align-items:center;justify-content:center;font-size:var(--fs-lg);flex-shrink:0">📙</div>
-      <div>
-        <div style="font-size:var(--fs-title);font-weight:700;letter-spacing:-.02em;margin-bottom:1px">Assurance-vie</div>
-        <div style="font-size:var(--fs-sm);color:#7c52d4;font-weight:600;margin-bottom:4px">Abattement après 8 ans</div>
-        <div style="font-size:var(--fs-sm);color:var(--muted);line-height:1.4">Fonds euros + ETF. Succession optimisée, 4 600 €/an exonérés.</div>
-      </div>
-    </div>
-
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:14px;display:flex;gap:12px;align-items:flex-start">
-      <div style="width:36px;height:36px;border-radius:10px;background:#d9353518;display:flex;align-items:center;justify-content:center;font-size:var(--fs-lg);flex-shrink:0">🏢</div>
-      <div>
-        <div style="font-size:var(--fs-title);font-weight:700;letter-spacing:-.02em;margin-bottom:1px">SCPI</div>
-        <div style="font-size:var(--fs-sm);color:#d93535;font-weight:600;margin-bottom:4px">4–5% · Revenus mensuels</div>
-        <div style="font-size:var(--fs-sm);color:var(--muted);line-height:1.4">Immobilier sans gestion. Loyers chaque mois dès 1 000 €.</div>
-      </div>
-    </div>
-
-  </div>
-
-  <div style="display:none"><div id="placements-chart-wrap"><canvas id="placements-chart"></canvas></div></div>
-  <!-- Simulateur -->
-  <div style="font-size:var(--fs-title);font-weight:700;letter-spacing:-.02em;color:var(--text);margin-bottom:.6rem">Simulateur de revenus passifs</div>
-  <div class="card" style="margin-bottom:1rem"><div id="conseils-sim"></div></div>
-  </div><!-- /#conseils-content -->
-
-</div>
 
 
 </main>
@@ -1082,14 +970,6 @@ window.onerror = function(msg, src, line) {
     <button class="bnav-btn" data-tab="analysis">
       <div class="bnav-icon"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
       <span class="bnav-label">Analyse</span>
-    </button>
-    <button class="bnav-btn" data-tab="projection">
-      <div class="bnav-icon"><svg viewBox="0 0 24 24"><line x1="3" y1="20" x2="21" y2="20"/><polyline points="5 20 5 10 9 10"/><polyline points="9 20 9 6 13 6"/><polyline points="13 20 13 14 17 14"/><polyline points="17 20 17 4 21 4"/></svg></div>
-      <span class="bnav-label">Projection</span>
-    </button>
-    <button class="bnav-btn" data-tab="conseils">
-      <div class="bnav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg></div>
-      <span class="bnav-label">Conseils</span>
     </button>
   </div>
 </nav>
@@ -1478,8 +1358,8 @@ function showConfirm(msg,sub,onOk){
 document.getElementById('modal-confirm').addEventListener('click',e=>{if(e.target.id==='modal-confirm')document.getElementById('modal-confirm').classList.remove('open');});
 
 let nextId=200,editEntryId=null,editSavingId=null;
-let donutChart=null,barChart=null,analysisDonut=null,projChart=null,topDonutChart=null;
-let waterfallChart=null,gaugeChart=null,radarChart=null,memberBarsChart=null,placementsChart=null;
+let donutChart=null,barChart=null,analysisDonut=null,topDonutChart=null;
+let waterfallChart=null,gaugeChart=null,radarChart=null,memberBarsChart=null;
 let dashBarChart=null,dashDonutChart=null,ovaDashChart=null;
 let anaEprateChart=null,anaSoldeChart=null,anaStackedChart=null;
 let savingsStabActive='month';
@@ -1488,10 +1368,8 @@ let currentTab='dashboard';
 let memberColors={Nicolas:'#3B8BD4',Carla:'#e06fa0'};
 let savingPct={Nicolas:60,Carla:50};
 let monthlyEpPct={};
-let savingsMember='all',analysisMember='all',projectionMember='all',dashboardMember='all',entriesMember='Commun',conseilsMember='all';
+let savingsMember='all',analysisMember='all',dashboardMember='all',entriesMember='Commun';
 let dashYear=new Date().getFullYear(),dashMonth=new Date().getMonth()+1;
-let projAnnualRate=0.04; // default 4%
-let simMonthlyOverride=null;
 let entryOrder={}; // kept for backward compat but no longer used for sorting
 localStorage.removeItem('bm_entry_order'); // supprime tout ordre drag-and-drop persisté
 // profilePhotos is now fetched from the API (stored in users table)
@@ -1760,7 +1638,7 @@ function hasNoData(member){
  */
 function kpiGhostGrid(n=4, labels=[]){
   const grey='var(--hint)';
-  const defaultLabels=['Revenus nets','Dépenses','Épargne','Reste à vivre','Capital','Projection','Bilan'];
+  const defaultLabels=['Revenus nets','Dépenses','Épargne','Reste à vivre','Capital','Bilan'];
   const used=labels.length?labels:defaultLabels.slice(0,n);
   // Même structure que kpiHtml() mais avec filtre grisé et no-interaction
   return used.slice(0,n).map(lbl=>`
@@ -2013,7 +1891,7 @@ function updateTopbarAvatar(){
 // ══════════════════════════════════════════════
 // NAV
 // ══════════════════════════════════════════════
-const DATA_TABS=['dashboard','analysis','projection','conseils'];
+const DATA_TABS=['dashboard','analysis'];
 function updateNavForDataState(){
   const noData=hasNoData();
   DATA_TABS.forEach(t=>{
@@ -2021,16 +1899,13 @@ function updateNavForDataState(){
   });
   if(noData && currentTab!=='entries') switchTab('entries');
 }
-const PAGE_NAMES={dashboard:'Résumé',entries:'Lignes',savings:'Épargne',analysis:'Analyse',projection:'Projection',conseils:'Conseils',banque:'Banque'};
+const PAGE_NAMES={dashboard:'Résumé',entries:'Lignes',savings:'Épargne',analysis:'Analyse',banque:'Banque'};
 function switchTab(id){
   if(hasNoData() && DATA_TABS.includes(id)) id='entries';
   currentTab=id;
   const pt=document.getElementById('topbar-page-title');
   if(pt) pt.textContent=PAGE_NAMES[id]||'';
   document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
-  // also hide/show conseils and banque panels (display:none by default for these)
-  const cp=document.getElementById('tab-conseils');
-  if(cp) cp.style.display=id==='conseils'?'block':'none';
   document.querySelectorAll('[data-tab]').forEach(b=>b.classList.remove('active'));
   const el=document.getElementById('tab-'+id);
   if(el&&el.classList.contains('tab-panel')) el.classList.add('active');
@@ -2043,8 +1918,6 @@ function switchTab(id){
   if(id==='entries'){if(entriesMember==='Commun')setEntriesMember(me);else renderEntries();}
   if(id==='savings'){if(savingsMember==='all')setSavingsMember(me);else renderSavings();}
   if(id==='analysis'){if(analysisMember==='all')setAnalysisMember(me);else renderAnalysis();}
-  if(id==='projection'){if(projectionMember==='all')setProjectionMember(me);else renderProjection();}
-  if(id==='conseils'){if(conseilsMember==='all')setConseilsMember(me);else renderConseils();}
   if(id==='banque')renderBank();
   // Re-fill slider tracks after render
   requestAnimationFrame(fillAllTracks);
@@ -2433,8 +2306,6 @@ function renderMemberTabs(){
   renderMemberTabsFor('entries-mtabs',  entriesMember==='Commun'?'all':entriesMember, 'setEntriesMember');
   renderMemberTabsFor('savings-mtabs',  savingsMember,    'setSavingsMember');
   renderMemberTabsFor('analysis-mtabs', analysisMember,   'setAnalysisMember');
-  renderMemberTabsFor('proj-mtabs',     projectionMember, 'setProjectionMember');
-  renderMemberTabsFor('conseils-mtabs', conseilsMember,   'setConseilsMember');
 }
 
 function setDashboardMember(m){dashboardMember=m;renderMemberTabsFor('dash-mtabs',m,'setDashboardMember');setTimeout(updateMtabColors,0);renderDashboard();}
@@ -2447,21 +2318,11 @@ function setEntriesMember(m){
 }
 function setSavingsMember(m){savingsMember=m;renderMemberTabsFor('savings-mtabs',m,'setSavingsMember');setTimeout(updateMtabColors,0);renderSavings();}
 function setAnalysisMember(m){analysisMember=m;renderMemberTabsFor('analysis-mtabs',m,'setAnalysisMember');setTimeout(updateMtabColors,0);renderAnalysis();}
-function setProjectionMember(m){projectionMember=m;simMonthlyOverride=null;renderMemberTabsFor('proj-mtabs',m,'setProjectionMember');setTimeout(updateMtabColors,0);renderProjection();}
 
 // ══════════════════════════════════════════════
 // DASHBOARD
 // ══════════════════════════════════════════════
 let _dashRefreshTimer=null;
-let _projRefreshTimer=null;
-function debouncedProjRefresh(){
-  clearTimeout(_projRefreshTimer);
-  _projRefreshTimer=setTimeout(()=>{
-    if(_isDragging) return;
-    renderProjection();
-    fillAllTracks();
-  },400);
-}
 function debouncedDashRefresh(){
   clearTimeout(_dashRefreshTimer);
   _dashRefreshTimer=setTimeout(()=>{
@@ -2470,7 +2331,6 @@ function debouncedDashRefresh(){
     fillAllTracks();
     if(currentTab==='entries')renderEntries();
     if(currentTab==='analysis')renderAnalysis();
-    if(currentTab==='projection')renderProjection();
   },600);
 }
 function prow(label,val,color){return`<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0"><span style="font-size:var(--fs-sm);color:var(--muted)">${label}</span><span style="font-size:var(--fs-sm);font-weight:600;color:${color}">${val}</span></div>`;}
@@ -2631,14 +2491,6 @@ async function renderDashboard(){
         <div class="prow"><span class="prow-lbl">Bruts</span><span class="prow-val" style="color:var(--green)">${eur(revA)}</span></div>
         <div class="prow"><span class="prow-lbl">Impôts</span><span class="prow-val" style="color:var(--amber)">−${eur(taxA)}</span></div>
         <div class="prow"><span class="prow-lbl" style="font-weight:700">Nets</span><span class="prow-val" style="color:var(--green);font-weight:700">${eur(revNetA)}</span></div>
-      </div>
-      <div style="flex:1;min-width:110px;padding-left:14px">
-        <div style="font-size:9px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--red);margin-bottom:6px">Dépenses</div>
-        <div class="prow"><span class="prow-lbl">Fixes</span><span class="prow-val" style="color:var(--red)">−${eur(fixA)}</span></div>
-        <div class="prow"><span class="prow-lbl">Variables</span><span class="prow-val" style="color:var(--red)">−${eur(varA)}</span></div>
-        <div class="prow"><span class="prow-lbl">Loisir</span><span class="prow-val" style="color:var(--amber)">−${eur(loiA)}</span></div>
-        ${epMonthDelta>0?`<div class="prow"><span class="prow-lbl">Épargne</span><span class="prow-val" style="color:var(--blue)">−${eur(epMonthDelta)}</span></div>`:''}
-        <div class="prow"><span class="prow-lbl" style="font-weight:700">Total</span><span class="prow-val" style="color:var(--red);font-weight:700">−${eur(totalDep)}</span></div>
       </div>
     </div>
     ${epMonthDelta<0?`<div style="margin-top:8px;padding-top:8px;border-top:1px dashed color-mix(in srgb,var(--amber) 50%,var(--border));font-size:var(--fs-xs);color:var(--amber);line-height:1.4">💡 RAV bonifié de <b>${eur(Math.abs(epMonthDelta))}</b> par le retrait sur épargne.</div>`:''}
@@ -3613,21 +3465,11 @@ function _renderMonthlySections(stats, expenses, savingsData = [], entryStats = 
         <div style="font-size:clamp(1.8rem,4vw,2.5rem);font-weight:900;letter-spacing:-.04em;color:${_foyerRavColor2};line-height:1.1">${mlyRav>=0?'+':''}${eur(mlyRav)}</div>
         <div style="font-size:var(--fs-xs);color:var(--muted);margin-top:4px">${mlyRavRate}% du revenu net</div>
       </div>
-      <div style="display:flex;gap:0;flex-wrap:wrap">
-        <div style="flex:1;min-width:110px;padding-right:14px;border-right:1px solid var(--border)">
-          <div style="font-size:9px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--green);margin-bottom:6px">Revenus</div>
+      <div>
+        <div style="font-size:9px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--green);margin-bottom:6px">Revenus</div>
           <div class="prow"><span class="prow-lbl">Bruts</span><span class="prow-val" style="color:var(--green)">${eur(revenu.actual)}</span></div>
           <div class="prow"><span class="prow-lbl">Impôts</span><span class="prow-val" style="color:var(--amber)">−${eur(impot.actual)}</span></div>
           <div class="prow"><span class="prow-lbl" style="font-weight:700">Nets</span><span class="prow-val" style="color:var(--green);font-weight:700">${eur(revNet)}</span></div>
-        </div>
-        <div style="flex:1;min-width:110px;padding-left:14px">
-          <div style="font-size:9px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--red);margin-bottom:6px">Dépenses</div>
-          <div class="prow"><span class="prow-lbl">Fixes</span><span class="prow-val" style="color:var(--red)">−${eur(fixe.actual)}</span></div>
-          <div class="prow"><span class="prow-lbl">Variables</span><span class="prow-val" style="color:var(--red)">−${eur(vari.actual)}</span></div>
-          <div class="prow"><span class="prow-lbl">Loisir</span><span class="prow-val" style="color:var(--amber)">−${eur(loi.actual)}</span></div>
-          ${epMonthDelta > 0 ? `<div class="prow"><span class="prow-lbl">Épargne</span><span class="prow-val" style="color:var(--blue)">−${eur(epMonthDelta)}</span></div>` : ''}
-          <div class="prow"><span class="prow-lbl" style="font-weight:700">Total</span><span class="prow-val" style="color:var(--red);font-weight:700">−${eur(fixe.actual + vari.actual + loi.actual + epMonthDelta)}</span></div>
-        </div>
       </div>
       ${epDelta<0?`<div style="margin-top:8px;padding-top:8px;border-top:1px dashed color-mix(in srgb,var(--amber) 50%,var(--border));font-size:var(--fs-xs);color:var(--amber);line-height:1.4">💡 RAV bonifié de <b>${eur(Math.abs(epDelta))}</b> par le retrait sur épargne.</div>`:''}
     </div>`;
@@ -3641,21 +3483,11 @@ function _renderMonthlySections(stats, expenses, savingsData = [], entryStats = 
         <div style="font-size:clamp(1.8rem,4vw,2.5rem);font-weight:900;letter-spacing:-.04em;color:${mlyRavColor};line-height:1.1">${mlyRav>=0?'+':''}${eur(mlyRav)}</div>
         <div style="font-size:var(--fs-xs);color:var(--muted);margin-top:4px">${mlyRavRate}% du revenu net</div>
       </div>
-      <div style="display:flex;gap:0;flex-wrap:wrap">
-        <div style="flex:1;min-width:110px;padding-right:14px;border-right:1px solid var(--border)">
-          <div style="font-size:9px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--green);margin-bottom:6px">Revenus</div>
+      <div>
+        <div style="font-size:9px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--green);margin-bottom:6px">Revenus</div>
           <div class="prow"><span class="prow-lbl">Bruts</span><span class="prow-val" style="color:var(--green)">${eur(revenu.actual)}</span></div>
           <div class="prow"><span class="prow-lbl">Impôts</span><span class="prow-val" style="color:var(--amber)">−${eur(impot.actual)}</span></div>
           <div class="prow"><span class="prow-lbl" style="font-weight:700">Nets</span><span class="prow-val" style="color:var(--green);font-weight:700">${eur(revNet)}</span></div>
-        </div>
-        <div style="flex:1;min-width:110px;padding-left:14px">
-          <div style="font-size:9px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--red);margin-bottom:6px">Dépenses</div>
-          <div class="prow"><span class="prow-lbl">Fixes</span><span class="prow-val" style="color:var(--red)">−${eur(fixe.actual)}</span></div>
-          <div class="prow"><span class="prow-lbl">Variables</span><span class="prow-val" style="color:var(--red)">−${eur(vari.actual)}</span></div>
-          <div class="prow"><span class="prow-lbl">Loisir</span><span class="prow-val" style="color:var(--amber)">−${eur(loi.actual)}</span></div>
-          ${epMonthDelta > 0 ? `<div class="prow"><span class="prow-lbl">Épargne</span><span class="prow-val" style="color:var(--blue)">−${eur(epMonthDelta)}</span></div>` : ''}
-          <div class="prow"><span class="prow-lbl" style="font-weight:700">Total</span><span class="prow-val" style="color:var(--red);font-weight:700">−${eur(fixe.actual + vari.actual + loi.actual + epMonthDelta)}</span></div>
-        </div>
       </div>
       ${epDelta<0?`<div style="margin-top:8px;padding-top:8px;border-top:1px dashed color-mix(in srgb,var(--amber) 50%,var(--border));font-size:var(--fs-xs);color:var(--amber);line-height:1.4">💡 RAV bonifié de <b>${eur(Math.abs(epDelta))}</b> par le retrait sur épargne.</div>`:''}
     </div>`;
@@ -5538,433 +5370,6 @@ async function renderAnalysis(){
 }
 
 // ══════════════════════════════════════════════
-// PROJECTION
-// ══════════════════════════════════════════════
-function renderProjection(){
-  if(hasNoData(projectionMember)){
-    projChart=destroyChart(projChart);
-    document.getElementById('proj-nodata').innerHTML=noDataBanner();
-    document.getElementById('proj-nodata').style.display='';
-    document.getElementById('proj-content').style.display='none';
-    return;
-  }
-  document.getElementById('proj-nodata').style.display='none';
-  document.getElementById('proj-content').style.display='';
-  if(!document.getElementById('proj-chart')) document.getElementById('proj-chart-wrap').innerHTML='<canvas id="proj-chart"></canvas>';
-  const scopedMembers=projectionMember==='all'?orderedMembers():[projectionMember];
-  const curSav=scopedMembers.reduce((sum,m)=>sum+(savings.filter(r=>r.member===m).slice(-1)[0]?.amount||0),0);
-  const monthly=Math.round(scopedMembers.reduce((sum,m)=>{const sm=calcStats(entries.filter(e=>e.member===m));return sum+sm.rav*(savingPct[m]??60)/100;},0));
-  const revScoped=scopedMembers.reduce((sum,m)=>sum+calcStats(entries.filter(e=>e.member===m)).revNet,0);
-  // KPI budget prévisionnel
-  const _projStats=scopedMembers.reduce((acc,m)=>{const s=calcStats(entries.filter(e=>e.member===m));acc.fix+=s.fix;acc.vari+=s.vari;acc.rav+=s.rav;return acc;},{fix:0,vari:0,rav:0});
-  const _projEp=monthly;
-  const _projLoi=Math.round(scopedMembers.reduce((s,m)=>{const sm=calcStats(entries.filter(e=>e.member===m));return s+sm.rav*(100-(savingPct[m]??60))/100;},0));
-  document.getElementById('proj-budget-kpis').innerHTML =
-    _budgetKpiCard('Fixes',    _projStats.fix,  0, '#d93535') +
-    _budgetKpiCard('Variables',_projStats.vari, 0, '#e05a2b') +
-    _budgetKpiCard('Loisir',   _projLoi,        0, '#f59e0b') +
-    _budgetKpiCard('Épargne',  _projEp,         0, '#2979c8',true);
-  const annualRate=projAnnualRate,years=10;
-  const projLabels=Array.from({length:years+1},(_,i)=>i===0?'Auj.':`+${i}a`);
-  const noInterest=[],withInterest=[];
-  let balNI=curSav,balWI=curSav;
-  const bal2=[],bal7=[];let b2=curSav,b7=curSav;
-  for(let y=0;y<=years;y++){noInterest.push(Math.round(balNI));withInterest.push(Math.round(balWI));bal2.push(Math.round(b2));bal7.push(Math.round(b7));balNI+=monthly*12;balWI=(balWI+monthly*12)*(1+annualRate);b2=(b2+monthly*12)*(1+0.02);b7=(b7+monthly*12)*(1+0.07);}
-  const textColor=darkVal('#666','#999');
-  const lineColor=projectionMember==='all'?'#2979c8':memberColors[projectionMember]||'#2979c8';
-  const lineColor2='#0d9e6e';
-  projChart=destroyChart(projChart);
-  projChart=new Chart(document.getElementById('proj-chart'),{
-    type:'line',
-    plugins:[ChartDataLabels],
-    data:{labels:projLabels,datasets:[
-      {
-        label:'Sans rendement',
-        data:noInterest,
-        borderColor:'#d93535',
-        backgroundColor:(ctx)=>{
-          const chart=ctx.chart,{ctx:c2,chartArea}=chart;
-          if(!chartArea)return '#d9353522';
-          const g=c2.createLinearGradient(0,chartArea.top,0,chartArea.bottom);
-          g.addColorStop(0,'#d9353544');g.addColorStop(1,'#d9353505');
-          return g;
-        },
-        tension:.45,fill:true,borderWidth:2.5,
-        pointRadius:0,pointHoverRadius:5,
-        pointBackgroundColor:'#d93535',pointBorderColor:'#fff',pointBorderWidth:2,
-      },
-      {
-        label:`Avec ${(annualRate*100).toFixed(1)}% rendement/an`,
-        data:withInterest,
-        borderColor:lineColor2,
-        backgroundColor:(ctx)=>{
-          const chart=ctx.chart,{ctx:c2,chartArea}=chart;
-          if(!chartArea)return lineColor2+'22';
-          const g=c2.createLinearGradient(0,chartArea.top,0,chartArea.bottom);
-          g.addColorStop(0,lineColor2+'66');g.addColorStop(1,lineColor2+'05');
-          return g;
-        },
-        tension:.45,fill:true,borderWidth:2.5,
-        pointRadius:0,pointHoverRadius:5,
-        pointBackgroundColor:lineColor2,pointBorderColor:'#fff',pointBorderWidth:2,
-      },
-      {label:'2% rendement',data:bal2,borderColor:'#f59e0b',backgroundColor:'transparent',tension:.45,fill:false,borderWidth:1.5,borderDash:[5,4],pointRadius:0,pointHoverRadius:4,pointBackgroundColor:'#f59e0b',pointBorderColor:'#fff',pointBorderWidth:2},
-      {label:'7% rendement',data:bal7,borderColor:'#7c52d4',backgroundColor:'transparent',tension:.45,fill:false,borderWidth:1.5,borderDash:[5,4],pointRadius:0,pointHoverRadius:4,pointBackgroundColor:'#7c52d4',pointBorderColor:'#fff',pointBorderWidth:2},
-    ]},
-    options:{
-      responsive:true,maintainAspectRatio:false,
-      interaction:{mode:'index',intersect:false},
-      layout:{padding:{top:28,right:20,left:4,bottom:4}},
-      plugins:{
-        legend:{
-          display:true,position:'bottom',
-          labels:{font:{size:fsPx('--fs-xs'),weight:'600'},boxWidth:12,boxHeight:4,padding:16,color:textColor,usePointStyle:true,pointStyle:'line'}
-        },
-        tooltip:{
-          backgroundColor:darkVal('rgba(255,255,255,1)','rgba(28,28,32,1)'),
-          borderColor:darkVal('rgba(0,0,0,.15)','rgba(255,255,255,.2)'),
-          borderWidth:1,
-          titleColor:textColor,bodyColor:textColor,
-          titleFont:{size:fsPx('--fs-sm'),weight:'700'},bodyFont:{size:fsPx('--fs-xs')},
-          padding:12,cornerRadius:10,
-          callbacks:{
-            title:([ctx])=>ctx.label,
-            label:ctx=>{
-              const pct=curSav>0?Math.round((ctx.raw-curSav)/curSav*100):0;
-              return ` ${ctx.dataset.label.split(' ')[0]} : ${ctx.raw.toLocaleString('fr-FR')} € (+${pct}%)`;
-            }
-          }
-        },
-        datalabels:{
-          display:(ctx)=>ctx.dataIndex===ctx.dataset.data.length-1,
-          anchor:'end',align:'top',
-          formatter:(v)=>`${(v/1000).toFixed(0)}k€`,
-          color:(ctx)=>ctx.datasetIndex===0?cssCol('--red'):ctx.datasetIndex===1?lineColor2:ctx.datasetIndex===2?'#f59e0b':'#7c52d4',
-          font:{size:fsPx('--fs-xs'),weight:'800'},
-          backgroundColor:(ctx)=>darkVal('#fff','#1a1a18'),
-          borderRadius:4,
-          padding:{top:3,bottom:3,left:6,right:6},
-          borderWidth:1,
-          borderColor:(ctx)=>ctx.datasetIndex===0?lineColor+'44':lineColor2+'44',
-        }
-      },
-      scales:{
-        x:{
-          grid:{display:false},
-          ticks:{color:textColor,font:{size:fsPx('--fs-xs')}},
-          border:{display:false}
-        },
-        y:{
-          beginAtZero:true,
-          ticks:{callback:v=>v===0?'':((v/1000).toFixed(0)+'k€'),font:{size:fsPx('--fs-xs')},color:textColor,maxTicksLimit:6},
-          grid:{color:darkVal('rgba(0,0,0,.04)','rgba(255,255,255,.04)'),drawBorder:false},
-          border:{display:false}
-        }
-      }
-    },
-  });
-  document.getElementById('proj-kpis').innerHTML=
-    kpiHtml('Épargne actuelle',eur(curSav),'var(--blue)',
-      projectionMember==='all'?`Livret A : ${Math.round(curSav/22950*100)}% · ${eur(monthly*12)}/an · +${eur(Math.round(withInterest[10]-noInterest[10]))} en 10 ans`:`Livret A : ${Math.round(curSav/22950*100)}% · ${eur(monthly*12)}/an · +${eur(Math.round(withInterest[10]-noInterest[10]))} en 10 ans`,null,
-      `Capital disponible aujourd'hui · Livret A plein à ${Math.round(curSav/22950*100)}% · Base de toute projection`)+
-    kpiHtml('Épargne mensuelle',eur(monthly),'var(--green)',
-      `${Math.round(monthly/(revScoped||1)*100)}% du revenu net`,null,
-      `Versement régulier mensuel · ${eur(monthly*12)}/an · Dont intérêts dans 10 ans : ${eur(Math.round(withInterest[10]-noInterest[10]))}`)+
-    kpiHtml('Dans 10 ans (sans rdt)',eur(noInterest[10]),'#d93535',
-      `×${(noInterest[10]/(curSav||1)).toFixed(1)} · +${Math.round((noInterest[10]-curSav)/(curSav||1)*100)}% vs aujourd'hui`,null,`Cumul pur des versements · Gain vs aujourd'hui : ${eur(noInterest[10]-curSav)} · Pas d'intérêts composés`)+
-    kpiHtml(`Dans 10 ans (${(projAnnualRate*100).toFixed(0)}% rdt)`,eur(withInterest[10]),'var(--green)',
-      `×${(withInterest[10]/(curSav||1)).toFixed(1)} · +${eur(withInterest[10]-noInterest[10])} grâce aux intérêts`,
-      Math.round((withInterest[10]-noInterest[10])/(noInterest[10]||1)*100),`Intérêts composés sur ${(projAnnualRate*100).toFixed(0)}%/an · Gain vs sans rendement : ${eur(withInterest[10]-noInterest[10])} · Revenu mensuel passif estimé : ${eur(Math.round(withInterest[10]*projAnnualRate/12))}`);
-  const goalContainer=document.getElementById('proj-goal');
-  const goalValues=[10000,20000,30000,50000,75000,100000,150000,200000,300000,500000];
-  const currentGoal=parseInt(goalContainer.dataset.goal||100000);
-  goalContainer.dataset.goal=currentGoal;
-  goalContainer.innerHTML=`
-    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:1rem" id="goal-btns">
-      ${goalValues.map(v=>{
-        const active=v===currentGoal;
-        const label=v>=1000000?(v/1000000)+'M€':v>=1000?(v/1000)+'k€':v+'€';
-        return`<button onclick="selectGoal(${v},this)" data-goal="${v}"
-          class="goal-btn${active?' goal-btn-active':''}"
-          style="padding:8px 4px;border-radius:10px;border:1.5px solid ${active?'#0d9e6e':'var(--border)'};
-          background:${active?'#0d9e6e':'var(--surface)'};
-          color:${active?'#fff':'var(--muted)'};font-size:var(--fs-sm);font-weight:600;
-          cursor:pointer;font-family:inherit;transition:all .15s;text-align:center">
-          <div style="font-size:var(--fs-md);font-weight:800;line-height:1">${label}</div>
-        </button>`;
-      }).join('')}
-    </div>
-    <div id="goal-result"></div>`;
-  updateGoal();
-  document.getElementById('proj-sim').innerHTML=`
-    <div style="margin-bottom:var(--sg)">
-      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px">
-        <span style="font-size:var(--fs-sm);color:var(--muted);font-weight:500">Épargne mensuelle</span>
-        <span id="sim-val" style="font-size:var(--fs-md);font-weight:700;color:var(--blue)">${simMonthlyOverride??monthly}&nbsp;€/mois</span>
-      </div>
-      <input type="range" min="100" max="3000" step="50" value="${simMonthlyOverride??monthly}" id="sim-slider"
-        style="width:100%;accent-color:var(--blue);--accent-c:var(--blue)"
-        oninput="simMonthlyOverride=+this.value;document.getElementById('sim-val').textContent=this.value+'\u00a0€/mois';updateSim();fillTrack(this)">
-      <div style="display:flex;justify-content:space-between;font-size:var(--fs-xs);color:var(--hint);margin-top:2px"><span>100 €</span><span>3 000 €</span></div>
-    </div>
-    <div style="margin-bottom:var(--sg)">
-      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px">
-        <span style="font-size:var(--fs-sm);color:var(--muted);font-weight:500">Rendement annuel</span>
-        <span id="sim-rate-val" style="font-size:var(--fs-md);font-weight:700;color:#0d9e6e">${(projAnnualRate*100).toFixed(0)}%/an</span>
-      </div>
-      <input type="range" min="1" max="12" step="0.1" value="${(projAnnualRate*100).toFixed(1)}" id="sim-rate"
-        style="width:100%;accent-color:#0d9e6e;--accent-c:#0d9e6e"
-        oninput="projAnnualRate=this.value/100;document.getElementById('sim-rate-val').textContent=parseFloat(this.value).toFixed(1)+'%/an';debouncedProjRefresh();">
-      <div style="display:flex;justify-content:space-between;font-size:var(--fs-xs);color:var(--hint);margin-top:2px"><span>1%</span><span style="color:#0d9e6e">↑ ETF ~7%</span><span>12%</span></div>
-    </div>
-    <div style="margin-bottom:var(--sg)">
-      <div style="font-size:var(--fs-sm);color:var(--muted);font-weight:500;margin-bottom:10px">Horizon de projection</div>
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px" id="horizon-btns">
-        ${[1,2,3,5,10,15,20,30].map(y=>`
-          <button onclick="selectHorizon(${y},this)" data-horizon="${y}"
-            class="horizon-btn${y===10?' horizon-btn-active':''}"
-            style="padding:8px 4px;border-radius:10px;border:1.5px solid ${y===10?'#2979c8':'var(--border)'};
-            background:${y===10?'#2979c8':'var(--surface)'};
-            color:${y===10?'#fff':'var(--muted)'};font-size:var(--fs-sm);font-weight:600;
-            cursor:pointer;font-family:inherit;transition:all .15s;text-align:center">
-            <div style="font-size:var(--fs-base);font-weight:800;line-height:1">${y}</div>
-            <div style="font-size:var(--fs-xs);font-weight:500;opacity:.8;margin-top:2px">an${y>1?'s':''}</div>
-          </button>`).join('')}
-      </div>
-    </div>
-    <div id="sim-result"></div>`;
-  updateSim();
-}
-function selectGoal(v, btn){
-  document.querySelectorAll('.goal-btn').forEach(b=>{
-    const active=b===btn;
-    b.style.background=active?'#0d9e6e':'var(--surface)';
-    b.style.borderColor=active?'#0d9e6e':'var(--border)';
-    b.style.color=active?'#fff':'var(--muted)';
-    b.classList.toggle('goal-btn-active',active);
-  });
-  const gc=document.getElementById('proj-goal');
-  if(gc) gc.dataset.goal=v;
-  updateGoal();
-}
-function updateGoal(){
-  const activeBtn=document.querySelector('.goal-btn-active');
-  const goal=parseInt(activeBtn?.dataset.goal||100000);
-  const scopedMembers=projectionMember==='all'?orderedMembers():[projectionMember];
-  const monthly=Math.round(scopedMembers.reduce((sum,m)=>{const sm=calcStats(entries.filter(e=>e.member===m));return sum+sm.rav*(savingPct[m]??60)/100;},0));
-  const curSav=scopedMembers.reduce((sum,m)=>sum+(savings.filter(r=>r.member===m).slice(-1)[0]?.amount||0),0);
-  if(monthly<=0){document.getElementById('goal-result').innerHTML=`<div class="alert alert-warn">Aucune épargne mensuelle détectée.</div>`;return;}
-  const needed=goal-curSav,months=needed>0?Math.ceil(needed/monthly):0;
-  const yrs=Math.floor(months/12),mo=months%12;
-  const color=months<=60?'#0d9e6e':months<=120?'#c49a00':'#d93535';
-  const pctDone=goal>0?Math.min(100,Math.round(curSav/goal*100)):0;
-  const timeLabel=months<=0?'Déjà atteint !':yrs>0&&mo>0?`${yrs} ans ${mo} mois`:yrs>0?`${yrs} ans`:`${mo} mois`;
-  const remaining=Math.max(0,goal-curSav);
-  document.getElementById('goal-result').innerHTML=`
-    <div style="margin-top:.75rem">
-      <!-- Progress bar header -->
-      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px">
-        <span style="font-size:var(--fs-sm);font-weight:600;color:var(--muted)">Progression</span>
-        <span style="font-size:var(--fs-md);font-weight:700;color:${color}">${pctDone}%</span>
-      </div>
-      <!-- Progress bar -->
-      <div style="height:8px;background:var(--surface2);border-radius:4px;margin-bottom:12px;overflow:hidden;border:1px solid var(--border)">
-        <div style="width:${pctDone}%;height:100%;background:linear-gradient(90deg,#0d9e6e,#2979c8);border-radius:4px;transition:width .6s ease"></div>
-      </div>
-      <!-- 3 stats -->
-      <div id="goal-result-stats" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">
-        <div style="background:var(--surface2);border-radius:var(--r);padding:10px;text-align:center;border:1px solid var(--border)">
-          <div style="font-size:var(--fs-xs);color:var(--hint);font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px">Atteint</div>
-          <div style="font-size:var(--fs-md);font-weight:700;color:#0d9e6e">${eur(curSav)}</div>
-        </div>
-        <div style="background:var(--surface2);border-radius:var(--r);padding:10px;text-align:center;border:1px solid var(--border)">
-          <div style="font-size:var(--fs-xs);color:var(--hint);font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px">Restant</div>
-          <div style="font-size:var(--fs-md);font-weight:700;color:var(--muted)">${eur(remaining)}</div>
-        </div>
-        <div style="background:var(--surface2);border-radius:var(--r);padding:10px;text-align:center;border:1px solid var(--border)">
-          <div style="font-size:var(--fs-xs);color:var(--hint);font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px">Mensuel</div>
-          <div style="font-size:var(--fs-md);font-weight:700;color:#2979c8">${eur(monthly)}</div>
-        </div>
-      </div>
-      <!-- Time estimate -->
-      <div style="background:${color}12;border:1.5px solid ${color}44;border-radius:var(--r);padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:8px">
-        <div>
-          <div style="font-size:var(--fs-sm);font-weight:600;color:var(--muted);margin-bottom:2px">Temps estimé</div>
-          <div style="font-size:var(--fs-lg);font-weight:800;color:${color};letter-spacing:-.02em">${timeLabel}</div>
-        </div>
-        <div style="font-size:var(--fs-xl);line-height:1">${months<=0?'🎉':months<=60?'🚀':months<=120?'⏳':'📅'}</div>
-      </div>
-    </div>`;
-}
-function toggleSimMore(){
-  const el=document.getElementById('sim-more-options');
-  const btn=document.getElementById('sim-more-btn');
-  if(!el)return;
-  const open=el.style.display==='flex';
-  el.style.display=open?'none':'flex';
-  if(btn) btn.classList.toggle('active',!open);
-}
-function selectHorizon(y, btn){
-  document.querySelectorAll('.horizon-btn').forEach(b=>{
-    const active = b===btn;
-    b.style.background = active ? '#2979c8' : 'var(--surface)';
-    b.style.borderColor = active ? '#2979c8' : 'var(--border)';
-    b.style.color = active ? '#fff' : 'var(--muted)';
-    b.classList.toggle('horizon-btn-active', active);
-  });
-  updateSim();
-}
-function updateSim(){
-  const simM=parseFloat(document.getElementById('sim-slider')?.value)||0;
-  const activeBtn=document.querySelector('.horizon-btn-active');
-  const horizon=parseInt(activeBtn?.dataset.horizon)||10;
-  const scopedMembers=projectionMember==='all'?orderedMembers():[projectionMember];
-  const curSav=scopedMembers.reduce((sum,m)=>sum+(savings.filter(r=>r.member===m).slice(-1)[0]?.amount||0),0);
-  const vNoRdt=curSav+simM*horizon*12;
-  const simRate=projAnnualRate;
-  const monthlyRate=Math.pow(1+simRate,1/12)-1;
-  const vRdt=Math.round(curSav*Math.pow(1+simRate,horizon)+simM*(Math.pow(1+simRate,horizon)-1)/monthlyRate);
-  const gain=vRdt-Math.round(vNoRdt);
-  const gainPct=vNoRdt>0?Math.round(gain/vNoRdt*100):0;
-  const growthPct=curSav>0?Math.round((vNoRdt-curSav)/curSav*100):0;
-  const growthPctRdt=curSav>0?Math.round((vRdt-curSav)/curSav*100):0;
-  document.getElementById('sim-result').innerHTML=`
-    <div class="sim-results">
-      <div class="sim-card" style="background:var(--red-bg);border:1px solid #d9353533">
-        <div class="sim-card-label" style="color:#d93535">Sans rendement</div>
-        <div class="sim-card-value" style="color:#d93535">${eur(Math.round(vNoRdt))}</div>
-        <div class="sim-card-sub" style="color:#d93535;opacity:.75">+${growthPct}% vs aujourd'hui · dans ${horizon}&nbsp;an${horizon>1?'s':''}</div>
-      </div>
-      <div class="sim-card" style="background:var(--green-bg);border:1px solid var(--green)">
-        <div class="sim-card-label" style="color:var(--green)">Avec 4%/an ✦</div>
-        <div class="sim-card-value" style="color:var(--green)">${eur(vRdt)}</div>
-        <div class="sim-card-sub" style="color:var(--green)">+${growthPctRdt}% · ${eur(gain)} d'intérêts (${gainPct}% de bonus)</div>
-      </div>
-    </div>`;
-}
-
-// ══════════════════════════════════════════════════════
-// CONSEILS
-// ══════════════════════════════════════════════════════
-function setConseilsMember(m){
-  conseilsMember=m;
-  renderMemberTabsFor('conseils-mtabs',m,'setConseilsMember');
-  updateMtabColors();
-  renderConseils();
-}
-function renderConseils(){
-  if(hasNoData(conseilsMember)){
-    placementsChart=destroyChart(placementsChart);
-    document.getElementById('conseils-nodata').innerHTML=noDataBanner();
-    document.getElementById('conseils-nodata').style.display='';
-    document.getElementById('conseils-content').style.display='none';
-    return;
-  }
-  document.getElementById('conseils-nodata').style.display='none';
-  document.getElementById('conseils-content').style.display='';
-  const scopedMembers=conseilsMember==='all'?orderedMembers():[conseilsMember];
-  const epMonthly=Math.round(scopedMembers.reduce((sum,m)=>{const sm=calcStats(entries.filter(e=>e.member===m));return sum+sm.rav*(savingPct[m]??60)/100;},0));
-  const curSav=scopedMembers.reduce((sum,m)=>sum+(savings.filter(r=>r.member===m).slice(-1)[0]?.amount||0),0);
-  const revNet=calcStats(entries).revNet;
-  // Projections revenus passifs
-  const scpiYield=0.045, etfYield=0.04, livretYield=0.03;
-  const scpiMonthly=Math.round(curSav*scpiYield/12);
-  const etfMonthly=Math.round(curSav*etfYield/12);
-  const in10=Math.round(curSav*Math.pow(1.04,10)+epMonthly*(Math.pow(1.04,10)-1)/(Math.pow(1.04,1/12)-1));
-  const revPassif10=Math.round(in10*etfYield/12);
-
-  // KPIs
-  document.getElementById('conseils-kpis').innerHTML=
-    kpiHtml('Épargne disponible',eur(curSav),'var(--blue)',`Capital de départ`,null,`Livret A plein à ${Math.round(curSav/22950*100)}% · Reste pour investir : ${eur(Math.max(0,curSav-22950))} · Potentiel Livret A : ${eur(Math.round(curSav*0.03/12))}/mois`)+
-    kpiHtml('Épargne mensuelle',eur(epMonthly),'var(--green)',`Versement régulier`,null,`${Math.round(epMonthly*12)} €/an · En 10 ans sans rendement : ${eur(epMonthly*12*10)} · Avec 5%/an : ${eur(Math.round(epMonthly*(Math.pow(1.05,10)-1)/(Math.pow(1.05,1/12)-1)))}`)+
-    kpiHtml('Revenu SCPI estimé',eur(scpiMonthly)+'/mois','#d93535',`Avec capital actuel à 4.5%`,null,`Rendement brut 4.5% · Frais de gestion ~1% · Net estimé : ${eur(Math.round(curSav*0.035/12))}/mois · Accessible dès 1 000 €`)+
-    kpiHtml('Revenu dans 10 ans',eur(revPassif10)+'/mois','#0d9e6e',`Capital projeté × 4%/an`,null,`Capital dans 10 ans : ${eur(in10)} · Soit ${Math.round(revPassif10/epMonthly*100)}% de votre épargne actuelle · +${eur(revPassif10*12)}/an passif`);
-
-  // Stratégies personnalisées
-  const strategies=[
-    {
-      icon:'🏦',color:'#0d9e6e',title:'Livret A & LDDS — Priorité immédiate',
-      badge:'Sans risque · 3%',
-      desc:`Votre épargne de précaution idéale. Avec ${eur(curSav)} placés, vous percevez environ ${eur(Math.round(curSav*livretYield/12))}/mois d'intérêts nets. Objectif : couvrir 3 à 6 mois de dépenses (${eur(Math.round(calcStats(entries).fix*4))} recommandés).`,
-      action:'Ouvrir un Livret A si pas encore fait — Plafond 22 950 €'
-    },
-    {
-      icon:'📈',color:'#2979c8',title:'PEA + ETF Monde — Le moteur de croissance',
-      badge:'Moyen terme · ~7%/an historique',
-      desc:`Investissez ${eur(Math.round(epMonthly*0.5))}/mois en ETF MSCI World via un PEA. En 10 ans, cela représente ${eur(Math.round(epMonthly*0.5*12*10*(1+0.07)**5))} estimés. Après 5 ans, les plus-values sont exonérées d'IR.`,
-      action:'Ouvrir un PEA chez Fortuneo, Bourse Direct ou Boursorama'
-    },
-    {
-      icon:'🏢',color:'#d93535',title:'SCPI — L\'immobilier sans contrainte',
-      badge:'Revenus mensuels · ~4-5%',
-      desc:`Avec ${eur(curSav)} en SCPI, vous pouvez espérer ${eur(scpiMonthly)}/mois de revenus locatifs nets. Pas de gestion, pas de locataire — vous recevez votre quote-part des loyers chaque trimestre ou mois.`,
-      action:'Comparer : Corum Origin, Primopierre, Immorente — accessible dès 1 000 €'
-    },
-    {
-      icon:'💼',color:'#7c52d4',title:'Assurance-vie — La polyvalence fiscale',
-      badge:'Fiscalité optimisée après 8 ans',
-      desc:`Mélangez fonds euros (sécurisé ~2.5%) et ETF en unités de compte. Idéal pour préparer un projet à moyen terme ou optimiser votre succession. Les gains après 8 ans bénéficient d'un abattement annuel de 4 600 € (9 200 € en couple).`,
-      action:'Linxea Spirit 2, Yomoni, Boursorama Vie — sans frais d\'entrée'
-    },
-  ];
-
-  document.getElementById('conseil-cards').innerHTML=strategies.map(s=>`
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:14px;display:flex;gap:12px;align-items:flex-start">
-      <div style="width:38px;height:38px;border-radius:10px;background:${s.color}18;border:1px solid ${s.color}30;display:flex;align-items:center;justify-content:center;font-size:var(--fs-lg);flex-shrink:0">${s.icon}</div>
-      <div style="flex:1;min-width:0">
-        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:5px">
-          <span style="font-size:var(--fs-title);font-weight:700;letter-spacing:-.02em">${s.title}</span>
-          <span style="font-size:var(--fs-xs);font-weight:600;padding:2px 7px;border-radius:20px;background:${s.color}18;color:${s.color}">${s.badge}</span>
-        </div>
-        <div style="font-size:var(--fs-sm);color:var(--muted);line-height:1.55;margin-bottom:8px">${s.desc}</div>
-        <div style="font-size:var(--fs-sm);font-weight:600;color:${s.color};display:flex;align-items:center;gap:5px;padding:5px 9px;background:${s.color}10;border-radius:7px;width:fit-content">
-          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>${s.action}
-        </div>
-      </div>
-    </div>`).join('');
-
-  // Simulateur revenus passifs
-  document.getElementById('conseils-sim').innerHTML=`
-    <div style="margin-bottom:var(--sg)">
-      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px">
-        <span style="font-size:var(--fs-sm);color:var(--muted);font-weight:500">Capital investi</span>
-        <span id="sim-cap-val" style="font-size:var(--fs-md);font-weight:700;color:#2979c8">${(curSav).toLocaleString('fr-FR')} €</span>
-      </div>
-      <input type="range" min="1000" max="200000" step="1000" value="${Math.min(curSav,200000)}" id="sim-cap"
-        style="width:100%;accent-color:#2979c8"
-        oninput="document.getElementById('sim-cap-val').textContent=parseInt(this.value).toLocaleString('fr-FR')+' €';updateConseilsSim();fillTrack(this)">
-      <div style="display:flex;justify-content:space-between;font-size:var(--fs-xs);color:var(--hint);margin-top:2px"><span>1 000 €</span><span style="color:#2979c8">↑ capital actuel</span><span>200 000 €</span></div>
-    </div>
-    <div id="conseils-sim-result"></div>`;
-  updateConseilsSim();
-  requestAnimationFrame(fillAllTracks);
-
-  placementsChart=destroyChart(placementsChart);
-}
-
-function updateConseilsSim(){
-  const cap=parseInt(document.getElementById('sim-cap')?.value)||0;
-  const rows=[
-    {label:'Livret A',rate:'3%',color:'#0d9e6e', monthly:Math.round(cap*0.03/12)},
-    {label:'SCPI',rate:'4.5%',color:'#d93535', monthly:Math.round(cap*0.045/12)},
-    {label:'ETF dividendes',rate:'4%',color:'#2979c8', monthly:Math.round(cap*0.04/12)},
-    {label:'Immobilier',rate:'5%',color:'#7c52d4', monthly:Math.round(cap*0.05/12)},
-  ];
-  document.getElementById('conseils-sim-result').innerHTML=`
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-      ${rows.map(r=>`
-        <div style="background:var(--surface2);border-radius:var(--r);padding:14px;border:1px solid var(--border);position:relative;overflow:hidden">
-          <div style="position:absolute;top:0;left:0;right:0;height:2px;background:${r.color}"></div>
-          <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
-            <span style="font-size:var(--fs-sm);font-weight:600;color:var(--muted)">${r.label}</span>
-            <span style="font-size:var(--fs-xs);font-weight:700;padding:1px 6px;border-radius:20px;background:${r.color}18;color:${r.color}">${r.rate}</span>
-          </div>
-          <div style="font-size:var(--fs-xl);font-weight:800;color:${r.color};letter-spacing:-.02em">${eur(r.monthly)}</div>
-          <div style="font-size:var(--fs-xs);color:var(--hint);margin-top:2px">par mois</div>
-        </div>`).join('')}
-    </div>`;
-}
-// ══════════════════════════════════════════════
 window.addEventListener('resize',()=>{if(currentTab==='savings')renderSavings();if(currentTab==='entries')renderEntries();});
 
 // ══════════════════════════════════════════════
@@ -6058,8 +5463,6 @@ function initSliders(){
 }
 const _origRenderDashboard=renderDashboard;
 renderDashboard=function(){_origRenderDashboard.apply(this,arguments);setTimeout(initSliders,0);};
-const _origRenderProjection=renderProjection;
-renderProjection=function(){_origRenderProjection.apply(this,arguments);setTimeout(initSliders,0);};
 
 // ══════════════════════════════════════════════
 // AUTH — backed by API
@@ -6320,7 +5723,6 @@ async function _refreshAndRender(showToast){
     if(currentTab==='entries')    renderEntries();
     if(currentTab==='savings')    renderSavings();
     if(currentTab==='analysis' && showToast) renderAnalysis();
-    if(currentTab==='projection') renderProjection();
     if(showToast) _showSyncToast();
   }finally{ _refreshing = false; }
 }
@@ -6531,8 +5933,6 @@ function initUserContext(){
   entriesMember=defaultEntries;
   savingsMember=myName;
   analysisMember=defaultMember;
-  projectionMember=defaultMember;
-  conseilsMember=defaultMember;
   updateMtabColors();
   renderMemberTabs();
   // Populate entry modal member select
