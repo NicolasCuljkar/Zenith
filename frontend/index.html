@@ -887,8 +887,8 @@ window.onerror = function(msg, src, line) {
         <span id="monthly-label" style="font-size:var(--fs-base);font-weight:700;letter-spacing:-.01em;text-align:center;flex:1"></span>
         <button id="monthly-nav-next" onclick="monthlyNavNext()" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:5px 14px;cursor:pointer;color:var(--fg);font-size:1.1rem;line-height:1;flex-shrink:0">›</button>
       </div>
-      <div id="monthly-solde-hero" style="margin-bottom:.75rem"></div>
       <div id="monthly-ret-banner"></div>
+      <div id="monthly-solde-hero" style="margin-bottom:.75rem"></div>
       <div id="monthly-kpis"></div>
       <div id="monthly-search-bar" style="display:flex;gap:6px;margin-bottom:.75rem">
         <input type="text" id="mly-search-input" class="inp search-inp" placeholder="Rechercher…" style="flex:1;min-width:0">
@@ -1590,21 +1590,31 @@ function _budgetKpiCard(lbl, act, bgt, col, isEp=false, excl=0) {
     ? (pct>=100?'var(--green)':pct>=70?'var(--amber)':'var(--red)')
     : (pct>100?'var(--red)':pct>85?'var(--amber)':'var(--green)');
   const bw  = pct!==null ? Math.min(pct,100) : 0;
-  const diff= bgt>0 ? act-bgt : null;
-  const ds  = diff!==null ? (diff>0?`+${eur(Math.abs(diff))}`:`−${eur(Math.abs(diff))}`) : null;
-  const dc  = diff===null?'':isEp?(diff>=0?'var(--green)':'var(--red)'):(diff>0?'var(--red)':'var(--green)');
-  return `<div class="card" style="padding:14px 16px">
-    <div style="font-size:10px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:${col};margin-bottom:8px">${lbl}</div>
-    <div style="font-size:1.5rem;font-weight:900;letter-spacing:-.03em;color:var(--fg);line-height:1">${eur(act)}</div>
-    ${bgt>0
-      ? `<div style="font-size:var(--fs-xs);color:var(--muted);margin:4px 0 8px">/ ${eur(bgt)} ${ds?`<span style="color:${dc};font-weight:700">${ds}</span>`:''}</div>`
-      : `<div style="font-size:var(--fs-xs);color:var(--hint);margin:4px 0 8px">aucun budget</div>`}
-    <div style="height:5px;background:var(--surface2);border-radius:99px;overflow:hidden">
-      <div style="width:${bw}%;height:100%;background:${pct!==null?pc:col};border-radius:99px;transition:width .4s"></div>
-    </div>
-    ${pct!==null?`<div style="font-size:11px;font-weight:700;color:${pc};margin-top:5px">${pct}%</div>`:''}
-    ${excl>0?`<div style="font-size:var(--fs-xs);color:var(--amber);margin-top:5px;padding-top:5px;border-top:1px dashed color-mix(in srgb,var(--amber) 30%,var(--border))">+${eur(excl)} exceptionnel</div>`:''}
-  </div>`;
+  if (bgt > 0) {
+    const rem = bgt - act;
+    const remCol = isEp
+      ? (rem<=0 ? 'var(--green)' : pct>=70 ? 'var(--amber)' : 'var(--red)')
+      : (rem>=0 ? 'var(--green)' : 'var(--red)');
+    const remStr = rem>=0 ? `+${eur(rem)}` : `−${eur(Math.abs(rem))}`;
+    return `<div class="card" style="padding:14px 16px">
+      <div style="font-size:10px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:${col};margin-bottom:6px">${lbl}</div>
+      <div style="font-size:1.5rem;font-weight:900;letter-spacing:-.03em;color:${remCol};line-height:1">${remStr}</div>
+      <div style="font-size:var(--fs-xs);color:var(--muted);margin:4px 0 6px">${eur(act)} dépensé · budget ${eur(bgt)}</div>
+      <div style="height:4px;background:var(--surface2);border-radius:99px;overflow:hidden">
+        <div style="width:${bw}%;height:100%;background:${pc};border-radius:99px;transition:width .4s"></div>
+      </div>
+      ${pct!==null?`<div style="font-size:10px;font-weight:700;color:${pc};margin-top:4px">${pct}%</div>`:''}
+      ${excl>0?`<div style="font-size:var(--fs-xs);color:var(--amber);margin-top:5px;padding-top:5px;border-top:1px dashed color-mix(in srgb,var(--amber) 30%,var(--border))">+${eur(excl)} exceptionnel</div>`:''}
+    </div>`;
+  } else {
+    return `<div class="card" style="padding:14px 16px">
+      <div style="font-size:10px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:${col};margin-bottom:6px">${lbl}</div>
+      <div style="font-size:1.5rem;font-weight:900;letter-spacing:-.03em;color:var(--fg);line-height:1">${eur(act)}</div>
+      <div style="font-size:var(--fs-xs);color:var(--hint);margin:4px 0 6px">aucun budget</div>
+      <div style="height:4px;background:var(--surface2);border-radius:99px;overflow:hidden"></div>
+      ${excl>0?`<div style="font-size:var(--fs-xs);color:var(--amber);margin-top:5px;padding-top:5px;border-top:1px dashed color-mix(in srgb,var(--amber) 30%,var(--border))">+${eur(excl)} exceptionnel</div>`:''}
+    </div>`;
+  }
 }
 function _retraitKpiCard(amount, balBefore, balAfter) {
   const absAmt = Math.abs(amount);
