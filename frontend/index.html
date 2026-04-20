@@ -2657,7 +2657,7 @@ async function renderDashboard(){
   // ── Où va l'argent ? ──
   const _catColP={fixe:'#d93535',variable:'#e05a2b',loisir:'#f59e0b',epargne:'#2979c8'};
   const _catLbl={fixe:'Fixes',variable:'Variables',loisir:'Loisir',epargne:'Épargne'};
-  const _depExpenses=mExpenses.filter(e=>!['revenu','impot'].includes(e.cat)&&!e.is_exceptional);
+  const _depExpenses=mExpenses.filter(e=>!['revenu','impot'].includes(e.cat));
   const _postesMap=new Map();
   for(const e of _depExpenses){
     const k=e.name.trim();
@@ -3775,7 +3775,7 @@ function _monthlyAutoGroup(rows, overrides, extras, g, isMobile) {
   // Impôts se soustraient des revenus ; les autres cats s'additionnent en valeur abs
   const catSign = cat => cat === 'impot' ? -1 : 1;
   const autoTot  = rows.reduce((s, e) => { const ov = getOv(e.id); return s + Math.abs(ov ? ov.amount : e.amount) * catSign(e.cat); }, 0);
-  const extraTot = extras.filter(e=>!e.is_exceptional).reduce((s, e) => s + Math.abs(e.amount) * catSign(e.cat), 0);
+  const extraTot = extras.reduce((s, e) => s + Math.abs(e.amount) * catSign(e.cat), 0);
   const tot = autoTot + extraTot;
   const budgetTot = rows.reduce((s, e) => s + Math.abs(e.amount) * catSign(e.cat), 0);
   const pct = budgetTot > 0 ? Math.round(tot / budgetTot * 100) : null;
@@ -3928,7 +3928,7 @@ ${bar}    <div class="tbl-wrap"><table style="width:100%;table-layout:fixed">
 
 // Groupe manuel (variable/loisir) avec bouton Ajouter et actions
 function _monthlyManualGroup(rows, g, budgetTotal, isMobile, revNet = 0) {
-  const actualTotal = rows.filter(e=>!e.is_exceptional).reduce((s, e) => s + Math.abs(e.amount), 0);
+  const actualTotal = rows.reduce((s, e) => s + Math.abs(e.amount), 0);
   // % du budget si budget défini, sinon % des revenus nets
   const refTotal = budgetTotal > 0 ? budgetTotal : revNet;
   const refLabel = budgetTotal > 0 ? `budget ${eur(budgetTotal)}` : `revenus nets`;
@@ -5209,7 +5209,7 @@ async function renderAnalysis(){
   // Graphique 2 : Évolution dépenses clés
   dashDonutChart = destroyChart(dashDonutChart);
   const _trendCard = document.getElementById('analysis-trend-card');
-  const _trendExpA = (_anaAllExp||[]).filter(e=>!['revenu','impot'].includes(e.cat)&&!e.is_exceptional);
+  const _trendExpA = (_anaAllExp||[]).filter(e=>!['revenu','impot'].includes(e.cat));
   const _trendMonthSetA = new Set(_trendExpA.map(e=>`${e.year}-${String(e.month).padStart(2,'0')}`));
   const _trendMonthsA = [..._trendMonthSetA].sort();
   const _trendMapA = new Map();
@@ -5252,7 +5252,7 @@ async function renderAnalysis(){
   // ── Données mensuelles communes ──
   const FR_MK={'Janvier':1,'Février':2,'Mars':3,'Avril':4,'Mai':5,'Juin':6,'Juillet':7,'Août':8,'Septembre':9,'Octobre':10,'Novembre':11,'Décembre':12};
   const _byMkExp=new Map();
-  for(const e of (_anaAllExp||[]).filter(e=>!e.is_exceptional)){
+  for(const e of (_anaAllExp||[])){
     const mk=`${e.year}-${String(e.month).padStart(2,'0')}`;
     if(!_byMkExp.has(mk))_byMkExp.set(mk,{revenu:0,impot:0,fixe:0,variable:0,loisir:0});
     const r=_byMkExp.get(mk);
@@ -5334,7 +5334,7 @@ async function renderAnalysis(){
     // Variables + Loisir : réels si dispo, sinon entrées budget
     const _fExpMap=new Map();
     for(const e of (_anaAllExp||[])){
-      if(!['variable','loisir'].includes(e.cat)||e.is_exceptional)continue;
+      if(!['variable','loisir'].includes(e.cat))continue;
       const k=e.name.trim()+'|'+e.cat;
       if(!_fExpMap.has(k))_fExpMap.set(k,{name:e.name.trim(),cat:e.cat,total:0,mks:new Set()});
       const r=_fExpMap.get(k);r.total+=Math.abs(e.amount);r.mks.add(`${e.year}-${e.month}`);
