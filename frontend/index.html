@@ -904,7 +904,7 @@ window.onerror = function(msg, src, line) {
       </div>
       <div id="monthly-solde-hero" style="margin-bottom:.75rem"></div>
       <div id="monthly-ret-banner"></div>
-      <div id="monthly-kpis" style="display:none"></div>
+      <div id="monthly-kpis"></div>
       <div id="monthly-search-bar" style="display:flex;gap:6px;margin-bottom:.75rem">
         <input type="text" id="mly-search-input" class="inp search-inp" placeholder="Rechercher…" style="flex:1;min-width:0">
         <select id="mly-filter-cat" class="inp" style="flex-shrink:0;width:auto">
@@ -3675,11 +3675,12 @@ function _renderMonthlySections(stats, expenses, savingsData = [], entryStats = 
   const _exclFixe = expenses.filter(e=>e.is_exceptional&&e.cat==='fixe').reduce((s,e)=>s+Math.abs(e.amount),0);
   const _exclVar  = expenses.filter(e=>e.is_exceptional&&e.cat==='variable').reduce((s,e)=>s+Math.abs(e.amount),0);
   const _exclLoi  = expenses.filter(e=>e.is_exceptional&&e.cat==='loisir').reduce((s,e)=>s+Math.abs(e.amount),0);
-  document.getElementById('monthly-kpis').innerHTML =
-    _budgetKpiCard('Fixes',    fixe.actual,   fixe.budget,  '#d93535', false, _exclFixe) +
-    _budgetKpiCard('Variables',vari.actual,   vari.budget,  '#e05a2b', false, _exclVar) +
-    _budgetKpiCard('Loisir',   loi.actual,    loiBudgetMly, '#f59e0b', false, _exclLoi) +
-    (epMonthDelta<0?_retraitKpiCard(epMonthDelta,_mlyBalBefore,_mlyBalAfter):_budgetKpiCard('Épargne',epMonthDelta,epBudget0,'#2979c8',true));
+  document.getElementById('monthly-kpis').innerHTML = _budgetKpiGrid(
+    _budgetKpiCard('Fixes',    fixe.actual,   fixe.budget,  '#d93535', false, _exclFixe),
+    _budgetKpiCard('Variables',vari.actual,   vari.budget,  '#e05a2b', false, _exclVar),
+    _budgetKpiCard('Loisir',   loi.actual,    loiBudgetMly, '#f59e0b', false, _exclLoi),
+    (epMonthDelta<0?_retraitKpiCard(epMonthDelta,_mlyBalBefore,_mlyBalAfter):_budgetKpiCard('Épargne',epMonthDelta,epBudget0,'#2979c8',true))
+  );
   setTimeout(fillAllTracks, 0);
 
   // ── Sections groupées identiques au style prévisionnel ──
