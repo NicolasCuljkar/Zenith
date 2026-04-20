@@ -1596,7 +1596,7 @@ function _budgetKpiCard(lbl, act, bgt, col, isEp=false, excl=0) {
       ? (rem<=0 ? 'var(--green)' : pct>=70 ? 'var(--amber)' : 'var(--red)')
       : (rem>=0 ? 'var(--green)' : 'var(--red)');
     const remStr = rem>=0 ? `+${eur(rem)}` : `−${eur(Math.abs(rem))}`;
-    return `<div class="card" style="padding:14px 16px">
+    return `<div class="card" style="padding:14px 16px;margin-bottom:0">
       <div style="font-size:10px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:${col};margin-bottom:6px">${lbl}</div>
       <div style="font-size:1.5rem;font-weight:900;letter-spacing:-.03em;color:${remCol};line-height:1">${remStr}</div>
       <div style="font-size:var(--fs-xs);color:var(--muted);margin:4px 0 6px">${eur(act)} dépensé · budget ${eur(bgt)}</div>
@@ -1607,7 +1607,7 @@ function _budgetKpiCard(lbl, act, bgt, col, isEp=false, excl=0) {
       ${excl>0?`<div style="font-size:var(--fs-xs);color:var(--amber);margin-top:5px;padding-top:5px;border-top:1px dashed color-mix(in srgb,var(--amber) 30%,var(--border))">+${eur(excl)} exceptionnel</div>`:''}
     </div>`;
   } else {
-    return `<div class="card" style="padding:14px 16px">
+    return `<div class="card" style="padding:14px 16px;margin-bottom:0">
       <div style="font-size:10px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:${col};margin-bottom:6px">${lbl}</div>
       <div style="font-size:1.5rem;font-weight:900;letter-spacing:-.03em;color:var(--fg);line-height:1">${eur(act)}</div>
       <div style="font-size:var(--fs-xs);color:var(--hint);margin:4px 0 6px">aucun budget</div>
@@ -1621,7 +1621,7 @@ function _retraitKpiCard(amount, balBefore, balAfter) {
   const balHtml = (balBefore !== null && balAfter !== null)
     ? `<div style="font-size:var(--fs-xs);color:var(--muted);margin:4px 0 8px">${eur(balBefore)} → <b style="color:var(--red)">${eur(balAfter)}</b></div>`
     : `<div style="font-size:var(--fs-xs);color:var(--hint);margin:4px 0 8px">solde épargne réduit</div>`;
-  return `<div class="card" style="padding:14px 16px;border-color:color-mix(in srgb,var(--red) 40%,var(--border))">
+  return `<div class="card" style="padding:14px 16px;margin-bottom:0;border-color:color-mix(in srgb,var(--red) 40%,var(--border))">
     <div style="font-size:10px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--red);margin-bottom:8px">Retrait épargne</div>
     <div style="font-size:1.5rem;font-weight:900;letter-spacing:-.03em;color:var(--red);line-height:1">−${eur(absAmt)}</div>
     ${balHtml}
