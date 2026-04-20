@@ -111,7 +111,7 @@ document.addEventListener('keydown', e => {
   --blue:#6eb8ff;--blue-bg:#102040;
   --amber:#ffc46a;--amber-bg:#302010;
   --purple:#c0a8ff;--purple-bg:#1e1640;
-  --r:10px;--rl:16px;--nav:58px;--sg:1rem;
+  --r:10px;--rl:16px;--nav:58px;--sg:.75rem;
   --card-shadow:0 2px 16px rgba(0,0,0,.32);
   --card-shadow-hover:0 8px 32px rgba(0,0,0,.48);
 }
@@ -156,14 +156,14 @@ html.light .topbar::after{background:linear-gradient(90deg,transparent 0%,rgba(5
 .main{flex:1;max-width:1280px;margin:0 auto;width:100%;padding:0 2rem 5rem}
 
 /* ── Member tabs (pill style, left-aligned) ── */
-.member-tabs{display:flex;gap:6px;margin-bottom:1rem;flex-wrap:wrap;margin-top:.75rem;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.member-tabs{display:flex;gap:6px;margin-bottom:var(--sg);flex-wrap:wrap;margin-top:var(--sg);overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
 .member-tabs::-webkit-scrollbar{display:none}
 .mtab .mtab-av{border-radius:50%;overflow:hidden;flex-shrink:0;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:var(--fs-xs);font-weight:700}
 .mtab .mtab-av img{width:100%;height:100%;object-fit:cover;border-radius:50%}
 .mtab.active .mtab-av{opacity:.9}
 
 /* ── Page section header ── */
-.page-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem}
+.page-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--sg)}
 .page-title{font-weight:700;font-size:var(--fs-title);letter-spacing:-.02em}
 
 /* ── Tabs ── */
@@ -286,7 +286,7 @@ html.dark .kpi-tooltip{box-shadow:0 8px 24px rgba(0,0,0,.4)}
 /* ── Cards ── */
 .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:1.25rem;margin-bottom:var(--sg);box-shadow:var(--card-shadow)}
 .card:hover{box-shadow:var(--card-shadow-hover)}
-.card-head{font-size:var(--fs-title);font-weight:700;color:var(--text);letter-spacing:-.02em;margin-bottom:1rem;display:flex;align-items:center;justify-content:space-between}
+.card-head{font-size:var(--fs-title);font-weight:700;color:var(--text);letter-spacing:-.02em;margin-bottom:var(--sg);display:flex;align-items:center;justify-content:space-between}
 
 /* ── Grids ── */
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:var(--sg)}
@@ -319,7 +319,7 @@ tbody tr:hover td{background:var(--hover)}
 .entry-group-hdr{display:flex;align-items:center;justify-content:space-between;padding:5px 10px;border-radius:7px;margin-bottom:6px;border:1px solid transparent}
 
 /* ── Toolbar ── */
-.toolbar{display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap;align-items:center}
+.toolbar{display:flex;gap:8px;margin-bottom:var(--sg);flex-wrap:wrap;align-items:center}
 .toolbar-inputs{display:flex;gap:8px;flex:1;flex-wrap:wrap}
 .inp{padding:7px 11px;border:1px solid var(--border);border-radius:var(--r);background:var(--surface);color:var(--text);font-size:var(--fs-md);font-family:inherit;appearance:none;-webkit-appearance:none}
 .inp:focus{outline:none;border-color:var(--blue)}
@@ -435,7 +435,7 @@ tr.drag-over td,.entry-card.drag-over{outline:2px solid var(--blue);outline-offs
 .btn-act-warn:hover{background:color-mix(in srgb,var(--amber) 12%,transparent);border-color:var(--amber);color:var(--amber)}
 html.dark .btn-act{background:var(--surface2);border-color:var(--border)}
 .btn-act-group{display:flex;gap:3px}
-.alert{border-radius:var(--r);padding:10px 14px;font-size:var(--fs-md);margin-bottom:1rem;display:flex;align-items:center;gap:10px}
+.alert{border-radius:var(--r);padding:10px 14px;font-size:var(--fs-md);margin-bottom:var(--sg);display:flex;align-items:center;gap:10px}
 .alert-warn{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber)}
 .alert-good{background:var(--green-bg);color:var(--green);border:1px solid var(--green)}
 .alert-info{background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue)}
@@ -467,7 +467,7 @@ input[type=range]:hover::-moz-range-thumb{transform:scale(1.1)}
 @media(max-width:900px){.g3{grid-template-columns:1fr 1fr}}
 /* ══ 640px — mise en page uniquement (zéro changement de taille) ══ */
 @media(max-width:640px){
-  :root{--sg:.75rem}
+  :root{--sg:.625rem}
   .topbar{padding-top:env(safe-area-inset-top,0px);padding-left:1rem;padding-right:1rem;gap:.5rem}
   .user-menu-btn{padding:3px;border-color:transparent!important;background:transparent!important}
   .user-menu-btn>svg{display:none}
@@ -882,15 +882,15 @@ window.onerror = function(msg, src, line) {
     <!-- ── SUIVI MENSUEL ── -->
     <div id="entries-mensuel" style="display:none">
       <!-- Navigateur de mois (style toolbar) -->
-      <div id="monthly-toolbar" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem;gap:8px">
+      <div id="monthly-toolbar" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--sg);gap:8px">
         <button id="monthly-nav-prev" onclick="monthlyNavPrev()" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:5px 14px;cursor:pointer;color:var(--fg);font-size:1.1rem;line-height:1;flex-shrink:0">‹</button>
         <span id="monthly-label" style="font-size:var(--fs-base);font-weight:700;letter-spacing:-.01em;text-align:center;flex:1"></span>
         <button id="monthly-nav-next" onclick="monthlyNavNext()" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:5px 14px;cursor:pointer;color:var(--fg);font-size:1.1rem;line-height:1;flex-shrink:0">›</button>
       </div>
-      <div id="monthly-ret-banner"></div>
-      <div id="monthly-solde-hero" style="margin-bottom:.75rem"></div>
+      <div id="monthly-ret-banner" style="margin-bottom:var(--sg)"></div>
+      <div id="monthly-solde-hero" style="margin-bottom:var(--sg)"></div>
       <div id="monthly-kpis"></div>
-      <div id="monthly-search-bar" style="display:flex;gap:6px;margin-bottom:.75rem">
+      <div id="monthly-search-bar" style="display:flex;gap:6px;margin-bottom:var(--sg)">
         <input type="text" id="mly-search-input" class="inp search-inp" placeholder="Rechercher…" style="flex:1;min-width:0">
         <select id="mly-filter-cat" class="inp" style="flex-shrink:0;width:auto">
           <option value="">Toutes catégories</option>
