@@ -903,6 +903,7 @@ window.onerror = function(msg, src, line) {
         <button id="monthly-nav-next" onclick="monthlyNavNext()" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:5px 14px;cursor:pointer;color:var(--fg);font-size:1.1rem;line-height:1;flex-shrink:0">›</button>
       </div>
       <div id="monthly-solde-hero" style="margin-bottom:.75rem"></div>
+      <div id="monthly-ret-banner"></div>
       <div id="monthly-kpis" style="display:none"></div>
       <div id="monthly-search-bar" style="display:flex;gap:6px;margin-bottom:.75rem">
         <input type="text" id="mly-search-input" class="inp search-inp" placeholder="Rechercher…" style="flex:1;min-width:0">
@@ -3667,6 +3668,7 @@ function _renderMonthlySections(stats, expenses, savingsData = [], entryStats = 
     </div>
   </div>` : '';
   document.getElementById('monthly-solde-hero').innerHTML = heroHtml;
+  document.getElementById('monthly-ret-banner').innerHTML = _mlyRetBanner;
 
   const loiBudgetMly = loi.budget > 0 ? loi.budget
     : (entryStats ? Math.round(entryStats.rav * (100-(savingPct[epMember0]??60)) / 100) : 0);
@@ -3674,7 +3676,6 @@ function _renderMonthlySections(stats, expenses, savingsData = [], entryStats = 
   const _exclVar  = expenses.filter(e=>e.is_exceptional&&e.cat==='variable').reduce((s,e)=>s+Math.abs(e.amount),0);
   const _exclLoi  = expenses.filter(e=>e.is_exceptional&&e.cat==='loisir').reduce((s,e)=>s+Math.abs(e.amount),0);
   document.getElementById('monthly-kpis').innerHTML =
-    _mlyRetBanner +
     _budgetKpiCard('Fixes',    fixe.actual,   fixe.budget,  '#d93535', false, _exclFixe) +
     _budgetKpiCard('Variables',vari.actual,   vari.budget,  '#e05a2b', false, _exclVar) +
     _budgetKpiCard('Loisir',   loi.actual,    loiBudgetMly, '#f59e0b', false, _exclLoi) +
