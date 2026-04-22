@@ -934,6 +934,7 @@ window.onerror = function(msg, src, line) {
     <div class="member-tabs" id="analysis-mtabs"></div>
     <div id="analysis-kpi-summary" style="display:none;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:var(--sg);margin-bottom:var(--sg)"></div>
     <div id="analysis-avg-kpis" style="display:none;margin-bottom:var(--sg)"></div>
+    <div id="analysis-health-card" style="display:none;margin-bottom:var(--sg)"></div>
     <div id="analysis-ova-card" style="display:none;margin-bottom:var(--sg)"></div>
     <div style="display:none"><div id="gauge-chart-wrap"><canvas id="gauge-chart"></canvas></div><div id="radar-chart-wrap"><canvas id="radar-chart"></canvas></div></div>
     <div class="card" id="member-bars-card" style="display:none"><div class="card-head">Comparaison membres</div><div id="member-bars-wrap" style="position:relative;height:210px"><canvas id="member-bars-chart"></canvas></div></div>
@@ -4905,16 +4906,23 @@ async function renderMonthlyComparison(member, nMonths) {
   }
 
   // Calculer les métriques par mois
+  // Pour variable/loisir : utiliser le réel si dispo, sinon prévisionnel budget (fallback)
   const rows = results.map(({ year, month, stats }) => {
-    if (!stats) return { year, month, revNet: null, dep: null, ep: null, solde: null };
-    const revNet = (stats.revenu?.actual || 0) - (stats.impot?.actual || 0);
-    const dep    = (stats.fixe?.actual || 0) + (stats.variable?.actual || 0) + (stats.loisir?.actual || 0);
-    const ep     = stats.epargne?.actual || 0;
-    const solde  = revNet - dep - ep;
-    return { year, month, revNet, dep, ep, solde, hasData: revNet > 0 || dep > 0 || ep !== 0 };
+    if (!stats) return { year, month, revNet: null, dep: null, ep: null, solde: null, hasData: false, isReal: false };
+    const revNet  = (stats.revenu?.actual || 0) - (stats.impot?.actual || 0);
+    const fixeA   = stats.fixe?.actual || 0;
+    const varA    = stats.variable?.actual > 0 ? stats.variable.actual : (stats.variable?.budget || 0);
+    const loiA    = stats.loisir?.actual  > 0 ? stats.loisir.actual   : (stats.loisir?.budget  || 0);
+    const dep     = fixeA + varA + loiA;
+    const ep      = stats.epargne?.actual || 0;
+    const solde   = revNet - dep - ep;
+    // isReal = au moins une catégorie a des données réelles saisies
+    const isReal  = (stats.variable?.actual > 0 || stats.loisir?.actual > 0 || stats.fixe?.actual > 0 || stats.revenu?.actual > 0);
+    return { year, month, revNet, dep, ep, solde, hasData: revNet > 0 || dep > 0, isReal };
   });
 
   const dataRows = rows.filter(r => r.hasData);
+  const realRows = rows.filter(r => r.isReal);
 
   // KPIs résumé
   const last3 = dataRows.slice(-3);
@@ -4972,20 +4980,22 @@ async function renderMonthlyComparison(member, nMonths) {
     const isCurrent = r.year === nowY && r.month === nowM;
     const borderStyle = isCurrent ? 'border-left:2px solid var(--blue);' : '';
     const bg = isCurrent ? 'background:color-mix(in srgb,var(--blue) 5%,transparent);' : '';
-    const monthLbl = `${mLabel(r.year, r.month)}${isCurrent?'<span style="font-size:9px;font-weight:700;color:var(--blue);margin-left:4px;vertical-align:middle;border:1px solid var(--blue);border-radius:3px;padding:0 3px">•</span>':''}`;
-    // Trend arrow vs previous data row
-    const prevData = rows.slice(0, i).reverse().find(x => x.hasData);
-    const depTrend = (r.hasData && prevData) ? (r.dep < prevData.dep ? `<span style="color:var(--green);font-size:10px">↓</span>` : r.dep > prevData.dep ? `<span style="color:var(--red);font-size:10px">↑</span>` : '') : '';
+    const previBadge = r.hasData && !r.isReal ? `<span style="font-size:9px;font-weight:700;color:var(--amber);margin-left:3px;vertical-align:middle;border:1px solid var(--amber);border-radius:3px;padding:0 3px;opacity:.8">prévi</span>` : '';
+    const curBadge = isCurrent ? `<span style="font-size:9px;font-weight:700;color:var(--blue);margin-left:3px;vertical-align:middle;border:1px solid var(--blue);border-radius:3px;padding:0 3px">•</span>` : '';
+    const monthLbl = `${mLabel(r.year, r.month)}${curBadge}${previBadge}`;
+    const prevReal = rows.slice(0, i).reverse().find(x => x.isReal);
+    const depTrend = (r.isReal && prevReal) ? (r.dep < prevReal.dep ? `<span style="color:var(--green);font-size:10px">↓</span>` : r.dep > prevReal.dep ? `<span style="color:var(--red);font-size:10px">↑</span>` : '') : '';
     if (!r.hasData) return `<tr style="${bg}${borderStyle}opacity:.4">
       <td style="font-weight:500;font-size:var(--fs-xs);${isCurrent?'color:var(--blue);font-weight:700':''}">${monthLbl}</td>
       <td style="text-align:right;color:var(--muted);font-size:var(--fs-xs)">—</td>
       <td style="text-align:right;color:var(--muted);font-size:var(--fs-xs)">—</td>
       <td style="text-align:right;color:var(--muted);font-size:var(--fs-xs)">—</td>
     </tr>`;
+    const depStyle = r.isReal ? 'font-weight:700;color:var(--red)' : 'font-weight:500;color:var(--amber)';
     return `<tr style="${bg}${borderStyle}">
       <td style="font-weight:600;font-size:var(--fs-xs);${isCurrent?'color:var(--blue)':''}">${monthLbl}</td>
       <td style="text-align:right;font-size:var(--fs-xs);font-weight:600;color:var(--green)">${fmtU(r.revNet)}</td>
-      <td style="text-align:right;font-size:var(--fs-xs);font-weight:600;color:var(--red)">${fmtU(r.dep)} ${depTrend}</td>
+      <td style="text-align:right;font-size:var(--fs-xs);${depStyle}">${fmtU(r.dep)} ${depTrend}</td>
       <td style="text-align:right;font-size:var(--fs-xs);font-weight:600;color:${r.ep>0?'#2979c8':r.ep<0?'var(--red)':'var(--muted)'}">${fmtV(r.ep)}</td>
     </tr>`;
   }).join('');
@@ -5257,6 +5267,36 @@ async function renderAnalysis(){
   });
   const _dataStats=_monthStats.filter(r=>r.hasData);
   const _tc=darkVal('#666','#999');
+
+  // ── Santé financière ──
+  {
+    const _hEl=document.getElementById('analysis-health-card');
+    if(_hEl && _dataStats.length>=1){
+      const _hN=_dataStats.length;
+      const _hEpRatePts=_dataStats.filter(r=>r.revNet>0);
+      const _hEpRate=_hEpRatePts.length?Math.round(_hEpRatePts.reduce((a,r)=>a+(r.ep/r.revNet*100),0)/_hEpRatePts.length):null;
+      const _hSolde=Math.round(_dataStats.reduce((a,r)=>a+r.solde,0)/_hN);
+      const _hPos=_dataStats.filter(r=>r.solde>=0).length;
+      const _hEpRateCol=_hEpRate===null?'var(--muted)':_hEpRate>=20?'var(--green)':_hEpRate>=10?'var(--amber)':'var(--red)';
+      const _hSoldeCol=_hSolde>=0?'var(--green)':'var(--red)';
+      const _hPosRatio=Math.round(_hPos/_hN*100);
+      const _hPosCol=_hPosRatio>=80?'var(--green)':_hPosRatio>=50?'var(--amber)':'var(--red)';
+      const _hKpi=(lbl,val,col,sub)=>`<div style="padding:10px 12px;background:var(--surface2);border-radius:10px;border-left:3px solid ${col}">
+        <div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px">${lbl}</div>
+        <div style="font-size:1.1rem;font-weight:800;color:${col}">${val}</div>
+        ${sub?`<div style="font-size:var(--fs-xs);color:var(--muted);margin-top:2px">${sub}</div>`:''}
+      </div>`;
+      _hEl.innerHTML=`<div class="card" style="padding:14px 16px;margin-bottom:0">
+        <div style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:10px">Santé financière · ${_hN} mois</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+          ${_hKpi('Taux épargne moy.',_hEpRate!==null?_hEpRate+'%':'—',_hEpRateCol,'objectif ≥ 20%')}
+          ${_hKpi('Solde moy.',(_hSolde>=0?'+':'')+eur(_hSolde),_hSoldeCol,'rev. − dép. − ép.')}
+          ${_hKpi('Mois positifs',_hPos+'/'+_hN,_hPosCol,_hPosRatio+'% du temps')}
+        </div>
+      </div>`;
+      _hEl.style.display='block';
+    } else if(_hEl){ _hEl.style.display='none'; }
+  }
 
   // ── KPI synthèse ──
   const _kpiEl=document.getElementById('analysis-kpi-summary');
