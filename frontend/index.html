@@ -937,7 +937,6 @@ window.onerror = function(msg, src, line) {
     <div class="card" id="member-bars-card" style="display:none"><div class="card-head">Comparaison membres</div><div id="member-bars-wrap" style="position:relative;height:210px"><canvas id="member-bars-chart"></canvas></div></div>
     <div style="display:none"><div id="analysis-donut-wrap" style="position:relative;height:0"><canvas id="analysis-donut-chart"></canvas></div><div id="analysis-donut-legend"></div></div>
     <div class="card" id="monthly-compare-card" style="display:none"><div class="card-head">Comparaison mensuelle</div><div id="monthly-compare-content"><div style="padding:20px;text-align:center;color:var(--muted);font-size:var(--fs-sm)">Chargement…</div></div></div>
-    <div class="card" id="analysis-hist-card" style="display:none"><div class="card-head">Évolution mensuelle des dépenses</div><div id="analysis-hist-legend" style="display:flex;gap:12px;flex-wrap:wrap;margin:4px 0 10px"></div><div id="analysis-hist-wrap" style="position:relative;height:200px"><canvas id="analysis-hist-chart"></canvas></div></div>
     <div class="card" id="analysis-eprate-card" style="display:none"><div class="card-head">Taux d'épargne mensuel (%)</div><div id="analysis-eprate-wrap" style="position:relative;height:180px"><canvas id="analysis-eprate-chart"></canvas></div></div>
     <div class="card" id="analysis-stacked-card" style="display:none"><div class="card-head">Répartition mensuelle des dépenses</div><div style="display:flex;gap:10px;flex-wrap:wrap;margin:4px 0 10px" id="analysis-stacked-legend"></div><div id="analysis-stacked-wrap" style="position:relative;height:200px"><canvas id="analysis-stacked-chart"></canvas></div></div>
     <div class="card" id="analysis-solde-card" style="display:none"><div class="card-head">Solde mensuel</div><div id="analysis-solde-wrap" style="position:relative;height:180px"><canvas id="analysis-solde-chart"></canvas></div></div>
@@ -1360,7 +1359,7 @@ document.getElementById('modal-confirm').addEventListener('click',e=>{if(e.targe
 let nextId=200,editEntryId=null,editSavingId=null;
 let donutChart=null,barChart=null,analysisDonut=null,topDonutChart=null;
 let waterfallChart=null,gaugeChart=null,radarChart=null,memberBarsChart=null;
-let dashBarChart=null,dashDonutChart=null,ovaDashChart=null;
+let dashBarChart=null,dashDonutChart=null,ovaDashChart=null,anaCompareChart=null;
 let savingsStabActive='month';
 let savingsYearFilter=String(new Date().getFullYear());
 let currentTab='dashboard';
@@ -4735,6 +4734,7 @@ async function renderMonthlyComparison(member) {
   const card = document.getElementById('monthly-compare-card');
   const content = document.getElementById('monthly-compare-content');
   if (!card || !content) return;
+  anaCompareChart = destroyChart(anaCompareChart);
   card.style.display = '';
   content.innerHTML = '<div style="padding:20px;text-align:center;color:var(--muted);font-size:var(--fs-sm)">Chargement…</div>';
 
@@ -4801,17 +4801,7 @@ async function renderMonthlyComparison(member) {
   // Identifier le mois courant
   const nowY = today.getFullYear(), nowM = today.getMonth() + 1;
 
-  const summaryHtml = `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:18px">
-    ${avgSolde3 !== null ? `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px 16px;border-left:3px solid ${colV(avgSolde3)}">
-      <div style="font-size:var(--fs-xs);color:var(--muted);font-weight:700;margin-bottom:5px">SOLDE MOY. 3 MOIS</div>
-      <div style="font-size:1.35rem;font-weight:800;color:${colV(avgSolde3)};letter-spacing:-.03em">${fmtV(avgSolde3)}</div>
-      ${trendDir !== null ? `<div style="font-size:var(--fs-xs);color:${trendCol};font-weight:700;margin-top:4px">${trendArrow} vs 3M préc.</div>` : ''}
-    </div>` : ''}
-    ${avgEpRate !== null ? `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px 16px;border-left:3px solid #2979c8">
-      <div style="font-size:var(--fs-xs);color:var(--muted);font-weight:700;margin-bottom:5px">TAUX ÉPARGNE MOY.</div>
-      <div style="font-size:1.35rem;font-weight:800;color:#2979c8;letter-spacing:-.03em">${fmtPct(avgEpRate)}</div>
-      <div style="font-size:var(--fs-xs);color:var(--muted);margin-top:4px">sur ${dataRows.filter(r=>r.revNet>0).length} mois</div>
-    </div>` : ''}
+  const summaryHtml = dataRows.length > 0 ? `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:18px">
     ${avgDep !== null ? `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px 16px;border-left:3px solid var(--red)">
       <div style="font-size:var(--fs-xs);color:var(--muted);font-weight:700;margin-bottom:5px">DÉP. MOYENNES</div>
       <div style="font-size:1.35rem;font-weight:800;color:var(--red);letter-spacing:-.03em">${fmtU(avgDep)}</div>
@@ -4820,47 +4810,85 @@ async function renderMonthlyComparison(member) {
     ${bestMonth ? `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px 16px;border-left:3px solid var(--green)">
       <div style="font-size:var(--fs-xs);color:var(--muted);font-weight:700;margin-bottom:5px">MEILLEUR MOIS</div>
       <div style="font-size:1.1rem;font-weight:800;color:var(--green);letter-spacing:-.02em">${mLabel(bestMonth.year, bestMonth.month)}</div>
-      <div style="font-size:var(--fs-xs);color:var(--muted);margin-top:4px">${fmtV(bestMonth.solde)}</div>
+      <div style="font-size:var(--fs-xs);color:var(--muted);margin-top:4px">${fmtU(bestMonth.dep)} dépenses</div>
     </div>` : ''}
-  </div>`;
+  </div>` : '';
 
-  // Tableau comparatif
+  // Tableau comparatif (sans taux ép. et solde)
   const tableRows = rows.map(r => {
     const isCurrent = r.year === nowY && r.month === nowM;
     const borderStyle = isCurrent ? 'border-left:2px solid var(--blue);' : '';
     const bg = isCurrent ? 'background:color-mix(in srgb,var(--blue) 5%,transparent);' : '';
+    const monthLbl = `${mLabel(r.year, r.month)}${isCurrent?'<span style="font-size:9px;font-weight:700;color:var(--blue);margin-left:5px;vertical-align:middle;border:1px solid var(--blue);border-radius:4px;padding:0 4px">EN COURS</span>':''}`;
     if (!r.hasData) return `<tr style="${bg}${borderStyle}opacity:.45">
-      <td style="font-weight:500;${isCurrent?'color:var(--blue);font-weight:700':''}">${mLabel(r.year, r.month)}${isCurrent?'<span style="font-size:9px;font-weight:700;color:var(--blue);margin-left:5px;vertical-align:middle;border:1px solid var(--blue);border-radius:4px;padding:0 4px">EN COURS</span>':''}</td>
-      <td style="text-align:right;color:var(--muted)">—</td>
-      <td style="text-align:right;color:var(--muted)">—</td>
+      <td style="font-weight:500;${isCurrent?'color:var(--blue);font-weight:700':''}">${monthLbl}</td>
       <td style="text-align:right;color:var(--muted)">—</td>
       <td style="text-align:right;color:var(--muted)">—</td>
       <td style="text-align:right;color:var(--muted)">—</td>
     </tr>`;
-    const epRateStr = r.revNet > 0 ? `${Math.round(r.ep / r.revNet * 100)}%` : '—';
     return `<tr style="${bg}${borderStyle}">
-      <td style="font-weight:600;${isCurrent?'color:var(--blue)':''}">${mLabel(r.year, r.month)}${isCurrent?'<span style="font-size:9px;font-weight:700;color:var(--blue);margin-left:5px;vertical-align:middle;border:1px solid var(--blue);border-radius:4px;padding:0 4px">EN COURS</span>':''}</td>
+      <td style="font-weight:600;${isCurrent?'color:var(--blue)':''}">${monthLbl}</td>
       <td style="text-align:right;font-weight:600;color:var(--green)">${fmtU(r.revNet)}</td>
       <td style="text-align:right;font-weight:600;color:var(--red)">${fmtU(r.dep)}</td>
       <td style="text-align:right;font-weight:600;color:#2979c8">${fmtV(r.ep)}</td>
-      <td style="text-align:right;font-weight:700;color:#2979c8">${epRateStr}</td>
-      <td style="text-align:right;font-weight:800;color:${colV(r.solde)}">${fmtV(r.solde)}</td>
     </tr>`;
   }).join('');
 
-  content.innerHTML = summaryHtml + `
+  // Graphique évolution (dépenses + épargne)
+  const _ccHcol='#d93535', _ccEcol='#2979c8';
+  const _ccLabels=rows.map(r=>mLabel(r.year,r.month));
+  const _ccDepVals=rows.map(r=>r.hasData?r.dep:null);
+  const _ccEpVals=rows.map(r=>(r.hasData&&r.ep>0)?r.ep:null);
+  const _ccHasEp=_ccEpVals.some(v=>v!==null);
+  const _ccLegend=`<div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:10px">
+    <div style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:3px;border-radius:2px;background:${_ccHcol};display:inline-block"></span><span style="font-size:11px;font-weight:600;color:${_ccHcol}">Dépenses</span></div>
+    ${_ccHasEp?`<div style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:3px;border-radius:2px;background:${_ccEcol};display:inline-block"></span><span style="font-size:11px;font-weight:600;color:${_ccEcol}">Épargne</span></div>`:''}
+  </div>`;
+
+  content.innerHTML = `${_ccLegend}<div style="position:relative;height:180px;margin-bottom:16px"><canvas id="ana-compare-chart"></canvas></div>` + summaryHtml + `
     <div class="tbl-wrap"><table style="width:100%;table-layout:fixed">
-      <colgroup><col style="width:16%"><col style="width:17%"><col style="width:17%"><col style="width:17%"><col style="width:16%"><col style="width:17%"></colgroup>
+      <colgroup><col style="width:25%"><col style="width:25%"><col style="width:25%"><col style="width:25%"></colgroup>
       <thead><tr>
         <th>Mois</th>
         <th style="text-align:right">Rev. nets</th>
         <th style="text-align:right">Dépenses</th>
         <th style="text-align:right">Épargne</th>
-        <th style="text-align:right">Taux ép.</th>
-        <th style="text-align:right">Solde</th>
       </tr></thead>
       <tbody>${tableRows}</tbody>
     </table></div>`;
+
+  // Créer le graphique après injection dans le DOM
+  anaCompareChart = destroyChart(anaCompareChart);
+  const _ccCtx = document.getElementById('ana-compare-chart');
+  if(_ccCtx){
+    const _tc2=darkVal('#666','#999');
+    const _single=rows.filter(r=>r.hasData).length<=1;
+    const _datasets=[{
+      label:'Dépenses',data:_ccDepVals,tension:.45,fill:true,
+      borderColor:_ccHcol,
+      backgroundColor:(c)=>{const{chart:{ctx:c2,chartArea}}=c;if(!chartArea)return _ccHcol+'22';const g=c2.createLinearGradient(0,chartArea.top,0,chartArea.bottom);g.addColorStop(0,_ccHcol+'55');g.addColorStop(1,_ccHcol+'05');return g;},
+      borderWidth:2.5,pointRadius:_single?5:0,pointHoverRadius:5,
+      pointBackgroundColor:_ccHcol,pointBorderColor:'#fff',pointBorderWidth:2,spanGaps:true,
+    }];
+    if(_ccHasEp)_datasets.push({
+      label:'Épargne',data:_ccEpVals,tension:.45,fill:false,
+      borderColor:_ccEcol,backgroundColor:_ccEcol+'33',
+      borderWidth:2.5,pointRadius:_single?5:0,pointHoverRadius:5,
+      pointBackgroundColor:_ccEcol,pointBorderColor:'#fff',pointBorderWidth:2,spanGaps:true,
+    });
+    anaCompareChart=new Chart(_ccCtx,{
+      type:'line',plugins:[ChartDataLabels],
+      data:{labels:_ccLabels,datasets:_datasets},
+      options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+        layout:{padding:{top:8,right:16}},
+        plugins:{legend:{display:false},
+          tooltip:{backgroundColor:darkVal('rgba(255,255,255,1)','rgba(28,28,32,1)'),borderColor:darkVal('rgba(0,0,0,.15)','rgba(255,255,255,.2)'),borderWidth:1,titleColor:_tc2,bodyColor:_tc2,titleFont:{size:fsPx('--fs-sm'),weight:'700'},bodyFont:{size:fsPx('--fs-xs')},padding:12,cornerRadius:10,callbacks:{label:c=>c.raw!=null?` ${c.dataset.label} : ${eur(c.raw)}`:''}},
+          datalabels:{display:c=>c.raw!=null&&c.dataIndex===rows.length-1,anchor:'end',align:'top',formatter:v=>v!=null?(v/1000).toFixed(1)+'k€':'',color:(c)=>c.datasetIndex===0?_ccHcol:_ccEcol,font:{size:fsPx('--fs-xs'),weight:'800'},backgroundColor:darkVal('#fff','#1a1a18'),borderRadius:4,padding:{top:3,bottom:3,left:6,right:6},borderWidth:1,borderColor:(c)=>(c.datasetIndex===0?_ccHcol:_ccEcol)+'44'}
+        },
+        scales:{x:{grid:{display:false},ticks:{color:_tc2,font:{size:fsPx('--fs-xs')},maxRotation:0},border:{display:false}},y:{beginAtZero:true,ticks:{callback:v=>(v/1000).toFixed(0)+'k€',font:{size:fsPx('--fs-xs')},color:_tc2,maxTicksLimit:4},grid:{color:darkVal('rgba(0,0,0,.06)','rgba(255,255,255,.06)')},border:{display:false}}}
+      }
+    });
+  }
 }
 
 
@@ -4870,7 +4898,7 @@ async function renderMonthlyComparison(member) {
 async function renderAnalysis(){
   if(hasNoData(analysisMember)){
     analysisDonut=destroyChart(analysisDonut);gaugeChart=destroyChart(gaugeChart);radarChart=destroyChart(radarChart);memberBarsChart=destroyChart(memberBarsChart);
-    anaEprateChart=destroyChart(anaEprateChart);anaSoldeChart=destroyChart(anaSoldeChart);anaStackedChart=destroyChart(anaStackedChart);
+    anaEprateChart=destroyChart(anaEprateChart);anaSoldeChart=destroyChart(anaSoldeChart);anaStackedChart=destroyChart(anaStackedChart);anaCompareChart=destroyChart(anaCompareChart);
     document.getElementById('analysis-nodata').innerHTML=noDataBanner();
     document.getElementById('analysis-nodata').style.display='';
     document.getElementById('analysis-content').style.display='none';
@@ -4997,59 +5025,13 @@ async function renderAnalysis(){
   const _MNA=['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];
   const _anaTextColor = darkVal('#666','#999');
 
-  // Graphique 1 : Évolution mensuelle (dépenses + épargne)
-  dashBarChart = destroyChart(dashBarChart);
-  const _histCard = document.getElementById('analysis-hist-card');
-  const _histPts = [..._anaHistory].sort((a,b)=>a.year-b.year||a.month-b.month);
-  // Épargne delta par mois
+  // Épargne delta par mois (nécessaire pour les calculs suivants)
   const FR_M_MAP={'Janvier':1,'Février':2,'Mars':3,'Avril':4,'Mai':5,'Juin':6,'Juillet':7,'Août':8,'Septembre':9,'Octobre':10,'Novembre':11,'Décembre':12};
   const _epByMk = new Map();
   for(const s of (_anaSavings||[])){
     const mk=`${s.year}-${String(FR_M_MAP[s.month]||0).padStart(2,'0')}`;
     _epByMk.set(mk,(_epByMk.get(mk)||0)+(s.delta!=null?s.delta:s.amount));
   }
-  if(_histPts.length >= 1){
-    _histCard.style.display='';
-    const _hcol='#d93535', _ecol='#2979c8';
-    const _histLabels = _histPts.map(h=>_MNA[h.month-1]+' '+String(h.year).slice(2));
-    const _histDepVals = _histPts.map(h=>h.total);
-    const _histEpVals  = _histPts.map(h=>{const mk=`${h.year}-${String(h.month).padStart(2,'0')}`;const v=_epByMk.get(mk);return(v!=null&&v>0)?v:null;});
-    const hasEpData = _histEpVals.some(v=>v!=null);
-    // Légende
-    document.getElementById('analysis-hist-legend').innerHTML =
-      `<div style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:3px;border-radius:2px;background:${_hcol};display:inline-block"></span><span style="font-size:11px;font-weight:600;color:${_hcol}">Dépenses</span></div>` +
-      (hasEpData?`<div style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:3px;border-radius:2px;background:${_ecol};display:inline-block"></span><span style="font-size:11px;font-weight:600;color:${_ecol}">Épargne</span></div>`:'');
-    const _histCtx = document.getElementById('analysis-hist-chart');
-    if(_histCtx){
-      const _single = _histPts.length<=1;
-      const _datasets = [{
-        label:'Dépenses', data:_histDepVals, tension:.45, fill:true,
-        borderColor:_hcol,
-        backgroundColor:(c)=>{const{chart:{ctx:c2,chartArea}}=c;if(!chartArea)return _hcol+'22';const g=c2.createLinearGradient(0,chartArea.top,0,chartArea.bottom);g.addColorStop(0,_hcol+'55');g.addColorStop(1,_hcol+'05');return g;},
-        borderWidth:2.5, pointRadius:_single?5:0, pointHoverRadius:5,
-        pointBackgroundColor:_hcol, pointBorderColor:'#fff', pointBorderWidth:2,
-      }];
-      if(hasEpData) _datasets.push({
-        label:'Épargne', data:_histEpVals, tension:.45, fill:false,
-        borderColor:_ecol, backgroundColor:_ecol+'33',
-        borderWidth:2.5, pointRadius:_single?5:0, pointHoverRadius:5,
-        pointBackgroundColor:_ecol, pointBorderColor:'#fff', pointBorderWidth:2,
-        spanGaps:true,
-      });
-      dashBarChart = new Chart(_histCtx,{
-        type:'line', plugins:[ChartDataLabels],
-        data:{ labels:_histLabels, datasets:_datasets },
-        options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
-          layout:{padding:{top:8,right:16}},
-          plugins:{legend:{display:false},
-            tooltip:{backgroundColor:darkVal('rgba(255,255,255,1)','rgba(28,28,32,1)'),borderColor:darkVal('rgba(0,0,0,.15)','rgba(255,255,255,.2)'),borderWidth:1,titleColor:_anaTextColor,bodyColor:_anaTextColor,titleFont:{size:fsPx('--fs-sm'),weight:'700'},bodyFont:{size:fsPx('--fs-xs')},padding:12,cornerRadius:10,callbacks:{label:c=>c.raw!=null?` ${c.dataset.label} : ${eur(c.raw)}`:''}},
-            datalabels:{display:c=>c.raw!=null&&c.dataIndex===_histPts.length-1,anchor:'end',align:'top',formatter:v=>v!=null?(v/1000).toFixed(1)+'k€':'',color:(c)=>c.datasetIndex===0?_hcol:_ecol,font:{size:fsPx('--fs-xs'),weight:'800'},backgroundColor:darkVal('#fff','#1a1a18'),borderRadius:4,padding:{top:3,bottom:3,left:6,right:6},borderWidth:1,borderColor:(c)=>(c.datasetIndex===0?_hcol:_ecol)+'44'}
-          },
-          scales:{x:{grid:{display:false},ticks:{color:_anaTextColor,font:{size:fsPx('--fs-xs')},maxRotation:0},border:{display:false}},y:{beginAtZero:true,ticks:{callback:v=>(v/1000).toFixed(0)+'k€',font:{size:fsPx('--fs-xs')},color:_anaTextColor,maxTicksLimit:4},grid:{color:darkVal('rgba(0,0,0,.06)','rgba(255,255,255,.06)')},border:{display:false}}}
-        }
-      });
-    }
-  } else { _histCard.style.display='none'; }
 
   // Graphique 2 : Évolution dépenses clés
   dashDonutChart = destroyChart(dashDonutChart);
