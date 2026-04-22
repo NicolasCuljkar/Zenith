@@ -5133,28 +5133,34 @@ async function renderAnalysis(){
     _kpiEl.innerHTML=_kpiCard('Salaire net annuel',eur(_annualNet),'var(--green)',`${eur(_avgRevNet)}/mois en moy.`);
   } else { _kpiEl.style.display='none'; }
 
-  // ── KPI moyennes par catégorie ──
+  // ── KPI moyennes par catégorie (6 derniers mois, prévisionnel en fallback) ──
   const _avgKpiEl=document.getElementById('analysis-avg-kpis');
   if(_avgKpiEl){
-    const _hasReal=_dataStats.length>=1;
-    const _n=_hasReal?_dataStats.length:0;
-    const _avgFixe=_hasReal?Math.round(_dataStats.reduce((a,r)=>a+r.fixe,0)/_n):0;
-    const _avgVar =_hasReal?Math.round(_dataStats.reduce((a,r)=>a+r.variable,0)/_n):0;
-    const _avgLoi =_hasReal?Math.round(_dataStats.reduce((a,r)=>a+r.loisir,0)/_n):0;
-    const _avgEp  =_epByMk.size>0?Math.round([..._epByMk.values()].reduce((a,v)=>a+v,0)/_epByMk.size):0;
-    const _epNeg  =_avgEp<0;
+    // Génère les 6 derniers mois (clés YYYY-MM)
+    const _now=new Date();
+    const _last6=[];
+    for(let i=5;i>=0;i--){const d=new Date(_now.getFullYear(),_now.getMonth()-i,1);_last6.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`);}
+    // Pour chaque mois : données réelles si dispo, sinon prévisionnel
+    const _avg6Fixe=Math.round(_last6.reduce((a,mk)=>a+(_byMkExp.has(mk)?_byMkExp.get(mk).fixe:s.fix),0)/6);
+    const _avg6Var =Math.round(_last6.reduce((a,mk)=>a+(_byMkExp.has(mk)?_byMkExp.get(mk).variable:s.vari),0)/6);
+    const _avg6Loi =Math.round(_last6.reduce((a,mk)=>a+(_byMkExp.has(mk)?_byMkExp.get(mk).loisir:loiScoped),0)/6);
+    const _avg6Ep  =Math.round(_last6.reduce((a,mk)=>a+(_epByMk.has(mk)?_epByMk.get(mk):epScoped),0)/6);
+    const _realCount=_last6.filter(mk=>_byMkExp.has(mk)).length;
+    const _subLabel=_realCount===6
+      ?`Moyenne sur <strong style="color:var(--text)">6 mois</strong>`
+      :_realCount===0
+        ?`<span style="color:var(--amber)">Prévisionnel</span> — aucune donnée réelle`
+        :`Moyenne sur 6 mois · <span style="color:var(--amber)">${6-_realCount} mois complétés par prévisionnel</span>`;
+    const _epNeg=_avg6Ep<0;
     const _epCard4=_epNeg
-      ? `<div class="card" style="padding:14px 16px;margin-bottom:0;border-color:color-mix(in srgb,var(--red) 40%,var(--border))"><div style="font-size:10px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--red);margin-bottom:6px">Retrait épargne moy.</div><div style="font-size:1.5rem;font-weight:900;letter-spacing:-.03em;color:var(--red);line-height:1">−${eur(Math.abs(_avgEp))}</div><div style="font-size:var(--fs-xs);color:var(--muted);margin:4px 0 6px">par mois en moy.</div><div style="height:4px;background:var(--surface2);border-radius:99px;overflow:hidden"><div style="width:100%;height:100%;background:var(--red);border-radius:99px"></div></div></div>`
-      : _budgetKpiCard('Épargne moy.',_hasReal?_avgEp:epScoped,epScoped,'#2979c8',true);
-    const _subLabel=_hasReal
-      ?`Moyenne sur <strong style="color:var(--text)">${_n} mois</strong>`
-      :`<span style="color:var(--amber)">Prévisionnel</span> — aucune donnée réelle`;
+      ? `<div class="card" style="padding:14px 16px;margin-bottom:0;border-color:color-mix(in srgb,var(--red) 40%,var(--border))"><div style="font-size:10px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--red);margin-bottom:6px">Retrait épargne moy.</div><div style="font-size:1.5rem;font-weight:900;letter-spacing:-.03em;color:var(--red);line-height:1">−${eur(Math.abs(_avg6Ep))}</div><div style="font-size:var(--fs-xs);color:var(--muted);margin:4px 0 6px">par mois en moy.</div><div style="height:4px;background:var(--surface2);border-radius:99px;overflow:hidden"><div style="width:100%;height:100%;background:var(--red);border-radius:99px"></div></div></div>`
+      : _budgetKpiCard('Épargne moy.',_avg6Ep,epScoped,'#2979c8',true);
     _avgKpiEl.innerHTML=
       `<div style="font-size:var(--fs-xs);color:var(--muted);margin-bottom:.375rem">${_subLabel}</div>`+
       _budgetKpiGrid(
-        _budgetKpiCard('Fixes moy.',    _hasReal?_avgFixe:s.fix,   s.fix,     '#d93535'),
-        _budgetKpiCard('Variables moy.',_hasReal?_avgVar:s.vari,   s.vari,    '#e05a2b'),
-        _budgetKpiCard('Loisir moy.',   _hasReal?_avgLoi:loiScoped,loiScoped, '#f59e0b'),
+        _budgetKpiCard('Fixes moy.',    _avg6Fixe,s.fix,    '#d93535'),
+        _budgetKpiCard('Variables moy.',_avg6Var, s.vari,   '#e05a2b'),
+        _budgetKpiCard('Loisir moy.',   _avg6Loi, loiScoped,'#f59e0b'),
         _epCard4
       );
     _avgKpiEl.style.display='block';
