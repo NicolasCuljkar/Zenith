@@ -932,6 +932,7 @@ window.onerror = function(msg, src, line) {
     <div class="member-tabs" id="analysis-mtabs"></div>
     <div id="analysis-kpi-summary" style="display:none;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:var(--sg);margin-bottom:var(--sg)"></div>
     <div id="analysis-avg-kpis" style="display:none;margin-bottom:var(--sg)"></div>
+    <div id="analysis-ova-card" style="display:none;margin-bottom:var(--sg)"></div>
     <div class="card"><div class="card-head">Règle 50/30/20</div><div id="analysis-flow"></div></div>
     <div style="display:none"><div id="gauge-chart-wrap"><canvas id="gauge-chart"></canvas></div><div id="radar-chart-wrap"><canvas id="radar-chart"></canvas></div></div>
     <div class="card" id="member-bars-card" style="display:none"><div class="card-head">Comparaison membres</div><div id="member-bars-wrap" style="position:relative;height:210px"><canvas id="member-bars-chart"></canvas></div></div>
@@ -5065,9 +5066,10 @@ async function renderAnalysis(){
   }
   const _trendTopA = [..._trendMapA.values()].sort((a,b)=>b.total-a.total).slice(0,5);
   const _trendColsA = ['#d93535','#2979c8','#0d9e6e','#f59e0b','#a855f7'];
-  if(_trendTopA.length >= 1){
+  if(_trendCard && _trendTopA.length >= 1){
     _trendCard.style.display='';
-    document.getElementById('analysis-trend-legend').innerHTML = _trendTopA.map((r,i)=>
+    const _trendLegEl=document.getElementById('analysis-trend-legend');
+    if(_trendLegEl) _trendLegEl.innerHTML = _trendTopA.map((r,i)=>
       `<div style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:3px;border-radius:2px;background:${_trendColsA[i]};display:inline-block"></span><span style="font-size:11px;font-weight:600;color:${_trendColsA[i]}">${r.name}</span></div>`
     ).join('');
     const _trendLabelsA = _trendMonthsA.map(k=>{const[y,m]=k.split('-');return _MNA[Number(m)-1]+' '+String(y).slice(2);});
@@ -5092,7 +5094,7 @@ async function renderAnalysis(){
         }
       });
     }
-  } else { _trendCard.style.display='none'; }
+  } else if(_trendCard){ _trendCard.style.display='none'; }
 
   // ── Données mensuelles communes ──
   const FR_MK={'Janvier':1,'Février':2,'Mars':3,'Avril':4,'Mai':5,'Juin':6,'Juillet':7,'Août':8,'Septembre':9,'Octobre':10,'Novembre':11,'Décembre':12};
@@ -5133,37 +5135,109 @@ async function renderAnalysis(){
     _kpiEl.innerHTML=_kpiCard('Salaire net annuel',eur(_annualNet),'var(--green)',`${eur(_avgRevNet)}/mois en moy.`);
   } else { _kpiEl.style.display='none'; }
 
-  // ── KPI moyennes par catégorie (6 derniers mois, prévisionnel en fallback) ──
-  const _avgKpiEl=document.getElementById('analysis-avg-kpis');
-  if(_avgKpiEl){
-    // Génère les 6 derniers mois (clés YYYY-MM)
+  // ── Moyennes 6 derniers mois (prévisionnel en fallback) ──
+  {
     const _now=new Date();
     const _last6=[];
     for(let i=5;i>=0;i--){const d=new Date(_now.getFullYear(),_now.getMonth()-i,1);_last6.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`);}
-    // Pour chaque mois : données réelles si dispo, sinon prévisionnel
     const _avg6Fixe=Math.round(_last6.reduce((a,mk)=>a+(_byMkExp.has(mk)?_byMkExp.get(mk).fixe:s.fix),0)/6);
     const _avg6Var =Math.round(_last6.reduce((a,mk)=>a+(_byMkExp.has(mk)?_byMkExp.get(mk).variable:s.vari),0)/6);
     const _avg6Loi =Math.round(_last6.reduce((a,mk)=>a+(_byMkExp.has(mk)?_byMkExp.get(mk).loisir:loiScoped),0)/6);
     const _avg6Ep  =Math.round(_last6.reduce((a,mk)=>a+(_epByMk.has(mk)?_epByMk.get(mk):epScoped),0)/6);
     const _realCount=_last6.filter(mk=>_byMkExp.has(mk)).length;
-    const _subLabel=_realCount===6
-      ?`Moyenne sur <strong style="color:var(--text)">6 mois</strong>`
-      :_realCount===0
-        ?`<span style="color:var(--amber)">Prévisionnel</span> — aucune donnée réelle`
-        :`Moyenne sur 6 mois · <span style="color:var(--amber)">${6-_realCount} mois complétés par prévisionnel</span>`;
-    const _epNeg=_avg6Ep<0;
-    const _epCard4=_epNeg
-      ? `<div class="card" style="padding:14px 16px;margin-bottom:0;border-color:color-mix(in srgb,var(--red) 40%,var(--border))"><div style="font-size:10px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--red);margin-bottom:6px">Retrait épargne moy.</div><div style="font-size:1.5rem;font-weight:900;letter-spacing:-.03em;color:var(--red);line-height:1">−${eur(Math.abs(_avg6Ep))}</div><div style="font-size:var(--fs-xs);color:var(--muted);margin:4px 0 6px">par mois en moy.</div><div style="height:4px;background:var(--surface2);border-radius:99px;overflow:hidden"><div style="width:100%;height:100%;background:var(--red);border-radius:99px"></div></div></div>`
-      : _budgetKpiCard('Épargne moy.',_avg6Ep,epScoped,'#2979c8',true);
-    _avgKpiEl.innerHTML=
-      `<div style="font-size:var(--fs-xs);color:var(--muted);margin-bottom:.375rem">${_subLabel}</div>`+
-      _budgetKpiGrid(
-        _budgetKpiCard('Fixes moy.',    _avg6Fixe,s.fix,    '#d93535'),
-        _budgetKpiCard('Variables moy.',_avg6Var, s.vari,   '#e05a2b'),
-        _budgetKpiCard('Loisir moy.',   _avg6Loi, loiScoped,'#f59e0b'),
-        _epCard4
-      );
-    _avgKpiEl.style.display='block';
+
+    // KPI grid
+    const _avgKpiEl=document.getElementById('analysis-avg-kpis');
+    if(_avgKpiEl){
+      const _subLabel=_realCount===6
+        ?`Moyenne sur <strong style="color:var(--text)">6 mois</strong>`
+        :_realCount===0
+          ?`<span style="color:var(--amber)">Prévisionnel</span> — aucune donnée réelle`
+          :`Moyenne sur 6 mois · <span style="color:var(--amber)">${6-_realCount} mois complétés par prévisionnel</span>`;
+      const _epNeg=_avg6Ep<0;
+      const _epCard4=_epNeg
+        ? `<div class="card" style="padding:14px 16px;margin-bottom:0;border-color:color-mix(in srgb,var(--red) 40%,var(--border))"><div style="font-size:10px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--red);margin-bottom:6px">Retrait épargne moy.</div><div style="font-size:1.5rem;font-weight:900;letter-spacing:-.03em;color:var(--red);line-height:1">−${eur(Math.abs(_avg6Ep))}</div><div style="font-size:var(--fs-xs);color:var(--muted);margin:4px 0 6px">par mois en moy.</div><div style="height:4px;background:var(--surface2);border-radius:99px;overflow:hidden"><div style="width:100%;height:100%;background:var(--red);border-radius:99px"></div></div></div>`
+        : _budgetKpiCard('Épargne moy.',_avg6Ep,epScoped,'#2979c8',true);
+      _avgKpiEl.innerHTML=
+        `<div style="font-size:var(--fs-xs);color:var(--muted);margin-bottom:.375rem">${_subLabel}</div>`+
+        _budgetKpiGrid(
+          _budgetKpiCard('Fixes moy.',    _avg6Fixe,s.fix,    '#d93535'),
+          _budgetKpiCard('Variables moy.',_avg6Var, s.vari,   '#e05a2b'),
+          _budgetKpiCard('Loisir moy.',   _avg6Loi, loiScoped,'#f59e0b'),
+          _epCard4
+        );
+      _avgKpiEl.style.display='block';
+    }
+
+    // Card Où va l'argent ? (moyenne mensuelle)
+    const _ovaAnaEl=document.getElementById('analysis-ova-card');
+    if(_ovaAnaEl){
+      const _catColA={fixe:'#d93535',variable:'#e05a2b',loisir:'#f59e0b',epargne:'#2979c8'};
+      const _catLblA={fixe:'Fixes',variable:'Variables',loisir:'Loisir',epargne:'Épargne'};
+      // Items fixes : entrées budget + overrides moyennés
+      const _scopedFixeE=(analysisMember==='all'?entries:entries.filter(e=>e.member===analysisMember)).filter(e=>e.cat==='fixe');
+      const _fixeOvMap=new Map();
+      for(const e of (_anaAllExp||[]).filter(e=>e.cat==='fixe'&&e.entry_id)){
+        if(!_fixeOvMap.has(e.entry_id))_fixeOvMap.set(e.entry_id,[]);
+        _fixeOvMap.get(e.entry_id).push(Math.abs(e.amount));
+      }
+      const _fixeItemsA=_scopedFixeE.map(fe=>{
+        const ovs=_fixeOvMap.get(fe.id)||[];
+        return{name:fe.name.trim(),avg:ovs.length?Math.round(ovs.reduce((a,v)=>a+v,0)/ovs.length):Math.abs(fe.amount)};
+      }).sort((a,b)=>b.avg-a.avg);
+      // Items variables + loisir : depuis données réelles
+      const _vlMap=new Map();
+      for(const e of (_anaAllExp||[]).filter(e=>['variable','loisir'].includes(e.cat))){
+        const k=e.name.trim()+'|'+e.cat;
+        if(!_vlMap.has(k))_vlMap.set(k,{name:e.name.trim(),cat:e.cat,total:0,months:new Set()});
+        const r=_vlMap.get(k);r.total+=Math.abs(e.amount);r.months.add(`${e.year}-${e.month}`);
+      }
+      const _vlItems=[..._vlMap.values()].map(r=>({name:r.name,cat:r.cat,avg:Math.round(r.total/r.months.size),months:r.months.size})).sort((a,b)=>b.avg-a.avg);
+      const _catTotA={fixe:_avg6Fixe,variable:_avg6Var,loisir:_avg6Loi,epargne:_avg6Ep>0?_avg6Ep:0};
+      const _ovaAnaTotal=_catTotA.fixe+_catTotA.variable+_catTotA.loisir+_catTotA.epargne;
+      const _catOrderA=['fixe','variable','loisir','epargne'].filter(c=>_catTotA[c]>0);
+      // Barre de répartition
+      const _barSegs=_catOrderA.map((c,i)=>{
+        const r=(i===0?'border-radius:4px 0 0 4px;':'')+(i===_catOrderA.length-1?'border-radius:0 4px 4px 0;':'');
+        return`<div title="${_catLblA[c]}" style="flex:${_catTotA[c]};background:${_catColA[c]};height:100%;${r}"></div>`;
+      }).join('');
+      // Sections par catégorie
+      const _itemsForCat={fixe:_fixeItemsA,variable:_vlItems.filter(r=>r.cat==='variable'),loisir:_vlItems.filter(r=>r.cat==='loisir'),epargne:[]};
+      const _ovaSections=_catOrderA.map(c=>{
+        const col=_catColA[c],tot=_catTotA[c];
+        const pctRev=s.revNet>0?Math.round(tot/s.revNet*100):null;
+        const itemsHtml=_itemsForCat[c].slice(0,10).map(r=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 6px 6px 20px">
+          <div style="display:flex;align-items:center;gap:7px;min-width:0;flex:1">
+            <span style="width:5px;height:5px;border-radius:50%;background:${col};flex-shrink:0;opacity:.7"></span>
+            <span style="font-size:var(--fs-sm);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.name}</span>
+            ${r.months>1?`<span style="font-size:10px;color:var(--muted)">${r.months} mois</span>`:''}
+          </div>
+          <span style="font-size:var(--fs-sm);font-weight:700;color:${col};min-width:52px;text-align:right">${eur(r.avg)}/mois</span>
+        </div>`).join('');
+        return`<div style="border-top:1px solid var(--border)">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 6px">
+            <div style="display:flex;align-items:center;gap:7px">
+              <span style="width:8px;height:8px;border-radius:50%;background:${col}"></span>
+              <span style="font-size:var(--fs-sm);font-weight:700;color:${col}">${_catLblA[c]}</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px">
+              ${pctRev!==null?`<span style="font-size:10px;color:var(--muted)">${pctRev}% rev.</span>`:''}
+              <span style="font-size:var(--fs-sm);font-weight:800;color:${col};min-width:52px;text-align:right">${eur(tot)}/mois</span>
+            </div>
+          </div>
+          ${itemsHtml?`<div style="padding-bottom:4px">${itemsHtml}</div>`:''}
+        </div>`;
+      }).join('');
+      _ovaAnaEl.innerHTML=`<div class="card" style="padding:16px 18px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <span style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)">Où va l'argent ?</span>
+          ${_ovaAnaTotal>0?`<span style="font-size:var(--fs-sm);font-weight:700;color:var(--fg)">${eur(_ovaAnaTotal)}/mois moy.</span>`:''}
+        </div>
+        ${_catOrderA.length>0?`<div style="display:flex;gap:1px;height:8px;border-radius:4px;overflow:hidden;margin-bottom:8px">${_barSegs}</div><div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:4px">${_catOrderA.map(c=>`<div style="display:flex;align-items:center;gap:4px"><span style="width:7px;height:7px;border-radius:50%;background:${_catColA[c]}"></span><span style="font-size:var(--fs-xs);color:var(--muted)">${_catLblA[c]} <strong style="color:var(--text)">${_ovaAnaTotal>0?Math.round(_catTotA[c]/_ovaAnaTotal*100):0}%</strong></span></div>`).join('')}</div>`:''}
+        ${_ovaSections}
+      </div>`;
+      _ovaAnaEl.style.display='block';
+    }
   }
 
   // ── Règle 50/30/20 (données réelles si dispo, sinon prévisionnel) ──
