@@ -4745,13 +4745,14 @@ function renderAvgCard(period, label) {
   const nM = _anaAvgPeriod;
   const lbl = _anaAvgLabel;
 
-  // Cutoff months set
+  // Cutoff months (last nM months, sorted ascending)
   const today = new Date();
-  const cutoff = new Set();
-  for (let i=0; i<nM; i++) {
+  const cutoffArr = [];
+  for (let i=nM-1; i>=0; i--) {
     const d = new Date(today.getFullYear(), today.getMonth()-i, 1);
-    cutoff.add(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`);
+    cutoffArr.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`);
   }
+  const cutoff = new Set(cutoffArr);
 
   const filtered = _anaCachedExp.filter(e => {
     const mk = `${e.year}-${String(e.month).padStart(2,'0')}`;
@@ -4765,85 +4766,81 @@ function renderAvgCard(period, label) {
   const catLbl={fixe:'Fixe',variable:'Variable',loisir:'Loisir'};
 
   // Period pills
-  const pills = [3,6,12].map(n=>`<button onclick="renderAvgCard(${n})" style="padding:3px 11px;border-radius:20px;border:1px solid ${n===nM?'var(--blue)':'var(--border)'};background:${n===nM?'var(--blue)':'transparent'};color:${n===nM?'#fff':'var(--muted)'};font-size:11px;font-weight:700;cursor:pointer">${n}M</button>`).join('');
+  const pills = [3,6,12].map(n=>`<button data-avg-period="${n}" style="padding:3px 11px;border-radius:20px;border:1px solid ${n===nM?'var(--blue)':'var(--border)'};background:${n===nM?'var(--blue)':'transparent'};color:${n===nM?'#fff':'var(--muted)'};font-size:11px;font-weight:700;cursor:pointer;line-height:1.4">${n}M</button>`).join('');
 
   // Expense names for select (sorted by total)
   const nameTotal = new Map();
-  for (const e of filtered) {
-    const k = e.name.trim();
-    nameTotal.set(k, (nameTotal.get(k)||0) + Math.abs(e.amount));
-  }
+  for (const e of filtered) nameTotal.set(e.name.trim(), (nameTotal.get(e.name.trim())||0)+Math.abs(e.amount));
   const sortedNames = [...nameTotal.entries()].sort((a,b)=>b[1]-a[1]).map(([n])=>n);
-  const selectHtml = `<select onchange="renderAvgCard(undefined,this.value)" style="padding:5px 8px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:var(--fs-xs);max-width:170px;cursor:pointer">
+  const selectHtml = `<select id="avg-card-select" style="padding:6px 8px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:var(--fs-xs);max-width:160px;cursor:pointer;min-height:34px">
     <option value="">Tous les postes</option>
-    ${sortedNames.map(n=>`<option value="${n.replace(/"/g,'&quot;')}"${lbl===n?' selected':''}>${n}</option>`).join('')}
+    ${sortedNames.map(n=>`<option value="${n.replace(/&/g,'&amp;').replace(/"/g,'&quot;')}"${lbl===n?' selected':''}>${n.replace(/&/g,'&amp;')}</option>`).join('')}
   </select>`;
 
   let bodyHtml='';
 
   if (lbl && nameTotal.has(lbl)) {
-    // Drill-down: month-by-month for selected expense
+    // Drill-down: month-by-month
     const monthData = new Map();
-    for (const e of filtered.filter(e=>e.name.trim()===lbl)) {
-      const mk=`${e.year}-${String(e.month).padStart(2,'0')}`;
-      monthData.set(mk,(monthData.get(mk)||0)+Math.abs(e.amount));
-    }
-    const mksSorted = [...cutoff].sort();
+    for (const e of filtered.filter(e=>e.name.trim()===lbl))
+      monthData.set(`${e.year}-${String(e.month).padStart(2,'0')}`, (monthData.get(`${e.year}-${String(e.month).padStart(2,'0')}`)||0)+Math.abs(e.amount));
+
     const maxVal = monthData.size ? Math.max(...monthData.values()) : 1;
     const totalSpent = [...monthData.values()].reduce((a,b)=>a+b,0);
     const avgPerPresent = monthData.size ? Math.round(totalSpent/monthData.size) : 0;
-    const col = '#e05a2b';
+    const col = catCol[filtered.find(e=>e.name.trim()===lbl)?.cat]||'#e05a2b';
+    const MN=['Jan','Fév','Mar','Avr','Mai','Juin','Juil','Aoû','Sep','Oct','Nov','Déc'];
 
-    const statsBar = `<div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:14px;padding:12px 14px;background:var(--surface2);border-radius:10px">
-      <div><div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px">Moy./présence</div><div style="font-size:1.15rem;font-weight:800;color:${col}">${eur(avgPerPresent)}</div></div>
-      <div><div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px">Total ${nM}M</div><div style="font-size:1.15rem;font-weight:800;color:var(--text)">${eur(totalSpent)}</div></div>
-      <div><div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px">Fréquence</div><div style="font-size:1.15rem;font-weight:800;color:var(--text)">${monthData.size}/${nM} mois</div></div>
-    </div>`;
-
-    const rows = mksSorted.map(mk=>{
+    bodyHtml = `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px">
+      <div style="padding:10px 12px;background:var(--surface2);border-radius:10px;border-left:3px solid ${col}">
+        <div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px">Moy./présence</div>
+        <div style="font-size:1.1rem;font-weight:800;color:${col}">${eur(avgPerPresent)}</div>
+      </div>
+      <div style="padding:10px 12px;background:var(--surface2);border-radius:10px">
+        <div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px">Total ${nM}M</div>
+        <div style="font-size:1.1rem;font-weight:800;color:var(--text)">${eur(totalSpent)}</div>
+      </div>
+      <div style="padding:10px 12px;background:var(--surface2);border-radius:10px">
+        <div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px">Fréquence</div>
+        <div style="font-size:1.1rem;font-weight:800;color:var(--text)">${monthData.size}/${nM} mois</div>
+      </div>
+    </div>
+    <div>${cutoffArr.map(mk=>{
       const [y,m]=mk.split('-');
-      const mLbl=['Jan','Fév','Mar','Avr','Mai','Juin','Juil','Aoû','Sep','Oct','Nov','Déc'][Number(m)-1]+' '+y;
       const val=monthData.get(mk);
       const bw=val&&maxVal>0?Math.round(val/maxVal*100):0;
       return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
-        <div style="min-width:56px;font-size:var(--fs-xs);color:var(--muted);font-weight:600">${mLbl}</div>
+        <div style="min-width:56px;font-size:var(--fs-xs);color:var(--muted);font-weight:600">${MN[Number(m)-1]} ${y}</div>
         <div style="flex:1"><div style="height:5px;background:var(--surface2);border-radius:99px;overflow:hidden"><div style="width:${bw}%;height:100%;background:${val?col:'transparent'};border-radius:99px;transition:width .3s"></div></div></div>
         <div style="min-width:64px;text-align:right;font-size:var(--fs-sm);font-weight:${val?'700':'400'};color:${val?col:'var(--muted)'}">${val?eur(val):'—'}</div>
       </div>`;
-    }).join('');
-
-    bodyHtml = statsBar + `<div>${rows}</div>`;
+    }).join('')}</div>`;
   } else {
-    // All expenses ranked by average
+    // All expenses ranked by average — click row to drill down
     const expMap = new Map();
     for (const e of filtered) {
       const k = e.name.trim()+'|'+e.cat;
       if (!expMap.has(k)) expMap.set(k,{name:e.name.trim(),cat:e.cat,total:0,months:new Set()});
-      const r=expMap.get(k);
-      r.total+=Math.abs(e.amount);
-      r.months.add(`${e.year}-${String(e.month).padStart(2,'0')}`);
+      const r=expMap.get(k); r.total+=Math.abs(e.amount); r.months.add(`${e.year}-${String(e.month).padStart(2,'0')}`);
     }
-    const rows=[...expMap.values()]
-      .map(r=>({...r,avg:Math.round(r.total/r.months.size),cnt:r.months.size}))
-      .sort((a,b)=>b.avg-a.avg).slice(0,20);
-
+    const rows=[...expMap.values()].map(r=>({...r,avg:Math.round(r.total/r.months.size),cnt:r.months.size})).sort((a,b)=>b.avg-a.avg).slice(0,20);
     if (!rows.length){card.style.display='none';return;}
     const maxAvg=rows[0].avg;
-
+    // Use data attribute — event listener handles click (no inline string escaping)
     bodyHtml=`<div>${rows.map(r=>{
       const col=catCol[r.cat]||'#6b7280';
       const bw=Math.round(r.avg/maxAvg*100);
-      const safeName=r.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-      return `<div style="padding:8px 0;border-bottom:1px solid var(--border);cursor:pointer" onclick="renderAvgCard(undefined,'${safeName}')">
+      return `<div class="avg-expense-row" data-expense-name="${r.name.replace(/&/g,'&amp;').replace(/"/g,'&quot;')}" style="padding:9px 0;border-bottom:1px solid var(--border);cursor:pointer;-webkit-tap-highlight-color:transparent" role="button">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
           <div style="display:flex;align-items:center;gap:7px;min-width:0;flex:1">
             <span style="width:7px;height:7px;border-radius:50%;background:${col};flex-shrink:0"></span>
-            <span style="font-size:var(--fs-sm);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.name}</span>
+            <span style="font-size:var(--fs-sm);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.name.replace(/&/g,'&amp;').replace(/</g,'&lt;')}</span>
             <span style="font-size:10px;padding:1px 5px;border-radius:20px;background:${col}22;color:${col};font-weight:700;flex-shrink:0">${catLbl[r.cat]}</span>
           </div>
           <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
             <span style="font-size:10px;color:var(--muted)">${r.cnt}×</span>
-            <span style="font-size:var(--fs-sm);font-weight:800;color:${col};min-width:68px;text-align:right">${eur(r.avg)}/mois</span>
+            <span style="font-size:var(--fs-sm);font-weight:800;color:${col};min-width:60px;text-align:right">${eur(r.avg)}/mois</span>
+            <span style="font-size:10px;color:var(--muted);opacity:.6">›</span>
           </div>
         </div>
         <div style="height:4px;background:var(--surface2);border-radius:99px;overflow:hidden">
@@ -4853,20 +4850,22 @@ function renderAvgCard(period, label) {
     }).join('')}</div>`;
   }
 
-  const backBtn = lbl ? `<button onclick="renderAvgCard(undefined,'')" style="display:flex;align-items:center;gap:5px;background:none;border:none;color:var(--muted);font-size:var(--fs-xs);cursor:pointer;padding:0;font-weight:600">← Tous</button>` : '';
-
   content.innerHTML=`
-    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px">
-      <div style="display:flex;align-items:center;gap:8px">
-        ${backBtn}
-        <span style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)">${lbl?lbl:'Moyennes par poste'}</span>
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:14px">
+      <div style="display:flex;align-items:center;gap:8px;min-width:0">
+        ${lbl?`<button data-avg-back style="display:flex;align-items:center;gap:4px;background:none;border:none;color:var(--muted);font-size:var(--fs-xs);cursor:pointer;padding:0;font-weight:600;flex-shrink:0">← Retour</button>`:''}
+        <span style="font-size:var(--fs-sm);font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${lbl||'Moyennes par poste'}</span>
       </div>
-      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+      <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
         ${selectHtml}
-        <div style="display:flex;gap:4px">${pills}</div>
+        <div style="display:flex;gap:3px">${pills}</div>
       </div>
     </div>
     ${bodyHtml}`;
+
+  // Bind select after injection (avoids onchange string risks)
+  const sel = document.getElementById('avg-card-select');
+  if (sel) sel.addEventListener('change', () => renderAvgCard(undefined, sel.value));
 }
 
 // MONTHLY COMPARISON (Analyse tab)
@@ -5478,11 +5477,11 @@ async function renderAnalysis(){
     `;
   }
 
-  // ── Graphique taux d'épargne ──
+  // ── Graphique taux d'épargne (masqué — données intégrées dans comparaison mensuelle) ──
   anaEprateChart=destroyChart(anaEprateChart);
   const _eprCard=document.getElementById('analysis-eprate-card');
   const _eprPts=_monthStats.filter(r=>r.epRate!==null&&r.revNet>0);
-  if(_eprPts.length>=1){
+  if(false&&_eprPts.length>=1){
     _eprCard.style.display='';
     const _ectx=document.getElementById('analysis-eprate-chart');
     if(_ectx){
@@ -5509,11 +5508,11 @@ async function renderAnalysis(){
     }
   } else { _eprCard.style.display='none'; }
 
-  // ── Graphique répartition empilée ──
+  // ── Graphique répartition empilée (masqué) ──
   anaStackedChart=destroyChart(anaStackedChart);
   const _stCard=document.getElementById('analysis-stacked-card');
   const _stPts=_monthStats.filter(r=>r.dep>0||r.ep>0);
-  if(_stPts.length>=1){
+  if(false&&_stPts.length>=1){
     _stCard.style.display='';
     const _stLabels=_stPts.map(r=>{const[y,m]=r.mk.split('-');return _MNX[Number(m)-1]+' '+String(y).slice(2);});
     const _stCats=[{k:'fixe',lbl:'Fixes',col:'#d93535'},{k:'variable',lbl:'Variables',col:'#e05a2b'},{k:'loisir',lbl:'Loisir',col:'#f59e0b'},{k:'ep',lbl:'Épargne',col:'#2979c8'}];
@@ -5536,11 +5535,11 @@ async function renderAnalysis(){
     }
   } else { _stCard.style.display='none'; }
 
-  // ── Graphique solde mensuel ──
+  // ── Graphique solde mensuel (masqué — intégré dans comparaison mensuelle) ──
   anaSoldeChart=destroyChart(anaSoldeChart);
   const _slCard=document.getElementById('analysis-solde-card');
   const _slPts=_monthStats.filter(r=>r.hasData);
-  if(_slPts.length>=1){
+  if(false&&_slPts.length>=1){
     _slCard.style.display='';
     const _slCtx=document.getElementById('analysis-solde-chart');
     if(_slCtx){
@@ -5573,8 +5572,15 @@ async function renderAnalysis(){
 // ══════════════════════════════════════════════
 window.addEventListener('resize',()=>{if(currentTab==='savings')renderSavings();if(currentTab==='entries')renderEntries();});
 
-// ══════════════════════════════════════════════
-window.addEventListener('resize',()=>{if(currentTab==='savings')renderSavings();if(currentTab==='entries')renderEntries();});
+// ── Avg card: delegated events (period pills, back btn, expense rows) ──
+document.addEventListener('click', e => {
+  const pill = e.target.closest('[data-avg-period]');
+  if (pill) { renderAvgCard(Number(pill.dataset.avgPeriod)); return; }
+  const back = e.target.closest('[data-avg-back]');
+  if (back) { renderAvgCard(undefined, ''); return; }
+  const row = e.target.closest('.avg-expense-row[data-expense-name]');
+  if (row) { renderAvgCard(undefined, row.dataset.expenseName); return; }
+});
 
 // ══════════════════════════════════════════════
 // SLIDER ENGINE — global, intercepts all sliders
