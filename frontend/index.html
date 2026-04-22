@@ -932,18 +932,51 @@ window.onerror = function(msg, src, line) {
     <div id="analysis-nodata" style="display:none"></div>
     <div id="analysis-content">
     <div class="member-tabs" id="analysis-mtabs"></div>
-    <div id="analysis-kpi-summary" style="display:none;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:var(--sg);margin-bottom:var(--sg)"></div>
-    <div id="analysis-avg-kpis" style="display:none;margin-bottom:var(--sg)"></div>
-    <div id="analysis-health-card" style="display:none;margin-bottom:var(--sg)"></div>
-    <div id="analysis-ova-card" style="display:none;margin-bottom:var(--sg)"></div>
-    <div style="display:none"><div id="gauge-chart-wrap"><canvas id="gauge-chart"></canvas></div><div id="radar-chart-wrap"><canvas id="radar-chart"></canvas></div></div>
-    <div class="card" id="member-bars-card" style="display:none"><div class="card-head">Comparaison membres</div><div id="member-bars-wrap" style="position:relative;height:210px"><canvas id="member-bars-chart"></canvas></div></div>
-    <div style="display:none"><div id="analysis-donut-wrap" style="position:relative;height:0"><canvas id="analysis-donut-chart"></canvas></div><div id="analysis-donut-legend"></div></div>
+
+    <!-- NEW: Hero metrics card -->
+    <div id="analysis-hero" style="display:none;margin-bottom:var(--sg)"></div>
+
+    <!-- NEW: Évolution chart card -->
+    <div class="card" id="analysis-evolution-card" style="display:none;margin-bottom:var(--sg)">
+      <div class="card-head" id="analysis-evol-head" style="display:flex;align-items:center;justify-content:space-between">
+        <span>Évolution mensuelle</span>
+        <div style="display:flex;gap:6px">
+          <button data-evol-period="3" style="font-size:var(--fs-xs);font-weight:700;padding:3px 10px;border-radius:99px;border:none;cursor:pointer;background:transparent;color:var(--muted)">3M</button>
+          <button data-evol-period="6" style="font-size:var(--fs-xs);font-weight:700;padding:3px 10px;border-radius:99px;border:none;cursor:pointer;background:#2979c8;color:#fff">6M</button>
+          <button data-evol-period="12" style="font-size:var(--fs-xs);font-weight:700;padding:3px 10px;border-radius:99px;border:none;cursor:pointer;background:transparent;color:var(--muted)">12M</button>
+        </div>
+      </div>
+      <div style="position:relative;height:200px"><canvas id="ana-evol-chart"></canvas></div>
+    </div>
+
+    <!-- NEW: Répartition card -->
+    <div class="card" id="analysis-repartition-card" style="display:none;margin-bottom:var(--sg)">
+      <div class="card-head">Répartition des dépenses</div>
+      <div id="analysis-repartition-content"></div>
+    </div>
+
+    <!-- KEPT: Comparaison mensuelle -->
     <div class="card" id="monthly-compare-card" style="display:none"><div class="card-head">Comparaison mensuelle</div><div id="monthly-compare-content"><div style="padding:20px;text-align:center;color:var(--muted);font-size:var(--fs-sm)">Chargement…</div></div></div>
-    <div class="card" id="analysis-eprate-card" style="display:none"><div class="card-head">Taux d'épargne mensuel (%)</div><div id="analysis-eprate-wrap" style="position:relative;height:180px"><canvas id="analysis-eprate-chart"></canvas></div></div>
-    <div class="card" id="analysis-stacked-card" style="display:none"><div class="card-head">Répartition mensuelle des dépenses</div><div style="display:flex;gap:10px;flex-wrap:wrap;margin:4px 0 10px" id="analysis-stacked-legend"></div><div id="analysis-stacked-wrap" style="position:relative;height:200px"><canvas id="analysis-stacked-chart"></canvas></div></div>
-    <div class="card" id="analysis-solde-card" style="display:none"><div class="card-head">Solde mensuel</div><div id="analysis-solde-wrap" style="position:relative;height:180px"><canvas id="analysis-solde-chart"></canvas></div></div>
+
+    <!-- KEPT: Moyennes par poste -->
     <div class="card" id="analysis-avg-card" style="display:none"><div id="analysis-avg-content"></div></div>
+
+    <!-- LEGACY (hidden, kept for reference) -->
+    <div style="display:none">
+      <div id="analysis-kpi-summary" style="grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:var(--sg)"></div>
+      <div id="analysis-avg-kpis"></div>
+      <div id="analysis-health-card"></div>
+      <div id="analysis-ova-card"></div>
+      <div id="gauge-chart-wrap"><canvas id="gauge-chart"></canvas></div>
+      <div id="radar-chart-wrap"><canvas id="radar-chart"></canvas></div>
+      <div id="member-bars-card"><div class="card-head">Comparaison membres</div><div id="member-bars-wrap" style="position:relative;height:210px"><canvas id="member-bars-chart"></canvas></div></div>
+      <div id="analysis-donut-wrap" style="position:relative;height:0"><canvas id="analysis-donut-chart"></canvas></div>
+      <div id="analysis-donut-legend"></div>
+      <div id="analysis-eprate-card"><div class="card-head">Taux d'épargne mensuel (%)</div><div id="analysis-eprate-wrap" style="position:relative;height:180px"><canvas id="analysis-eprate-chart"></canvas></div></div>
+      <div id="analysis-stacked-card"><div class="card-head">Répartition mensuelle des dépenses</div><div style="display:flex;gap:10px;flex-wrap:wrap;margin:4px 0 10px" id="analysis-stacked-legend"></div><div id="analysis-stacked-wrap" style="position:relative;height:200px"><canvas id="analysis-stacked-chart"></canvas></div></div>
+      <div id="analysis-solde-card"><div class="card-head">Solde mensuel</div><div id="analysis-solde-wrap" style="position:relative;height:180px"><canvas id="analysis-solde-chart"></canvas></div></div>
+    </div>
+
     </div><!-- /#analysis-content -->
   </div>
 
@@ -1365,6 +1398,7 @@ let waterfallChart=null,gaugeChart=null,radarChart=null,memberBarsChart=null;
 let dashBarChart=null,dashDonutChart=null,ovaDashChart=null,anaCompareChart=null;
 let _anaCachedExp=null, _anaAvgPeriod=6, _anaAvgLabel='';
 let _anaComparePeriod=6;
+let anaEvolChart=null; let _anaMthStats=[]; let _anaEvolPeriod=6;
 let savingsStabActive='month';
 let savingsYearFilter=String(new Date().getFullYear());
 let currentTab='dashboard';
@@ -4869,6 +4903,81 @@ function renderAvgCard(period, label) {
   if (sel) sel.addEventListener('change', () => renderAvgCard(undefined, sel.value));
 }
 
+// ══════════════════════════════════════════════
+// ÉVOLUTION CHART (Analyse tab)
+// ══════════════════════════════════════════════
+function renderEvolChart(n) {
+  if (n !== undefined) _anaEvolPeriod = n;
+  // Update period pill button styles
+  document.querySelectorAll('[data-evol-period]').forEach(btn => {
+    const active = Number(btn.dataset.evolPeriod) === _anaEvolPeriod;
+    btn.style.background = active ? '#2979c8' : 'transparent';
+    btn.style.color = active ? '#fff' : 'var(--muted)';
+  });
+  const pts = [..._anaMthStats].slice(-_anaEvolPeriod);
+  const _MNX=['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];
+  const labels = pts.map(r => { const [y,m]=r.mk.split('-'); return _MNX[Number(m)-1]+' '+String(y).slice(2); });
+  const _tc = darkVal('#666','#999');
+  const canvas = document.getElementById('ana-evol-chart');
+  if (!canvas) return;
+  anaEvolChart = destroyChart(anaEvolChart);
+  const ctx = canvas.getContext('2d');
+  // Gradient fill for dépenses
+  const gradDep = ctx.createLinearGradient(0, 0, 0, 200);
+  gradDep.addColorStop(0, 'rgba(217,53,53,0.25)');
+  gradDep.addColorStop(1, 'rgba(217,53,53,0.0)');
+  const hasEp = pts.some(r => r.ep > 0);
+  const datasets = [
+    {
+      label: 'Revenus nets',
+      data: pts.map(r => r.hasData ? r.revNet : null),
+      borderColor: '#0d9e6e', backgroundColor: 'transparent',
+      borderWidth: 2, pointRadius: 3, tension: 0.3, fill: false, spanGaps: true
+    },
+    {
+      label: 'Dépenses',
+      data: pts.map(r => r.hasData ? r.dep : null),
+      borderColor: '#d93535', backgroundColor: gradDep,
+      borderWidth: 2, pointRadius: 3, tension: 0.3, fill: true, spanGaps: true
+    }
+  ];
+  if (hasEp) {
+    datasets.push({
+      label: 'Épargne',
+      data: pts.map(r => r.ep > 0 ? r.ep : null),
+      borderColor: '#2979c8', backgroundColor: 'transparent',
+      borderWidth: 2, pointRadius: 3, tension: 0.3, fill: false,
+      borderDash: [5, 4], spanGaps: true
+    });
+  }
+  anaEvolChart = new Chart(canvas, {
+    type: 'line',
+    plugins: [ChartDataLabels],
+    data: { labels, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      layout: { padding: { top: 4, right: 4 } },
+      plugins: {
+        legend: { display: true, position: 'bottom', labels: { color: _tc, font: { size: fsPx('--fs-xs') }, boxWidth: 12, padding: 14 } },
+        datalabels: { display: false },
+        tooltip: {
+          backgroundColor: darkVal('rgba(255,255,255,1)','rgba(28,28,32,1)'),
+          borderColor: darkVal('rgba(0,0,0,.15)','rgba(255,255,255,.2)'),
+          borderWidth: 1, titleColor: _tc, bodyColor: _tc,
+          titleFont: { size: fsPx('--fs-sm'), weight: '700' },
+          bodyFont: { size: fsPx('--fs-xs') }, padding: 12, cornerRadius: 10,
+          callbacks: { label: c => ` ${c.dataset.label} : ${c.raw != null ? eur(c.raw) : '—'}` }
+        }
+      },
+      scales: {
+        x: { grid: { display: false }, ticks: { color: _tc, font: { size: fsPx('--fs-xs') }, maxRotation: 0 }, border: { display: false } },
+        y: { beginAtZero: true, ticks: { callback: v => (v/1000).toFixed(0)+'k€', font: { size: fsPx('--fs-xs') }, color: _tc, maxTicksLimit: 5 }, grid: { color: darkVal('rgba(0,0,0,.06)','rgba(255,255,255,.06)') }, border: { display: false } }
+      }
+    }
+  });
+}
+
 // MONTHLY COMPARISON (Analyse tab)
 // ══════════════════════════════════════════════
 async function renderMonthlyComparison(member, nMonths) {
@@ -5266,6 +5375,7 @@ async function renderAnalysis(){
     return{mk,revNet,dep,fixe:exp.fixe||0,variable:exp.variable||0,loisir:exp.loisir||0,ep:epV>0?epV:0,solde,epRate,hasData:revNet>0||dep>0||epV>0};
   });
   const _dataStats=_monthStats.filter(r=>r.hasData);
+  _anaMthStats = _monthStats; // cache for period selector
   const _tc=darkVal('#666','#999');
 
   // ── Santé financière ──
@@ -5322,6 +5432,119 @@ async function renderAnalysis(){
     const _avg6Loi =Math.round(_last6.reduce((a,mk)=>a+(_byMkExp.has(mk)?_byMkExp.get(mk).loisir:loiScoped),0)/6);
     const _avg6Ep  =Math.round(_last6.reduce((a,mk)=>a+(_epByMk.has(mk)?_epByMk.get(mk):epScoped),0)/6);
     const _realCount=_last6.filter(mk=>_byMkExp.has(mk)).length;
+
+    // ── NEW: Hero card ──
+    {
+      const _heroEl=document.getElementById('analysis-hero');
+      if(_heroEl){
+        const _avgDep=_avg6Fixe+_avg6Var+_avg6Loi;
+        const _avgRev=s.revNet;
+        const _avgEp=_avg6Ep;
+        // Compute average solde from real data if available, else fallback
+        const _avgSolde=_dataStats.length>=1
+          ?Math.round(_dataStats.reduce((a,r)=>a+r.solde,0)/_dataStats.length)
+          :Math.round(_avgRev-_avgDep-Math.max(0,_avgEp));
+        const _avgSoldeCol=_avgSolde>=0?'#0d9e6e':'#d93535';
+        // Taux épargne
+        const _epRate=_avgRev>0?Math.round(Math.max(0,_avgEp)/_avgRev*100):null;
+        const _epRateCol=_epRate===null?'var(--muted)':_epRate>=20?'#0d9e6e':_epRate>=10?'#f59e0b':'#d93535';
+        const _epRatePct=Math.min(100,_epRate||0);
+        const _targetPct=20; // 20% target marker position
+        const _qualLabel=_realCount===6?`${_realCount}/6 mois réels`:_realCount===0?'Prévisionnel':`${_realCount}/6 mois réels`;
+        const _metricBox=(lbl,val,col,sign)=>`<div style="background:var(--surface2);border-radius:12px;padding:14px 16px;border-top:3px solid ${col}">
+          <div style="font-size:10px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:6px">${lbl}</div>
+          <div style="font-size:1.35rem;font-weight:900;letter-spacing:-.03em;color:${col};line-height:1">${sign?(_avgEp>=0?'+':'-'):''}${val}</div>
+        </div>`;
+        _heroEl.innerHTML=`<div class="card" style="padding:16px 18px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+            <span style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)">Synthèse mensuelle moy.</span>
+            <span style="font-size:var(--fs-xs);color:var(--muted)">${_qualLabel}</span>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+            ${_metricBox('Revenus nets moy.',eur(_avgRev),'#0d9e6e',false)}
+            ${_metricBox('Dépenses moy.',eur(_avgDep),'#d93535',false)}
+            <div style="background:var(--surface2);border-radius:12px;padding:14px 16px;border-top:3px solid #2979c8">
+              <div style="font-size:10px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:6px">Épargne moy.</div>
+              <div style="font-size:1.35rem;font-weight:900;letter-spacing:-.03em;color:#2979c8;line-height:1">${_avgEp>=0?'+':'-'}${eur(Math.abs(_avgEp))}</div>
+            </div>
+            <div style="background:var(--surface2);border-radius:12px;padding:14px 16px;border-top:3px solid ${_avgSoldeCol}">
+              <div style="font-size:10px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:6px">Solde moy.</div>
+              <div style="font-size:1.35rem;font-weight:900;letter-spacing:-.03em;color:${_avgSoldeCol};line-height:1">${_avgSolde>=0?'+':''}${eur(_avgSolde)}</div>
+            </div>
+          </div>
+          <div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">
+              <span style="font-size:var(--fs-xs);color:var(--muted);font-weight:700">Taux d'épargne</span>
+              <span style="font-size:var(--fs-xs);font-weight:800;color:${_epRateCol}">${_epRate!==null?_epRate+'%':'—'}</span>
+            </div>
+            <div style="position:relative;height:8px;background:var(--surface2);border-radius:99px;overflow:visible">
+              <div style="position:absolute;left:0;top:0;height:100%;width:${_epRatePct}%;background:${_epRateCol};border-radius:99px;transition:width .4s"></div>
+              <div title="Objectif 20%" style="position:absolute;left:${_targetPct}%;top:-3px;width:2px;height:14px;background:var(--muted);border-radius:1px;opacity:.5"></div>
+            </div>
+            <div style="font-size:10px;color:var(--muted);margin-top:4px">objectif ≥ 20%</div>
+          </div>
+        </div>`;
+        _heroEl.style.display='block';
+      }
+    }
+
+    // ── NEW: Évolution chart card ──
+    {
+      const _evolCard=document.getElementById('analysis-evolution-card');
+      if(_evolCard && _dataStats.length>=1){
+        _evolCard.style.display='';
+        renderEvolChart(_anaEvolPeriod);
+      } else if(_evolCard){ _evolCard.style.display='none'; }
+    }
+
+    // ── NEW: Répartition card ──
+    {
+      const _repCard=document.getElementById('analysis-repartition-card');
+      const _repContent=document.getElementById('analysis-repartition-content');
+      if(_repCard && _repContent){
+        const _repTotal=_avg6Fixe+_avg6Var+_avg6Loi+(_avg6Ep>0?_avg6Ep:0);
+        if(_repTotal>0 && s.revNet>0){
+          const _repCats=[
+            {key:'fixe',  lbl:'Charges fixes',  amt:_avg6Fixe,            col:'#d93535'},
+            {key:'var',   lbl:'Variables',       amt:_avg6Var,             col:'#e05a2b'},
+            {key:'loi',   lbl:'Loisir',          amt:_avg6Loi,             col:'#f59e0b'},
+            ...(_avg6Ep>0?[{key:'ep',lbl:'Épargne',amt:_avg6Ep,col:'#2979c8'}]:[])
+          ].filter(c=>c.amt>0);
+          const _surplus=s.revNet-_repTotal;
+          const _repBarsHtml=_repCats.map(c=>{
+            const pct=s.revNet>0?Math.round(c.amt/s.revNet*100):0;
+            const barW=Math.min(100,pct);
+            return`<div style="margin-bottom:12px">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+                <div style="display:flex;align-items:center;gap:6px">
+                  <span style="width:8px;height:8px;border-radius:50%;background:${c.col};flex-shrink:0"></span>
+                  <span style="font-size:var(--fs-sm);font-weight:600">${c.lbl}</span>
+                </div>
+                <div style="display:flex;gap:8px;align-items:center">
+                  <span style="font-size:var(--fs-xs);color:var(--muted)">${pct}%</span>
+                  <span style="font-size:var(--fs-sm);font-weight:700;color:${c.col};min-width:56px;text-align:right">${eur(c.amt)}/mois</span>
+                </div>
+              </div>
+              <div style="height:6px;background:var(--surface2);border-radius:99px;overflow:hidden">
+                <div style="width:${barW}%;height:100%;background:${c.col};border-radius:99px"></div>
+              </div>
+            </div>`;
+          }).join('');
+          const _surplusHtml=_surplus>0
+            ?`<div style="margin-top:10px;padding:10px 14px;background:rgba(13,158,110,.08);border:1px solid rgba(13,158,110,.2);border-radius:10px;display:flex;justify-content:space-between;align-items:center">
+                <span style="font-size:var(--fs-xs);font-weight:700;color:#0d9e6e">Non alloué (surplus)</span>
+                <span style="font-size:var(--fs-sm);font-weight:800;color:#0d9e6e">+${eur(_surplus)}/mois</span>
+              </div>`
+            :_surplus<0
+            ?`<div style="margin-top:10px;padding:10px 14px;background:rgba(217,53,53,.08);border:1px solid rgba(217,53,53,.2);border-radius:10px;display:flex;justify-content:space-between;align-items:center">
+                <span style="font-size:var(--fs-xs);font-weight:700;color:#d93535">Déficit vs revenus</span>
+                <span style="font-size:var(--fs-sm);font-weight:800;color:#d93535">${eur(_surplus)}/mois</span>
+              </div>`:'';
+          _repContent.innerHTML=`<div style="padding:4px 0">${_repBarsHtml}${_surplusHtml}</div>`;
+          _repCard.style.display='';
+        } else { _repCard.style.display='none'; }
+      }
+    }
 
     // KPI grid
     const _avgKpiEl=document.getElementById('analysis-avg-kpis');
@@ -5415,6 +5638,9 @@ async function renderAnalysis(){
       </div>`;
       _ovaAnaEl.style.display='block';
     }
+
+    // Force-hide legacy sections (data preserved, elements hidden)
+    ['analysis-kpi-summary','analysis-avg-kpis','analysis-health-card','analysis-ova-card','member-bars-card'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
   }
 
   // ── Règle 50/30/20 (données réelles si dispo, sinon prévisionnel) ──
@@ -5620,6 +5846,12 @@ document.addEventListener('click', e => {
   if (back) { renderAvgCard(undefined, ''); return; }
   const row = e.target.closest('.avg-expense-row[data-expense-name]');
   if (row) { renderAvgCard(undefined, row.dataset.expenseName); return; }
+});
+
+// ── Évolution period pills ──
+document.addEventListener('click', e => {
+  const pill = e.target.closest('[data-evol-period]');
+  if (pill) renderEvolChart(Number(pill.dataset.evolPeriod));
 });
 
 // ══════════════════════════════════════════════
