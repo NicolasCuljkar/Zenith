@@ -5121,29 +5121,16 @@ async function renderAnalysis(){
 
   // ── KPI synthèse ──
   const _kpiEl=document.getElementById('analysis-kpi-summary');
-  if(_dataStats.length>=1){
-    const _avgEp=Math.round(_dataStats.reduce((acc,r)=>acc+r.ep,0)/_dataStats.length);
-    const _avgEpRate=s.revNet>0?Math.round(_avgEp/s.revNet*100):0;
-    const _avgDep=Math.round(_dataStats.reduce((acc,r)=>acc+r.dep,0)/_dataStats.length);
-    const _avgSolde=Math.round(_dataStats.reduce((acc,r)=>acc+r.solde,0)/_dataStats.length);
-    const _avgRevNet=s.revNet;
-    const _annualNet=_avgRevNet*12;
-    const _best=_dataStats.reduce((b,r)=>r.solde>(b?.solde??-Infinity)?r:b,null);
-    const _worst=_dataStats.reduce((w,r)=>r.solde<(w?.solde??Infinity)?r:w,null);
-    const _colSolde=v=>v>=0?'var(--green)':'var(--red)';
+  const _avgRevNet=s.revNet;
+  const _annualNet=_avgRevNet*12;
+  if(_avgRevNet>0){
     const _kpiCard=(lbl,val,col,sub)=>`<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;border-left:3px solid ${col}">
       <div style="font-size:var(--fs-xs);color:var(--muted);font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:5px">${lbl}</div>
       <div style="font-size:1.2rem;font-weight:800;color:${col};letter-spacing:-.03em">${val}</div>
       ${sub?`<div style="font-size:var(--fs-xs);color:var(--muted);margin-top:4px">${sub}</div>`:''}
     </div>`;
     _kpiEl.style.display='grid';
-    _kpiEl.innerHTML=
-      (_avgRevNet>0?_kpiCard('Salaire net annuel',eur(_annualNet),'var(--green)',`${eur(_avgRevNet)}/mois en moy.`):'')+
-      _kpiCard('Taux épargne moy.',`${_avgEpRate}%`,'#2979c8',`sur ${_dataStats.length} mois`)+
-      _kpiCard('Dépenses moy.',eur(_avgDep)+'/mois','var(--red)',`${_dataStats.length} mois analysés`)+
-      _kpiCard('Solde moy.',(_avgSolde>=0?'+':'')+eur(_avgSolde)+'/mois',_colSolde(_avgSolde),null)+
-      (_best?_kpiCard('Meilleur mois',`${_MNX[Number(_best.mk.split('-')[1])-1]} ${_best.mk.split('-')[0]}`,'var(--green)',(_best.solde>=0?'+':'')+eur(_best.solde)):'')+
-      (_worst&&_worst!==_best?_kpiCard('Mois difficile',`${_MNX[Number(_worst.mk.split('-')[1])-1]} ${_worst.mk.split('-')[0]}`,'var(--red)',(_worst.solde>=0?'+':'')+eur(_worst.solde)):'');
+    _kpiEl.innerHTML=_kpiCard('Salaire net annuel',eur(_annualNet),'var(--green)',`${eur(_avgRevNet)}/mois en moy.`);
   } else { _kpiEl.style.display='none'; }
 
   // ── Règle 50/30/20 (données réelles si dispo, sinon prévisionnel) ──
