@@ -930,13 +930,17 @@ window.onerror = function(msg, src, line) {
     <div id="analysis-nodata" style="display:none"></div>
     <div id="analysis-content">
     <div class="member-tabs" id="analysis-mtabs"></div>
-    <div id="analysis-avg-kpis" style="display:none"></div>
+    <div id="analysis-kpi-summary" style="display:none;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:var(--sg);margin-bottom:var(--sg)"></div>
     <div class="card"><div class="card-head">Règle 50/30/20</div><div id="analysis-flow"></div></div>
     <div style="display:none"><div id="gauge-chart-wrap"><canvas id="gauge-chart"></canvas></div><div id="radar-chart-wrap"><canvas id="radar-chart"></canvas></div></div>
     <div class="card" id="member-bars-card" style="display:none"><div class="card-head">Comparaison membres</div><div id="member-bars-wrap" style="position:relative;height:210px"><canvas id="member-bars-chart"></canvas></div></div>
     <div style="display:none"><div id="analysis-donut-wrap" style="position:relative;height:0"><canvas id="analysis-donut-chart"></canvas></div><div id="analysis-donut-legend"></div></div>
     <div class="card" id="monthly-compare-card" style="display:none"><div class="card-head">Comparaison mensuelle</div><div id="monthly-compare-content"><div style="padding:20px;text-align:center;color:var(--muted);font-size:var(--fs-sm)">Chargement…</div></div></div>
     <div class="card" id="analysis-hist-card" style="display:none"><div class="card-head">Évolution mensuelle des dépenses</div><div id="analysis-hist-legend" style="display:flex;gap:12px;flex-wrap:wrap;margin:4px 0 10px"></div><div id="analysis-hist-wrap" style="position:relative;height:200px"><canvas id="analysis-hist-chart"></canvas></div></div>
+    <div class="card" id="analysis-trend-card" style="display:none"><div class="card-head" id="analysis-trend-head">Évolution des dépenses clés</div><div id="analysis-trend-legend" style="display:flex;gap:10px;flex-wrap:wrap;margin:4px 0 12px"></div><div id="analysis-trend-wrap" style="position:relative;height:220px"><canvas id="analysis-trend-chart"></canvas></div></div>
+    <div class="card" id="analysis-eprate-card" style="display:none"><div class="card-head">Taux d'épargne mensuel (%)</div><div id="analysis-eprate-wrap" style="position:relative;height:180px"><canvas id="analysis-eprate-chart"></canvas></div></div>
+    <div class="card" id="analysis-stacked-card" style="display:none"><div class="card-head">Répartition mensuelle des dépenses</div><div style="display:flex;gap:10px;flex-wrap:wrap;margin:4px 0 10px" id="analysis-stacked-legend"></div><div id="analysis-stacked-wrap" style="position:relative;height:200px"><canvas id="analysis-stacked-chart"></canvas></div></div>
+    <div class="card" id="analysis-solde-card" style="display:none"><div class="card-head">Solde mensuel</div><div id="analysis-solde-wrap" style="position:relative;height:180px"><canvas id="analysis-solde-chart"></canvas></div></div>
     <div class="card" id="analysis-avg-card" style="display:none"><div class="card-head">Coût mensuel moyen par poste</div><div style="font-size:var(--fs-xs);color:var(--muted);margin:-4px 0 10px">Variables &amp; Loisir — moyenne sur les mois où la dépense est présente</div><div id="analysis-avg-content"></div></div>
     </div><!-- /#analysis-content -->
   </div>
@@ -4859,12 +4863,14 @@ async function renderMonthlyComparison(member) {
     </table></div>`;
 }
 
+
 // ══════════════════════════════════════════════
 // ANALYSIS
 // ══════════════════════════════════════════════
 async function renderAnalysis(){
   if(hasNoData(analysisMember)){
     analysisDonut=destroyChart(analysisDonut);gaugeChart=destroyChart(gaugeChart);radarChart=destroyChart(radarChart);memberBarsChart=destroyChart(memberBarsChart);
+    anaEprateChart=destroyChart(anaEprateChart);anaSoldeChart=destroyChart(anaSoldeChart);anaStackedChart=destroyChart(anaStackedChart);
     document.getElementById('analysis-nodata').innerHTML=noDataBanner();
     document.getElementById('analysis-nodata').style.display='';
     document.getElementById('analysis-content').style.display='none';
@@ -5059,10 +5065,9 @@ async function renderAnalysis(){
   }
   const _trendTopA = [..._trendMapA.values()].sort((a,b)=>b.total-a.total).slice(0,5);
   const _trendColsA = ['#d93535','#2979c8','#0d9e6e','#f59e0b','#a855f7'];
-  if(_trendCard && _trendTopA.length >= 1){
+  if(_trendTopA.length >= 1){
     _trendCard.style.display='';
-    const _trendLegEl=document.getElementById('analysis-trend-legend');
-    if(_trendLegEl) _trendLegEl.innerHTML = _trendTopA.map((r,i)=>
+    document.getElementById('analysis-trend-legend').innerHTML = _trendTopA.map((r,i)=>
       `<div style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:3px;border-radius:2px;background:${_trendColsA[i]};display:inline-block"></span><span style="font-size:11px;font-weight:600;color:${_trendColsA[i]}">${r.name}</span></div>`
     ).join('');
     const _trendLabelsA = _trendMonthsA.map(k=>{const[y,m]=k.split('-');return _MNA[Number(m)-1]+' '+String(y).slice(2);});
@@ -5114,39 +5119,32 @@ async function renderAnalysis(){
   const _dataStats=_monthStats.filter(r=>r.hasData);
   const _tc=darkVal('#666','#999');
 
-  // ── KPI moyennes par catégorie (toujours visible, prévisionnel si pas de données réelles) ──
-  const _avgKpiEl=document.getElementById('analysis-avg-kpis');
-  if(_avgKpiEl){
-    const _hasReal=_dataStats.length>=1;
-    const _n=_hasReal?_dataStats.length:0;
-    const _avgFixe=_hasReal?Math.round(_dataStats.reduce((a,r)=>a+r.fixe,0)/_n):0;
-    const _avgVar =_hasReal?Math.round(_dataStats.reduce((a,r)=>a+r.variable,0)/_n):0;
-    const _avgLoi =_hasReal?Math.round(_dataStats.reduce((a,r)=>a+r.loisir,0)/_n):0;
-    const _avgEp  =_epByMk.size>0?Math.round([..._epByMk.values()].reduce((a,v)=>a+v,0)/_epByMk.size):0;
-    const _epNeg  =_avgEp<0;
-    const _epCard4=_epNeg
-      ? `<div class="card" style="padding:14px 16px;margin-bottom:0;border-color:color-mix(in srgb,var(--red) 40%,var(--border))"><div style="font-size:10px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--red);margin-bottom:6px">Retrait épargne moy.</div><div style="font-size:1.5rem;font-weight:900;letter-spacing:-.03em;color:var(--red);line-height:1">−${eur(Math.abs(_avgEp))}</div><div style="font-size:var(--fs-xs);color:var(--muted);margin:4px 0 6px">par mois en moy.</div><div style="height:4px;background:var(--surface2);border-radius:99px;overflow:hidden"><div style="width:100%;height:100%;background:var(--red);border-radius:99px"></div></div></div>`
-      : _budgetKpiCard('Épargne moy.',_hasReal?_avgEp:epScoped,epScoped,'#2979c8',true);
-    const _revNetAnnuel=s.revNet*12;
-    const _salKpi=`<div class="card" style="padding:14px 16px;margin-bottom:var(--sg)">
-      <div style="font-size:10px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#0d9e6e;margin-bottom:6px">Salaire net annuel estimé</div>
-      <div style="font-size:1.5rem;font-weight:900;letter-spacing:-.03em;color:var(--green);line-height:1">${eur(_revNetAnnuel)}</div>
-      <div style="font-size:var(--fs-xs);color:var(--muted);margin-top:4px">${eur(s.revNet)}/mois · revenus nets</div>
+  // ── KPI synthèse ──
+  const _kpiEl=document.getElementById('analysis-kpi-summary');
+  if(_dataStats.length>=1){
+    const _avgEp=Math.round(_dataStats.reduce((acc,r)=>acc+r.ep,0)/_dataStats.length);
+    const _avgEpRate=s.revNet>0?Math.round(_avgEp/s.revNet*100):0;
+    const _avgDep=Math.round(_dataStats.reduce((acc,r)=>acc+r.dep,0)/_dataStats.length);
+    const _avgSolde=Math.round(_dataStats.reduce((acc,r)=>acc+r.solde,0)/_dataStats.length);
+    const _avgRevNet=s.revNet;
+    const _annualNet=_avgRevNet*12;
+    const _best=_dataStats.reduce((b,r)=>r.solde>(b?.solde??-Infinity)?r:b,null);
+    const _worst=_dataStats.reduce((w,r)=>r.solde<(w?.solde??Infinity)?r:w,null);
+    const _colSolde=v=>v>=0?'var(--green)':'var(--red)';
+    const _kpiCard=(lbl,val,col,sub)=>`<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;border-left:3px solid ${col}">
+      <div style="font-size:var(--fs-xs);color:var(--muted);font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:5px">${lbl}</div>
+      <div style="font-size:1.2rem;font-weight:800;color:${col};letter-spacing:-.03em">${val}</div>
+      ${sub?`<div style="font-size:var(--fs-xs);color:var(--muted);margin-top:4px">${sub}</div>`:''}
     </div>`;
-    const _subLabel=_hasReal
-      ?`Moyenne sur <strong style="color:var(--text)">${_n} mois</strong>`
-      :`<span style="color:var(--amber)">Prévisionnel</span> — aucune donnée réelle`;
-    _avgKpiEl.innerHTML=
-      _salKpi+
-      `<div style="font-size:var(--fs-xs);color:var(--muted);margin-bottom:.375rem">${_subLabel}</div>`+
-      _budgetKpiGrid(
-        _budgetKpiCard('Fixes moy.',    _hasReal?_avgFixe:s.fix,  s.fix,     '#d93535'),
-        _budgetKpiCard('Variables moy.',_hasReal?_avgVar:s.vari,  s.vari,    '#e05a2b'),
-        _budgetKpiCard('Loisir moy.',   _hasReal?_avgLoi:loiScoped,loiScoped,'#f59e0b'),
-        _epCard4
-      );
-    _avgKpiEl.style.display='block';
-  }
+    _kpiEl.style.display='grid';
+    _kpiEl.innerHTML=
+      (_avgRevNet>0?_kpiCard('Salaire net annuel',eur(_annualNet),'var(--green)',`${eur(_avgRevNet)}/mois en moy.`):'')+
+      _kpiCard('Taux épargne moy.',`${_avgEpRate}%`,'#2979c8',`sur ${_dataStats.length} mois`)+
+      _kpiCard('Dépenses moy.',eur(_avgDep)+'/mois','var(--red)',`${_dataStats.length} mois analysés`)+
+      _kpiCard('Solde moy.',(_avgSolde>=0?'+':'')+eur(_avgSolde)+'/mois',_colSolde(_avgSolde),null)+
+      (_best?_kpiCard('Meilleur mois',`${_MNX[Number(_best.mk.split('-')[1])-1]} ${_best.mk.split('-')[0]}`,'var(--green)',(_best.solde>=0?'+':'')+eur(_best.solde)):'')+
+      (_worst&&_worst!==_best?_kpiCard('Mois difficile',`${_MNX[Number(_worst.mk.split('-')[1])-1]} ${_worst.mk.split('-')[0]}`,'var(--red)',(_worst.solde>=0?'+':'')+eur(_worst.solde)):'');
+  } else { _kpiEl.style.display='none'; }
 
   // ── Règle 50/30/20 (données réelles si dispo, sinon prévisionnel) ──
   // Base : tous les mois ayant des dépenses OU un mouvement épargne (positif ou négatif)
@@ -5248,6 +5246,93 @@ async function renderAnalysis(){
     `;
   }
 
+  // ── Graphique taux d'épargne ──
+  anaEprateChart=destroyChart(anaEprateChart);
+  const _eprCard=document.getElementById('analysis-eprate-card');
+  const _eprPts=_monthStats.filter(r=>r.epRate!==null&&r.revNet>0);
+  if(_eprPts.length>=1){
+    _eprCard.style.display='';
+    const _ectx=document.getElementById('analysis-eprate-chart');
+    if(_ectx){
+      const _col='#2979c8';
+      anaEprateChart=new Chart(_ectx,{
+        type:'line',plugins:[ChartDataLabels],
+        data:{labels:_eprPts.map(r=>{const[y,m]=r.mk.split('-');return _MNX[Number(m)-1]+' '+String(y).slice(2);}),
+          datasets:[{label:'Taux épargne',data:_eprPts.map(r=>r.epRate),tension:.4,fill:true,
+            borderColor:_col,
+            backgroundColor:(c)=>{const{chart:{ctx:c2,chartArea}}=c;if(!chartArea)return _col+'22';const g=c2.createLinearGradient(0,chartArea.top,0,chartArea.bottom);g.addColorStop(0,_col+'55');g.addColorStop(1,_col+'05');return g;},
+            borderWidth:2.5,pointRadius:_eprPts.length<=1?5:0,pointHoverRadius:5,
+            pointBackgroundColor:_col,pointBorderColor:'#fff',pointBorderWidth:2,
+          }]},
+        options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+          layout:{padding:{top:8,right:20}},
+          plugins:{legend:{display:false},
+            tooltip:{backgroundColor:darkVal('rgba(255,255,255,1)','rgba(28,28,32,1)'),borderColor:darkVal('rgba(0,0,0,.15)','rgba(255,255,255,.2)'),borderWidth:1,titleColor:_tc,bodyColor:_tc,titleFont:{size:fsPx('--fs-sm'),weight:'700'},bodyFont:{size:fsPx('--fs-xs')},padding:12,cornerRadius:10,callbacks:{label:c=>` Taux épargne : ${c.raw}%`}},
+            datalabels:{display:c=>c.dataIndex===_eprPts.length-1,anchor:'end',align:'top',formatter:v=>`${v}%`,color:_col,font:{size:fsPx('--fs-xs'),weight:'800'},backgroundColor:darkVal('#fff','#1a1a18'),borderRadius:4,padding:{top:3,bottom:3,left:6,right:6},borderWidth:1,borderColor:_col+'44'}
+          },
+          scales:{x:{grid:{display:false},ticks:{color:_tc,font:{size:fsPx('--fs-xs')},maxRotation:0},border:{display:false}},
+            y:{beginAtZero:true,ticks:{callback:v=>v+'%',font:{size:fsPx('--fs-xs')},color:_tc,maxTicksLimit:5},grid:{color:darkVal('rgba(0,0,0,.06)','rgba(255,255,255,.06)')},border:{display:false}}}
+        }
+      });
+    }
+  } else { _eprCard.style.display='none'; }
+
+  // ── Graphique répartition empilée ──
+  anaStackedChart=destroyChart(anaStackedChart);
+  const _stCard=document.getElementById('analysis-stacked-card');
+  const _stPts=_monthStats.filter(r=>r.dep>0||r.ep>0);
+  if(_stPts.length>=1){
+    _stCard.style.display='';
+    const _stLabels=_stPts.map(r=>{const[y,m]=r.mk.split('-');return _MNX[Number(m)-1]+' '+String(y).slice(2);});
+    const _stCats=[{k:'fixe',lbl:'Fixes',col:'#d93535'},{k:'variable',lbl:'Variables',col:'#e05a2b'},{k:'loisir',lbl:'Loisir',col:'#f59e0b'},{k:'ep',lbl:'Épargne',col:'#2979c8'}];
+    document.getElementById('analysis-stacked-legend').innerHTML=_stCats.map(c=>`<div style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:8px;border-radius:2px;background:${c.col};display:inline-block"></span><span style="font-size:11px;font-weight:600;color:${c.col}">${c.lbl}</span></div>`).join('');
+    const _stCtx=document.getElementById('analysis-stacked-chart');
+    if(_stCtx){
+      anaStackedChart=new Chart(_stCtx,{
+        type:'bar',plugins:[ChartDataLabels],
+        data:{labels:_stLabels,datasets:_stCats.map(c=>({label:c.lbl,data:_stPts.map(r=>r[c.k]||0),backgroundColor:c.col+'cc',borderColor:c.col,borderWidth:0,borderRadius:2,stack:'s'}))},
+        options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+          layout:{padding:{top:4,right:4}},
+          plugins:{legend:{display:false},
+            tooltip:{backgroundColor:darkVal('rgba(255,255,255,1)','rgba(28,28,32,1)'),borderColor:darkVal('rgba(0,0,0,.15)','rgba(255,255,255,.2)'),borderWidth:1,titleColor:_tc,bodyColor:_tc,titleFont:{size:fsPx('--fs-sm'),weight:'700'},bodyFont:{size:fsPx('--fs-xs')},padding:12,cornerRadius:10,callbacks:{label:c=>c.raw>0?` ${c.dataset.label} : ${eur(c.raw)}`:''}},
+            datalabels:{display:false}
+          },
+          scales:{x:{stacked:true,grid:{display:false},ticks:{color:_tc,font:{size:fsPx('--fs-xs')},maxRotation:0},border:{display:false}},
+            y:{stacked:true,beginAtZero:true,ticks:{callback:v=>(v/1000).toFixed(0)+'k€',font:{size:fsPx('--fs-xs')},color:_tc,maxTicksLimit:4},grid:{color:darkVal('rgba(0,0,0,.06)','rgba(255,255,255,.06)')},border:{display:false}}}
+        }
+      });
+    }
+  } else { _stCard.style.display='none'; }
+
+  // ── Graphique solde mensuel ──
+  anaSoldeChart=destroyChart(anaSoldeChart);
+  const _slCard=document.getElementById('analysis-solde-card');
+  const _slPts=_monthStats.filter(r=>r.hasData);
+  if(_slPts.length>=1){
+    _slCard.style.display='';
+    const _slCtx=document.getElementById('analysis-solde-chart');
+    if(_slCtx){
+      anaSoldeChart=new Chart(_slCtx,{
+        type:'bar',plugins:[ChartDataLabels],
+        data:{labels:_slPts.map(r=>{const[y,m]=r.mk.split('-');return _MNX[Number(m)-1]+' '+String(y).slice(2);}),
+          datasets:[{label:'Solde',data:_slPts.map(r=>r.solde),
+            backgroundColor:_slPts.map(r=>r.solde>=0?'#0d9e6ecc':'#d93535cc'),
+            borderColor:_slPts.map(r=>r.solde>=0?'#0d9e6e':'#d93535'),
+            borderWidth:0,borderRadius:4
+          }]},
+        options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+          layout:{padding:{top:4,right:4}},
+          plugins:{legend:{display:false},
+            tooltip:{backgroundColor:darkVal('rgba(255,255,255,1)','rgba(28,28,32,1)'),borderColor:darkVal('rgba(0,0,0,.15)','rgba(255,255,255,.2)'),borderWidth:1,titleColor:_tc,bodyColor:_tc,titleFont:{size:fsPx('--fs-sm'),weight:'700'},bodyFont:{size:fsPx('--fs-xs')},padding:12,cornerRadius:10,callbacks:{label:c=>` Solde : ${c.raw>=0?'+':''}${eur(c.raw)}`}},
+            datalabels:{display:false}
+          },
+          scales:{x:{grid:{display:false},ticks:{color:_tc,font:{size:fsPx('--fs-xs')},maxRotation:0},border:{display:false}},
+            y:{ticks:{callback:v=>eur(v),font:{size:fsPx('--fs-xs')},color:_tc,maxTicksLimit:4},grid:{color:darkVal('rgba(0,0,0,.06)','rgba(255,255,255,.06)')},border:{display:false}}}
+        }
+      });
+    }
+  } else { _slCard.style.display='none'; }
+
   // ── Coût mensuel moyen par poste (variable + loisir) ──
   const _avgCard=document.getElementById('analysis-avg-card');
   const _avgExp=(_anaAllExp||[]).filter(e=>['variable','loisir'].includes(e.cat));
@@ -5264,16 +5349,6 @@ async function renderAnalysis(){
     .map(r=>({...r,months:r.byMonth.size,avg:Math.round(r.total/r.byMonth.size)}))
     .sort((a,b)=>b.avg-a.avg)
     .slice(0,15);
-  // Fallback sur entrées budget si aucune donnée réelle
-  if(_avgRows.length===0){
-    const _fbEntries=(analysisMember==='all'?entries:entries.filter(e=>e.member===analysisMember)).filter(e=>['variable','loisir'].includes(e.cat));
-    _fbEntries.forEach(e=>{
-      const k=e.name.trim();
-      if(!_avgMap.has(k))_avgMap.set(k,{name:k,cat:e.cat,byMonth:new Map(),total:0});
-      const r=_avgMap.get(k);r.byMonth.set('budget',Math.abs(e.amount));r.total=Math.abs(e.amount);
-    });
-    _avgRows.push(...[..._avgMap.values()].map(r=>({...r,months:0,avg:Math.round(r.total)})).sort((a,b)=>b.avg-a.avg).slice(0,15));
-  }
   if(_avgRows.length>=1){
     _avgCard.style.display='';
     const _maxAvg=_avgRows[0].avg;
@@ -5283,7 +5358,7 @@ async function renderAnalysis(){
       const col=_avgCatCol[r.cat]||'#6b7280';
       const barW=Math.round(r.avg/_maxAvg*100);
       const totalMonths=_allMks.length||1;
-      const freq=r.months>0?Math.round(r.months/totalMonths*100):null;
+      const freq=Math.round(r.months/totalMonths*100);
       return `<div style="padding:8px 0;border-bottom:1px solid var(--border)">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
           <div style="display:flex;align-items:center;gap:7px;min-width:0;flex:1">
@@ -5292,7 +5367,7 @@ async function renderAnalysis(){
             <span style="font-size:10px;padding:1px 6px;border-radius:20px;background:${col}22;color:${col};font-weight:700;flex-shrink:0">${_avgCatLbl[r.cat]}</span>
           </div>
           <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
-            <span style="font-size:10px;color:var(--muted)">${r.months>0?`${r.months} mois · ${freq}%`:'prévisionnel'}</span>
+            <span style="font-size:10px;color:var(--muted)">${r.months} mois · ${freq}%</span>
             <span style="font-size:var(--fs-sm);font-weight:800;color:${col};min-width:68px;text-align:right">${eur(r.avg)}/mois</span>
           </div>
         </div>
@@ -5303,6 +5378,9 @@ async function renderAnalysis(){
     }).join('');
   } else { _avgCard.style.display='none'; }
 }
+
+// ══════════════════════════════════════════════
+window.addEventListener('resize',()=>{if(currentTab==='savings')renderSavings();if(currentTab==='entries')renderEntries();});
 
 // ══════════════════════════════════════════════
 window.addEventListener('resize',()=>{if(currentTab==='savings')renderSavings();if(currentTab==='entries')renderEntries();});
