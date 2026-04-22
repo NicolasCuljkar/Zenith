@@ -5059,9 +5059,10 @@ async function renderAnalysis(){
   }
   const _trendTopA = [..._trendMapA.values()].sort((a,b)=>b.total-a.total).slice(0,5);
   const _trendColsA = ['#d93535','#2979c8','#0d9e6e','#f59e0b','#a855f7'];
-  if(_trendTopA.length >= 1){
+  if(_trendCard && _trendTopA.length >= 1){
     _trendCard.style.display='';
-    document.getElementById('analysis-trend-legend').innerHTML = _trendTopA.map((r,i)=>
+    const _trendLegEl=document.getElementById('analysis-trend-legend');
+    if(_trendLegEl) _trendLegEl.innerHTML = _trendTopA.map((r,i)=>
       `<div style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:3px;border-radius:2px;background:${_trendColsA[i]};display:inline-block"></span><span style="font-size:11px;font-weight:600;color:${_trendColsA[i]}">${r.name}</span></div>`
     ).join('');
     const _trendLabelsA = _trendMonthsA.map(k=>{const[y,m]=k.split('-');return _MNA[Number(m)-1]+' '+String(y).slice(2);});
@@ -5125,7 +5126,14 @@ async function renderAnalysis(){
     const _epCard4=_epNeg
       ? `<div class="card" style="padding:14px 16px;margin-bottom:0;border-color:color-mix(in srgb,var(--red) 40%,var(--border))"><div style="font-size:10px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--red);margin-bottom:6px">Retrait épargne moy.</div><div style="font-size:1.5rem;font-weight:900;letter-spacing:-.03em;color:var(--red);line-height:1">−${eur(Math.abs(_avgEp))}</div><div style="font-size:var(--fs-xs);color:var(--muted);margin:4px 0 6px">par mois en moy.</div><div style="height:4px;background:var(--surface2);border-radius:99px;overflow:hidden"><div style="width:100%;height:100%;background:var(--red);border-radius:99px"></div></div></div>`
       : _budgetKpiCard('Épargne moy.',_avgEp,epScoped,'#2979c8',true);
+    const _revNetAnnuel=s.revNet*12;
+    const _salKpi=`<div class="card" style="padding:14px 16px;margin-bottom:var(--sg)">
+      <div style="font-size:10px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#0d9e6e;margin-bottom:6px">Salaire net annuel estimé</div>
+      <div style="font-size:1.5rem;font-weight:900;letter-spacing:-.03em;color:var(--green);line-height:1">${eur(_revNetAnnuel)}</div>
+      <div style="font-size:var(--fs-xs);color:var(--muted);margin-top:4px">${eur(s.revNet)}/mois · revenus nets</div>
+    </div>`;
     _avgKpiEl.innerHTML=
+      _salKpi+
       `<div style="font-size:var(--fs-xs);color:var(--muted);margin-bottom:.375rem">Moyenne sur <strong style="color:var(--text)">${_n} mois</strong></div>`+
       _budgetKpiGrid(
         _budgetKpiCard('Fixes moy.',    _avgFixe, s.fix,     '#d93535'),
