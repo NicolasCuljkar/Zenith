@@ -5516,6 +5516,17 @@ async function renderAnalysis(){
             else mm.set(mk,{mk,year:e.year,month:e.month,amount:Math.abs(e.amount)});
           }
           for(const [k,mm] of _repExpRaw)_repExpHistory.set(k,[...mm.values()]);
+          // Fixe entries : use budget amount for missing months (they're fixed by definition)
+          const _last12Mks=[];
+          for(let i=11;i>=0;i--){const d=new Date(_now.getFullYear(),_now.getMonth()-i,1);_last12Mks.push({mk:`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`,year:d.getFullYear(),month:d.getMonth()+1});}
+          for(const e of scopedEntries.filter(e=>e.cat==='fixe')){
+            const k=e.name.trim();
+            const existing=_repExpHistory.get(k)||[];
+            const existingMks=new Set(existing.map(h=>h.mk));
+            const filled=[...existing];
+            for(const m of _last12Mks)if(!existingMks.has(m.mk))filled.push({...m,amount:Math.abs(e.amount)});
+            _repExpHistory.set(k,filled.sort((a,b)=>a.mk.localeCompare(b.mk)));
+          }
           const _groupByName=cat=>{
             const map=new Map();
             _varLoi6.filter(e=>e.cat===cat).forEach(e=>map.set(e.name||'—',(map.get(e.name||'—')||0)+Math.abs(e.amount)));
