@@ -1386,6 +1386,16 @@ let dashBarChart=null,dashDonutChart=null,ovaDashChart=null,anaCompareChart=null
 let _anaCachedExp=null, _anaAvgPeriod=6, _anaAvgLabel='';
 let _anaComparePeriod=6;
 let anaEvolChart=null; let _anaMthStats=[]; let _anaEvolPeriod=6;
+let _repExpHistory=new Map();
+function _sparklineSvg(vals,col,w=180,h=48){
+  const nums=vals.map(v=>v??0);
+  const mn=Math.min(...nums),mx=Math.max(...nums),rng=mx-mn||1;
+  const xs=nums.map((_,i)=>Math.round(i/(Math.max(nums.length-1,1))*w));
+  const ys=nums.map(v=>Math.round(h-8-((v-mn)/rng)*(h-16)));
+  const pts=xs.map((x,i)=>`${x},${ys[i]}`).join(' ');
+  const lx=xs[xs.length-1],ly=ys[ys.length-1];
+  return`<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg"><polyline points="${pts}" fill="none" stroke="${col}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/><circle cx="${lx}" cy="${ly}" r="3.5" fill="${col}" stroke="#fff" stroke-width="1.5"/></svg>`;
+}
 let savingsStabActive='month';
 let savingsYearFilter=String(new Date().getFullYear());
 let currentTab='dashboard';
@@ -5494,6 +5504,13 @@ async function renderAnalysis(){
           // Detail per category
           const _fixeDetail=scopedEntries.filter(e=>e.cat==='fixe').sort((a,b)=>Math.abs(b.amount)-Math.abs(a.amount)).map(e=>({name:e.name,avg:Math.abs(e.amount)}));
           const _varLoi6=(_anaAllExp||[]).filter(e=>_last6.includes(`${e.year}-${String(e.month).padStart(2,'0')}`));
+          // Build full history map (all months, not just last 6)
+          _repExpHistory.clear();
+          for(const e of (_anaAllExp||[])){
+            const k=e.name?.trim()||'—';
+            if(!_repExpHistory.has(k))_repExpHistory.set(k,[]);
+            _repExpHistory.get(k).push({mk:`${e.year}-${String(e.month).padStart(2,'0')}`,year:e.year,month:e.month,amount:Math.abs(e.amount)});
+          }
           const _groupByName=cat=>{
             const map=new Map();
             _varLoi6.filter(e=>e.cat===cat).forEach(e=>map.set(e.name||'—',(map.get(e.name||'—')||0)+Math.abs(e.amount)));
@@ -5511,7 +5528,7 @@ async function renderAnalysis(){
             const pct=s.revNet>0?Math.round(c.amt/s.revNet*100):0;
             const barW=Math.min(100,pct);
             const hasDetail=c.detail && c.detail.length>0;
-            const detailRows=hasDetail?c.detail.map(d=>`<div style="display:flex;justify-content:space-between;padding:4px 8px 4px 14px;border-left:2px solid ${c.col}40"><span style="font-size:var(--fs-xs);color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:65%">${d.name}</span><span style="font-size:var(--fs-xs);font-weight:700;color:var(--text);flex-shrink:0">${eur(d.avg)}</span></div>`).join(''):'';
+            const detailRows=hasDetail?c.detail.map(d=>`<div data-rep-exp-name="${(d.name||'').replace(/"/g,'&quot;')}" style="display:flex;justify-content:space-between;padding:5px 8px 5px 14px;border-left:2px solid ${c.col}40;cursor:pointer;border-radius:0 6px 6px 0;transition:background .12s" onmouseenter="this.style.background='var(--surface2)'" onmouseleave="this.style.background=''"><span style="font-size:var(--fs-xs);color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:65%">${d.name}</span><span style="font-size:var(--fs-xs);font-weight:700;color:var(--text);flex-shrink:0">${eur(d.avg)}</span></div>`).join(''):'';
             return`<div style="margin-bottom:12px">
               <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px${hasDetail?';cursor:pointer':''}" ${hasDetail?`data-rep-toggle="${c.key}"`:''}>
                 <div style="display:flex;align-items:center;gap:6px">
@@ -5867,6 +5884,55 @@ document.addEventListener('click', e => {
     if (chevron) chevron.style.transform = open ? '' : 'rotate(180deg)';
   }
 });
+
+// ── Répartition expense tooltip ──
+{
+  const _MNX=['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];
+  let _repTipTimer=null;
+  document.addEventListener('mouseover', e => {
+    const row=e.target.closest('[data-rep-exp-name]');
+    if(!row){return;}
+    clearTimeout(_repTipTimer);
+    const name=row.dataset.repExpName;
+    const hist=_repExpHistory.get(name)||_repExpHistory.get(name.replace(/&quot;/g,'"'));
+    const tip=document.getElementById('rep-exp-tooltip');
+    const tc=document.getElementById('rep-exp-tooltip-content');
+    if(!tip||!tc||!hist||hist.length===0){if(tip)tip.style.display='none';return;}
+    const sorted=[...hist].sort((a,b)=>a.mk.localeCompare(b.mk));
+    const last12=sorted.slice(-12);
+    const vals=last12.map(h=>h.amount);
+    const avg=Math.round(vals.reduce((s,v)=>s+v,0)/vals.length);
+    const mn=Math.min(...vals),mx=Math.max(...vals);
+    const rowsHtml=last12.slice().reverse().slice(0,8).map(h=>{
+      const pct=mx>mn?Math.round((h.amount-mn)/(mx-mn)*100):50;
+      return`<div style="display:flex;justify-content:space-between;align-items:center;padding:2px 0;gap:8px">
+        <span style="font-size:10px;color:var(--muted);flex-shrink:0">${_MNX[h.month-1]} ${String(h.year).slice(2)}</span>
+        <div style="flex:1;height:4px;background:var(--surface2);border-radius:99px;overflow:hidden"><div style="width:${pct}%;height:100%;background:#2979c8;border-radius:99px"></div></div>
+        <span style="font-size:10px;font-weight:700;color:var(--text);flex-shrink:0;min-width:48px;text-align:right">${eur(h.amount)}</span>
+      </div>`;
+    }).join('');
+    tc.innerHTML=`<div style="font-size:var(--fs-sm);font-weight:800;margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${name}</div>
+      <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-bottom:4px">
+        <span>Moy. <b style="color:var(--text)">${eur(avg)}</b></span>
+        <span>${last12.length} mois · min ${eur(mn)} · max ${eur(mx)}</span>
+      </div>
+      <div style="margin-bottom:10px">${_sparklineSvg(vals,'#2979c8',180,44)}</div>
+      <div style="border-top:1px solid var(--border);padding-top:8px;display:flex;flex-direction:column;gap:3px">${rowsHtml}</div>`;
+    const rect=row.getBoundingClientRect();
+    const tW=270,tH=tip.offsetHeight||280;
+    let top=rect.bottom+8,left=rect.left;
+    if(top+tH>window.innerHeight-8)top=rect.top-tH-8;
+    if(left+tW>window.innerWidth-8)left=window.innerWidth-tW-8;
+    if(left<8)left=8;
+    tip.style.top=top+'px';tip.style.left=left+'px';tip.style.display='';
+  });
+  document.addEventListener('mouseout', e => {
+    const row=e.target.closest('[data-rep-exp-name]');
+    if(!row)return;
+    const tip=document.getElementById('rep-exp-tooltip');
+    _repTipTimer=setTimeout(()=>{if(tip)tip.style.display='none';},80);
+  });
+}
 
 // ══════════════════════════════════════════════
 // SLIDER ENGINE — global, intercepts all sliders
@@ -7249,5 +7315,8 @@ async function connectBank(){
   }catch(e){alert('Erreur : '+e.message);}
 }
 </script>
+<div id="rep-exp-tooltip" style="display:none;position:fixed;z-index:9999;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px 16px;box-shadow:0 10px 40px rgba(0,0,0,.28);min-width:210px;max-width:270px;pointer-events:none;transition:opacity .12s">
+  <div id="rep-exp-tooltip-content"></div>
+</div>
 </body>
 </html>
