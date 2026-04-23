@@ -5504,13 +5504,18 @@ async function renderAnalysis(){
           // Detail per category
           const _fixeDetail=scopedEntries.filter(e=>e.cat==='fixe').sort((a,b)=>Math.abs(b.amount)-Math.abs(a.amount)).map(e=>({name:e.name,avg:Math.abs(e.amount)}));
           const _varLoi6=(_anaAllExp||[]).filter(e=>_last6.includes(`${e.year}-${String(e.month).padStart(2,'0')}`));
-          // Build full history map (all months, not just last 6)
+          // Build full history map (all months, not just last 6) — grouped by month
           _repExpHistory.clear();
+          const _repExpRaw=new Map();
           for(const e of (_anaAllExp||[])){
             const k=e.name?.trim()||'—';
-            if(!_repExpHistory.has(k))_repExpHistory.set(k,[]);
-            _repExpHistory.get(k).push({mk:`${e.year}-${String(e.month).padStart(2,'0')}`,year:e.year,month:e.month,amount:Math.abs(e.amount)});
+            const mk=`${e.year}-${String(e.month).padStart(2,'0')}`;
+            if(!_repExpRaw.has(k))_repExpRaw.set(k,new Map());
+            const mm=_repExpRaw.get(k);
+            if(mm.has(mk))mm.get(mk).amount+=Math.abs(e.amount);
+            else mm.set(mk,{mk,year:e.year,month:e.month,amount:Math.abs(e.amount)});
           }
+          for(const [k,mm] of _repExpRaw)_repExpHistory.set(k,[...mm.values()]);
           const _groupByName=cat=>{
             const map=new Map();
             _varLoi6.filter(e=>e.cat===cat).forEach(e=>map.set(e.name||'—',(map.get(e.name||'—')||0)+Math.abs(e.amount)));
