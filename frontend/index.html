@@ -5504,18 +5504,29 @@ async function renderAnalysis(){
       if(_repCard && _repContent){
         const _repTotal=_avg6Fixe+_avg6Var+_avg6Loi+(_avg6Ep>0?_avg6Ep:0);
         if(_repTotal>0 && s.revNet>0){
+          // Detail per category
+          const _fixeDetail=scopedEntries.filter(e=>e.cat==='fixe').sort((a,b)=>Math.abs(b.amount)-Math.abs(a.amount)).map(e=>({name:e.name,avg:Math.abs(e.amount)}));
+          const _varLoi6=(_anaAllExp||[]).filter(e=>_last6.includes(`${e.year}-${String(e.month).padStart(2,'0')}`));
+          const _groupByName=cat=>{
+            const map=new Map();
+            _varLoi6.filter(e=>e.cat===cat).forEach(e=>map.set(e.name||'—',(map.get(e.name||'—')||0)+Math.abs(e.amount)));
+            const mths=new Set(_varLoi6.filter(e=>e.cat===cat).map(e=>`${e.year}-${e.month}`)).size||1;
+            return [...map.entries()].map(([name,tot])=>({name,avg:Math.round(tot/mths)})).sort((a,b)=>b.avg-a.avg);
+          };
           const _repCats=[
-            {key:'fixe',  lbl:'Charges fixes',  amt:_avg6Fixe,            col:'#d93535'},
-            {key:'var',   lbl:'Variables',       amt:_avg6Var,             col:'#e05a2b'},
-            {key:'loi',   lbl:'Loisir',          amt:_avg6Loi,             col:'#f59e0b'},
-            ...(_avg6Ep>0?[{key:'ep',lbl:'Épargne',amt:_avg6Ep,col:'#2979c8'}]:[])
+            {key:'fixe',lbl:'Charges fixes',amt:_avg6Fixe,col:'#d93535',detail:_fixeDetail},
+            {key:'var', lbl:'Variables',    amt:_avg6Var, col:'#e05a2b',detail:_groupByName('variable')},
+            {key:'loi', lbl:'Loisir',       amt:_avg6Loi, col:'#f59e0b',detail:_groupByName('loisir')},
+            ...(_avg6Ep>0?[{key:'ep',lbl:'Épargne',amt:_avg6Ep,col:'#2979c8',detail:[]}]:[])
           ].filter(c=>c.amt>0);
           const _surplus=s.revNet-_repTotal;
           const _repBarsHtml=_repCats.map(c=>{
             const pct=s.revNet>0?Math.round(c.amt/s.revNet*100):0;
             const barW=Math.min(100,pct);
+            const hasDetail=c.detail && c.detail.length>0;
+            const detailRows=hasDetail?c.detail.map(d=>`<div style="display:flex;justify-content:space-between;padding:4px 8px 4px 14px;border-left:2px solid ${c.col}40"><span style="font-size:var(--fs-xs);color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:65%">${d.name}</span><span style="font-size:var(--fs-xs);font-weight:700;color:var(--text);flex-shrink:0">${eur(d.avg)}</span></div>`).join(''):'';
             return`<div style="margin-bottom:12px">
-              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px${hasDetail?';cursor:pointer':''}" ${hasDetail?`data-rep-toggle="${c.key}"`:''}>
                 <div style="display:flex;align-items:center;gap:6px">
                   <span style="width:8px;height:8px;border-radius:50%;background:${c.col};flex-shrink:0"></span>
                   <span style="font-size:var(--fs-sm);font-weight:600">${c.lbl}</span>
@@ -5523,11 +5534,13 @@ async function renderAnalysis(){
                 <div style="display:flex;gap:8px;align-items:center">
                   <span style="font-size:var(--fs-xs);color:var(--muted)">${pct}%</span>
                   <span style="font-size:var(--fs-sm);font-weight:700;color:${c.col};min-width:56px;text-align:right">${eur(c.amt)}/mois</span>
+                  ${hasDetail?`<span data-rep-chevron="${c.key}" style="font-size:9px;color:var(--muted);display:inline-block;transition:transform .2s">▼</span>`:''}
                 </div>
               </div>
-              <div style="height:6px;background:var(--surface2);border-radius:99px;overflow:hidden">
+              <div style="height:6px;background:var(--surface2);border-radius:99px;overflow:hidden;margin-bottom:2px">
                 <div style="width:${barW}%;height:100%;background:${c.col};border-radius:99px"></div>
               </div>
+              ${hasDetail?`<div id="rep-detail-${c.key}" style="display:none;margin-top:6px;padding-bottom:4px">${detailRows}</div>`:''}
             </div>`;
           }).join('');
           const _surplusHtml=_surplus>0
@@ -5852,6 +5865,20 @@ document.addEventListener('click', e => {
 document.addEventListener('click', e => {
   const pill = e.target.closest('[data-evol-period]');
   if (pill) renderEvolChart(Number(pill.dataset.evolPeriod));
+});
+
+// ── Répartition toggles ──
+document.addEventListener('click', e => {
+  const toggle = e.target.closest('[data-rep-toggle]');
+  if (!toggle) return;
+  const key = toggle.dataset.repToggle;
+  const detail = document.getElementById(`rep-detail-${key}`);
+  const chevron = document.querySelector(`[data-rep-chevron="${key}"]`);
+  if (detail) {
+    const open = detail.style.display !== 'none';
+    detail.style.display = open ? 'none' : '';
+    if (chevron) chevron.style.transform = open ? '' : 'rotate(180deg)';
+  }
 });
 
 // ══════════════════════════════════════════════
