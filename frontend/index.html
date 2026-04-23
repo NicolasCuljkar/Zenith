@@ -1387,7 +1387,7 @@ let _anaCachedExp=null, _anaAvgPeriod=6, _anaAvgLabel='';
 let _anaComparePeriod=6;
 let anaEvolChart=null; let _anaMthStats=[]; let _anaEvolPeriod=6;
 let _repExpHistory=new Map();
-function _sparklineSvg(vals,col,w=180,h=48){
+function _sparklineSvg(vals,col,w=300,h=60){
   const nums=vals.map(v=>v??0);
   const mn=Math.min(...nums),mx=Math.max(...nums),rng=mx-mn||1;
   const xs=nums.map((_,i)=>Math.round(i/(Math.max(nums.length-1,1))*w));
@@ -5903,25 +5903,40 @@ document.addEventListener('click', e => {
     const vals=last12.map(h=>h.amount);
     const avg=Math.round(vals.reduce((s,v)=>s+v,0)/vals.length);
     const mn=Math.min(...vals),mx=Math.max(...vals);
-    const rowsHtml=last12.slice().reverse().slice(0,8).map(h=>{
+    const rowsHtml=last12.slice().reverse().map(h=>{
       const pct=mx>mn?Math.round((h.amount-mn)/(mx-mn)*100):50;
-      return`<div style="display:flex;justify-content:space-between;align-items:center;padding:2px 0;gap:8px">
-        <span style="font-size:10px;color:var(--muted);flex-shrink:0">${_MNX[h.month-1]} ${String(h.year).slice(2)}</span>
-        <div style="flex:1;height:4px;background:var(--surface2);border-radius:99px;overflow:hidden"><div style="width:${pct}%;height:100%;background:#2979c8;border-radius:99px"></div></div>
-        <span style="font-size:10px;font-weight:700;color:var(--text);flex-shrink:0;min-width:48px;text-align:right">${eur(h.amount)}</span>
+      const isAvg=h.amount===avg;
+      const aboveAvg=h.amount>avg;
+      const barCol=aboveAvg?'#e05a2b':'#2979c8';
+      return`<div style="display:flex;align-items:center;gap:10px;padding:3px 0">
+        <span style="font-size:11px;color:var(--muted);flex-shrink:0;width:46px">${_MNX[h.month-1]} ${String(h.year).slice(2)}</span>
+        <div style="flex:1;height:5px;background:var(--surface2);border-radius:99px;overflow:hidden"><div style="width:${pct||4}%;height:100%;background:${barCol};border-radius:99px"></div></div>
+        <span style="font-size:12px;font-weight:700;color:var(--text);flex-shrink:0;min-width:54px;text-align:right">${eur(h.amount)}</span>
       </div>`;
     }).join('');
-    tc.innerHTML=`<div style="font-size:var(--fs-sm);font-weight:800;margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${name}</div>
-      <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-bottom:4px">
-        <span>Moy. <b style="color:var(--text)">${eur(avg)}</b></span>
-        <span>${last12.length} mois · min ${eur(mn)} · max ${eur(mx)}</span>
+    tc.innerHTML=`
+      <div style="font-size:15px;font-weight:800;margin-bottom:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${name}</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px">
+        <div style="background:var(--surface2);border-radius:10px;padding:8px 10px;text-align:center">
+          <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:3px">Moyenne</div>
+          <div style="font-size:13px;font-weight:800;color:#2979c8">${eur(avg)}</div>
+        </div>
+        <div style="background:var(--surface2);border-radius:10px;padding:8px 10px;text-align:center">
+          <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:3px">Min</div>
+          <div style="font-size:13px;font-weight:800;color:var(--green)">${eur(mn)}</div>
+        </div>
+        <div style="background:var(--surface2);border-radius:10px;padding:8px 10px;text-align:center">
+          <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:3px">Max</div>
+          <div style="font-size:13px;font-weight:800;color:var(--red)">${eur(mx)}</div>
+        </div>
       </div>
-      <div style="margin-bottom:10px">${_sparklineSvg(vals,'#2979c8',180,44)}</div>
-      <div style="border-top:1px solid var(--border);padding-top:8px;display:flex;flex-direction:column;gap:3px">${rowsHtml}</div>`;
+      <div style="margin-bottom:14px;width:100%">${_sparklineSvg(vals,'#2979c8',300,60)}</div>
+      <div style="font-size:10px;color:var(--muted);margin-bottom:8px">${last12.length} mois d'historique</div>
+      <div style="border-top:1px solid var(--border);padding-top:10px;display:flex;flex-direction:column;gap:4px">${rowsHtml}</div>`;
     const rect=row.getBoundingClientRect();
-    const tW=270,tH=tip.offsetHeight||280;
-    let top=rect.bottom+8,left=rect.left;
-    if(top+tH>window.innerHeight-8)top=rect.top-tH-8;
+    const tW=340,tH=tip.offsetHeight||360;
+    let top=rect.bottom+10,left=rect.left;
+    if(top+tH>window.innerHeight-8)top=Math.max(8,rect.top-tH-10);
     if(left+tW>window.innerWidth-8)left=window.innerWidth-tW-8;
     if(left<8)left=8;
     tip.style.top=top+'px';tip.style.left=left+'px';tip.style.display='';
@@ -7315,7 +7330,7 @@ async function connectBank(){
   }catch(e){alert('Erreur : '+e.message);}
 }
 </script>
-<div id="rep-exp-tooltip" style="display:none;position:fixed;z-index:9999;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px 16px;box-shadow:0 10px 40px rgba(0,0,0,.28);min-width:210px;max-width:270px;pointer-events:none;transition:opacity .12s">
+<div id="rep-exp-tooltip" style="display:none;position:fixed;z-index:9999;background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px 20px;box-shadow:0 16px 56px rgba(0,0,0,.32);width:340px;pointer-events:none">
   <div id="rep-exp-tooltip-content"></div>
 </div>
 </body>
