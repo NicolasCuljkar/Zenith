@@ -656,6 +656,18 @@ html.light input[type=range]{background:var(--border)}
 html.light .auth-screen{background:radial-gradient(ellipse at 30% 20%,rgba(59,139,212,.06),transparent 60%),radial-gradient(ellipse at 70% 80%,rgba(224,111,160,.06),transparent 60%),var(--bg)}
 html.light .auth-card{box-shadow:0 4px 40px rgba(0,0,0,.08)}
 
+/* ── Layout 2 colonnes desktop ── */
+@media(min-width:900px){
+  .dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:var(--sg);align-items:start}
+  /* Analyse */
+  #analysis-content{display:grid;grid-template-columns:1fr 1fr;gap:var(--sg);align-items:start}
+  #analysis-content .member-tabs,
+  #analysis-content #analysis-hero{grid-column:1/-1}
+  #monthly-compare-card{grid-column:1}
+  #analysis-repartition-card{grid-column:2;margin-bottom:0}
+  #analysis-avg-card{grid-column:1/-1}
+}
+
 /* ── Comparaison mensuelle : table scrollable sur mobile ── */
 #monthly-compare-content .tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:10px}
 #monthly-compare-content table{min-width:320px}
@@ -2717,7 +2729,10 @@ async function renderDashboard(){
   content.innerHTML=_monthNav+
     `<div id="dash-alert"></div>`+
     _savWarnHtml+
-    _hero+_cats+_ova+
+    `<div class="dash-grid">
+      <div class="dash-col-main">${_hero}${_cats}</div>
+      <div class="dash-col-side">${_ova}</div>
+    </div>`+
     `<div id="dash-charts" style="display:none"></div>`;
 
   // Init donut OVA
@@ -5974,22 +5989,25 @@ document.addEventListener('keydown', e => {
 // ── Swipe entre onglets ──
 {
   const _TAB_ORDER=['dashboard','entries','savings','analysis'];
-  let _swX=null,_swY=null,_swTarget=null;
+  let _swX=null,_swY=null;
   document.addEventListener('touchstart',e=>{
-    // Ne pas interférer avec les sliders et scrolls
-    if(e.target.closest('input[type=range],canvas,.tbl-wrap,textarea,select'))return;
-    _swX=e.touches[0].clientX;_swY=e.touches[0].clientY;_swTarget=e.target;
+    if(e.touches.length!==1)return; // multi-touch ignoré
+    if(e.target.closest('input[type=range],canvas,.tbl-wrap,textarea,select,.overlay,.modal'))return;
+    _swX=e.touches[0].clientX;_swY=e.touches[0].clientY;
   },{passive:true});
+  document.addEventListener('touchcancel',()=>{_swX=null;_swY=null;},{passive:true});
   document.addEventListener('touchend',e=>{
-    if(_swX===null)return;
+    if(_swX===null||e.changedTouches.length!==1)return;
     const dx=e.changedTouches[0].clientX-_swX;
     const dy=e.changedTouches[0].clientY-_swY;
     _swX=null;_swY=null;
-    if(Math.abs(dx)<72||Math.abs(dx)<Math.abs(dy)*1.4)return;
-    const idx=_TAB_ORDER.indexOf(currentTab);
-    if(idx===-1)return;
-    const next=dx<0?_TAB_ORDER[idx+1]:_TAB_ORDER[idx-1];
-    if(next)showTab(next);
+    if(Math.abs(dx)<80||Math.abs(dx)<Math.abs(dy)*1.6)return; // seuil plus strict
+    try{
+      const idx=_TAB_ORDER.indexOf(currentTab);
+      if(idx===-1)return;
+      const next=dx<0?_TAB_ORDER[idx+1]:_TAB_ORDER[idx-1];
+      if(next)showTab(next);
+    }catch(err){console.warn('swipe tab error',err);}
   },{passive:true});
 }
 
