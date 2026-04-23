@@ -656,17 +656,6 @@ html.light input[type=range]{background:var(--border)}
 html.light .auth-screen{background:radial-gradient(ellipse at 30% 20%,rgba(59,139,212,.06),transparent 60%),radial-gradient(ellipse at 70% 80%,rgba(224,111,160,.06),transparent 60%),var(--bg)}
 html.light .auth-card{box-shadow:0 4px 40px rgba(0,0,0,.08)}
 
-/* ── Layout 2 colonnes desktop ── */
-@media(min-width:900px){
-  .dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:var(--sg);align-items:start}
-  /* Analyse */
-  #analysis-content{display:grid;grid-template-columns:1fr 1fr;gap:var(--sg);align-items:start}
-  #analysis-content .member-tabs,
-  #analysis-content #analysis-hero{grid-column:1/-1}
-  #monthly-compare-card{grid-column:1}
-  #analysis-repartition-card{grid-column:2;margin-bottom:0}
-  #analysis-avg-card{grid-column:1/-1}
-}
 
 /* ── Comparaison mensuelle : table scrollable sur mobile ── */
 #monthly-compare-content .tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:10px}
@@ -2729,10 +2718,7 @@ async function renderDashboard(){
   content.innerHTML=_monthNav+
     `<div id="dash-alert"></div>`+
     _savWarnHtml+
-    `<div class="dash-grid">
-      <div class="dash-col-main">${_hero}${_cats}</div>
-      <div class="dash-col-side">${_ova}</div>
-    </div>`+
+    _hero+_cats+_ova+
     `<div id="dash-charts" style="display:none"></div>`;
 
   // Init donut OVA
