@@ -656,6 +656,17 @@ html.light input[type=range]{background:var(--border)}
 html.light .auth-screen{background:radial-gradient(ellipse at 30% 20%,rgba(59,139,212,.06),transparent 60%),radial-gradient(ellipse at 70% 80%,rgba(224,111,160,.06),transparent 60%),var(--bg)}
 html.light .auth-card{box-shadow:0 4px 40px rgba(0,0,0,.08)}
 
+/* ── Skeleton loader ── */
+.skel{border-radius:8px;background:linear-gradient(90deg,var(--surface2) 25%,var(--border) 50%,var(--surface2) 75%);background-size:200% 100%;animation:skelAnim 1.4s ease-in-out infinite}
+@keyframes skelAnim{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+/* ── App toasts ── */
+#app-toast{position:fixed;bottom:calc(76px + env(safe-area-inset-bottom,0));left:50%;transform:translateX(-50%);z-index:9994;display:flex;flex-direction:column-reverse;align-items:center;gap:8px;pointer-events:none}
+.app-toast{padding:10px 22px;border-radius:99px;font-size:13px;font-weight:700;box-shadow:0 6px 28px rgba(0,0,0,.28);animation:toastIn .22s ease;white-space:nowrap;max-width:88vw;text-align:center;border:1px solid transparent}
+.app-toast.ok{background:color-mix(in srgb,#0d9e6e 14%,var(--surface));border-color:rgba(13,158,110,.35);color:var(--text)}
+.app-toast.err{background:color-mix(in srgb,#d93535 14%,var(--surface));border-color:rgba(217,53,53,.35);color:var(--text)}
+@keyframes toastIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
 </style>
 <script>(function(){
   const isDark=localStorage.getItem('zenith_theme')==='dark';
@@ -1216,13 +1227,13 @@ window.onerror = function(msg, src, line) {
         </div>
       </div>
       <div class="frow" id="f-amount-row">
-        <div class="fgrp"><label>Montant (€)</label><input type="number" id="f-amount" min="0" step="0.01" placeholder="0"></div>
+        <div class="fgrp"><label>Montant (€)</label><input type="number" id="f-amount" min="0" step="0.01" placeholder="0" inputmode="decimal"></div>
       </div>
       <!-- Champs % impôt -->
       <div id="f-impot-pct-fields" style="display:none">
         <div class="frow" style="margin-bottom:6px">
-          <div class="fgrp"><label>Revenu brut (€)</label><input type="number" id="f-impot-brut" placeholder="0" step="0.01" oninput="if(editEntryId)impotBrutCache[editEntryId]=+this.value;calcImpotAmount()"></div>
-          <div class="fgrp"><label>Taux (%)</label><input type="number" id="f-impot-taux" placeholder="0" step="0.1" min="0" max="100" oninput="calcImpotAmount()"></div>
+          <div class="fgrp"><label>Revenu brut (€)</label><input type="number" id="f-impot-brut" placeholder="0" step="0.01" inputmode="decimal" oninput="if(editEntryId)impotBrutCache[editEntryId]=+this.value;calcImpotAmount()"></div>
+          <div class="fgrp"><label>Taux (%)</label><input type="number" id="f-impot-taux" placeholder="0" step="0.1" min="0" max="100" inputmode="decimal" oninput="calcImpotAmount()"></div>
         </div>
         <div style="font-size:var(--fs-sm);color:var(--amber);font-weight:600">→ Impôts calculés : <span id="f-impot-calc">0 €</span></div>
       </div>
@@ -1265,7 +1276,7 @@ window.onerror = function(msg, src, line) {
             <option value="fixe">Charge fixe</option>
           </select>
         </div>
-        <div class="fgrp"><label>Montant (€)</label><input type="number" id="fme-amount" min="0" step="0.01" placeholder="0"></div>
+        <div class="fgrp"><label>Montant (€)</label><input type="number" id="fme-amount" min="0" step="0.01" placeholder="0" inputmode="decimal"></div>
       </div>
       <div class="fgrp"><label>Note <span style="font-weight:400;color:var(--muted)">(optionnel)</span></label><input type="text" id="fme-note" placeholder="Ex. Leclerc, Total…"></div>
     </div>
@@ -1314,7 +1325,7 @@ window.onerror = function(msg, src, line) {
         </div>
         <div class="fgrp" style="margin:0">
           <label id="fs-amount-label">Évolution (€)</label>
-          <input type="number" id="fs-amount" placeholder="0">
+          <input type="number" id="fs-amount" placeholder="0" inputmode="decimal">
         </div>
       </div>
     </div>
@@ -1431,6 +1442,15 @@ function hideLoading(){
   _isLoading=false;
   const el=document.getElementById('zenith-loading');
   if(el) el.style.display='none';
+}
+function showToast(msg, type='ok', dur=2600){
+  const c=document.getElementById('app-toast');
+  if(!c)return;
+  const t=document.createElement('div');
+  t.className='app-toast '+type;
+  t.textContent=msg;
+  c.appendChild(t);
+  setTimeout(()=>{t.style.opacity='0';t.style.transition='opacity .28s';setTimeout(()=>t.remove(),300);},dur);
 }
 function showApiError(msg){
   console.error('[Zénith API]',msg);
@@ -3280,6 +3300,7 @@ function deleteEntry(id){
     try{
       await API.entries.delete(id);
       entries=entries.filter(x=>x.id!==id);
+      showToast('Ligne supprimée');
       updateNavForDataState();renderEntries();renderDashboard();
     }catch(err){
       showApiError('Erreur lors de la suppression : '+err.message);
@@ -3301,9 +3322,11 @@ document.getElementById('modal-entry-save').onclick=async ()=>{
     if(editEntryId){
       const updated=await API.entries.update(editEntryId,{name,amount,cat,member});
       entries=entries.map(e=>e.id===editEntryId?{...e,...updated}:e);
+      showToast('Ligne modifiée ✓');
     } else {
       const created=await API.entries.create({name,amount,cat,member});
       entries.push(created);
+      showToast('Ligne ajoutée ✓');
     }
     renderEntries();renderDashboard();
     _triggerPushAlertCheck();
@@ -4305,7 +4328,7 @@ function deleteMonthlyExpense(id) {
   const e = monthlyExpenses.find(x => x.id === id);
   showConfirm(`Supprimer "${e?.name || 'cette dépense'}" ?`, 'Cette dépense sera définitivement supprimée.', async () => {
     showLoading();
-    try { await API.monthlyExpenses.delete(id); await renderMonthly(); }
+    try { await API.monthlyExpenses.delete(id); showToast('Dépense supprimée'); await renderMonthly(); }
     catch(err) { showApiError('Erreur lors de la suppression : ' + err.message); }
     finally { hideLoading(); }
   });
@@ -4338,8 +4361,10 @@ document.getElementById('modal-me-save').onclick = async () => {
   try {
     if (editMonthlyId) {
       await API.monthlyExpenses.update(editMonthlyId, { name, amount, cat, member, note, entry_id: editMonthlyEntryId });
+      showToast('Dépense modifiée ✓');
     } else {
       await API.monthlyExpenses.create({ year: monthlyYear, month: monthlyMonth, name, amount, cat, member, note, entry_id: editMonthlyEntryId });
+      showToast('Dépense ajoutée ✓');
     }
     editMonthlyEntryId = null;
     await renderMonthly();
@@ -4748,9 +4773,11 @@ document.getElementById('modal-saving-save').onclick=async ()=>{
     if(editSavingId){
       const updated=await API.savings.update(editSavingId,{member,year,month,amount});
       savings=savings.map(s=>s.id===editSavingId?{...s,...updated}:s);
+      showToast('Épargne modifiée ✓');
     } else {
       const created=await API.savings.create({member,year,month,amount});
       savings.push(created);
+      showToast('Épargne enregistrée ✓');
     }
     renderSavings();
     if (currentTab === 'entries' && document.getElementById('entries-mensuel').style.display !== 'none') renderMonthly();
@@ -4984,7 +5011,7 @@ async function renderMonthlyComparison(member, nMonths) {
   if (!card || !content) return;
   anaCompareChart = destroyChart(anaCompareChart);
   card.style.display = '';
-  content.innerHTML = '<div style="padding:20px;text-align:center;color:var(--muted);font-size:var(--fs-sm)">Chargement…</div>';
+  content.innerHTML = '<div style="padding:16px;display:flex;flex-direction:column;gap:10px"><div class="skel" style="height:14px"></div><div class="skel" style="height:14px;width:80%"></div><div class="skel" style="height:14px;width:60%"></div></div>';
 
   // Générer les N derniers mois
   const today = new Date();
@@ -5900,6 +5927,49 @@ document.addEventListener('click', e => {
     if (chevron) chevron.style.transform = open ? '' : 'rotate(180deg)';
   }
 });
+
+// ── Raccourcis clavier ──
+document.addEventListener('keydown', e => {
+  if(['INPUT','TEXTAREA','SELECT'].includes(document.activeElement?.tagName)) return;
+  if(e.key==='Escape'){
+    document.querySelectorAll('.overlay.open,.modal.open').forEach(m=>m.classList.remove('open'));
+    return;
+  }
+  if(e.key==='ArrowLeft'){
+    if(currentTab==='dashboard') dashNavPrev();
+    else if(currentTab==='entries') monthlyNavPrev?.();
+  }
+  if(e.key==='ArrowRight'){
+    if(currentTab==='dashboard') dashNavNext();
+    else if(currentTab==='entries') monthlyNavNext?.();
+  }
+  if(!e.altKey&&!e.ctrlKey&&!e.metaKey){
+    const tabMap={'1':'dashboard','2':'entries','3':'savings','4':'analysis'};
+    if(tabMap[e.key]) showTab(tabMap[e.key]);
+  }
+});
+
+// ── Swipe entre onglets ──
+{
+  const _TAB_ORDER=['dashboard','entries','savings','analysis'];
+  let _swX=null,_swY=null,_swTarget=null;
+  document.addEventListener('touchstart',e=>{
+    // Ne pas interférer avec les sliders et scrolls
+    if(e.target.closest('input[type=range],canvas,.tbl-wrap,textarea,select'))return;
+    _swX=e.touches[0].clientX;_swY=e.touches[0].clientY;_swTarget=e.target;
+  },{passive:true});
+  document.addEventListener('touchend',e=>{
+    if(_swX===null)return;
+    const dx=e.changedTouches[0].clientX-_swX;
+    const dy=e.changedTouches[0].clientY-_swY;
+    _swX=null;_swY=null;
+    if(Math.abs(dx)<72||Math.abs(dx)<Math.abs(dy)*1.4)return;
+    const idx=_TAB_ORDER.indexOf(currentTab);
+    if(idx===-1)return;
+    const next=dx<0?_TAB_ORDER[idx+1]:_TAB_ORDER[idx-1];
+    if(next)showTab(next);
+  },{passive:true});
+}
 
 // ── Répartition expense tooltip ──
 {
@@ -7346,6 +7416,7 @@ async function connectBank(){
   }catch(e){alert('Erreur : '+e.message);}
 }
 </script>
+<div id="app-toast"></div>
 <div id="rep-exp-tooltip" style="display:none;position:fixed;z-index:9999;background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px 20px;box-shadow:0 16px 56px rgba(0,0,0,.32);width:340px;pointer-events:none">
   <div id="rep-exp-tooltip-content"></div>
 </div>
