@@ -2642,15 +2642,15 @@ async function renderDashboard(){
     const isEp=r.cat==='epargne';
     const clickAttr=isEp?'':`onclick="_ovaGoto('${r.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'")}')"`;
     const amtStr=isNeg?`−${eur(Math.abs(r.total))}`:eur(r.total);
-    return `<div ${clickAttr} style="display:flex;align-items:center;justify-content:space-between;padding:7px 6px 7px 20px;border-radius:6px;cursor:${isEp?'default':'pointer'};transition:background .15s" onmouseenter="this.style.background='var(--surface2)'" onmouseleave="this.style.background=''">
-      <div style="display:flex;align-items:center;gap:7px;min-width:0;flex:1">
-        <span style="width:5px;height:5px;border-radius:50%;background:${col};flex-shrink:0;opacity:.7"></span>
+    return `<div ${clickAttr} style="display:flex;align-items:center;justify-content:space-between;padding:8px 18px 8px 38px;cursor:${isEp?'default':'pointer'};transition:background .15s" onmouseenter="this.style.background='var(--surface2)'" onmouseleave="this.style.background=''">
+      <div style="display:flex;align-items:center;gap:8px;min-width:0;flex:1">
+        <span style="width:4px;height:4px;border-radius:50%;background:${col};flex-shrink:0;opacity:.55"></span>
         <span style="font-size:var(--fs-sm);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.name}</span>
         ${r.count>1?`<span style="font-size:10px;color:var(--muted)">×${r.count}</span>`:''}
       </div>
-      <div style="display:flex;align-items:center;gap:7px;flex-shrink:0">
+      <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
         ${diffHtml}
-        ${incShare!==null?`<span style="font-size:10px;color:var(--muted)">${incShare}%&nbsp;rev.</span>`:''}
+        ${incShare!==null?`<span style="font-size:10px;color:var(--muted)">${incShare}%</span>`:''}
         <span style="font-size:var(--fs-sm);font-weight:700;color:${col};min-width:52px;text-align:right">${amtStr}</span>
       </div>
     </div>`;
@@ -2663,30 +2663,29 @@ async function renderDashboard(){
       const shareTotal=_postesTotal>0?Math.round(g.total/_postesTotal*100):0;
       const bgtHtml=bgt>0?`<span style="font-size:10px;color:${g.total>bgt?'var(--red)':'var(--muted)'}">/ ${eur(bgt)}</span>`:'';
       const isOpen=false;
-      return `<div style="border-top:1px solid var(--border)">
-        <div onclick="_ovaToggle('${c}')" style="display:flex;align-items:center;justify-content:space-between;padding:10px 18px 10px 16px;cursor:pointer;transition:background .15s" onmouseenter="this.style.background='var(--surface2)'" onmouseleave="this.style.background=''">
-          <div style="display:flex;align-items:center;gap:8px">
-            <span id="ova-arrow-${c}" style="font-size:8px;color:${col};transition:transform .2s;width:10px;text-align:center">${isOpen?'▼':'▶'}</span>
-            <span style="width:9px;height:9px;border-radius:50%;background:${col};box-shadow:0 0 0 3px ${col}33"></span>
+      return `<div style="border-top:1px solid var(--border);border-left:3px solid ${col}44">
+        <div onclick="_ovaToggle('${c}')" style="display:flex;align-items:center;justify-content:space-between;padding:11px 18px 11px 13px;cursor:pointer;transition:background .15s" onmouseenter="this.style.background='var(--surface2)'" onmouseleave="this.style.background=''">
+          <div style="display:flex;align-items:center;gap:9px">
+            <span id="ova-arrow-${c}" style="font-size:8px;color:${col}99;transition:transform .2s">${isOpen?'▼':'▶'}</span>
             <span style="font-size:var(--fs-sm);font-weight:700;color:${col}">${_catLbl[c]}</span>
             ${bgtHtml}
           </div>
           <div style="display:flex;align-items:center;gap:8px">
-            <span style="background:${col}22;color:${col};font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px">${shareTotal}%</span>
+            <span style="background:${col}18;color:${col};font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;border:1px solid ${col}33">${shareTotal}%</span>
             <span style="font-size:var(--fs-sm);font-weight:800;color:${col};min-width:52px;text-align:right">${eur(g.total)}</span>
           </div>
         </div>
-        <div id="ova-items-${c}" style="display:${isOpen?'':'none'};padding-bottom:6px">
+        <div id="ova-items-${c}" style="display:${isOpen?'':'none'};padding-bottom:8px;border-left:2px solid ${col}22;margin-left:3px">
           ${g.items.map(r=>_ovaItem(r)).join('')}
         </div>
       </div>`;
     }).join('');
 
   const _donutData=_catOrder.filter(c=>_catGroups[c]).map(c=>({label:_catLbl[c],val:_catGroups[c].total,col:_catColP[c]}));
-  const _ovaDonutHtml=_donutData.length>0?`<div style="display:flex;align-items:center;gap:14px;margin:0 18px 12px;padding:12px 14px;background:var(--surface2);border-radius:10px">
-    <div style="width:72px;height:72px;flex-shrink:0"><canvas id="ova-donut-chart"></canvas></div>
-    <div style="flex:1;display:flex;flex-direction:column;gap:7px">
-      ${_donutData.map(d=>{const pct=_postesTotal>0?Math.round(d.val/_postesTotal*100):0;return`<div style="display:flex;justify-content:space-between;align-items:center"><div style="display:flex;align-items:center;gap:6px"><span style="width:6px;height:6px;border-radius:50%;background:${d.col}"></span><span style="font-size:var(--fs-xs);font-weight:600;color:${d.col}">${d.label}</span></div><div style="display:flex;align-items:center;gap:6px"><span style="font-size:10px;color:var(--muted)">${pct}%</span><span style="font-size:var(--fs-xs);font-weight:700;color:var(--fg);min-width:48px;text-align:right">${eur(d.val)}</span></div></div>`;}).join('')}
+  const _ovaDonutHtml=_donutData.length>0?`<div style="display:flex;align-items:center;gap:16px;margin:0 18px 14px;padding:14px 16px;background:var(--surface2);border-radius:12px;border:1px solid var(--border)">
+    <div style="width:76px;height:76px;flex-shrink:0"><canvas id="ova-donut-chart"></canvas></div>
+    <div style="flex:1;display:flex;flex-direction:column;gap:9px">
+      ${_donutData.map(d=>{const pct=_postesTotal>0?Math.round(d.val/_postesTotal*100):0;return`<div><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><div style="display:flex;align-items:center;gap:6px"><span style="width:6px;height:6px;border-radius:50%;background:${d.col}"></span><span style="font-size:var(--fs-xs);font-weight:600;color:${d.col}">${d.label}</span></div><span style="font-size:var(--fs-xs);font-weight:700;color:var(--fg)">${eur(d.val)}</span></div><div style="height:3px;border-radius:2px;background:var(--border);overflow:hidden"><div style="width:${pct}%;height:100%;background:${d.col};border-radius:2px"></div></div></div>`;}).join('')}
     </div>
   </div>`:'';
 
@@ -2704,7 +2703,7 @@ async function renderDashboard(){
         <span style="font-size:var(--fs-sm);font-weight:800;color:var(--fg)">Où va l'argent ?</span>
         ${_postesTotal>0?`<span style="background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:3px 11px;font-size:var(--fs-sm);font-weight:800;color:var(--fg)">${eur(_postesTotal)}</span>`:''}
       </div>
-      ${_donutData.length>0?`<div style="display:flex;height:5px;border-radius:3px;overflow:hidden;gap:1px">${_donutData.map(d=>`<div title="${d.label}" style="flex:${d.val};background:${d.col}"></div>`).join('')}</div>`:''}
+      ${_donutData.length>0?`<div style="display:flex;height:5px;border-radius:3px;overflow:hidden;gap:2px">${_donutData.map(d=>`<div title="${d.label}" style="flex:${d.val};background:${d.col};border-radius:2px"></div>`).join('')}</div>`:''}
     </div>
     ${_ovaDonutHtml}${_ovaContent}${_ovaRetraitBlock}
   </div>`;
