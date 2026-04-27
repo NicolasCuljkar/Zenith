@@ -1,8 +1,9 @@
 'use strict';
 
-const webpush = require('web-push');
-const cron    = require('node-cron');
-const db      = require('../config/database');
+const webpush            = require('web-push');
+const cron               = require('node-cron');
+const db                 = require('../config/database');
+const monthlyExpensesSvc = require('./monthly_expenses.service');
 
 let vapidPublicKey = null;
 
@@ -73,20 +74,25 @@ async function sendToUser(userId, payload) {
   }
 }
 
-// ── Stats budgétaires ─────────────────────────────────────────────────────────
+// ── Stats budgétaires du mois en cours ───────────────────────────────────────
 
-function getUserStats(memberName) {
-  const entries = db.prepare('SELECT cat, amount FROM entries WHERE member = ?').all(memberName);
-  const sum = cat => entries.filter(e => e.cat === cat).reduce((s, e) => s + Math.abs(e.amount), 0);
-  const rev    = sum('revenu');
-  const tax    = sum('impot');
-  const fix    = sum('fixe');
-  const vari   = sum('variable');
-  const revNet = rev - tax;
-  const dep    = fix + vari;
-  const rav    = revNet - dep;
-  const ep     = sum('epargne');
-  return { rev, tax, fix, vari, revNet, dep, rav, ep };
+function getMonthlyStats(userId) {
+  const now   = new Date();
+  const year  = now.getFullYear();
+  const month = now.getMonth() + 1;
+  const stats = monthlyExpensesSvc.getStats({ userId, year, month });
+
+  const revenu   = stats.revenu?.actual   || 0;
+  const impot    = stats.impot?.actual    || 0;
+  const fixe     = stats.fixe?.actual     || 0;
+  const variable = stats.variable?.actual || 0;
+  const loisir   = stats.loisir?.actual   || 0;
+  const epargne  = stats.epargne?.actual  || 0;
+  const revNet   = revenu - impot;
+  const dep      = fixe + variable + loisir;
+  const rav      = revNet - dep - epargne;
+
+  return { revenu, impot, revNet, fixe, variable, loisir, dep, epargne, rav };
 }
 
 const eur = n => Math.round(n).toLocaleString('fr-FR') + ' €';
@@ -110,21 +116,17 @@ function markAlertSent(userId, alertKey) {
 // ── Vérification et envoi des alertes budgétaires ────────────────────────────
 
 async function checkBudgetAlerts(userId, memberName) {
-  const s = getUserStats(memberName);
-  if (s.rev === 0) return; // pas de données → rien à vérifier
+  const s = getMonthlyStats(userId);
+  if (s.revenu === 0) return; // pas de données ce mois → rien à vérifier
 
-  const revNet     = s.revNet;
-  const dep        = s.dep;
-  const rav        = s.rav;
-  const fix        = s.fix;
-  const tax        = s.tax;
-  const depRate    = revNet > 0 ? Math.round(dep    / revNet * 100) : 0;
-  const fixRate    = revNet > 0 ? Math.round(fix    / revNet * 100) : 0;
-  const contrRate  = revNet > 0 ? Math.round((tax + fix) / revNet * 100) : 0;
-  const epRate     = revNet > 0 ? Math.round(s.ep   / revNet * 100) : 0;
-  const ravRate    = revNet > 0 ? Math.round(rav    / revNet * 100) : 0;
+  const { revNet, dep, rav, fixe, impot, epargne } = s;
+  const depRate   = revNet > 0 ? Math.round(dep    / revNet * 100) : 0;
+  const fixRate   = revNet > 0 ? Math.round(fixe   / revNet * 100) : 0;
+  const contrRate = revNet > 0 ? Math.round((impot + fixe) / revNet * 100) : 0;
+  const epRate    = revNet > 0 ? Math.round(epargne / revNet * 100) : 0;
+  const ravRate   = revNet > 0 ? Math.round(rav    / revNet * 100) : 0;
 
-  // Jours couverts par l'épargne (dernier enregistrement)
+  // Jours de dépenses couverts par le matelas d'épargne
   const latestSav = db.prepare(`
     SELECT amount FROM savings WHERE member = ?
     ORDER BY year DESC,
@@ -135,58 +137,61 @@ async function checkBudgetAlerts(userId, memberName) {
         WHEN 'Octobre' THEN 10 WHEN 'Novembre' THEN 11 WHEN 'Décembre' THEN 12
       END DESC LIMIT 1
   `).get(memberName);
-  const totalSav = latestSav?.amount || 0;
+  const totalSav      = latestSav?.amount || 0;
   const joursCouverts = dep > 0 ? Math.round(totalSav / dep * 30) : null;
 
-  // Score santé simplifié (sans savingPct)
-  const scoreRig = fixRate <= 30 ? 30 : fixRate <= 50 ? Math.round(30 - (fixRate - 30) * 0.75) : 0;
+  // Score santé
+  const scoreRig   = fixRate <= 30 ? 30 : fixRate <= 50 ? Math.round(30 - (fixRate - 30) * 0.75) : 0;
   const depRatePct = revNet > 0 ? dep / revNet * 100 : 0;
-  const scoreDep = depRatePct <= 50 ? 30 : depRatePct <= 70 ? Math.round(30 - (depRatePct - 50) * 1.5) : 0;
-  const scoreSav = Math.min(40, ravRate * 1.2); // approximation sans savingPct
+  const scoreDep   = depRatePct <= 50 ? 30 : depRatePct <= 70 ? Math.round(30 - (depRatePct - 50) * 1.5) : 0;
+  const scoreSav   = Math.min(40, ravRate * 1.2);
   const healthScore = Math.round(scoreSav + scoreRig + scoreDep);
+
+  const now   = new Date();
+  const mois  = MONTHS[now.getMonth()];
 
   const ALERTS = [
     {
-      key: 'rav_negatif',
+      key:       'rav_negatif',
       condition: rav < 0,
-      title: '🔴 Budget en déficit — Zénith',
-      body:  `Votre reste à vivre est négatif (${eur(rav)}). Vos dépenses dépassent vos revenus nets.`,
+      title:     'Budget en déficit · Zénith',
+      body:      `Votre reste à vivre est de ${eur(rav)} en ${mois}. Vos dépenses dépassent vos revenus nets.`,
     },
     {
-      key: 'dep_critique',
+      key:       'dep_critique',
       condition: depRate > 70,
-      title: '🔴 Dépenses critiques — Zénith',
-      body:  `Vos dépenses représentent ${depRate}% de vos revenus nets. Seuil critique : 70%.`,
+      title:     'Dépenses trop élevées · Zénith',
+      body:      `${depRate}% de vos revenus nets sont partis en dépenses ce mois-ci. Seuil recommandé : 70%.`,
     },
     {
-      key: 'ep_faible',
-      condition: s.ep > 0 && epRate < 5,
-      title: '🔴 Épargne insuffisante — Zénith',
-      body:  `Votre taux d'épargne est de ${epRate}%. Objectif minimum recommandé : 10%.`,
+      key:       'ep_faible',
+      condition: epargne > 0 && epRate < 5,
+      title:     'Épargne insuffisante · Zénith',
+      body:      `Votre taux d'épargne est de ${epRate}% en ${mois}. Visez au moins 10% de vos revenus nets.`,
     },
     {
-      key: 'matelas_faible',
+      key:       'matelas_faible',
       condition: joursCouverts !== null && joursCouverts < 30,
-      title: '🟠 Matelas de sécurité insuffisant — Zénith',
-      body:  `Votre épargne couvre ${joursCouverts} jours de dépenses. Objectif recommandé : 90 jours (3 mois).`,
+      title:     'Matelas de sécurité faible · Zénith',
+      body:      `Votre épargne couvre ${joursCouverts} jour${joursCouverts > 1 ? 's' : ''} de dépenses. Objectif : 3 mois (90 jours).`,
     },
     {
-      key: 'score_bas',
+      key:       'score_bas',
       condition: healthScore < 40,
-      title: '🔴 Score santé faible — Zénith',
-      body:  `Votre score santé financière est de ${healthScore}/100. Consultez l'onglet Analyse pour les détails.`,
+      title:     'Santé financière dégradée · Zénith',
+      body:      `Votre score financier est de ${healthScore}/100 ce mois-ci. Ouvrez l'onglet Analyse pour en savoir plus.`,
     },
     {
-      key: 'fixes_eleves',
+      key:       'fixes_eleves',
       condition: fixRate > 50,
-      title: '🟠 Charges fixes élevées — Zénith',
-      body:  `Vos charges fixes représentent ${fixRate}% de vos revenus nets. Peu de flexibilité budgétaire.`,
+      title:     'Charges fixes élevées · Zénith',
+      body:      `Vos charges fixes représentent ${fixRate}% de vos revenus nets en ${mois}. Peu de flexibilité budgétaire.`,
     },
     {
-      key: 'contrainte_elev',
+      key:       'contrainte_elev',
       condition: contrRate > 55,
-      title: '🟠 Budget très rigide — Zénith',
-      body:  `${contrRate}% de vos revenus sont bloqués (impôts + charges fixes). Votre budget manque de flexibilité.`,
+      title:     'Budget rigide · Zénith',
+      body:      `${contrRate}% de vos revenus sont mobilisés par les impôts et charges fixes. Peu de marge de manœuvre.`,
     },
   ];
 
@@ -203,40 +208,42 @@ async function checkBudgetAlerts(userId, memberName) {
 
 function startScheduler() {
 
-  // 1er du mois à 9h — rappel mise à jour épargne
-  cron.schedule('0 9 1 * *', async () => {
+  // 1er du mois à 13h — rappel mise à jour épargne
+  cron.schedule('0 13 1 * *', async () => {
     const month = MONTHS[new Date().getMonth()];
     const users = db.prepare('SELECT id, name FROM users').all();
     for (const user of users) {
       await sendToUser(user.id, {
-        title: '💰 Rappel épargne — Zénith',
-        body:  `Pensez à mettre à jour votre épargne pour ${month} !`,
-        url:   '/index.html#savings',
+        title: `Épargne de ${month} · Zénith`,
+        body:  `N'oubliez pas de saisir votre épargne pour ${month}.`,
+        url:   '/',
       });
     }
     console.log(`[Push] Rappel épargne envoyé (${month})`);
   }, { timezone: 'Europe/Paris' });
 
-  // Chaque lundi à 8h — résumé budgétaire hebdo
-  cron.schedule('0 8 * * 1', async () => {
+  // Chaque lundi à 13h — résumé budgétaire du mois en cours
+  cron.schedule('0 13 * * 1', async () => {
+    const now   = new Date();
+    const mois  = MONTHS[now.getMonth()];
     const users = db.prepare('SELECT id, name FROM users').all();
     for (const user of users) {
-      const s = getUserStats(user.name);
-      if (s.rev === 0) continue;
-      const depRate  = s.revNet > 0 ? Math.round(s.dep / s.revNet * 100) : 0;
-      const epRate   = s.revNet > 0 ? Math.round(s.ep  / s.revNet * 100) : 0;
-      const alert    = depRate > 80 ? ' ⚠️ Dépenses élevées !' : '';
+      const s = getMonthlyStats(user.id);
+      if (s.revenu === 0) continue;
+      const depRate = s.revNet > 0 ? Math.round(s.dep     / s.revNet * 100) : 0;
+      const epRate  = s.revNet > 0 ? Math.round(s.epargne / s.revNet * 100) : 0;
+      const suffix  = depRate > 80 ? ' — dépenses élevées ce mois-ci.' : '.';
       await sendToUser(user.id, {
-        title: `📊 Résumé hebdo — ${user.name}`,
-        body:  `Revenus nets ${eur(s.revNet)} · Dépenses ${eur(s.dep)} (${depRate}%) · Épargne ${eur(s.ep)} (${epRate}%)${alert}`,
+        title: `Bilan de la semaine · Zénith`,
+        body:  `${mois} — Revenus nets ${eur(s.revNet)}, dépenses ${eur(s.dep)} (${depRate}%), épargne ${eur(s.epargne)} (${epRate}%)${suffix}`,
         url:   '/',
       });
     }
     console.log('[Push] Résumé hebdo envoyé');
   }, { timezone: 'Europe/Paris' });
 
-  // Chaque jour à 7h30 — vérification des alertes budgétaires
-  cron.schedule('30 7 * * *', async () => {
+  // Chaque jour à 13h — vérification des alertes budgétaires
+  cron.schedule('0 13 * * *', async () => {
     const users = db.prepare('SELECT id, name FROM users').all();
     for (const user of users) {
       await checkBudgetAlerts(user.id, user.name);
