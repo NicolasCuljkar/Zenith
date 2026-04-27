@@ -30,28 +30,35 @@ const MONTH_CASE = `
 
 // Calcule le delta par rapport à l'entrée précédente du même user
 function computeDelta(userId, year, month, amount, excludeId = null) {
+  const monthNum = VALID_MONTHS.indexOf(month) + 1;
+  if (monthNum === 0) return null;
+  const params = [userId, year, monthNum, year, monthNum];
+  if (excludeId) params.push(excludeId);
   const prev = db.prepare(`
     SELECT amount FROM savings
     WHERE user_id = ?
-      AND (year < ? OR (year = ? AND ${MONTH_CASE} < (
-        SELECT ${MONTH_CASE} FROM savings WHERE id = COALESCE(?, -1)
-        UNION SELECT
-          CASE ?
-            WHEN 'Janvier'   THEN 1  WHEN 'Février'   THEN 2
-            WHEN 'Mars'      THEN 3  WHEN 'Avril'     THEN 4
-            WHEN 'Mai'       THEN 5  WHEN 'Juin'      THEN 6
-            WHEN 'Juillet'   THEN 7  WHEN 'Août'      THEN 8
-            WHEN 'Septembre' THEN 9  WHEN 'Octobre'   THEN 10
-            WHEN 'Novembre'  THEN 11 WHEN 'Décembre'  THEN 12
-          END
-        LIMIT 1
-      )))
+      AND (year < ? OR (year = ? AND ${MONTH_CASE} < ?))
       ${excludeId ? 'AND id != ?' : ''}
     ORDER BY year DESC, ${MONTH_CASE} DESC
     LIMIT 1
-  `).get(...[userId, year, year, excludeId, month, ...(excludeId ? [excludeId] : [])]);
+  `).get(...params);
+  return prev != null ? amount - prev.amount : null;
+}
 
-  return prev ? amount - prev.amount : null;
+// Recalcule le delta de l'entrée qui suit (year, month) — à appeler après update/delete
+function recomputeNextDelta(userId, year, month) {
+  const monthNum = VALID_MONTHS.indexOf(month) + 1;
+  if (monthNum === 0) return;
+  const next = db.prepare(`
+    SELECT id, year, month, amount FROM savings
+    WHERE user_id = ?
+      AND (year > ? OR (year = ? AND ${MONTH_CASE} > ?))
+    ORDER BY year ASC, ${MONTH_CASE} ASC
+    LIMIT 1
+  `).get(userId, year, year, monthNum);
+  if (!next) return;
+  const newDelta = computeDelta(userId, next.year, next.month, next.amount);
+  db.prepare(`UPDATE savings SET delta = ?, updated_at = datetime('now') WHERE id = ?`).run(newDelta, next.id);
 }
 
 // ── Lecture ──────────────────────────────────────────────────────
@@ -140,6 +147,9 @@ function update(id, { member, year, month, amount }, userId) {
     WHERE id = ?
   `).run(updatedYear, updatedMonth, updatedAmount, delta, id);
 
+  // Recalcule le delta de l'entrée suivante (elle référençait l'ancienne valeur)
+  recomputeNextDelta(userId, updatedYear, updatedMonth);
+
   return getById(id);
 }
 
@@ -150,6 +160,8 @@ function remove(id, userId) {
   if (existing.user_id !== userId) throw httpError('Non autorisé à supprimer cette entrée.', 403);
 
   db.prepare('DELETE FROM savings WHERE id = ?').run(id);
+  // Recalcule le delta de l'entrée suivante (elle référençait l'entrée supprimée)
+  recomputeNextDelta(userId, existing.year, existing.month);
   return { deleted: true };
 }
 

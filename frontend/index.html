@@ -4587,7 +4587,7 @@ function renderSavings(){
           callbacks:{label:ctx=>` ${ctx.dataset.label} : ${(ctx.raw||0).toLocaleString('fr-FR')} €`}
         },
         datalabels:{
-          display:(ctx)=>ctx.dataIndex===ctx.dataset.data.length-1,
+          display:(ctx)=>ctx.raw!=null&&ctx.dataIndex===ctx.dataset.data.filter(v=>v!=null).length-1,
           anchor:'end',align:'top',
           formatter:(v)=>v!=null?(v/1000).toFixed(1)+'k€':'',
           color:(ctx)=>datasets[ctx.datasetIndex]?.backgroundColor||textColor,
@@ -4595,8 +4595,7 @@ function renderSavings(){
           backgroundColor:darkVal('#fff','#1a1a18'),
           borderRadius:4,padding:{top:3,bottom:3,left:6,right:6},
           borderWidth:1,
-          borderColor:(ctx)=>(datasets[ctx.datasetIndex]?.backgroundColor||'#999')+'44',
-          display:(ctx)=>ctx.raw!=null
+          borderColor:(ctx)=>(datasets[ctx.datasetIndex]?.backgroundColor||'#999')+'44'
         }
       },
       scales:{
@@ -5358,7 +5357,7 @@ async function renderAnalysis(){
   const _epByMk = new Map();
   for(const s of (_anaSavings||[])){
     const mk=`${s.year}-${String(FR_M_MAP[s.month]||0).padStart(2,'0')}`;
-    _epByMk.set(mk,(_epByMk.get(mk)||0)+(s.delta!=null?s.delta:s.amount));
+    _epByMk.set(mk,(_epByMk.get(mk)||0)+(s.delta!=null?s.delta:0));
   }
 
   // Graphique 2 : Évolution dépenses clés
