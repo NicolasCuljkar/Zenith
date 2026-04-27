@@ -2689,13 +2689,12 @@ async function renderDashboard(){
     </div>
   </div>`:'';
 
-  const _ovaRetraitBlock=epMonthDelta<0&&_hasSavRec?`<div style="border-top:1px solid var(--border);padding:10px 18px 14px;display:flex;align-items:center;justify-content:space-between">
-    <div style="display:flex;align-items:center;gap:7px">
-      <span style="font-size:12px">💸</span>
+  const _ovaRetraitBlock=epMonthDelta<0&&_hasSavRec?`<div style="border-top:1px solid var(--border);padding:11px 18px 14px 16px;display:flex;align-items:center;justify-content:space-between">
+    <div style="display:flex;align-items:center;gap:9px">
       <span style="font-size:var(--fs-sm);font-weight:700;color:var(--red)">Retrait épargne</span>
       ${_balBefore!==null?`<span style="font-size:10px;color:var(--muted)">${eur(_balBefore)} → ${eur(_balAfter)}</span>`:''}
     </div>
-    <span style="font-size:var(--fs-sm);font-weight:800;color:var(--red)">−${eur(Math.abs(epMonthDelta))}</span>
+    <span style="font-size:var(--fs-sm);font-weight:800;color:var(--red);min-width:52px;text-align:right">−${eur(Math.abs(epMonthDelta))}</span>
   </div>`:'';
   const _ova=`<div class="card" style="padding:0;overflow:hidden">
     <div style="padding:16px 18px ${_donutData.length>0?14:0}px">
