@@ -154,43 +154,43 @@ async function checkBudgetAlerts(userId, memberName) {
     {
       key:       'rav_negatif',
       condition: rav < 0,
-      title:     'Budget en déficit · Zénith',
+      title:     'Budget en déficit',
       body:      `Votre reste à vivre est de ${eur(rav)} en ${mois}. Vos dépenses dépassent vos revenus nets.`,
     },
     {
       key:       'dep_critique',
       condition: depRate > 70,
-      title:     'Dépenses trop élevées · Zénith',
+      title:     'Dépenses trop élevées',
       body:      `${depRate}% de vos revenus nets sont partis en dépenses ce mois-ci. Seuil recommandé : 70%.`,
     },
     {
       key:       'ep_faible',
       condition: epargne > 0 && epRate < 5,
-      title:     'Épargne insuffisante · Zénith',
+      title:     'Épargne insuffisante',
       body:      `Votre taux d'épargne est de ${epRate}% en ${mois}. Visez au moins 10% de vos revenus nets.`,
     },
     {
       key:       'matelas_faible',
       condition: joursCouverts !== null && joursCouverts < 30,
-      title:     'Matelas de sécurité faible · Zénith',
+      title:     'Matelas de sécurité faible',
       body:      `Votre épargne couvre ${joursCouverts} jour${joursCouverts > 1 ? 's' : ''} de dépenses. Objectif : 3 mois (90 jours).`,
     },
     {
       key:       'score_bas',
       condition: healthScore < 40,
-      title:     'Santé financière dégradée · Zénith',
+      title:     'Santé financière dégradée',
       body:      `Votre score financier est de ${healthScore}/100 ce mois-ci. Ouvrez l'onglet Analyse pour en savoir plus.`,
     },
     {
       key:       'fixes_eleves',
       condition: fixRate > 50,
-      title:     'Charges fixes élevées · Zénith',
+      title:     'Charges fixes élevées',
       body:      `Vos charges fixes représentent ${fixRate}% de vos revenus nets en ${mois}. Peu de flexibilité budgétaire.`,
     },
     {
       key:       'contrainte_elev',
       condition: contrRate > 55,
-      title:     'Budget rigide · Zénith',
+      title:     'Budget rigide',
       body:      `${contrRate}% de vos revenus sont mobilisés par les impôts et charges fixes. Peu de marge de manœuvre.`,
     },
   ];
@@ -214,7 +214,7 @@ function startScheduler() {
     const users = db.prepare('SELECT id, name FROM users').all();
     for (const user of users) {
       await sendToUser(user.id, {
-        title: `Épargne de ${month} · Zénith`,
+        title: `Épargne de ${month}`,
         body:  `N'oubliez pas de saisir votre épargne pour ${month}.`,
         url:   '/',
       });
@@ -234,7 +234,7 @@ function startScheduler() {
       const epRate  = s.revNet > 0 ? Math.round(s.epargne / s.revNet * 100) : 0;
       const suffix  = depRate > 80 ? ' — dépenses élevées ce mois-ci.' : '.';
       await sendToUser(user.id, {
-        title: `Bilan de la semaine · Zénith`,
+        title: `Bilan de la semaine`,
         body:  `${mois} — Revenus nets ${eur(s.revNet)}, dépenses ${eur(s.dep)} (${depRate}%), épargne ${eur(s.epargne)} (${epRate}%)${suffix}`,
         url:   '/',
       });
