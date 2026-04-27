@@ -2661,32 +2661,32 @@ async function renderDashboard(){
     :_catOrder.filter(c=>_catGroups[c]).map((c,ci)=>{
       const g=_catGroups[c],col=_catColP[c],bgt=_catBudgets[c];
       const shareTotal=_postesTotal>0?Math.round(g.total/_postesTotal*100):0;
-      const bgtHtml=bgt>0?`<span style="font-size:10px;color:${g.total>bgt?'var(--red)':'var(--muted)'}">${eur(g.total)} / ${eur(bgt)}</span>`:'';
+      const bgtHtml=bgt>0?`<span style="font-size:10px;color:${g.total>bgt?'var(--red)':'var(--muted)'}">/ ${eur(bgt)}</span>`:'';
       const isOpen=false;
       return `<div style="border-top:1px solid var(--border)">
-        <div onclick="_ovaToggle('${c}')" style="display:flex;align-items:center;justify-content:space-between;padding:9px 6px;cursor:pointer;transition:background .15s" onmouseenter="this.style.background='var(--surface2)'" onmouseleave="this.style.background=''">
-          <div style="display:flex;align-items:center;gap:7px">
-            <span id="ova-arrow-${c}" style="font-size:9px;color:${col};transition:transform .2s">${isOpen?'▼':'▶'}</span>
-            <span style="width:8px;height:8px;border-radius:50%;background:${col}"></span>
+        <div onclick="_ovaToggle('${c}')" style="display:flex;align-items:center;justify-content:space-between;padding:10px 18px 10px 16px;cursor:pointer;transition:background .15s" onmouseenter="this.style.background='var(--surface2)'" onmouseleave="this.style.background=''">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span id="ova-arrow-${c}" style="font-size:8px;color:${col};transition:transform .2s;width:10px;text-align:center">${isOpen?'▼':'▶'}</span>
+            <span style="width:9px;height:9px;border-radius:50%;background:${col};box-shadow:0 0 0 3px ${col}33"></span>
             <span style="font-size:var(--fs-sm);font-weight:700;color:${col}">${_catLbl[c]}</span>
             ${bgtHtml}
           </div>
           <div style="display:flex;align-items:center;gap:8px">
-            <span style="font-size:11px;color:var(--muted)">${shareTotal}%</span>
+            <span style="background:${col}22;color:${col};font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px">${shareTotal}%</span>
             <span style="font-size:var(--fs-sm);font-weight:800;color:${col};min-width:52px;text-align:right">${eur(g.total)}</span>
           </div>
         </div>
-        <div id="ova-items-${c}" style="display:${isOpen?'':'none'};padding-bottom:4px">
+        <div id="ova-items-${c}" style="display:${isOpen?'':'none'};padding-bottom:6px">
           ${g.items.map(r=>_ovaItem(r)).join('')}
         </div>
       </div>`;
     }).join('');
 
   const _donutData=_catOrder.filter(c=>_catGroups[c]).map(c=>({label:_catLbl[c],val:_catGroups[c].total,col:_catColP[c]}));
-  const _ovaDonutHtml=_donutData.length>0?`<div style="display:flex;align-items:center;gap:14px;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--border)">
-    <div style="width:76px;height:76px;flex-shrink:0"><canvas id="ova-donut-chart"></canvas></div>
-    <div style="flex:1;display:flex;flex-direction:column;gap:5px">
-      ${_donutData.map(d=>`<div style="display:flex;justify-content:space-between;align-items:center"><div style="display:flex;align-items:center;gap:6px"><span style="width:7px;height:7px;border-radius:50%;background:${d.col}"></span><span style="font-size:var(--fs-xs);font-weight:600;color:${d.col}">${d.label}</span></div><span style="font-size:var(--fs-xs);font-weight:700;color:var(--fg)">${eur(d.val)}</span></div>`).join('')}
+  const _ovaDonutHtml=_donutData.length>0?`<div style="display:flex;align-items:center;gap:14px;margin:0 18px 12px;padding:12px 14px;background:var(--surface2);border-radius:10px">
+    <div style="width:72px;height:72px;flex-shrink:0"><canvas id="ova-donut-chart"></canvas></div>
+    <div style="flex:1;display:flex;flex-direction:column;gap:7px">
+      ${_donutData.map(d=>{const pct=_postesTotal>0?Math.round(d.val/_postesTotal*100):0;return`<div style="display:flex;justify-content:space-between;align-items:center"><div style="display:flex;align-items:center;gap:6px"><span style="width:6px;height:6px;border-radius:50%;background:${d.col}"></span><span style="font-size:var(--fs-xs);font-weight:600;color:${d.col}">${d.label}</span></div><div style="display:flex;align-items:center;gap:6px"><span style="font-size:10px;color:var(--muted)">${pct}%</span><span style="font-size:var(--fs-xs);font-weight:700;color:var(--fg);min-width:48px;text-align:right">${eur(d.val)}</span></div></div>`;}).join('')}
     </div>
   </div>`:'';
 
@@ -2698,10 +2698,13 @@ async function renderDashboard(){
     </div>
     <span style="font-size:var(--fs-sm);font-weight:800;color:var(--red)">−${eur(Math.abs(epMonthDelta))}</span>
   </div>`:'';
-  const _ova=`<div class="card" style="padding:16px 18px">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-      <span style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)">Où va l'argent ?</span>
-      ${_postesTotal>0?`<span style="font-size:var(--fs-sm);font-weight:700;color:var(--fg)">${eur(_postesTotal)}</span>`:''}
+  const _ova=`<div class="card" style="padding:0;overflow:hidden">
+    <div style="padding:16px 18px ${_donutData.length>0?14:0}px">
+      <div style="display:flex;justify-content:space-between;align-items:center${_donutData.length>0?';margin-bottom:10px':''}">
+        <span style="font-size:var(--fs-sm);font-weight:800;color:var(--fg)">Où va l'argent ?</span>
+        ${_postesTotal>0?`<span style="background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:3px 11px;font-size:var(--fs-sm);font-weight:800;color:var(--fg)">${eur(_postesTotal)}</span>`:''}
+      </div>
+      ${_donutData.length>0?`<div style="display:flex;height:5px;border-radius:3px;overflow:hidden;gap:1px">${_donutData.map(d=>`<div title="${d.label}" style="flex:${d.val};background:${d.col}"></div>`).join('')}</div>`:''}
     </div>
     ${_ovaDonutHtml}${_ovaContent}${_ovaRetraitBlock}
   </div>`;
