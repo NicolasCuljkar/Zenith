@@ -2639,10 +2639,8 @@ async function renderDashboard(){
       :diff>0?`<span style="font-size:10px;color:var(--red);font-weight:700;white-space:nowrap">↑+${eur(Math.abs(diff))}</span>`
       :diff<0?`<span style="font-size:10px;color:var(--green);font-weight:700;white-space:nowrap">↓−${eur(Math.abs(diff))}</span>`
       :`<span style="font-size:10px;color:var(--muted)">→</span>`;
-    const isEp=r.cat==='epargne';
-    const clickAttr=isEp?'':`onclick="_ovaGoto('${r.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'")}')"`;
     const amtStr=isNeg?`−${eur(Math.abs(r.total))}`:eur(r.total);
-    return `<div ${clickAttr} style="display:flex;align-items:center;justify-content:space-between;padding:8px 18px 8px 38px;cursor:${isEp?'default':'pointer'};transition:background .15s" onmouseenter="this.style.background='var(--surface2)'" onmouseleave="this.style.background=''">
+    return `<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 18px 8px 38px">
       <div style="display:flex;align-items:center;gap:8px;min-width:0;flex:1">
         <span style="width:4px;height:4px;border-radius:50%;background:${col};flex-shrink:0;opacity:.55"></span>
         <span style="font-size:var(--fs-sm);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.name}</span>
@@ -2702,7 +2700,8 @@ async function renderDashboard(){
         <span style="font-size:var(--fs-sm);font-weight:800;color:var(--fg)">Où va l'argent ?</span>
         ${_postesTotal>0?`<span style="background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:3px 11px;font-size:var(--fs-sm);font-weight:800;color:var(--fg)">${eur(_postesTotal)}</span>`:''}
       </div>
-      ${_donutData.length>0?`<div style="display:flex;height:5px;border-radius:3px;overflow:hidden;gap:2px">${_donutData.map(d=>`<div title="${d.label}" style="flex:${d.val};background:${d.col};border-radius:2px"></div>`).join('')}</div>`:''}
+      ${_donutData.length>0?`<div style="display:flex;height:5px;border-radius:3px;overflow:hidden;gap:2px">${_donutData.map(d=>`<div title="${d.label}" style="flex:${d.val};background:${d.col};border-radius:2px"></div>`).join('')}</div>
+      <div style="display:flex;gap:2px;margin-top:5px">${_donutData.map(d=>{const pct=_postesTotal>0?Math.round(d.val/_postesTotal*100):0;return`<div style="flex:${d.val};text-align:center"><span style="font-size:9px;font-weight:700;color:${d.col}">${pct}%</span></div>`;}).join('')}</div>`:''}
     </div>
     ${_ovaDonutHtml}${_ovaContent}${_ovaRetraitBlock}
   </div>`;
@@ -5498,11 +5497,6 @@ async function renderAnalysis(){
           ?Math.round(_dataStats.reduce((a,r)=>a+r.solde,0)/_dataStats.length)
           :Math.round(_avgRev-_avgDep-Math.max(0,_avgEp));
         const _avgSoldeCol=_avgSolde>=0?'#0d9e6e':'#d93535';
-        // Taux épargne
-        const _epRate=_avgRev>0?Math.round(Math.max(0,_avgEp)/_avgRev*100):null;
-        const _epRateCol=_epRate===null?'var(--muted)':_epRate>=20?'#0d9e6e':_epRate>=10?'#f59e0b':'#d93535';
-        const _epRatePct=Math.min(100,_epRate||0);
-        const _targetPct=20; // 20% target marker position
         const _qualLabel=_realCount===6?`${_realCount}/6 mois réels`:_realCount===0?'Prévisionnel':`${_realCount}/6 mois réels`;
         const _metricBox=(lbl,val,col,sign)=>`<div style="background:var(--surface2);border-radius:12px;padding:14px 16px;border-top:3px solid ${col}">
           <div style="font-size:10px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:6px">${lbl}</div>
@@ -5513,7 +5507,7 @@ async function renderAnalysis(){
             <span style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)">Synthèse mensuelle moy.</span>
             <span style="font-size:var(--fs-xs);color:var(--muted)">${_qualLabel}</span>
           </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
             ${_metricBox('Revenus nets moy.',eur(_avgRev),'#0d9e6e',false)}
             ${_metricBox('Dépenses moy.',eur(_avgDep),'#d93535',false)}
             <div style="background:var(--surface2);border-radius:12px;padding:14px 16px;border-top:3px solid #2979c8">
@@ -5524,17 +5518,6 @@ async function renderAnalysis(){
               <div style="font-size:10px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:6px">Solde moy.</div>
               <div style="font-size:1.35rem;font-weight:900;letter-spacing:-.03em;color:${_avgSoldeCol};line-height:1">${_avgSolde>=0?'+':''}${eur(_avgSolde)}</div>
             </div>
-          </div>
-          <div>
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">
-              <span style="font-size:var(--fs-xs);color:var(--muted);font-weight:700">Taux d'épargne</span>
-              <span style="font-size:var(--fs-xs);font-weight:800;color:${_epRateCol}">${_epRate!==null?_epRate+'%':'—'}</span>
-            </div>
-            <div style="position:relative;height:8px;background:var(--surface2);border-radius:99px;overflow:visible">
-              <div style="position:absolute;left:0;top:0;height:100%;width:${_epRatePct}%;background:${_epRateCol};border-radius:99px;transition:width .4s"></div>
-              <div title="Objectif 20%" style="position:absolute;left:${_targetPct}%;top:-3px;width:2px;height:14px;background:var(--muted);border-radius:1px;opacity:.5"></div>
-            </div>
-            <div style="font-size:10px;color:var(--muted);margin-top:4px">objectif ≥ 20%</div>
           </div>
         </div>`;
         _heroEl.style.display='block';
