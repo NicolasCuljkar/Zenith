@@ -2770,7 +2770,7 @@ function _ovaToggle(cat){
 }
 function _ovaGoto(label){
   monthlyYear=dashYear;monthlyMonth=dashMonth;
-  showTab('entries');switchEntriesTab('mensuel');
+  switchTab('entries');switchEntriesTab('mensuel');
   setTimeout(()=>{const s=document.getElementById('mly-search-input');if(s){s.value=label;s.dispatchEvent(new Event('input'));}},150);
 }
 
