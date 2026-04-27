@@ -1654,7 +1654,7 @@ const kpiHtml=(label,value,color,sub='',trend=null,tip='',badge='')=>{
 function destroyChart(c){if(c){try{c.destroy()}catch(e){}}return null;}
 
 // Carte budget KPI réutilisable (Fixes/Variables/Loisir/Épargne)
-function _budgetKpiCard(lbl, act, bgt, col, isEp=false, excl=0) {
+function _budgetKpiCard(lbl, act, bgt, col, isEp=false) {
   const pct = bgt>0 ? Math.round(act/bgt*100) : null;
   const pc  = pct===null ? 'var(--muted)' : isEp
     ? (pct>=100?'var(--green)':pct>=70?'var(--amber)':'var(--red)')
@@ -1674,7 +1674,6 @@ function _budgetKpiCard(lbl, act, bgt, col, isEp=false, excl=0) {
         <div style="width:${bw}%;height:100%;background:${pc};border-radius:99px;transition:width .4s"></div>
       </div>
       ${pct!==null?`<div style="font-size:10px;font-weight:700;color:${pc};margin-top:4px">${pct}%</div>`:''}
-      ${excl>0?`<div style="font-size:var(--fs-xs);color:var(--amber);margin-top:5px;padding-top:5px;border-top:1px dashed color-mix(in srgb,var(--amber) 30%,var(--border))">+${eur(excl)} exceptionnel</div>`:''}
     </div>`;
   } else {
     return `<div class="card" style="padding:14px 16px;margin-bottom:0">
@@ -1682,7 +1681,6 @@ function _budgetKpiCard(lbl, act, bgt, col, isEp=false, excl=0) {
       <div style="font-size:1.5rem;font-weight:900;letter-spacing:-.03em;color:var(--fg);line-height:1">${eur(act)}</div>
       <div style="font-size:var(--fs-xs);color:var(--hint);margin:4px 0 6px">aucun budget</div>
       <div style="height:4px;background:var(--surface2);border-radius:99px;overflow:hidden"></div>
-      ${excl>0?`<div style="font-size:var(--fs-xs);color:var(--amber);margin-top:5px;padding-top:5px;border-top:1px dashed color-mix(in srgb,var(--amber) 30%,var(--border))">+${eur(excl)} exceptionnel</div>`:''}
     </div>`;
   }
 }
@@ -2582,13 +2580,10 @@ async function renderDashboard(){
   </div>`;
 
   // ── 4 cartes budget ──
-  const _dExclFixe = mExpenses.filter(e=>e.is_exceptional&&e.cat==='fixe').reduce((s,e)=>s+Math.abs(e.amount),0);
-  const _dExclVar  = mExpenses.filter(e=>e.is_exceptional&&e.cat==='variable').reduce((s,e)=>s+Math.abs(e.amount),0);
-  const _dExclLoi  = mExpenses.filter(e=>e.is_exceptional&&e.cat==='loisir').reduce((s,e)=>s+Math.abs(e.amount),0);
   const _cats=_budgetKpiGrid(
-    _budgetKpiCard('Fixes',    fixA,        fixBudget, '#d93535', false, _dExclFixe),
-    _budgetKpiCard('Variables',varA,        varBudget, '#e05a2b', false, _dExclVar),
-    _budgetKpiCard('Loisir',   loiA,        loiBudget, '#f59e0b', false, _dExclLoi),
+    _budgetKpiCard('Fixes',    fixA,        fixBudget, '#d93535'),
+    _budgetKpiCard('Variables',varA,        varBudget, '#e05a2b'),
+    _budgetKpiCard('Loisir',   loiA,        loiBudget, '#f59e0b'),
     epMonthDelta<0?_retraitKpiCard(epMonthDelta,_balBefore,_balAfter):_budgetKpiCard('Épargne',epMonthDelta,epBudget,'#2979c8',true),
   );
 
@@ -2695,13 +2690,11 @@ async function renderDashboard(){
     <span style="font-size:var(--fs-sm);font-weight:800;color:var(--red);min-width:52px;text-align:right">−${eur(Math.abs(epMonthDelta))}</span>
   </div>`:'';
   const _ova=`<div class="card" style="padding:0;overflow:hidden">
-    <div style="padding:16px 18px ${_donutData.length>0?14:0}px">
+    <div style="padding:16px 18px ${_donutData.length>0?14:16}px">
       <div style="display:flex;justify-content:space-between;align-items:center${_donutData.length>0?';margin-bottom:10px':''}">
         <span style="font-size:var(--fs-sm);font-weight:800;color:var(--fg)">Où va l'argent ?</span>
         ${_postesTotal>0?`<span style="background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:3px 11px;font-size:var(--fs-sm);font-weight:800;color:var(--fg)">${eur(_postesTotal)}</span>`:''}
       </div>
-      ${_donutData.length>0?`<div style="display:flex;height:5px;border-radius:3px;overflow:hidden;gap:2px">${_donutData.map(d=>`<div title="${d.label}" style="flex:${d.val};background:${d.col};border-radius:2px"></div>`).join('')}</div>
-      <div style="display:flex;gap:2px;margin-top:5px">${_donutData.map(d=>{const pct=_postesTotal>0?Math.round(d.val/_postesTotal*100):0;return`<div style="flex:${d.val};text-align:center"><span style="font-size:9px;font-weight:700;color:${d.col}">${pct}%</span></div>`;}).join('')}</div>`:''}
     </div>
     ${_ovaDonutHtml}${_ovaContent}${_ovaRetraitBlock}
   </div>`;
@@ -3593,13 +3586,10 @@ function _renderMonthlySections(stats, expenses, savingsData = [], entryStats = 
 
   const loiBudgetMly = loi.budget > 0 ? loi.budget
     : (entryStats ? Math.round(entryStats.rav * (100-(savingPct[epMember0]??60)) / 100) : 0);
-  const _exclFixe = expenses.filter(e=>e.is_exceptional&&e.cat==='fixe').reduce((s,e)=>s+Math.abs(e.amount),0);
-  const _exclVar  = expenses.filter(e=>e.is_exceptional&&e.cat==='variable').reduce((s,e)=>s+Math.abs(e.amount),0);
-  const _exclLoi  = expenses.filter(e=>e.is_exceptional&&e.cat==='loisir').reduce((s,e)=>s+Math.abs(e.amount),0);
   document.getElementById('monthly-kpis').innerHTML = _budgetKpiGrid(
-    _budgetKpiCard('Fixes',    fixe.actual,   fixe.budget,  '#d93535', false, _exclFixe),
-    _budgetKpiCard('Variables',vari.actual,   vari.budget,  '#e05a2b', false, _exclVar),
-    _budgetKpiCard('Loisir',   loi.actual,    loiBudgetMly, '#f59e0b', false, _exclLoi),
+    _budgetKpiCard('Fixes',    fixe.actual,   fixe.budget,  '#d93535'),
+    _budgetKpiCard('Variables',vari.actual,   vari.budget,  '#e05a2b'),
+    _budgetKpiCard('Loisir',   loi.actual,    loiBudgetMly, '#f59e0b'),
     (epMonthDelta<0?_retraitKpiCard(epMonthDelta,_mlyBalBefore,_mlyBalAfter):_budgetKpiCard('Épargne',epMonthDelta,epBudget0,'#2979c8',true))
   );
   setTimeout(fillAllTracks, 0);
@@ -3769,20 +3759,17 @@ function _monthlyAutoGroup(rows, overrides, extras, g, isMobile) {
     }).join('')}${extras.map(e => {
       const c = CATS[e.cat];
       const exAc = e.cat==='revenu'?'var(--green)':e.cat==='impot'?'var(--amber)':'var(--red)';
-      const isExcl = !!e.is_exceptional;
-      return `<div class="entry-card" style="border-left-color:${c.hex};border-left-style:dashed;background:${c.bg};padding:13px 14px 11px 14px;${isExcl?'opacity:.55':''}">
+      return `<div class="entry-card" style="border-left-color:${c.hex};border-left-style:dashed;background:${c.bg};padding:13px 14px 11px 14px">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
           <input type="checkbox" class="monthly-cb" data-id="${e.id}" ${monthlySelected.has(e.id)?'checked':''} onchange="toggleMonthlySelect(${e.id},this)" style="margin-top:3px;flex-shrink:0">
-          <span style="font-weight:700;font-size:var(--fs-base);flex:1;line-height:1.3;${isExcl?'text-decoration:line-through;color:var(--muted)':''}">${e.name}</span>
+          <span style="font-weight:700;font-size:var(--fs-base);flex:1;line-height:1.3">${e.name}</span>
           <span style="font-size:var(--fs-base);font-weight:800;color:${exAc}">${eur(Math.abs(e.amount))}</span>
         </div>
-        ${isExcl?`<div style="font-size:var(--fs-xs);color:var(--amber);margin-top:3px">Exclue des stats</div>`:''}
         ${e.note ? `<div style="font-size:var(--fs-xs);color:var(--muted);margin-top:4px">${e.note}</div>` : ''}
         <div style="height:1px;background:${c.hex}22;margin:9px 0 8px"></div>
         <div style="display:flex;justify-content:space-between;align-items:center">
           <span style="font-size:var(--fs-xs);font-weight:700;color:${c.text};letter-spacing:.05em;text-transform:uppercase">${c.label}</span>
           <div style="display:flex;gap:5px">
-            <button class="btn-act${isExcl?' btn-act-warn':''}" onclick="toggleMonthlyExceptional(${e.id})" title="${isExcl?'Réintégrer aux stats':'Exclure des stats'}">${EXCL_ICON}</button>
             <button class="btn-act" onclick="openEditMonthlyExpense(${e.id})">${EDIT_ICON}</button>
             <button class="btn-act btn-act-danger" onclick="deleteMonthlyExpense(${e.id})">${DEL_ICON}</button>
           </div>
@@ -3833,13 +3820,12 @@ ${bar}    <div class="tbl-wrap"><table style="width:100%;table-layout:fixed">
             </div></td>
           </tr>`;
         }).join('')}
-        ${extras.map(e => { const c=CATS[e.cat]; const exAc=e.cat==='revenu'?'var(--green)':e.cat==='impot'?'var(--amber)':'var(--red)'; const isExcl=!!e.is_exceptional; return `<tr style="box-shadow:inset 3px 0 0 ${c.hex}66;background:color-mix(in srgb,${c.hex} 5%,var(--surface));${isExcl?'opacity:.55':''}">
+        ${extras.map(e => { const c=CATS[e.cat]; const exAc=e.cat==='revenu'?'var(--green)':e.cat==='impot'?'var(--amber)':'var(--red)'; return `<tr style="box-shadow:inset 3px 0 0 ${c.hex}66;background:color-mix(in srgb,${c.hex} 5%,var(--surface))">
           <td><input type="checkbox" class="monthly-cb" data-id="${e.id}" data-group="${g.key}" ${monthlySelected.has(e.id)?'checked':''} onchange="toggleMonthlySelect(${e.id},this)"></td>
-          <td><div style="font-weight:500;${isExcl?'text-decoration:line-through;color:var(--muted)':''}">${e.name}${!isExcl?`<span style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:1px 6px;border-radius:4px;background:var(--surface2);color:var(--muted);border:1px solid var(--border);margin-left:6px;vertical-align:middle">+ ajouté</span>`:''}</div>${isExcl?`<div style="font-size:var(--fs-xs);color:var(--amber);margin-top:2px">Exclue des stats</div>`:''}${e.note?`<div style="font-size:var(--fs-xs);color:var(--muted);margin-top:2px">${e.note}</div>`:''}</td>
+          <td><div style="font-weight:500">${e.name}<span style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:1px 6px;border-radius:4px;background:var(--surface2);color:var(--muted);border:1px solid var(--border);margin-left:6px;vertical-align:middle">+ ajouté</span></div>${e.note?`<div style="font-size:var(--fs-xs);color:var(--muted);margin-top:2px">${e.note}</div>`:''}</td>
           <td><span class="badge" style="background:${c.bg};color:${c.text};border:${c.border}">${c.label}</span></td>
           <td style="text-align:right;font-weight:600;color:${exAc}">${eur(Math.abs(e.amount))}</td>
           <td><div style="display:flex;gap:3px;justify-content:flex-end">
-            <button class="btn-act${isExcl?' btn-act-warn':''}" onclick="toggleMonthlyExceptional(${e.id})" title="${isExcl?'Réintégrer aux stats':'Exclure des stats'}">${EXCL_ICON}</button>
             <button class="btn-act" onclick="openEditMonthlyExpense(${e.id})">${EDIT_ICON}</button>
             <button class="btn-act btn-act-danger" onclick="deleteMonthlyExpense(${e.id})">${DEL_ICON}</button>
           </div></td>
@@ -3893,20 +3879,17 @@ function _monthlyManualGroup(rows, g, budgetTotal, isMobile, revNet = 0) {
   if (isMobile) {
     return `<div style="margin-bottom:1rem">${hdr}<div id="monthly-body-${g.key}" style="${collapsed2?'display:none':''}">${bar}${rows.map(e => {
       const c = CATS[e.cat];
-      const isExcl = !!e.is_exceptional;
-      return `<div class="entry-card" style="border-left-color:${c.hex};background:${c.bg};padding:13px 14px 11px 14px;${isExcl?'opacity:.55':''}">
+      return `<div class="entry-card" style="border-left-color:${c.hex};background:${c.bg};padding:13px 14px 11px 14px">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
           <input type="checkbox" class="monthly-cb" data-id="${e.id}" ${monthlySelected.has(e.id)?'checked':''} onchange="toggleMonthlySelect(${e.id},this)" style="margin-top:3px;flex-shrink:0">
-          <span style="font-weight:700;font-size:var(--fs-base);flex:1;line-height:1.3;${isExcl?'text-decoration:line-through;color:var(--muted)':''}">${e.name}</span>
+          <span style="font-weight:700;font-size:var(--fs-base);flex:1;line-height:1.3">${e.name}</span>
           <span style="font-size:var(--fs-base);font-weight:800;color:var(--red)">${eur(Math.abs(e.amount))}</span>
         </div>
-        ${isExcl?`<div style="font-size:var(--fs-xs);color:var(--amber);margin-top:3px">Exclue des stats</div>`:''}
         ${e.note ? `<div style="font-size:var(--fs-xs);color:var(--muted);margin-top:4px">${e.note}</div>` : ''}
         <div style="height:1px;background:${c.hex}22;margin:9px 0 8px"></div>
         <div style="display:flex;justify-content:space-between;align-items:center">
           <span style="font-size:var(--fs-xs);font-weight:700;color:${c.text};letter-spacing:.05em;text-transform:uppercase">${c.label}</span>
           <div style="display:flex;gap:5px">
-            <button class="btn-act${isExcl?' btn-act-warn':''}" onclick="toggleMonthlyExceptional(${e.id})" title="${isExcl?'Réintégrer aux stats':'Exclure des stats'}">${EXCL_ICON}</button>
             <button class="btn-act" onclick="openEditMonthlyExpense(${e.id})">${EDIT_ICON}</button>
             <button class="btn-act btn-act-danger" onclick="deleteMonthlyExpense(${e.id})">${DEL_ICON}</button>
           </div>
@@ -3923,13 +3906,12 @@ ${bar}    <div class="tbl-wrap"><table style="width:100%;table-layout:fixed">
         <th>Désignation</th><th>Catégorie</th><th style="text-align:right">Montant</th><th></th>
       </tr></thead>
       <tbody>
-        ${rows.map(e => { const c=CATS[e.cat]; const isExcl=!!e.is_exceptional; return `<tr style="${isExcl?'opacity:.55':''}">
+        ${rows.map(e => { const c=CATS[e.cat]; return `<tr>
           <td><input type="checkbox" class="monthly-cb" data-id="${e.id}" data-group="${g.key}" ${monthlySelected.has(e.id)?'checked':''} onchange="toggleMonthlySelect(${e.id},this)"></td>
-          <td><div style="font-weight:500;${isExcl?'text-decoration:line-through;color:var(--muted)':''}">${e.name}</div>${isExcl?`<div style="font-size:var(--fs-xs);color:var(--amber);margin-top:2px">Exclue des stats</div>`:''}${e.note?`<div style="font-size:var(--fs-xs);color:var(--muted);margin-top:2px">${e.note}</div>`:''}</td>
+          <td><div style="font-weight:500">${e.name}</div>${e.note?`<div style="font-size:var(--fs-xs);color:var(--muted);margin-top:2px">${e.note}</div>`:''}</td>
           <td><span class="badge" style="background:${c.bg};color:${c.text};border:${c.border}">${c.label}</span></td>
           <td style="text-align:right;font-weight:600;color:var(--red)">${eur(Math.abs(e.amount))}</td>
           <td><div style="display:flex;gap:4px">
-            <button class="btn-act${isExcl?' btn-act-warn':''}" onclick="toggleMonthlyExceptional(${e.id})" title="${isExcl?'Réintégrer aux stats':'Exclure des stats'}">${EXCL_ICON}</button>
             <button class="btn-act" onclick="openEditMonthlyExpense(${e.id})">${EDIT_ICON}</button>
             <button class="btn-act btn-act-danger" onclick="deleteMonthlyExpense(${e.id})">${DEL_ICON}</button>
           </div></td>
