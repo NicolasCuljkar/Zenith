@@ -5567,7 +5567,7 @@ async function renderAnalysis(){
             return [...map.entries()].map(([name,tot])=>({name,avg:Math.round(tot/mths)})).sort((a,b)=>b.avg-a.avg);
           };
           const _repCats=[
-            {key:'fixe',lbl:'Charges fixes',amt:_avg6Fixe,col:'#d93535',detail:_fixeDetail},
+            {key:'fixe',lbl:'Charges fixes',amt:_avg6Fixe,col:'#d93535',detail:[]},
             {key:'var', lbl:'Variables',    amt:_avg6Var, col:'#e05a2b',detail:_groupByName('variable')},
             {key:'loi', lbl:'Loisir',       amt:_avg6Loi, col:'#f59e0b',detail:_groupByName('loisir')},
             ...(_avg6Ep>0?[{key:'ep',lbl:'Épargne',amt:_avg6Ep,col:'#2979c8',detail:[]}]:[])
