@@ -967,8 +967,10 @@ window.onerror = function(msg, src, line) {
     <div class="card" id="monthly-compare-card" style="display:none"><div class="card-head">Comparaison mensuelle</div><div id="monthly-compare-content"><div style="padding:20px;text-align:center;color:var(--muted);font-size:var(--fs-sm)">Chargement…</div></div></div>
 
     <!-- NEW: Répartition card -->
-    <div class="card" id="analysis-repartition-card" style="display:none;margin-bottom:var(--sg)">
-      <div class="card-head">Répartition des dépenses</div>
+    <div class="card" id="analysis-repartition-card" style="display:none;margin-bottom:var(--sg);padding:0;overflow:hidden">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:15px 18px;border-bottom:1px solid var(--border)">
+        <span style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)">Répartition des dépenses</span>
+      </div>
       <div id="analysis-repartition-content"></div>
     </div>
 
@@ -5553,27 +5555,29 @@ async function renderAnalysis(){
             const pct=s.revNet>0?Math.round(c.amt/s.revNet*100):0;
             const barW=Math.min(100,pct);
             const hasDetail=c.detail && c.detail.length>0;
-            const detailRows=hasDetail?c.detail.map(d=>`<div data-rep-exp-name="${(d.name||'').replace(/"/g,'&quot;')}" style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-top:1px solid var(--border);cursor:pointer"><span style="font-size:var(--fs-xs);color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0">${d.name}</span><span style="font-size:var(--fs-xs);font-weight:700;color:${c.col};flex-shrink:0;margin-left:8px">${eur(d.avg)}</span></div>`).join(''):'';
-            return`<div style="padding:10px 0${i>0?';border-top:1px solid var(--border)':''}">
-              <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:3px">
-                <span style="font-size:10px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:${c.col}">${c.lbl}</span>
-                ${hasDetail?`<span data-rep-chevron="${c.key}" style="font-size:9px;color:var(--muted);display:inline-block;transition:transform .2s;margin-top:1px;cursor:pointer" ${`data-rep-toggle="${c.key}"`}>▶</span>`:''}
+            const detailRows=hasDetail?c.detail.map(d=>`<div data-rep-exp-name="${(d.name||'').replace(/"/g,'&quot;')}" style="display:flex;justify-content:space-between;align-items:center;padding:5px 18px;border-top:1px solid var(--border);cursor:pointer;transition:background .15s" onmouseenter="this.style.background='var(--surface2)'" onmouseleave="this.style.background=''"><span style="font-size:var(--fs-xs);color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0">${d.name}</span><span style="font-size:var(--fs-xs);font-weight:700;color:${c.col};flex-shrink:0;margin-left:8px">${eur(d.avg)}</span></div>`).join(''):'';
+            return`<div style="border-top:1px solid var(--border)">
+              <div ${hasDetail?`data-rep-toggle="${c.key}"`:''}  style="padding:10px 18px 8px;cursor:${hasDetail?'pointer':'default'};transition:background .15s" onmouseenter="this.style.background='var(--surface2)'" onmouseleave="this.style.background=''">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px">
+                  <span style="font-size:10px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:${c.col}">${c.lbl}</span>
+                  ${hasDetail?`<span data-rep-chevron="${c.key}" style="font-size:9px;color:var(--muted);transition:transform .2s">▶</span>`:''}
+                </div>
+                <div style="font-size:1.2rem;font-weight:900;letter-spacing:-.03em;color:${c.col};line-height:1;margin-bottom:3px">${eur(c.amt)}<span style="font-size:var(--fs-xs);font-weight:500;color:var(--muted);letter-spacing:0">/mois</span></div>
+                <div style="font-size:var(--fs-xs);color:var(--muted);margin-bottom:5px">${pct}% des revenus nets</div>
+                <div style="height:3px;background:var(--surface2);border-radius:99px;overflow:hidden">
+                  <div style="width:${barW}%;height:100%;background:${c.col};border-radius:99px;transition:width .4s"></div>
+                </div>
               </div>
-              <div style="font-size:1.2rem;font-weight:900;letter-spacing:-.03em;color:${c.col};line-height:1;margin-bottom:3px">${eur(c.amt)}<span style="font-size:var(--fs-xs);font-weight:500;color:var(--muted);letter-spacing:0">/mois</span></div>
-              <div style="font-size:var(--fs-xs);color:var(--muted);margin-bottom:5px">${pct}% des revenus nets</div>
-              <div style="height:3px;background:var(--surface2);border-radius:99px;overflow:hidden">
-                <div style="width:${barW}%;height:100%;background:${c.col};border-radius:99px;transition:width .4s"></div>
-              </div>
-              ${hasDetail?`<div id="rep-detail-${c.key}" style="display:none;margin-top:6px">${detailRows}</div>`:''}
+              ${hasDetail?`<div id="rep-detail-${c.key}" style="display:none">${detailRows}</div>`:''}
             </div>`;
           }).join('');
           const _surplusCol=_surplus>0?'#0d9e6e':'#d93535';
           const _surplusHtml=_surplus!==0
-            ?`<div style="padding:10px 0;border-top:1px solid var(--border)">
-                <span style="font-size:10px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:${_surplusCol}">${_surplus>0?'Non alloué':'Déficit'}</span>
-                <div style="font-size:1.2rem;font-weight:900;letter-spacing:-.03em;color:${_surplusCol};line-height:1;margin-top:3px">${_surplus>0?'+':''}${eur(_surplus)}<span style="font-size:var(--fs-xs);font-weight:500;color:var(--muted);letter-spacing:0">/mois</span></div>
+            ?`<div style="border-top:1px solid var(--border);padding:10px 18px 12px">
+                <div style="font-size:10px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:${_surplusCol};margin-bottom:3px">${_surplus>0?'Non alloué':'Déficit'}</div>
+                <div style="font-size:1.2rem;font-weight:900;letter-spacing:-.03em;color:${_surplusCol};line-height:1">${_surplus>0?'+':''}${eur(_surplus)}<span style="font-size:var(--fs-xs);font-weight:500;color:var(--muted);letter-spacing:0">/mois</span></div>
               </div>`:'';
-          _repContent.innerHTML=`<div style="padding:0 2px">${_repBarsHtml}${_surplusHtml}</div>`;
+          _repContent.innerHTML=`<div>${_repBarsHtml}${_surplusHtml}</div>`;
           _repCard.style.display='';
         } else { _repCard.style.display='none'; }
       }
