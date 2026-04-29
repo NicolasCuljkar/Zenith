@@ -2675,13 +2675,8 @@ async function renderDashboard(){
       </div>`;
     }).join('');
 
-  const _donutData=_catOrder.filter(c=>_catGroups[c]).map(c=>({label:_catLbl[c],val:_catGroups[c].total,col:_catColP[c]}));
-  const _ovaDonutHtml=_donutData.length>0?`<div style="display:flex;align-items:center;gap:16px;margin:0 18px 14px;padding:14px 16px;background:var(--surface2);border-radius:12px;border:1px solid var(--border)">
-    <div style="width:76px;height:76px;flex-shrink:0"><canvas id="ova-donut-chart"></canvas></div>
-    <div style="flex:1;display:flex;flex-direction:column;gap:9px">
-      ${_donutData.map(d=>{const pct=_postesTotal>0?Math.round(d.val/_postesTotal*100):0;return`<div><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><div style="display:flex;align-items:center;gap:6px"><span style="width:6px;height:6px;border-radius:50%;background:${d.col}"></span><span style="font-size:var(--fs-xs);font-weight:600;color:${d.col}">${d.label}</span></div><span style="font-size:var(--fs-xs);font-weight:700;color:var(--fg)">${eur(d.val)}</span></div><div style="height:3px;border-radius:2px;background:var(--border);overflow:hidden"><div style="width:${pct}%;height:100%;background:${d.col};border-radius:2px"></div></div></div>`;}).join('')}
-    </div>
-  </div>`:'';
+  const _donutData=[];
+  const _ovaDonutHtml='';
 
   const _ovaRetraitBlock=epMonthDelta<0&&_hasSavRec?`<div style="border-top:1px solid var(--border);padding:11px 18px 14px 16px;display:flex;align-items:center;justify-content:space-between">
     <div style="display:flex;align-items:center;gap:9px">
