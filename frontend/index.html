@@ -2634,14 +2634,14 @@ async function renderDashboard(){
       :diff<0?`<span style="font-size:9px;color:var(--green);font-weight:700;white-space:nowrap">−${eur(Math.abs(diff))}</span>`
       :'';
     const amtStr=isNeg?`−${eur(Math.abs(r.total))}`:eur(r.total);
-    return `<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 18px;border-top:1px solid var(--border)">
-      <div style="display:flex;align-items:center;gap:8px;min-width:0;flex:1">
-        <span style="font-size:var(--fs-sm);color:var(--fg);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.name}</span>
+    return `<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 14px;border-top:1px solid var(--border)">
+      <div style="display:flex;align-items:center;gap:6px;min-width:0;flex:1">
+        <span style="font-size:var(--fs-xs);color:var(--fg);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.name}</span>
         ${r.count>1?`<span style="font-size:9px;color:var(--muted)">×${r.count}</span>`:''}
       </div>
-      <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+      <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
         ${diffHtml}
-        <span style="font-size:var(--fs-sm);font-weight:700;color:${col};min-width:52px;text-align:right">${amtStr}</span>
+        <span style="font-size:var(--fs-xs);font-weight:700;color:${col};min-width:48px;text-align:right">${amtStr}</span>
       </div>
     </div>`;
   };
@@ -2658,17 +2658,17 @@ async function renderDashboard(){
       const pctLabel=bgt>0?`${Math.round(g.total/bgt*100)}%`:`${shareTotal}%`;
       const pctCol=bgt>0&&g.total>bgt?'var(--red)':col;
       return `<div style="border-top:1px solid var(--border)">
-        <div onclick="_ovaToggle('${c}')" style="padding:14px 16px 12px;cursor:pointer;transition:background .15s" onmouseenter="this.style.background='var(--surface2)'" onmouseleave="this.style.background=''">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">
+        <div onclick="_ovaToggle('${c}')" style="padding:10px 14px 8px;cursor:pointer;transition:background .15s" onmouseenter="this.style.background='var(--surface2)'" onmouseleave="this.style.background=''">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px">
             <span style="font-size:10px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:${col}">${_catLbl[c]}</span>
             <span id="ova-arrow-${c}" style="font-size:9px;color:var(--muted);transition:transform .2s">${isOpen?'▼':'▶'}</span>
           </div>
-          <div style="font-size:1.4rem;font-weight:900;letter-spacing:-.03em;color:${col};line-height:1;margin-bottom:5px">${eur(g.total)}</div>
-          <div style="font-size:var(--fs-xs);color:var(--muted);margin-bottom:6px">${subtext}</div>
-          <div style="height:4px;background:var(--surface2);border-radius:99px;overflow:hidden">
+          <div style="font-size:1.2rem;font-weight:900;letter-spacing:-.03em;color:${col};line-height:1;margin-bottom:3px">${eur(g.total)}</div>
+          <div style="font-size:var(--fs-xs);color:var(--muted);margin-bottom:5px">${subtext}</div>
+          <div style="height:3px;background:var(--surface2);border-radius:99px;overflow:hidden">
             <div style="width:${barW}%;height:100%;background:${barCol};border-radius:99px;transition:width .4s"></div>
           </div>
-          <div style="font-size:10px;font-weight:700;color:${pctCol};margin-top:4px">${pctLabel}</div>
+          <div style="font-size:10px;font-weight:700;color:${pctCol};margin-top:3px">${pctLabel}</div>
         </div>
         <div id="ova-items-${c}" style="display:${isOpen?'':'none'}">
           ${g.items.map(r=>_ovaItem(r)).join('')}
@@ -2679,11 +2679,11 @@ async function renderDashboard(){
   const _donutData=[];
   const _ovaDonutHtml='';
 
-  const _ovaRetraitBlock=epMonthDelta<0&&_hasSavRec?`<div style="border-top:1px solid var(--border);padding:14px 16px 12px">
-    <div style="font-size:10px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--red);margin-bottom:5px">Retrait épargne</div>
-    <div style="font-size:1.4rem;font-weight:900;letter-spacing:-.03em;color:var(--red);line-height:1;margin-bottom:5px">−${eur(Math.abs(epMonthDelta))}</div>
-    ${_balBefore!==null?`<div style="font-size:var(--fs-xs);color:var(--muted);margin-bottom:6px">${eur(_balBefore)} → ${eur(_balAfter)}</div>`:'<div style="margin-bottom:6px"></div>'}
-    <div style="height:4px;background:var(--surface2);border-radius:99px;overflow:hidden"><div style="width:100%;height:100%;background:var(--red);border-radius:99px"></div></div>
+  const _ovaRetraitBlock=epMonthDelta<0&&_hasSavRec?`<div style="border-top:1px solid var(--border);padding:10px 14px 8px">
+    <div style="font-size:10px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--red);margin-bottom:3px">Retrait épargne</div>
+    <div style="font-size:1.2rem;font-weight:900;letter-spacing:-.03em;color:var(--red);line-height:1;margin-bottom:3px">−${eur(Math.abs(epMonthDelta))}</div>
+    ${_balBefore!==null?`<div style="font-size:var(--fs-xs);color:var(--muted);margin-bottom:5px">${eur(_balBefore)} → ${eur(_balAfter)}</div>`:'<div style="margin-bottom:5px"></div>'}
+    <div style="height:3px;background:var(--surface2);border-radius:99px;overflow:hidden"><div style="width:100%;height:100%;background:var(--red);border-radius:99px"></div></div>
   </div>`:'';
   const _ova=`<div class="card" style="padding:0;overflow:hidden">
     <div style="display:flex;justify-content:space-between;align-items:center;padding:15px 18px;border-bottom:1px solid var(--border)">
@@ -5554,24 +5554,24 @@ async function renderAnalysis(){
             const barW=Math.min(100,pct);
             const hasDetail=c.detail && c.detail.length>0;
             const detailRows=hasDetail?c.detail.map(d=>`<div data-rep-exp-name="${(d.name||'').replace(/"/g,'&quot;')}" style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-top:1px solid var(--border);cursor:pointer"><span style="font-size:var(--fs-xs);color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0">${d.name}</span><span style="font-size:var(--fs-xs);font-weight:700;color:${c.col};flex-shrink:0;margin-left:8px">${eur(d.avg)}</span></div>`).join(''):'';
-            return`<div style="padding:14px 0${i>0?';border-top:1px solid var(--border)':''}">
-              <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:5px">
+            return`<div style="padding:10px 0${i>0?';border-top:1px solid var(--border)':''}">
+              <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:3px">
                 <span style="font-size:10px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:${c.col}">${c.lbl}</span>
                 ${hasDetail?`<span data-rep-chevron="${c.key}" style="font-size:9px;color:var(--muted);display:inline-block;transition:transform .2s;margin-top:1px;cursor:pointer" ${`data-rep-toggle="${c.key}"`}>▶</span>`:''}
               </div>
-              <div style="font-size:1.4rem;font-weight:900;letter-spacing:-.03em;color:${c.col};line-height:1;margin-bottom:4px">${eur(c.amt)}<span style="font-size:var(--fs-xs);font-weight:500;color:var(--muted);letter-spacing:0">/mois</span></div>
-              <div style="font-size:var(--fs-xs);color:var(--muted);margin-bottom:6px">${pct}% des revenus nets</div>
-              <div style="height:4px;background:var(--surface2);border-radius:99px;overflow:hidden">
+              <div style="font-size:1.2rem;font-weight:900;letter-spacing:-.03em;color:${c.col};line-height:1;margin-bottom:3px">${eur(c.amt)}<span style="font-size:var(--fs-xs);font-weight:500;color:var(--muted);letter-spacing:0">/mois</span></div>
+              <div style="font-size:var(--fs-xs);color:var(--muted);margin-bottom:5px">${pct}% des revenus nets</div>
+              <div style="height:3px;background:var(--surface2);border-radius:99px;overflow:hidden">
                 <div style="width:${barW}%;height:100%;background:${c.col};border-radius:99px;transition:width .4s"></div>
               </div>
-              ${hasDetail?`<div id="rep-detail-${c.key}" style="display:none;margin-top:8px">${detailRows}</div>`:''}
+              ${hasDetail?`<div id="rep-detail-${c.key}" style="display:none;margin-top:6px">${detailRows}</div>`:''}
             </div>`;
           }).join('');
           const _surplusCol=_surplus>0?'#0d9e6e':'#d93535';
           const _surplusHtml=_surplus!==0
-            ?`<div style="padding:14px 0;border-top:1px solid var(--border)">
+            ?`<div style="padding:10px 0;border-top:1px solid var(--border)">
                 <span style="font-size:10px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:${_surplusCol}">${_surplus>0?'Non alloué':'Déficit'}</span>
-                <div style="font-size:1.4rem;font-weight:900;letter-spacing:-.03em;color:${_surplusCol};line-height:1;margin-top:5px">${_surplus>0?'+':''}${eur(_surplus)}<span style="font-size:var(--fs-xs);font-weight:500;color:var(--muted);letter-spacing:0">/mois</span></div>
+                <div style="font-size:1.2rem;font-weight:900;letter-spacing:-.03em;color:${_surplusCol};line-height:1;margin-top:3px">${_surplus>0?'+':''}${eur(_surplus)}<span style="font-size:var(--fs-xs);font-weight:500;color:var(--muted);letter-spacing:0">/mois</span></div>
               </div>`:'';
           _repContent.innerHTML=`<div style="padding:0 2px">${_repBarsHtml}${_surplusHtml}</div>`;
           _repCard.style.display='';
