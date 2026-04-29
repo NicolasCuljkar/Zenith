@@ -2861,9 +2861,9 @@ function memberTableHtml(rows,isMobile,memberName){
     const subInfo=gRows.length
       ?`<span style="font-size:var(--fs-xs);font-weight:700;color:${g.totColor}">${eur(Math.abs(tot))}</span>`
       :`<span style="font-size:var(--fs-xs);color:var(--muted)">Aucune donnée</span>`;
-    const hdr=`<div style="display:flex;justify-content:space-between;align-items:center;padding:0 2px 6px;margin-bottom:5px;border-bottom:2px solid ${g.color}30">
+    const hdr=`<div onclick="toggleEntriesSection('${memberName}','${g.key}')" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;padding:0 2px 6px;margin-bottom:5px;border-bottom:2px solid ${g.color}30">
       <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">
-        <button onclick="toggleEntriesSection('${memberName}','${g.key}')" data-entries-collapse="${ck}" style="background:none;border:none;cursor:pointer;color:var(--muted);padding:0;display:flex;align-items:center;transition:transform .2s;${chevronStyle}">${CHEVRON_SVG}</button>
+        <button onclick="event.stopPropagation();toggleEntriesSection('${memberName}','${g.key}')" data-entries-collapse="${ck}" style="background:none;border:none;cursor:pointer;color:var(--muted);padding:0;display:flex;align-items:center;transition:transform .2s;${chevronStyle}">${CHEVRON_SVG}</button>
         <span style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:${g.color}">${g.label}</span>
         <span style="font-size:var(--fs-xs);color:var(--hint);background:${g.color}18;border-radius:20px;padding:1px 7px;font-weight:700">${rowCount}</span>
         ${subInfo}
@@ -2989,9 +2989,9 @@ function renderEntries(){
       if(!(_ck in window.entriesSectionCollapsed))window.entriesSectionCollapsed[_ck]=true;
       const _isC=!!window.entriesSectionCollapsed[_ck];
       const _uid=`entries-body-commun-${g.key}`;
-      const hdr=`<div style="display:flex;justify-content:space-between;align-items:center;padding:0 2px 6px;margin-bottom:5px;border-bottom:2px solid ${g.color}30">
+      const hdr=`<div onclick="toggleEntriesSection('commun','${g.key}')" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;padding:0 2px 6px;margin-bottom:5px;border-bottom:2px solid ${g.color}30">
         <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">
-          <button onclick="toggleEntriesSection('commun','${g.key}')" data-entries-collapse="${_ck}" style="background:none;border:none;cursor:pointer;color:var(--muted);padding:0;display:flex;align-items:center;transition:transform .2s;${_isC?'transform:rotate(-90deg);':''}">${CHEVRON_SVG}</button>
+          <button onclick="event.stopPropagation();toggleEntriesSection('commun','${g.key}')" data-entries-collapse="${_ck}" style="background:none;border:none;cursor:pointer;color:var(--muted);padding:0;display:flex;align-items:center;transition:transform .2s;${_isC?'transform:rotate(-90deg);':''}">${CHEVRON_SVG}</button>
           <span style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:${g.color}">${g.label}</span>
           <span style="font-size:var(--fs-xs);color:var(--hint);background:${g.color}18;border-radius:20px;padding:1px 7px;font-weight:700">${allNames.length}</span>
           ${allNames.length?`<span style="font-size:var(--fs-xs);font-weight:700;color:${g.totColor}">${eur(Math.abs(tot))}</span>${[...e1,...e2].some(e=>e._synthetic)?`<span style="font-size:var(--fs-xs);color:var(--muted);font-style:italic">calculé</span>`:''}`:`<span style="font-size:var(--fs-xs);color:var(--muted)">Aucune donnée</span>`}
@@ -3367,7 +3367,7 @@ const DEL_ICON     = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none
 const RESTORE_ICON  = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.5"/></svg>`;
 const CHEVRON_SVG   = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>`;
 const ADD_SVG       = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`;
-const MLY_ADD_BTN   = (onclick) => `<button onclick="${onclick}" style="width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#3B8BD4,#e06fa0);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0;box-shadow:0 2px 8px rgba(59,139,212,.35);transition:opacity .15s" title="Ajouter"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>`;
+const MLY_ADD_BTN   = (onclick) => `<button onclick="event.stopPropagation();${onclick}" style="width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#3B8BD4,#e06fa0);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0;box-shadow:0 2px 8px rgba(59,139,212,.35);transition:opacity .15s" title="Ajouter"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>`;
 
 function switchEntriesTab(tab) {
   document.querySelectorAll('[data-etab]').forEach(b => b.classList.toggle('active', b.dataset.etab === tab));
@@ -3701,9 +3701,9 @@ function _monthlyAutoGroup(rows, overrides, extras, g, isMobile) {
   else if (g.cats.includes('fixe')) addBtn = MLY_ADD_BTN(`openAddMonthlyExpense('fixe',true)`);
   const collapsed = !!monthlySectionCollapsed[g.key];
   const chevronStyle = collapsed ? 'transform:rotate(-90deg);' : '';
-  const hdr = `<div style="display:flex;justify-content:space-between;align-items:center;padding:0 2px 6px;margin-bottom:5px;border-bottom:2px solid ${g.color}30">
+  const hdr = `<div onclick="toggleMonthlySection('${g.key}')" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;padding:0 2px 6px;margin-bottom:5px;border-bottom:2px solid ${g.color}30">
     <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">
-      <button onclick="toggleMonthlySection('${g.key}')" data-collapse-key="${g.key}" style="background:none;border:none;cursor:pointer;color:var(--muted);padding:0;display:flex;align-items:center;transition:transform .2s;${chevronStyle}">${CHEVRON_SVG}</button>
+      <button onclick="event.stopPropagation();toggleMonthlySection('${g.key}')" data-collapse-key="${g.key}" style="background:none;border:none;cursor:pointer;color:var(--muted);padding:0;display:flex;align-items:center;transition:transform .2s;${chevronStyle}">${CHEVRON_SVG}</button>
       <span style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:${g.color}">${g.label}</span>
       <span style="font-size:var(--fs-xs);color:var(--hint);background:${g.color}18;border-radius:20px;padding:1px 7px;font-weight:700">${rows.length + extras.length}</span>
       ${subInfo}
@@ -3848,9 +3848,9 @@ function _monthlyManualGroup(rows, g, budgetTotal, isMobile, revNet = 0) {
 
   const collapsed2 = !!monthlySectionCollapsed[g.key];
   const chevronStyle2 = collapsed2 ? 'transform:rotate(-90deg);' : '';
-  const hdr = `<div style="display:flex;justify-content:space-between;align-items:center;padding:0 2px 6px;margin-bottom:5px;border-bottom:2px solid ${g.color}30">
+  const hdr = `<div onclick="toggleMonthlySection('${g.key}')" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;padding:0 2px 6px;margin-bottom:5px;border-bottom:2px solid ${g.color}30">
     <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">
-      <button onclick="toggleMonthlySection('${g.key}')" data-collapse-key="${g.key}" style="background:none;border:none;cursor:pointer;color:var(--muted);padding:0;display:flex;align-items:center;transition:transform .2s;${chevronStyle2}">${CHEVRON_SVG}</button>
+      <button onclick="event.stopPropagation();toggleMonthlySection('${g.key}')" data-collapse-key="${g.key}" style="background:none;border:none;cursor:pointer;color:var(--muted);padding:0;display:flex;align-items:center;transition:transform .2s;${chevronStyle2}">${CHEVRON_SVG}</button>
       <span style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:${g.color}">${g.label}</span>
       <span style="font-size:var(--fs-xs);color:var(--hint);background:${g.color}18;border-radius:20px;padding:1px 7px;font-weight:700">${rows.length}</span>
       ${subInfo}
@@ -3941,9 +3941,9 @@ function _monthlyEpargneGroup(savingRecord, g, budgetTotal, actualTotal, revNet,
       : `<span style="font-size:var(--fs-xs);font-weight:700;color:var(--fg)">${eur(epActual)}</span>`;
   const collapsed3 = !!monthlySectionCollapsed[g.key];
   const chevronStyle3 = collapsed3 ? 'transform:rotate(-90deg);' : '';
-  const hdr = `<div style="display:flex;justify-content:space-between;align-items:center;padding:0 2px 6px;margin-bottom:5px;border-bottom:2px solid ${g.color}30">
+  const hdr = `<div onclick="toggleMonthlySection('${g.key}')" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;padding:0 2px 6px;margin-bottom:5px;border-bottom:2px solid ${g.color}30">
     <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">
-      <button onclick="toggleMonthlySection('${g.key}')" data-collapse-key="${g.key}" style="background:none;border:none;cursor:pointer;color:var(--muted);padding:0;display:flex;align-items:center;transition:transform .2s;${chevronStyle3}">${CHEVRON_SVG}</button>
+      <button onclick="event.stopPropagation();toggleMonthlySection('${g.key}')" data-collapse-key="${g.key}" style="background:none;border:none;cursor:pointer;color:var(--muted);padding:0;display:flex;align-items:center;transition:transform .2s;${chevronStyle3}">${CHEVRON_SVG}</button>
       <span style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:${g.color}">${g.label}</span>
       ${subInfo}
     </div>
@@ -5956,18 +5956,24 @@ document.addEventListener('keydown', e => {
   },{passive:true});
 }
 
-// ── Répartition expense tooltip ──
+// ── Répartition expense modal ──
+function _closeRepTip(){
+  const tip=document.getElementById('rep-exp-tooltip');
+  const bd=document.getElementById('rep-exp-backdrop');
+  if(tip)tip.style.display='none';
+  if(bd)bd.style.display='none';
+}
 {
   const _MNX=['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];
-  let _repTipTimer=null;
-  document.addEventListener('mouseover', e => {
+  document.addEventListener('click', e => {
+    if(e.target.closest('#rep-exp-tooltip'))return;
     const row=e.target.closest('[data-rep-exp-name]');
     if(!row){return;}
-    clearTimeout(_repTipTimer);
     const name=row.dataset.repExpName;
     const hist=_repExpHistory.get(name)||_repExpHistory.get(name.replace(/&quot;/g,'"'));
     const tip=document.getElementById('rep-exp-tooltip');
     const tc=document.getElementById('rep-exp-tooltip-content');
+    const bd=document.getElementById('rep-exp-backdrop');
     if(!tip||!tc||!hist||hist.length===0){if(tip)tip.style.display='none';return;}
     const sorted=[...hist].sort((a,b)=>a.mk.localeCompare(b.mk));
     const last12=sorted.slice(-12);
@@ -6004,19 +6010,8 @@ document.addEventListener('keydown', e => {
       <div style="margin-bottom:14px;width:100%">${_sparklineSvg(vals,'#2979c8',300,60)}</div>
       <div style="font-size:10px;color:var(--muted);margin-bottom:8px">${last12.length} mois d'historique</div>
       <div style="border-top:1px solid var(--border);padding-top:10px;display:flex;flex-direction:column;gap:4px">${rowsHtml}</div>`;
-    const rect=row.getBoundingClientRect();
-    const tW=340,tH=tip.offsetHeight||360;
-    let top=rect.bottom+10,left=rect.left;
-    if(top+tH>window.innerHeight-8)top=Math.max(8,rect.top-tH-10);
-    if(left+tW>window.innerWidth-8)left=window.innerWidth-tW-8;
-    if(left<8)left=8;
-    tip.style.top=top+'px';tip.style.left=left+'px';tip.style.display='';
-  });
-  document.addEventListener('mouseout', e => {
-    const row=e.target.closest('[data-rep-exp-name]');
-    if(!row)return;
-    const tip=document.getElementById('rep-exp-tooltip');
-    _repTipTimer=setTimeout(()=>{if(tip)tip.style.display='none';},80);
+    tip.style.display='';
+    if(bd)bd.style.display='';
   });
 }
 
@@ -7402,7 +7397,9 @@ async function connectBank(){
 }
 </script>
 <div id="app-toast"></div>
-<div id="rep-exp-tooltip" style="display:none;position:fixed;z-index:9999;background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px 20px;box-shadow:0 16px 56px rgba(0,0,0,.32);width:340px;pointer-events:none">
+<div id="rep-exp-backdrop" style="display:none;position:fixed;inset:0;z-index:9998;background:rgba(0,0,0,.35)" onclick="_closeRepTip()"></div>
+<div id="rep-exp-tooltip" style="display:none;position:fixed;z-index:9999;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px;box-shadow:0 24px 64px rgba(0,0,0,.4);width:340px;max-width:calc(100vw - 32px);max-height:85vh;overflow-y:auto">
+  <button onclick="_closeRepTip()" style="position:absolute;top:12px;right:12px;background:none;border:none;cursor:pointer;color:var(--muted);font-size:18px;line-height:1;padding:4px 6px">✕</button>
   <div id="rep-exp-tooltip-content"></div>
 </div>
 </body>
