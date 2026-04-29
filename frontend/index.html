@@ -2636,13 +2636,12 @@ async function renderDashboard(){
     const amtStr=isNeg?`−${eur(Math.abs(r.total))}`:eur(r.total);
     return `<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 18px;border-top:1px solid var(--border)">
       <div style="display:flex;align-items:center;gap:8px;min-width:0;flex:1">
-        <span style="width:3px;height:3px;border-radius:50%;background:${col};flex-shrink:0;opacity:.5"></span>
-        <span style="font-size:var(--fs-sm);color:var(--fg);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.name}</span>
-        ${r.count>1?`<span style="font-size:9px;color:var(--muted)">×${r.count}</span>`:''}
+        <span style="font-size:var(--fs-sm);color:var(--muted);font-weight:400;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.name}</span>
+        ${r.count>1?`<span style="font-size:9px;color:var(--hint)">×${r.count}</span>`:''}
       </div>
       <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
         ${diffHtml}
-        <span style="font-size:var(--fs-sm);font-weight:700;color:${col};min-width:52px;text-align:right">${amtStr}</span>
+        <span style="font-size:var(--fs-sm);font-weight:600;color:var(--fg);min-width:52px;text-align:right">${amtStr}</span>
       </div>
     </div>`;
   };
@@ -2654,25 +2653,23 @@ async function renderDashboard(){
       const shareTotal=_postesTotal>0?Math.round(g.total/_postesTotal*100):0;
       const isOpen=false;
       return `<div style="border-top:1px solid var(--border)">
-        <div onclick="_ovaToggle('${c}')" style="padding:14px 18px 12px;cursor:pointer;transition:background .15s" onmouseenter="this.style.background='var(--surface2)'" onmouseleave="this.style.background=''">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-            <div style="display:flex;align-items:center;gap:8px">
-              <span id="ova-arrow-${c}" style="font-size:7px;color:${col};opacity:.5;transition:transform .2s">${isOpen?'▼':'▶'}</span>
-              <span style="font-size:10px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:${col}">${_catLbl[c]}</span>
+        <div onclick="_ovaToggle('${c}')" style="padding:15px 18px 13px;cursor:pointer;transition:background .15s;background:linear-gradient(90deg,${col}0a,transparent)" onmouseenter="this.style.background='linear-gradient(90deg,${col}18,var(--surface2))'" onmouseleave="this.style.background='linear-gradient(90deg,${col}0a,transparent)'">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px">
+            <div>
+              <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:${col};margin-bottom:2px">${_catLbl[c]}</div>
+              ${bgt>0?`<div style="font-size:var(--fs-xs);color:${g.total>bgt?'var(--red)':'var(--muted)'}">budget ${eur(bgt)}</div>`:''}
             </div>
-            <div style="display:flex;align-items:baseline;gap:8px">
-              ${bgt>0?`<span style="font-size:var(--fs-xs);color:${g.total>bgt?'var(--red)':'var(--muted)'}">/ ${eur(bgt)}</span>`:''}
-              <span style="font-size:1.1rem;font-weight:900;color:${col};letter-spacing:-.02em">${eur(g.total)}</span>
-            </div>
+            <span style="font-size:1.2rem;font-weight:900;color:var(--fg);letter-spacing:-.03em">${eur(g.total)}</span>
           </div>
           <div style="display:flex;align-items:center;gap:10px">
-            <div style="flex:1;height:4px;background:var(--border);border-radius:99px;overflow:hidden">
+            <div style="flex:1;height:2px;background:var(--border);border-radius:99px;overflow:hidden">
               <div style="width:${shareTotal}%;height:100%;background:${col};border-radius:99px"></div>
             </div>
-            <span style="font-size:var(--fs-xs);color:var(--muted);font-weight:700;flex-shrink:0">${shareTotal}%</span>
+            <span style="font-size:var(--fs-xs);color:var(--muted);font-weight:600;flex-shrink:0">${shareTotal}%</span>
+            <span id="ova-arrow-${c}" style="font-size:8px;color:var(--muted);opacity:.5;transition:transform .2s;flex-shrink:0">${isOpen?'▼':'▶'}</span>
           </div>
         </div>
-        <div id="ova-items-${c}" style="display:${isOpen?'':'none'};padding-bottom:8px;background:var(--surface2)">
+        <div id="ova-items-${c}" style="display:${isOpen?'':'none'}">
           ${g.items.map(r=>_ovaItem(r)).join('')}
         </div>
       </div>`;
@@ -2681,12 +2678,12 @@ async function renderDashboard(){
   const _donutData=[];
   const _ovaDonutHtml='';
 
-  const _ovaRetraitBlock=epMonthDelta<0&&_hasSavRec?`<div style="border-top:1px solid var(--border);padding:11px 18px 14px 16px;display:flex;align-items:center;justify-content:space-between">
-    <div style="display:flex;align-items:center;gap:9px">
-      <span style="font-size:var(--fs-sm);font-weight:700;color:var(--red)">Retrait épargne</span>
-      ${_balBefore!==null?`<span style="font-size:10px;color:var(--muted)">${eur(_balBefore)} → ${eur(_balAfter)}</span>`:''}
+  const _ovaRetraitBlock=epMonthDelta<0&&_hasSavRec?`<div style="border-top:1px solid var(--border);padding:15px 18px 14px;background:linear-gradient(90deg,rgba(217,53,53,.06),transparent);display:flex;align-items:flex-start;justify-content:space-between">
+    <div>
+      <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--red);margin-bottom:2px">Retrait épargne</div>
+      ${_balBefore!==null?`<div style="font-size:var(--fs-xs);color:var(--muted)">${eur(_balBefore)} → ${eur(_balAfter)}</div>`:''}
     </div>
-    <span style="font-size:var(--fs-sm);font-weight:800;color:var(--red);min-width:52px;text-align:right">−${eur(Math.abs(epMonthDelta))}</span>
+    <span style="font-size:1.2rem;font-weight:900;color:var(--red);letter-spacing:-.03em">−${eur(Math.abs(epMonthDelta))}</span>
   </div>`:'';
   const _ova=`<div class="card" style="padding:0;overflow:hidden">
     <div style="display:flex;justify-content:space-between;align-items:center;padding:15px 18px;border-bottom:1px solid var(--border)">
