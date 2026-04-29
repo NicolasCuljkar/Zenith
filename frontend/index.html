@@ -2627,48 +2627,49 @@ async function renderDashboard(){
   const _ovaItem=(r)=>{
     const isNeg=r.total<0;
     const col=isNeg?'var(--red)':(_catColP[r.cat]||'#6b7280');
-    const incShare=!isNeg&&revNetA>0?Math.round(r.total/revNetA*100):null;
     const pvVal=_pvMap.get(r.name);
     const diff=!isNeg&&pvVal!==undefined?Math.round(r.total-pvVal):null;
     const diffHtml=diff===null?''
-      :diff>0?`<span style="font-size:10px;color:var(--red);font-weight:700;white-space:nowrap">↑+${eur(Math.abs(diff))}</span>`
-      :diff<0?`<span style="font-size:10px;color:var(--green);font-weight:700;white-space:nowrap">↓−${eur(Math.abs(diff))}</span>`
-      :`<span style="font-size:10px;color:var(--muted)">→</span>`;
+      :diff>0?`<span style="font-size:9px;color:var(--red);font-weight:700;white-space:nowrap">+${eur(Math.abs(diff))}</span>`
+      :diff<0?`<span style="font-size:9px;color:var(--green);font-weight:700;white-space:nowrap">−${eur(Math.abs(diff))}</span>`
+      :'';
     const amtStr=isNeg?`−${eur(Math.abs(r.total))}`:eur(r.total);
-    return `<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 18px 8px 38px">
-      <div style="display:flex;align-items:center;gap:8px;min-width:0;flex:1">
-        <span style="width:4px;height:4px;border-radius:50%;background:${col};flex-shrink:0;opacity:.55"></span>
-        <span style="font-size:var(--fs-sm);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.name}</span>
-        ${r.count>1?`<span style="font-size:10px;color:var(--muted)">×${r.count}</span>`:''}
+    return `<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 18px;border-top:1px solid var(--border)">
+      <div style="display:flex;align-items:center;gap:7px;min-width:0;flex:1">
+        <span style="font-size:var(--fs-sm);color:var(--muted);font-weight:400;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.name}</span>
+        ${r.count>1?`<span style="font-size:9px;color:var(--hint)">×${r.count}</span>`:''}
       </div>
       <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
         ${diffHtml}
-        ${incShare!==null?`<span style="font-size:10px;color:var(--muted)">${incShare}%</span>`:''}
-        <span style="font-size:var(--fs-sm);font-weight:700;color:${col};min-width:52px;text-align:right">${amtStr}</span>
+        <span style="font-size:var(--fs-sm);font-weight:600;color:${col};min-width:52px;text-align:right">${amtStr}</span>
       </div>
     </div>`;
   };
 
   const _ovaContent=_postesTotal===0
-    ?`<div style="font-size:var(--fs-sm);color:var(--hint);padding:10px 0;text-align:center">Aucune dépense ce mois</div>`
+    ?`<div style="font-size:var(--fs-sm);color:var(--hint);padding:16px 0;text-align:center">Aucune dépense ce mois</div>`
     :_catOrder.filter(c=>_catGroups[c]).map((c,ci)=>{
       const g=_catGroups[c],col=_catColP[c],bgt=_catBudgets[c];
       const shareTotal=_postesTotal>0?Math.round(g.total/_postesTotal*100):0;
-      const bgtHtml=bgt>0?`<span style="font-size:10px;color:${g.total>bgt?'var(--red)':'var(--muted)'}">/ ${eur(bgt)}</span>`:'';
       const isOpen=false;
-      return `<div style="border-top:1px solid var(--border);border-left:3px solid ${col}44">
-        <div onclick="_ovaToggle('${c}')" style="display:flex;align-items:center;justify-content:space-between;padding:11px 18px 11px 13px;cursor:pointer;transition:background .15s" onmouseenter="this.style.background='var(--surface2)'" onmouseleave="this.style.background=''">
-          <div style="display:flex;align-items:center;gap:9px">
-            <span id="ova-arrow-${c}" style="font-size:8px;color:${col}99;transition:transform .2s">${isOpen?'▼':'▶'}</span>
-            <span style="font-size:var(--fs-sm);font-weight:700;color:${col}">${_catLbl[c]}</span>
-            ${bgtHtml}
+      return `<div style="border-top:1px solid var(--border)">
+        <div onclick="_ovaToggle('${c}')" style="padding:13px 18px 11px;cursor:pointer;transition:background .15s" onmouseenter="this.style.background='var(--surface2)'" onmouseleave="this.style.background=''">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:9px">
+            <div style="display:flex;align-items:center;gap:7px">
+              <span id="ova-arrow-${c}" style="font-size:7px;color:${col};opacity:.6;transition:transform .2s">${isOpen?'▼':'▶'}</span>
+              <span style="font-size:10px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:${col}">${_catLbl[c]}</span>
+            </div>
+            <span style="font-size:1.05rem;font-weight:900;color:${col};letter-spacing:-.02em">${eur(g.total)}</span>
           </div>
-          <div style="display:flex;align-items:center;gap:8px">
-            <span style="background:${col}18;color:${col};font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;border:1px solid ${col}33">${shareTotal}%</span>
-            <span style="font-size:var(--fs-sm);font-weight:800;color:${col};min-width:52px;text-align:right">${eur(g.total)}</span>
+          <div style="height:3px;background:var(--border);border-radius:99px;overflow:hidden;margin-bottom:5px">
+            <div style="width:${shareTotal}%;height:100%;background:${col};border-radius:99px"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <span style="font-size:9px;color:var(--muted);font-weight:600">${shareTotal}% du total</span>
+            ${bgt>0?`<span style="font-size:9px;font-weight:600;color:${g.total>bgt?'var(--red)':'var(--muted)'}">budget ${eur(bgt)}</span>`:''}
           </div>
         </div>
-        <div id="ova-items-${c}" style="display:${isOpen?'':'none'};padding-bottom:8px;border-left:2px solid ${col}22;margin-left:3px">
+        <div id="ova-items-${c}" style="display:${isOpen?'':'none'};padding-bottom:6px">
           ${g.items.map(r=>_ovaItem(r)).join('')}
         </div>
       </div>`;
