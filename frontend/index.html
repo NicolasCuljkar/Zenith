@@ -2638,7 +2638,7 @@ async function renderDashboard(){
     const amtStr=isNeg?`−${eur(Math.abs(r.total))}`:eur(r.total);
     return `<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 18px;border-top:1px solid var(--border)">
       <div style="display:flex;align-items:center;gap:6px;min-width:0;flex:1">
-        <span style="font-size:var(--fs-xs);color:var(--fg);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.name}</span>
+        <span style="font-size:var(--fs-xs);color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.name}</span>
         ${r.count>1?`<span style="font-size:9px;color:var(--muted)">×${r.count}</span>`:''}
       </div>
       <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
@@ -2670,7 +2670,6 @@ async function renderDashboard(){
           <div style="height:3px;background:var(--surface2);border-radius:99px;overflow:hidden">
             <div style="width:${barW}%;height:100%;background:${barCol};border-radius:99px;transition:width .4s"></div>
           </div>
-          <div style="font-size:10px;font-weight:700;color:${pctCol};margin-top:3px">${pctLabel}</div>
         </div>
         <div id="ova-items-${c}" style="display:${isOpen?'':'none'}">
           ${g.items.map(r=>_ovaItem(r)).join('')}
