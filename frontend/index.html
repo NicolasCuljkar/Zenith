@@ -5549,40 +5549,31 @@ async function renderAnalysis(){
             ...(_avg6Ep>0?[{key:'ep',lbl:'Épargne',amt:_avg6Ep,col:'#2979c8',detail:[]}]:[])
           ].filter(c=>c.amt>0);
           const _surplus=s.revNet-_repTotal;
-          const _repBarsHtml=_repCats.map(c=>{
+          const _repBarsHtml=_repCats.map((c,i)=>{
             const pct=s.revNet>0?Math.round(c.amt/s.revNet*100):0;
             const barW=Math.min(100,pct);
             const hasDetail=c.detail && c.detail.length>0;
-            const detailRows=hasDetail?c.detail.map(d=>`<div data-rep-exp-name="${(d.name||'').replace(/"/g,'&quot;')}" style="display:flex;justify-content:space-between;padding:5px 8px 5px 14px;border-left:2px solid ${c.col}40;cursor:pointer;border-radius:0 6px 6px 0;transition:background .12s" onmouseenter="this.style.background='var(--surface2)'" onmouseleave="this.style.background=''"><span style="font-size:var(--fs-xs);color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:65%">${d.name}</span><span style="font-size:var(--fs-xs);font-weight:700;color:var(--text);flex-shrink:0">${eur(d.avg)}</span></div>`).join(''):'';
-            return`<div style="margin-bottom:12px">
-              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px${hasDetail?';cursor:pointer':''}" ${hasDetail?`data-rep-toggle="${c.key}"`:''}>
-                <div style="display:flex;align-items:center;gap:6px">
-                  <span style="width:8px;height:8px;border-radius:50%;background:${c.col};flex-shrink:0"></span>
-                  <span style="font-size:var(--fs-sm);font-weight:600">${c.lbl}</span>
-                </div>
-                <div style="display:flex;gap:8px;align-items:center">
-                  <span style="font-size:var(--fs-xs);color:var(--muted)">${pct}%</span>
-                  <span style="font-size:var(--fs-sm);font-weight:700;color:${c.col};min-width:56px;text-align:right">${eur(c.amt)}/mois</span>
-                  ${hasDetail?`<span data-rep-chevron="${c.key}" style="font-size:9px;color:var(--muted);display:inline-block;transition:transform .2s">▼</span>`:''}
-                </div>
+            const detailRows=hasDetail?c.detail.map(d=>`<div data-rep-exp-name="${(d.name||'').replace(/"/g,'&quot;')}" style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-top:1px solid var(--border);cursor:pointer"><span style="font-size:var(--fs-xs);color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0">${d.name}</span><span style="font-size:var(--fs-xs);font-weight:700;color:${c.col};flex-shrink:0;margin-left:8px">${eur(d.avg)}</span></div>`).join(''):'';
+            return`<div style="padding:14px 0${i>0?';border-top:1px solid var(--border)':''}">
+              <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:5px">
+                <span style="font-size:10px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:${c.col}">${c.lbl}</span>
+                ${hasDetail?`<span data-rep-chevron="${c.key}" style="font-size:9px;color:var(--muted);display:inline-block;transition:transform .2s;margin-top:1px;cursor:pointer" ${`data-rep-toggle="${c.key}"`}>▶</span>`:''}
               </div>
-              <div style="height:6px;background:var(--surface2);border-radius:99px;overflow:hidden;margin-bottom:2px">
-                <div style="width:${barW}%;height:100%;background:${c.col};border-radius:99px"></div>
+              <div style="font-size:1.4rem;font-weight:900;letter-spacing:-.03em;color:${c.col};line-height:1;margin-bottom:4px">${eur(c.amt)}<span style="font-size:var(--fs-xs);font-weight:500;color:var(--muted);letter-spacing:0">/mois</span></div>
+              <div style="font-size:var(--fs-xs);color:var(--muted);margin-bottom:6px">${pct}% des revenus nets</div>
+              <div style="height:4px;background:var(--surface2);border-radius:99px;overflow:hidden">
+                <div style="width:${barW}%;height:100%;background:${c.col};border-radius:99px;transition:width .4s"></div>
               </div>
-              ${hasDetail?`<div id="rep-detail-${c.key}" style="display:none;margin-top:6px;padding-bottom:4px">${detailRows}</div>`:''}
+              ${hasDetail?`<div id="rep-detail-${c.key}" style="display:none;margin-top:8px">${detailRows}</div>`:''}
             </div>`;
           }).join('');
-          const _surplusHtml=_surplus>0
-            ?`<div style="margin-top:10px;padding:10px 14px;background:rgba(13,158,110,.08);border:1px solid rgba(13,158,110,.2);border-radius:10px;display:flex;justify-content:space-between;align-items:center">
-                <span style="font-size:var(--fs-xs);font-weight:700;color:#0d9e6e">Non alloué (surplus)</span>
-                <span style="font-size:var(--fs-sm);font-weight:800;color:#0d9e6e">+${eur(_surplus)}/mois</span>
-              </div>`
-            :_surplus<0
-            ?`<div style="margin-top:10px;padding:10px 14px;background:rgba(217,53,53,.08);border:1px solid rgba(217,53,53,.2);border-radius:10px;display:flex;justify-content:space-between;align-items:center">
-                <span style="font-size:var(--fs-xs);font-weight:700;color:#d93535">Déficit vs revenus</span>
-                <span style="font-size:var(--fs-sm);font-weight:800;color:#d93535">${eur(_surplus)}/mois</span>
+          const _surplusCol=_surplus>0?'#0d9e6e':'#d93535';
+          const _surplusHtml=_surplus!==0
+            ?`<div style="padding:14px 0;border-top:1px solid var(--border)">
+                <span style="font-size:10px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:${_surplusCol}">${_surplus>0?'Non alloué':'Déficit'}</span>
+                <div style="font-size:1.4rem;font-weight:900;letter-spacing:-.03em;color:${_surplusCol};line-height:1;margin-top:5px">${_surplus>0?'+':''}${eur(_surplus)}<span style="font-size:var(--fs-xs);font-weight:500;color:var(--muted);letter-spacing:0">/mois</span></div>
               </div>`:'';
-          _repContent.innerHTML=`<div style="padding:4px 0">${_repBarsHtml}${_surplusHtml}</div>`;
+          _repContent.innerHTML=`<div style="padding:0 2px">${_repBarsHtml}${_surplusHtml}</div>`;
           _repCard.style.display='';
         } else { _repCard.style.display='none'; }
       }
@@ -5906,7 +5897,7 @@ document.addEventListener('click', e => {
   if (detail) {
     const open = detail.style.display !== 'none';
     detail.style.display = open ? 'none' : '';
-    if (chevron) chevron.style.transform = open ? '' : 'rotate(180deg)';
+    if (chevron) chevron.style.transform = open ? '' : 'rotate(90deg)';
   }
 });
 
