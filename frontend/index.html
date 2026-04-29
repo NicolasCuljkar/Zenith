@@ -2636,12 +2636,12 @@ async function renderDashboard(){
     const amtStr=isNeg?`−${eur(Math.abs(r.total))}`:eur(r.total);
     return `<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 18px;border-top:1px solid var(--border)">
       <div style="display:flex;align-items:center;gap:8px;min-width:0;flex:1">
-        <span style="font-size:var(--fs-sm);color:var(--muted);font-weight:400;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.name}</span>
-        ${r.count>1?`<span style="font-size:9px;color:var(--hint)">×${r.count}</span>`:''}
+        <span style="font-size:var(--fs-sm);color:var(--fg);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.name}</span>
+        ${r.count>1?`<span style="font-size:9px;color:var(--muted)">×${r.count}</span>`:''}
       </div>
       <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
         ${diffHtml}
-        <span style="font-size:var(--fs-sm);font-weight:600;color:var(--fg);min-width:52px;text-align:right">${amtStr}</span>
+        <span style="font-size:var(--fs-sm);font-weight:700;color:${col};min-width:52px;text-align:right">${amtStr}</span>
       </div>
     </div>`;
   };
@@ -2652,22 +2652,23 @@ async function renderDashboard(){
       const g=_catGroups[c],col=_catColP[c],bgt=_catBudgets[c];
       const shareTotal=_postesTotal>0?Math.round(g.total/_postesTotal*100):0;
       const isOpen=false;
+      const barW=bgt>0?Math.min(100,Math.round(g.total/bgt*100)):shareTotal;
+      const barCol=bgt>0&&g.total>bgt?'var(--red)':col;
+      const subtext=bgt>0?`${eur(g.total)} dépensé · budget ${eur(bgt)}`:`${shareTotal}% des dépenses du mois`;
+      const pctLabel=bgt>0?`${Math.round(g.total/bgt*100)}%`:`${shareTotal}%`;
+      const pctCol=bgt>0&&g.total>bgt?'var(--red)':col;
       return `<div style="border-top:1px solid var(--border)">
-        <div onclick="_ovaToggle('${c}')" style="padding:15px 18px 13px;cursor:pointer;transition:background .15s;background:linear-gradient(90deg,${col}0a,transparent)" onmouseenter="this.style.background='linear-gradient(90deg,${col}18,var(--surface2))'" onmouseleave="this.style.background='linear-gradient(90deg,${col}0a,transparent)'">
-          <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px">
-            <div>
-              <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:${col};margin-bottom:2px">${_catLbl[c]}</div>
-              ${bgt>0?`<div style="font-size:var(--fs-xs);color:${g.total>bgt?'var(--red)':'var(--muted)'}">budget ${eur(bgt)}</div>`:''}
-            </div>
-            <span style="font-size:1.2rem;font-weight:900;color:var(--fg);letter-spacing:-.03em">${eur(g.total)}</span>
+        <div onclick="_ovaToggle('${c}')" style="padding:14px 16px 12px;cursor:pointer;transition:background .15s" onmouseenter="this.style.background='var(--surface2)'" onmouseleave="this.style.background=''">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">
+            <span style="font-size:10px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:${col}">${_catLbl[c]}</span>
+            <span id="ova-arrow-${c}" style="font-size:9px;color:var(--muted);transition:transform .2s">${isOpen?'▼':'▶'}</span>
           </div>
-          <div style="display:flex;align-items:center;gap:10px">
-            <div style="flex:1;height:2px;background:var(--border);border-radius:99px;overflow:hidden">
-              <div style="width:${shareTotal}%;height:100%;background:${col};border-radius:99px"></div>
-            </div>
-            <span style="font-size:var(--fs-xs);color:var(--muted);font-weight:600;flex-shrink:0">${shareTotal}%</span>
-            <span id="ova-arrow-${c}" style="font-size:8px;color:var(--muted);opacity:.5;transition:transform .2s;flex-shrink:0">${isOpen?'▼':'▶'}</span>
+          <div style="font-size:1.4rem;font-weight:900;letter-spacing:-.03em;color:${col};line-height:1;margin-bottom:5px">${eur(g.total)}</div>
+          <div style="font-size:var(--fs-xs);color:var(--muted);margin-bottom:6px">${subtext}</div>
+          <div style="height:4px;background:var(--surface2);border-radius:99px;overflow:hidden">
+            <div style="width:${barW}%;height:100%;background:${barCol};border-radius:99px;transition:width .4s"></div>
           </div>
+          <div style="font-size:10px;font-weight:700;color:${pctCol};margin-top:4px">${pctLabel}</div>
         </div>
         <div id="ova-items-${c}" style="display:${isOpen?'':'none'}">
           ${g.items.map(r=>_ovaItem(r)).join('')}
@@ -2678,12 +2679,11 @@ async function renderDashboard(){
   const _donutData=[];
   const _ovaDonutHtml='';
 
-  const _ovaRetraitBlock=epMonthDelta<0&&_hasSavRec?`<div style="border-top:1px solid var(--border);padding:15px 18px 14px;background:linear-gradient(90deg,rgba(217,53,53,.06),transparent);display:flex;align-items:flex-start;justify-content:space-between">
-    <div>
-      <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--red);margin-bottom:2px">Retrait épargne</div>
-      ${_balBefore!==null?`<div style="font-size:var(--fs-xs);color:var(--muted)">${eur(_balBefore)} → ${eur(_balAfter)}</div>`:''}
-    </div>
-    <span style="font-size:1.2rem;font-weight:900;color:var(--red);letter-spacing:-.03em">−${eur(Math.abs(epMonthDelta))}</span>
+  const _ovaRetraitBlock=epMonthDelta<0&&_hasSavRec?`<div style="border-top:1px solid var(--border);padding:14px 16px 12px">
+    <div style="font-size:10px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--red);margin-bottom:5px">Retrait épargne</div>
+    <div style="font-size:1.4rem;font-weight:900;letter-spacing:-.03em;color:var(--red);line-height:1;margin-bottom:5px">−${eur(Math.abs(epMonthDelta))}</div>
+    ${_balBefore!==null?`<div style="font-size:var(--fs-xs);color:var(--muted);margin-bottom:6px">${eur(_balBefore)} → ${eur(_balAfter)}</div>`:'<div style="margin-bottom:6px"></div>'}
+    <div style="height:4px;background:var(--surface2);border-radius:99px;overflow:hidden"><div style="width:100%;height:100%;background:var(--red);border-radius:99px"></div></div>
   </div>`:'';
   const _ova=`<div class="card" style="padding:0;overflow:hidden">
     <div style="display:flex;justify-content:space-between;align-items:center;padding:15px 18px;border-bottom:1px solid var(--border)">
