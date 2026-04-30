@@ -32,7 +32,7 @@ const MONTH_CASE = `
 function computeDelta(userId, year, month, amount, excludeId = null) {
   const monthNum = VALID_MONTHS.indexOf(month) + 1;
   if (monthNum === 0) return null;
-  const params = [userId, year, monthNum, year, monthNum];
+  const params = [userId, year, year, monthNum];
   if (excludeId) params.push(excludeId);
   const prev = db.prepare(`
     SELECT amount FROM savings
