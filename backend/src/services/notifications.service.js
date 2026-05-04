@@ -4,6 +4,7 @@ const webpush            = require('web-push');
 const cron               = require('node-cron');
 const db                 = require('../config/database');
 const monthlyExpensesSvc = require('./monthly_expenses.service');
+const householdService   = require('./household.service');
 
 let vapidPublicKey = null;
 
@@ -80,7 +81,11 @@ function getMonthlyStats(userId) {
   const now   = new Date();
   const year  = now.getFullYear();
   const month = now.getMonth() + 1;
-  const stats = monthlyExpensesSvc.getStats({ userId, year, month });
+  const household = householdService.getForUser(userId);
+  const scope = household && household.members.length > 0
+    ? { userIds: household.members.map(m => m.id) }
+    : { userId };
+  const stats = monthlyExpensesSvc.getStats({ ...scope, year, month });
 
   const revenu   = stats.revenu?.actual   || 0;
   const impot    = stats.impot?.actual    || 0;
