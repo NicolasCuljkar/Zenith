@@ -1325,6 +1325,18 @@ window.onerror = function(msg, src, line) {
     <div class="modal-drag"></div>
     <h3 id="modal-me-title">Ajouter une dépense</h3>
     <div class="fstack">
+      <div class="frow">
+        <div class="fgrp"><label>Catégorie</label>
+          <select id="fme-cat" onchange="_allowedCats=[this.value];_loadExpenseLabels([this.value],'')">
+            <option value="variable">Variable</option>
+            <option value="loisir">Loisir</option>
+            <option value="revenu">Revenu</option>
+            <option value="impot">Impôt</option>
+            <option value="fixe">Charge fixe</option>
+          </select>
+        </div>
+        <div class="fgrp"><label>Montant (€)</label><input type="number" id="fme-amount" min="0" step="0.01" placeholder="0" inputmode="decimal"></div>
+      </div>
       <div class="fgrp">
         <label>Désignation</label>
         <div style="display:flex;gap:6px">
@@ -1339,18 +1351,6 @@ window.onerror = function(msg, src, line) {
             <button type="button" class="btn" style="padding:0 12px;flex-shrink:0" onclick="cancelAddLabel()">✕</button>
           </div>
         </div>
-      </div>
-      <div class="frow">
-        <div class="fgrp"><label>Catégorie</label>
-          <select id="fme-cat" onchange="_allowedCats=[this.value];_loadExpenseLabels([this.value],'')">
-            <option value="variable">Variable</option>
-            <option value="loisir">Loisir</option>
-            <option value="revenu">Revenu</option>
-            <option value="impot">Impôt</option>
-            <option value="fixe">Charge fixe</option>
-          </select>
-        </div>
-        <div class="fgrp"><label>Montant (€)</label><input type="number" id="fme-amount" min="0" step="0.01" placeholder="0" inputmode="decimal"></div>
       </div>
       <div class="fgrp"><label>Note <span style="font-weight:400;color:var(--muted)">(optionnel)</span></label><input type="text" id="fme-note" placeholder="Ex. Leclerc, Total…"></div>
     </div>
