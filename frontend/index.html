@@ -4112,6 +4112,7 @@ function _monthlyAutoGroup(rows, overrides, extras, g, isMobile) {
         <div style="display:flex;justify-content:space-between;align-items:center">
           <span style="font-size:var(--fs-xs);font-weight:700;color:${c.text};letter-spacing:.05em;text-transform:uppercase">${c.label}</span>
           <div style="display:flex;gap:5px">
+            <button class="btn-act ${e.is_exceptional?'btn-act-active':''}" onclick="toggleMonthlyExceptional(${e.id})" title="Exceptionnel">${EXCL_ICON}</button>
             <button class="btn-act" onclick="openEditMonthlyExpense(${e.id})">${EDIT_ICON}</button>
             <button class="btn-act btn-act-danger" onclick="deleteMonthlyExpense(${e.id})">${DEL_ICON}</button>
           </div>
@@ -4168,6 +4169,7 @@ ${bar}    <div class="tbl-wrap"><table style="width:100%;table-layout:fixed">
           <td><span class="badge" style="background:${c.bg};color:${c.text};border:${c.border}">${c.label}</span></td>
           <td style="text-align:right;font-weight:600;color:${exAc}">${eur(Math.abs(e.amount))}</td>
           <td><div style="display:flex;gap:3px;justify-content:flex-end">
+            <button class="btn-act ${e.is_exceptional?'btn-act-active':''}" onclick="toggleMonthlyExceptional(${e.id})" title="Exceptionnel">${EXCL_ICON}</button>
             <button class="btn-act" onclick="openEditMonthlyExpense(${e.id})">${EDIT_ICON}</button>
             <button class="btn-act btn-act-danger" onclick="deleteMonthlyExpense(${e.id})">${DEL_ICON}</button>
           </div></td>
@@ -4232,6 +4234,7 @@ function _monthlyManualGroup(rows, g, budgetTotal, isMobile, revNet = 0) {
         <div style="display:flex;justify-content:space-between;align-items:center">
           <span style="font-size:var(--fs-xs);font-weight:700;color:${c.text};letter-spacing:.05em;text-transform:uppercase">${c.label}</span>
           <div style="display:flex;gap:5px">
+            <button class="btn-act ${e.is_exceptional?'btn-act-active':''}" onclick="toggleMonthlyExceptional(${e.id})" title="Exceptionnel">${EXCL_ICON}</button>
             <button class="btn-act" onclick="openEditMonthlyExpense(${e.id})">${EDIT_ICON}</button>
             <button class="btn-act btn-act-danger" onclick="deleteMonthlyExpense(${e.id})">${DEL_ICON}</button>
           </div>
@@ -4254,6 +4257,7 @@ ${bar}    <div class="tbl-wrap"><table style="width:100%;table-layout:fixed">
           <td><span class="badge" style="background:${c.bg};color:${c.text};border:${c.border}">${c.label}</span></td>
           <td style="text-align:right;font-weight:600;color:var(--red)">${eur(Math.abs(e.amount))}</td>
           <td><div style="display:flex;gap:4px">
+            <button class="btn-act ${e.is_exceptional?'btn-act-active':''}" onclick="toggleMonthlyExceptional(${e.id})" title="Exceptionnel">${EXCL_ICON}</button>
             <button class="btn-act" onclick="openEditMonthlyExpense(${e.id})">${EDIT_ICON}</button>
             <button class="btn-act btn-act-danger" onclick="deleteMonthlyExpense(${e.id})">${DEL_ICON}</button>
           </div></td>
@@ -5857,11 +5861,11 @@ async function renderAnalysis(){
         if(_repTotal>0 && s.revNet>0){
           // Detail per category
           const _fixeDetail=scopedEntries.filter(e=>e.cat==='fixe').sort((a,b)=>Math.abs(b.amount)-Math.abs(a.amount)).map(e=>({name:e.name,avg:Math.abs(e.amount)}));
-          const _varLoi6=(_anaAllExp||[]).filter(e=>_last6.includes(`${e.year}-${String(e.month).padStart(2,'0')}`));
+          const _varLoi6=(_anaAllExp||[]).filter(e=>!e.is_exceptional&&_last6.includes(`${e.year}-${String(e.month).padStart(2,'0')}`));
           // Build full history map (all months, not just last 6) — grouped by month
           _repExpHistory.clear();
           const _repExpRaw=new Map();
-          for(const e of (_anaAllExp||[])){
+          for(const e of (_anaAllExp||[]).filter(e=>!e.is_exceptional)){
             const k=e.name?.trim()||'—';
             const mk=`${e.year}-${String(e.month).padStart(2,'0')}`;
             if(!_repExpRaw.has(k))_repExpRaw.set(k,new Map());
@@ -5989,7 +5993,7 @@ async function renderAnalysis(){
       }).sort((a,b)=>b.avg-a.avg);
       // Items variables + loisir : depuis données réelles
       const _vlMap=new Map();
-      for(const e of (_anaAllExp||[]).filter(e=>['variable','loisir'].includes(e.cat))){
+      for(const e of (_anaAllExp||[]).filter(e=>!e.is_exceptional&&['variable','loisir'].includes(e.cat))){
         const k=e.name.trim()+'|'+e.cat;
         if(!_vlMap.has(k))_vlMap.set(k,{name:e.name.trim(),cat:e.cat,total:0,months:new Set()});
         const r=_vlMap.get(k);r.total+=Math.abs(e.amount);r.months.add(`${e.year}-${e.month}`);
