@@ -298,6 +298,9 @@ UPDATE households SET creator_id = (
   // v25 — correctif : is_exceptional non appliqué sur Railway (migration v19 ignorée car index mal placé)
   `ALTER TABLE monthly_expenses ADD COLUMN is_exceptional INTEGER NOT NULL DEFAULT 0`,
 
+  // v26 — jour de prélèvement sur les charges fixes (1-31, nullable)
+  `ALTER TABLE entries ADD COLUMN debit_day INTEGER`,
+
 ];
 
 // ── Apply pending migrations ──────────────────────────────────────────────────

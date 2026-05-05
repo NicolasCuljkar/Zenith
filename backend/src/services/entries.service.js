@@ -55,7 +55,7 @@ function getAll(filters = {}) {
   const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
 
   return db.prepare(`
-    SELECT id, user_id, name, amount, cat, member, sort_order, created_at, updated_at
+    SELECT id, user_id, name, amount, cat, member, sort_order, debit_day, created_at, updated_at
     FROM entries
     ${where}
     ORDER BY member ASC, sort_order ASC, ABS(amount) DESC
@@ -83,25 +83,27 @@ function getStats(filters = {}) {
 
 // ── Écriture ─────────────────────────────────────────────────────
 
-function create({ name, amount, cat, member }, userId) {
+function create({ name, amount, cat, member, debit_day }, userId) {
   if (!name || !name.trim())                        throw httpError('La désignation est requise.', 400);
   if (isNaN(Number(amount)))                        throw httpError('Le montant doit être un nombre.', 400);
   if (!VALID_CATS.includes(cat))                    throw httpError(`Catégorie invalide : ${cat}`, 400);
   if (!getValidMembers(userId).includes(member))    throw httpError(`Membre invalide : ${member}`, 400);
+
+  const dd = (cat === 'fixe' && debit_day != null && debit_day !== '') ? Math.min(31, Math.max(1, parseInt(debit_day))) : null;
 
   const maxOrder = db.prepare(
     'SELECT COALESCE(MAX(sort_order), 0) AS m FROM entries WHERE member = ?'
   ).get(member).m;
 
   const result = db.prepare(`
-    INSERT INTO entries (user_id, name, amount, cat, member, sort_order, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, datetime('now'))
-  `).run(userId, name.trim(), Number(amount), cat, member, maxOrder + 1);
+    INSERT INTO entries (user_id, name, amount, cat, member, sort_order, debit_day, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'))
+  `).run(userId, name.trim(), Number(amount), cat, member, maxOrder + 1, dd);
 
   return getById(result.lastInsertRowid);
 }
 
-function update(id, { name, amount, cat, member }, userId) {
+function update(id, { name, amount, cat, member, debit_day }, userId) {
   const existing = getById(id);
   if (!existing) throw httpError('Ligne budgétaire introuvable.', 404);
 
@@ -118,12 +120,15 @@ function update(id, { name, amount, cat, member }, userId) {
   const updatedAmount = amount !== undefined ? Number(amount) : existing.amount;
   const updatedCat    = cat    !== undefined ? cat            : existing.cat;
   const updatedMember = member !== undefined ? member         : existing.member;
+  const updatedDd     = updatedCat === 'fixe' && debit_day !== undefined
+    ? (debit_day != null && debit_day !== '' ? Math.min(31, Math.max(1, parseInt(debit_day))) : null)
+    : (updatedCat !== 'fixe' ? null : existing.debit_day);
 
   db.prepare(`
     UPDATE entries
-    SET name = ?, amount = ?, cat = ?, member = ?, updated_at = datetime('now')
+    SET name = ?, amount = ?, cat = ?, member = ?, debit_day = ?, updated_at = datetime('now')
     WHERE id = ?
-  `).run(updatedName, updatedAmount, updatedCat, updatedMember, id);
+  `).run(updatedName, updatedAmount, updatedCat, updatedMember, updatedDd, id);
 
   return getById(id);
 }

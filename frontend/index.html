@@ -1234,6 +1234,10 @@ window.onerror = function(msg, src, line) {
         </div>
         <div class="fgrp" style="display:none"><select id="f-member"></select></div>
       </div>
+      <!-- Section fixe : jour de prélèvement -->
+      <div id="f-debit-section" style="display:none">
+        <div class="fgrp" style="margin-bottom:0"><label>Jour de prélèvement <span style="font-weight:400;color:var(--muted)">(optionnel)</span></label><input type="number" id="f-debit-day" min="1" max="31" placeholder="ex. 5" inputmode="numeric" style="max-width:100px"></div>
+      </div>
       <!-- Section impôt : toggle mode saisie -->
       <div id="f-impot-section" style="display:none">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
@@ -1662,11 +1666,21 @@ function _budgetKpiCard(lbl, act, bgt, col, isEp=false) {
     ? (pct>=100?'var(--green)':pct>=70?'var(--amber)':'var(--red)')
     : (pct>100?'var(--red)':pct>85?'var(--amber)':'var(--green)');
   const bw  = pct!==null ? Math.min(pct,100) : 0;
-  if (bgt > 0) {
+  if (isEp) {
+    // Épargne : montrer le montant épargné directement (delta), pas le reste à atteindre
+    const epSub = bgt>0 ? `objectif ${eur(bgt)}${pct!==null?' · '+pct+'%':''}` : 'aucun objectif';
+    const epCol = pct===null ? col : (pct>=100?'var(--green)':pct>=70?'var(--amber)':'var(--red)');
+    return `<div class="card" style="padding:14px 16px;margin-bottom:0">
+      <div style="font-size:10px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:${col};margin-bottom:6px">${lbl}</div>
+      <div style="font-size:1.5rem;font-weight:900;letter-spacing:-.03em;color:${epCol};line-height:1">${eur(act)}</div>
+      <div style="font-size:var(--fs-xs);color:var(--muted);margin:4px 0 6px">épargné ce mois · ${epSub}</div>
+      <div style="height:4px;background:var(--surface2);border-radius:99px;overflow:hidden">
+        <div style="width:${bw}%;height:100%;background:${epCol};border-radius:99px;transition:width .4s"></div>
+      </div>
+    </div>`;
+  } else if (bgt > 0) {
     const rem = bgt - act;
-    const remCol = isEp
-      ? (rem<=0 ? 'var(--green)' : pct>=70 ? 'var(--amber)' : 'var(--red)')
-      : (rem>=0 ? 'var(--green)' : 'var(--red)');
+    const remCol = rem>=0 ? 'var(--green)' : 'var(--red)';
     const remStr = rem>=0 ? `+${eur(rem)}` : `−${eur(Math.abs(rem))}`;
     return `<div class="card" style="padding:14px 16px;margin-bottom:0">
       <div style="font-size:10px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:${col};margin-bottom:6px">${lbl}</div>
@@ -2513,7 +2527,14 @@ async function renderDashboard(){
   // ── Valeurs réelles ──
   const revA  = mStats?.revenu?.actual   ??0;
   const taxA  = mStats?.impot?.actual    ??0;
-  const fixA  = mStats?.fixe?.actual     ??0;
+  const _fixARaw = mStats?.fixe?.actual  ??0;
+  // Mois courant : soustraire les charges fixes dont le prélèvement n'a pas encore eu lieu
+  const _todayDay = now.getDate();
+  const _memberEntries = dashboardMember==='all' ? entries : entries.filter(e=>e.member===dashboardMember);
+  const _pendingFix = isCurrentMonth
+    ? _memberEntries.filter(e=>e.cat==='fixe'&&e.debit_day!=null&&e.debit_day>_todayDay).reduce((s,e)=>s+Math.abs(e.amount),0)
+    : 0;
+  const fixA  = Math.max(0, _fixARaw - _pendingFix);
   const varA  = mStats?.variable?.actual ??0;
   const loiA  = mStats?.loisir?.actual   ??0;
   const revNetA = revA - taxA;
@@ -3214,7 +3235,7 @@ function openAddEntry(){
   impotMode='montant';
   setImpotMode('montant');
   document.getElementById('modal-entry-title').textContent='Ajouter une ligne';
-  ['f-name','f-amount','f-impot-brut','f-impot-taux'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['f-name','f-amount','f-impot-brut','f-impot-taux','f-debit-day'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   document.getElementById('f-sign').value='neg';
   document.getElementById('f-member').value=myRole();
   onEntrySignChange('neg');
@@ -3276,6 +3297,8 @@ function onEntryCatChange(cat){
   const sec=document.getElementById('f-impot-section');
   const pctFields=document.getElementById('f-impot-pct-fields');
   const amtRow=document.getElementById('f-amount-row');
+  const debitSec=document.getElementById('f-debit-section');
+  debitSec.style.display=cat==='fixe'?'':'none';
   if(cat==='impot'){
     sec.style.display='';
     impotMode='montant';setImpotMode('montant');
@@ -3300,6 +3323,7 @@ function openEditEntry(id){
   onEntrySignChange(sign);
   document.getElementById('f-cat').value=e.cat;
   onEntryCatChange(e.cat);
+  document.getElementById('f-debit-day').value=e.debit_day??'';
   document.getElementById('modal-entry').classList.add('open');
 }
 function deleteEntry(id){
@@ -3326,15 +3350,17 @@ document.getElementById('modal-entry-save').onclick=async ()=>{
   const sign=document.getElementById('f-sign').value==='pos'?1:-1,cat=document.getElementById('f-cat').value,member=document.getElementById('f-member').value;
   if(!name||isNaN(amt))return alert('Remplissez tous les champs.');
   const amount=sign*Math.abs(amt);
+  const _dd=document.getElementById('f-debit-day').value;
+  const debit_day=cat==='fixe'&&_dd!==''?parseInt(_dd):null;
   document.getElementById('modal-entry').classList.remove('open');
   btn.disabled=true;showLoading();
   try{
     if(editEntryId){
-      const updated=await API.entries.update(editEntryId,{name,amount,cat,member});
+      const updated=await API.entries.update(editEntryId,{name,amount,cat,member,debit_day});
       entries=entries.map(e=>e.id===editEntryId?{...e,...updated}:e);
       showToast('Ligne modifiée ✓');
     } else {
-      const created=await API.entries.create({name,amount,cat,member});
+      const created=await API.entries.create({name,amount,cat,member,debit_day});
       entries.push(created);
       showToast('Ligne ajoutée ✓');
     }
@@ -3454,11 +3480,19 @@ function _renderMonthlySections(stats, expenses, savingsData = [], entryStats = 
   const epMember0    = entriesMember === 'Commun' ? myRole() : entriesMember;
   const epBudget0    = entryStats ? Math.round(entryStats.rav * (savingPct[epMember0] ?? 60) / 100) : 0;
   const revNet       = revenu.actual - impot.actual;
-  const totalDepReel = fixe.actual + vari.actual + loi.actual;
+  // Mois courant : exclure les charges fixes dont le prélèvement n'a pas encore eu lieu
+  const _mlyIsCurrentMonth = monthlyYear===new Date().getFullYear()&&monthlyMonth===new Date().getMonth()+1;
+  const _mlyTodayDay = new Date().getDate();
+  const _mlyMemberEntries = entriesMember==='all'||entriesMember==='Commun' ? entries : entries.filter(e=>e.member===entriesMember);
+  const _mlyPendingFix = _mlyIsCurrentMonth
+    ? _mlyMemberEntries.filter(e=>e.cat==='fixe'&&e.debit_day!=null&&e.debit_day>_mlyTodayDay).reduce((s,e)=>s+Math.abs(e.amount),0)
+    : 0;
+  const fixeActual   = Math.max(0, fixe.actual - _mlyPendingFix);
+  const totalDepReel = fixeActual + vari.actual + loi.actual;
   const soldeReel    = revNet - totalDepReel - Math.max(epDelta, 0);
   const revNetBudget = revenu.budget - impot.budget;
   const soldeBudget  = revNetBudget - (fixe.budget + vari.budget + loi.budget) - epBudget0;
-  const depRate      = revNet > 0 ? Math.round((fixe.actual + vari.actual) / revNet * 100) : 0;
+  const depRate      = revNet > 0 ? Math.round((fixeActual + vari.actual) / revNet * 100) : 0;
   const variPct      = vari.budget > 0 ? Math.round(vari.actual / vari.budget * 100) : null;
   const variPctCol   = variPct === null ? 'var(--muted)' : variPct > 100 ? 'var(--red)' : variPct > 80 ? 'var(--amber)' : 'var(--green)';
   const soldePct     = soldeBudget !== 0 ? Math.round(soldeReel / Math.abs(soldeBudget) * 100) : null;
@@ -3484,7 +3518,7 @@ function _renderMonthlySections(stats, expenses, savingsData = [], entryStats = 
   // ── KPI Mensuel (style Prévisionnel) ──
   const mlyRavKey  = `${epMember0}_${monthlyYear}_${monthlyMonth}`;
   const mlyPct     = monthlyEpPct[mlyRavKey] ?? (savingPct[epMember0] ?? 60);
-  const mlyRav     = revNet - fixe.actual - vari.actual - loi.actual - epMonthDelta;
+  const mlyRav     = revNet - fixeActual - vari.actual - loi.actual - epMonthDelta;
   const mlyEpC     = Math.max(0, Math.round(mlyRav * mlyPct / 100));
   const mlyLoiC    = Math.max(0, Math.round(mlyRav * (100 - mlyPct) / 100));
   const mlyRavRate = revNet > 0 ? Math.round(mlyRav / revNet * 100) : 0;
@@ -3582,7 +3616,7 @@ function _renderMonthlySections(stats, expenses, savingsData = [], entryStats = 
   const loiBudgetMly = loi.budget > 0 ? loi.budget
     : (entryStats ? Math.round(entryStats.rav * (100-(savingPct[epMember0]??60)) / 100) : 0);
   document.getElementById('monthly-kpis').innerHTML = _budgetKpiGrid(
-    _budgetKpiCard('Fixes',    fixe.actual,   fixe.budget,  '#d93535'),
+    _budgetKpiCard('Fixes',    fixeActual,    fixe.budget,  '#d93535'),
     _budgetKpiCard('Variables',vari.actual,   vari.budget,  '#e05a2b'),
     _budgetKpiCard('Loisir',   loi.actual,    loiBudgetMly, '#f59e0b'),
     (epMonthDelta<0?_retraitKpiCard(epMonthDelta,_mlyBalBefore,_mlyBalAfter):_budgetKpiCard('Épargne',epMonthDelta,epBudget0,'#2979c8',true))

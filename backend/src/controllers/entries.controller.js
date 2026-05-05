@@ -34,8 +34,8 @@ async function getStats(req, res, next) {
 
 async function createEntry(req, res, next) {
   try {
-    const { name, amount, cat, member } = req.body;
-    const entry = entriesService.create({ name, amount, cat, member }, req.user.id);
+    const { name, amount, cat, member, debit_day } = req.body;
+    const entry = entriesService.create({ name, amount, cat, member, debit_day }, req.user.id);
     sseService.broadcastToHousehold(req.user.id);
     res.status(201).json({ success: true, data: entry });
   } catch (err) { next(err); }
@@ -51,8 +51,8 @@ async function getEntry(req, res, next) {
 
 async function updateEntry(req, res, next) {
   try {
-    const { name, amount, cat, member } = req.body;
-    const entry = entriesService.update(Number(req.params.id), { name, amount, cat, member }, req.user.id);
+    const { name, amount, cat, member, debit_day } = req.body;
+    const entry = entriesService.update(Number(req.params.id), { name, amount, cat, member, debit_day }, req.user.id);
     sseService.broadcastToHousehold(req.user.id);
     res.json({ success: true, data: entry });
   } catch (err) { next(err); }
