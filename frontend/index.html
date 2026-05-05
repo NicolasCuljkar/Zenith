@@ -683,6 +683,49 @@ html.light .auth-card{box-shadow:0 4px 40px rgba(0,0,0,.08)}
 .app-toast.err{background:color-mix(in srgb,#d93535 14%,var(--surface));border-color:rgba(217,53,53,.35);color:var(--text)}
 @keyframes toastIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 
+/* ── Undo toast ── */
+.undo-toast{position:fixed;bottom:calc(84px + env(safe-area-inset-bottom,0));left:50%;transform:translateX(-50%);z-index:9995;display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:10px 14px 10px 18px;font-size:13px;font-weight:600;box-shadow:0 8px 32px rgba(0,0,0,.22);animation:toastIn .22s ease;white-space:nowrap;pointer-events:all}
+.undo-toast .undo-btn{padding:4px 12px;border-radius:8px;background:linear-gradient(135deg,#3B8BD4,#e06fa0);color:#fff;border:none;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit}
+
+/* ── KPI flash animation ── */
+@keyframes kpiFlash{0%{opacity:1}30%{opacity:.35}60%{opacity:1}80%{opacity:.6}100%{opacity:1}}
+.kpi-flash{animation:kpiFlash .5s ease}
+
+/* ── Member badge (topbar) ── */
+#topbar-member-badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);white-space:nowrap;letter-spacing:.03em;display:none}
+
+/* ── In-app notification panel ── */
+#notif-panel{position:fixed;top:52px;right:8px;width:min(340px,92vw);background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,.22);z-index:800;display:none;flex-direction:column;max-height:480px;overflow:hidden}
+#notif-panel.open{display:flex}
+.notif-header{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border-bottom:1px solid var(--border)}
+.notif-header span{font-size:var(--fs-sm);font-weight:700}
+.notif-list{overflow-y:auto;flex:1}
+.notif-item{padding:10px 14px;border-bottom:1px solid var(--border);cursor:default}
+.notif-item:last-child{border-bottom:none}
+.notif-item .ni-title{font-size:var(--fs-sm);font-weight:700;margin-bottom:2px}
+.notif-item .ni-body{font-size:var(--fs-xs);color:var(--muted);line-height:1.4}
+.notif-item .ni-time{font-size:10px;color:var(--hint);margin-top:3px}
+.notif-item.unread{background:color-mix(in srgb,var(--blue) 6%,var(--surface))}
+.notif-empty{padding:28px 16px;text-align:center;font-size:var(--fs-sm);color:var(--hint)}
+#topbar-notif-btn{position:relative;flex-shrink:0}
+#notif-badge{position:absolute;top:3px;right:3px;min-width:16px;height:16px;border-radius:8px;background:var(--red);color:#fff;font-size:10px;font-weight:700;display:none;align-items:center;justify-content:center;padding:0 3px;line-height:1}
+
+/* ── Onboarding wizard ── */
+#wizard-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:1200;display:none;align-items:center;justify-content:center;padding:16px}
+#wizard-overlay.open{display:flex}
+.wizard-card{background:var(--surface);border-radius:20px;padding:28px 24px 24px;width:100%;max-width:440px;border:1px solid var(--border);box-shadow:0 16px 48px rgba(0,0,0,.3)}
+.wizard-step-dots{display:flex;gap:6px;justify-content:center;margin-bottom:24px}
+.wizard-dot{width:8px;height:8px;border-radius:50%;background:var(--border);transition:background .2s}
+.wizard-dot.active{background:var(--blue)}
+.wizard-icon{font-size:2.4rem;text-align:center;margin-bottom:12px}
+.wizard-title{font-size:var(--fs-title);font-weight:800;letter-spacing:-.02em;text-align:center;margin-bottom:8px}
+.wizard-sub{font-size:var(--fs-sm);color:var(--muted);text-align:center;line-height:1.5;margin-bottom:24px}
+.wizard-actions{display:flex;flex-direction:column;gap:8px}
+.wizard-btn{padding:11px 18px;border-radius:10px;font-size:var(--fs-sm);font-weight:700;cursor:pointer;border:none;font-family:inherit;transition:opacity .15s}
+.wizard-btn.primary{background:linear-gradient(135deg,#3B8BD4,#e06fa0);color:#fff;box-shadow:0 4px 16px rgba(59,139,212,.25)}
+.wizard-btn.primary:hover{opacity:.9}
+.wizard-btn.secondary{background:var(--surface2);color:var(--muted);border:1px solid var(--border)}
+
 </style>
 <script>(function(){
   const isDark=localStorage.getItem('zenith_theme')==='dark';
@@ -804,6 +847,13 @@ window.onerror = function(msg, src, line) {
   </div>
 
   <span id="topbar-page-title" class="topbar-page-title"></span>
+  <span id="topbar-member-badge"></span>
+
+  <!-- In-app notification button -->
+  <button class="icon-btn" id="topbar-notif-btn" onclick="_toggleNotifPanel()" title="Notifications" style="flex-shrink:0">
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+    <span id="notif-badge"></span>
+  </button>
 
   <!-- Alert bell -->
   <button class="icon-btn" id="topbar-bell-btn" onclick="switchTab('dashboard');setTimeout(()=>document.getElementById('dash-alert')?.scrollIntoView({behavior:'smooth'}),100)" title="Alertes budgétaires" style="flex-shrink:0;position:relative;display:none">
@@ -1001,6 +1051,7 @@ window.onerror = function(msg, src, line) {
 </main>
 
 
+<button class="fab" id="fab-dashboard" style="display:none" aria-label="Ajouter une dépense"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
 <button class="fab" id="fab-entry" aria-label="Ajouter une ligne budgétaire"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
 <button class="fab" id="fab-saving" style="display:none" aria-label="Ajouter une épargne"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
 
@@ -1402,6 +1453,204 @@ Chart.defaults.plugins.legend.labels.usePointStyle = true;
 // Register datalabels plugin (only for charts that explicitly use it)
 // Per-chart registration via plugins array
 // ══════════════════════════════════════════════
+// ══════════════════════════════════════════════
+// UNDO TOAST
+// ══════════════════════════════════════════════
+let _undoTimer=null;
+let _undoEl=null;
+function _showUndoToast(label, onConfirm, onUndo){
+  if(_undoEl){ clearTimeout(_undoTimer); _undoEl.remove(); _undoEl=null; }
+  const el=document.createElement('div');
+  el.className='undo-toast';
+  el.innerHTML=`<span>${label}</span><button class="undo-btn" onclick="_undoAction()">Annuler</button>`;
+  document.body.appendChild(el);
+  _undoEl=el;
+  window._undoCallback=onUndo;
+  _undoTimer=setTimeout(async()=>{
+    if(_undoEl===el){ _undoEl.remove(); _undoEl=null; }
+    await onConfirm();
+  },4500);
+}
+function _undoAction(){
+  if(!_undoEl)return;
+  clearTimeout(_undoTimer);
+  _undoEl.remove(); _undoEl=null;
+  if(window._undoCallback)window._undoCallback();
+  window._undoCallback=null;
+}
+
+// ══════════════════════════════════════════════
+// MEMBER BADGE (TOPBAR)
+// ══════════════════════════════════════════════
+function _updateMemberBadge(){
+  const el=document.getElementById('topbar-member-badge');
+  if(!el||!currentUser)return;
+  if(currentTab==='dashboard'){
+    const lbl=dashboardMember==='all'?'Foyer':dashboardMember;
+    el.textContent=lbl;
+    el.style.display='';
+  } else {
+    el.style.display='none';
+  }
+}
+
+// ══════════════════════════════════════════════
+// IN-APP NOTIFICATIONS
+// ══════════════════════════════════════════════
+let _inAppNotifs=JSON.parse(localStorage.getItem('zenith_notifs')||'[]');
+let _notifUnread=_inAppNotifs.filter(n=>!n.read).length;
+
+function _saveNotifs(){ localStorage.setItem('zenith_notifs',JSON.stringify(_inAppNotifs.slice(0,30))); }
+
+function addInAppNotif(title, body, type='info'){
+  const n={ id:Date.now(), title, body, type, read:false, ts:new Date().toISOString() };
+  _inAppNotifs.unshift(n);
+  _notifUnread++;
+  _saveNotifs();
+  _renderNotifBadge();
+  _renderNotifList();
+}
+
+function _renderNotifBadge(){
+  const b=document.getElementById('notif-badge');
+  if(!b)return;
+  if(_notifUnread>0){
+    b.textContent=_notifUnread>9?'9+':_notifUnread;
+    b.style.display='flex';
+  } else {
+    b.style.display='none';
+  }
+}
+
+function _renderNotifList(){
+  const list=document.getElementById('notif-list');
+  if(!list)return;
+  if(_inAppNotifs.length===0){
+    list.innerHTML='<div class="notif-empty">Aucune notification</div>';
+    return;
+  }
+  const fmt=ts=>{
+    const d=new Date(ts), now=new Date();
+    const diff=Math.round((now-d)/60000);
+    if(diff<1)return'À l\'instant';
+    if(diff<60)return`Il y a ${diff} min`;
+    if(diff<1440)return`Il y a ${Math.round(diff/60)}h`;
+    return d.toLocaleDateString('fr-FR',{day:'numeric',month:'short'});
+  };
+  list.innerHTML=_inAppNotifs.map(n=>`
+    <div class="notif-item${n.read?'':' unread'}">
+      <div class="ni-title">${n.title}</div>
+      <div class="ni-body">${n.body}</div>
+      <div class="ni-time">${fmt(n.ts)}</div>
+    </div>`).join('');
+}
+
+function _toggleNotifPanel(){
+  const p=document.getElementById('notif-panel');
+  if(!p)return;
+  const wasOpen=p.classList.contains('open');
+  p.classList.toggle('open');
+  if(!wasOpen){ _markAllNotifsRead(); }
+}
+
+function _markAllNotifsRead(){
+  _inAppNotifs.forEach(n=>n.read=true);
+  _notifUnread=0;
+  _saveNotifs();
+  _renderNotifBadge();
+  _renderNotifList();
+}
+
+// Ferme le panel si clic en dehors
+document.addEventListener('click',e=>{
+  const p=document.getElementById('notif-panel');
+  const btn=document.getElementById('topbar-notif-btn');
+  if(p&&p.classList.contains('open')&&!p.contains(e.target)&&e.target!==btn&&!btn?.contains(e.target)){
+    p.classList.remove('open');
+  }
+});
+
+// ══════════════════════════════════════════════
+// ONBOARDING WIZARD
+// ══════════════════════════════════════════════
+const _WIZARD_STEPS=[
+  {
+    icon:'💰',
+    title:'Ajoutez votre premier revenu',
+    sub:'Commencez par renseigner votre salaire ou revenu principal. Tout repose sur cette base.',
+    actions:[
+      { lbl:'Ajouter un revenu', primary:true, fn:'_wizardAddEntry("revenu")' },
+      { lbl:'Passer', primary:false, fn:'_wizardNext()' },
+    ]
+  },
+  {
+    icon:'🏠',
+    title:'Vos charges fixes',
+    sub:'Loyer, électricité, abonnements… Ajoutez vos dépenses qui reviennent chaque mois.',
+    actions:[
+      { lbl:'Ajouter une charge fixe', primary:true, fn:'_wizardAddEntry("fixe")' },
+      { lbl:'Passer', primary:false, fn:'_wizardNext()' },
+    ]
+  },
+  {
+    icon:'🎯',
+    title:'C\'est parti !',
+    sub:'Votre tableau de bord est prêt. Vous pouvez maintenant suivre vos dépenses et votre épargne mois par mois.',
+    actions:[
+      { lbl:'Commencer', primary:true, fn:'_closeWizard()' },
+    ]
+  }
+];
+let _wizardStep=0;
+
+function maybeShowOnboarding(){
+  if(entries.length===0&&!localStorage.getItem('zenith_onboarded')){
+    _wizardStep=0;
+    _renderWizardStep();
+    document.getElementById('wizard-overlay').classList.add('open');
+  }
+}
+
+function _renderWizardStep(){
+  const step=_WIZARD_STEPS[_wizardStep];
+  const n=_WIZARD_STEPS.length;
+  document.getElementById('wizard-dots').innerHTML=Array.from({length:n},(_,i)=>`<div class="wizard-dot${i===_wizardStep?' active':''}"></div>`).join('');
+  document.getElementById('wizard-icon').textContent=step.icon;
+  document.getElementById('wizard-title').textContent=step.title;
+  document.getElementById('wizard-sub').textContent=step.sub;
+  document.getElementById('wizard-actions').innerHTML=step.actions.map(a=>`<button class="wizard-btn ${a.primary?'primary':'secondary'}" onclick="${a.fn}">${a.lbl}</button>`).join('');
+}
+
+function _wizardNext(){
+  _wizardStep++;
+  if(_wizardStep>=_WIZARD_STEPS.length){ _closeWizard(); return; }
+  _renderWizardStep();
+}
+
+function _wizardAddEntry(cat){
+  document.getElementById('wizard-overlay').classList.remove('open');
+  // Pré-sélectionne la catégorie dans le modal d'entrée
+  const origAfterSave=window._afterEntryModalSave;
+  openAddEntry();
+  setTimeout(()=>{
+    const catEl=document.getElementById('f-cat');
+    if(catEl){ catEl.value=cat; onEntryCatChange(cat); }
+    const saveBtn=document.getElementById('modal-entry-save');
+    const origClick=saveBtn.onclick;
+    saveBtn.onclick=async function(){
+      if(origClick)await origClick.call(this);
+      _wizardNext();
+      document.getElementById('wizard-overlay').classList.add('open');
+    };
+  },50);
+}
+
+function _closeWizard(){
+  localStorage.setItem('zenith_onboarded','1');
+  document.getElementById('wizard-overlay').classList.remove('open');
+  addInAppNotif('Bienvenue sur Zénith 🎉','Votre tableau de bord est configuré. Ajoutez vos dépenses mensuelles pour commencer le suivi.','info');
+}
+
 function showConfirm(msg,sub,onOk){
   document.getElementById('confirm-msg').textContent=msg;
   document.getElementById('confirm-sub').textContent=sub||'Cette action est irréversible.';
@@ -2010,9 +2259,11 @@ function switchTab(id){
   const el=document.getElementById('tab-'+id);
   if(el&&el.classList.contains('tab-panel')) el.classList.add('active');
   document.querySelectorAll(`[data-tab="${id}"]`).forEach(b=>b.classList.add('active'));
-  const isS=id==='savings',isE=id==='entries';
+  const isS=id==='savings',isE=id==='entries',isD=id==='dashboard';
   document.getElementById('fab-entry').style.display=isE?'':'none';
   document.getElementById('fab-saving').style.display=(isS&&savingsStabActive==='month')?'':'none';
+  document.getElementById('fab-dashboard').style.display=isD&&!hasNoData()?'':'none';
+  _updateMemberBadge();
   const me=myRole();
   if(id==='dashboard'){if(dashboardMember==='all')setDashboardMember(me);else renderDashboard();}
   if(id==='entries'){if(entriesMember==='Commun')setEntriesMember(me);else renderEntries();}
@@ -2408,7 +2659,7 @@ function renderMemberTabs(){
   renderMemberTabsFor('analysis-mtabs', analysisMember,   'setAnalysisMember');
 }
 
-function setDashboardMember(m){dashboardMember=m;renderMemberTabsFor('dash-mtabs',m,'setDashboardMember');setTimeout(updateMtabColors,0);renderDashboard();}
+function setDashboardMember(m){dashboardMember=m;renderMemberTabsFor('dash-mtabs',m,'setDashboardMember');setTimeout(updateMtabColors,0);renderDashboard();_updateMemberBadge();}
 function setEntriesMember(m){
   // entries tab uses 'Commun' for the combined view, 'all' maps to 'Commun'
   entriesMember=m==='all'?'Commun':m;
@@ -2607,7 +2858,7 @@ async function renderDashboard(){
     _budgetKpiCard('Fixes',    fixA,        fixBudget, '#d93535'),
     _budgetKpiCard('Variables',varA,        varBudget, '#e05a2b'),
     _budgetKpiCard('Loisir',   loiA,        loiBudget, '#f59e0b'),
-    epMonthDelta<0?_retraitKpiCard(epMonthDelta,_balBefore,_balAfter):_budgetKpiCard('Épargne',epMonthDelta,epBudget,'#2979c8',true),
+    epMonthDelta<0?_retraitKpiCard(epMonthDelta,_balBefore,_balAfter):`<div onclick="openAddSaving()" title="Saisir l'épargne du mois" style="cursor:pointer">${_budgetKpiCard('Épargne',epMonthDelta,epBudget,'#2979c8',true)}</div>`,
   );
 
   // ── Où va l'argent ? ──
@@ -2754,6 +3005,14 @@ async function renderDashboard(){
   renderMemberTabsFor('dash-mtabs',dashboardMember,'setDashboardMember');
   setTimeout(updateMtabColors,0);
   checkInAppAlerts();
+  // Flash les valeurs KPI pour feedback visuel
+  requestAnimationFrame(()=>{
+    document.querySelectorAll('#dash-content .kpi-value, #dash-content [style*="font-size:1.5rem"], #dash-content [style*="font-size:clamp"]').forEach(el=>{
+      el.classList.remove('kpi-flash');
+      void el.offsetWidth;
+      el.classList.add('kpi-flash');
+    });
+  });
 }
 
 function dashNavPrev(){
@@ -3309,6 +3568,7 @@ function onEntryCatChange(cat){
   }
 }
 document.getElementById('btn-add-entry').addEventListener('click',openAddEntry);
+document.getElementById('fab-dashboard').addEventListener('click',()=>openAddMonthlyExpense());
 document.getElementById('fab-entry').addEventListener('click',()=>{
   const mensuelActive=document.getElementById('entries-mensuel').style.display!=='none';
   if(mensuelActive)openAddMonthlyExpense();else openAddEntry();
@@ -3329,17 +3589,12 @@ function openEditEntry(id){
 function deleteEntry(id){
   const e=entries.find(x=>x.id===id);
   if(!e||!canEdit(e.member))return;
-  showConfirm(`Supprimer "${e?.name||'cette ligne'}" ?`,'Cette ligne sera définitivement supprimée.',async ()=>{
-    showLoading();
-    try{
-      await API.entries.delete(id);
-      entries=entries.filter(x=>x.id!==id);
-      showToast('Ligne supprimée');
-      updateNavForDataState();renderEntries();renderDashboard();
-    }catch(err){
-      showApiError('Erreur lors de la suppression : '+err.message);
-    }finally{hideLoading();}
-  });
+  entries=entries.filter(x=>x.id!==id);
+  updateNavForDataState();renderEntries();renderDashboard();
+  _showUndoToast(`"${e.name}" supprimé`,
+    async()=>{ try{ await API.entries.delete(id); }catch(err){ entries.push(e); updateNavForDataState();renderEntries();renderDashboard(); showApiError('Erreur : '+err.message); } },
+    ()=>{ entries.push(e); updateNavForDataState();renderEntries();renderDashboard(); }
+  );
 }
 document.getElementById('modal-entry-cancel').onclick=()=>document.getElementById('modal-entry').classList.remove('open');
 document.getElementById('modal-entry').addEventListener('click',e=>{if(e.target.id==='modal-entry')document.getElementById('modal-entry').classList.remove('open');});
@@ -3358,11 +3613,11 @@ document.getElementById('modal-entry-save').onclick=async ()=>{
     if(editEntryId){
       const updated=await API.entries.update(editEntryId,{name,amount,cat,member,debit_day});
       entries=entries.map(e=>e.id===editEntryId?{...e,...updated}:e);
-      showToast('Ligne modifiée ✓');
+      showToast('Ligne modifiée ✓');addInAppNotif('Ligne modifiée','Budget mis à jour.');
     } else {
       const created=await API.entries.create({name,amount,cat,member,debit_day});
       entries.push(created);
-      showToast('Ligne ajoutée ✓');
+      showToast('Ligne ajoutée ✓');addInAppNotif('Ligne ajoutée','Votre budget prévisionnel a été mis à jour.');
     }
     renderEntries();renderDashboard();
     _triggerPushAlertCheck();
@@ -4360,12 +4615,13 @@ async function deleteSelectedMonthly() {
 }
 function deleteMonthlyExpense(id) {
   const e = monthlyExpenses.find(x => x.id === id);
-  showConfirm(`Supprimer "${e?.name || 'cette dépense'}" ?`, 'Cette dépense sera définitivement supprimée.', async () => {
-    showLoading();
-    try { await API.monthlyExpenses.delete(id); showToast('Dépense supprimée'); await renderMonthly(); }
-    catch(err) { showApiError('Erreur lors de la suppression : ' + err.message); }
-    finally { hideLoading(); }
-  });
+  if (!e) return;
+  monthlyExpenses = monthlyExpenses.filter(x => x.id !== id);
+  renderMonthly();
+  _showUndoToast(`"${e.name}" supprimé`,
+    async () => { try { await API.monthlyExpenses.delete(id); } catch(err) { monthlyExpenses.push(e); renderMonthly(); showApiError('Erreur : ' + err.message); } },
+    () => { monthlyExpenses.push(e); renderMonthly(); }
+  );
 }
 async function toggleMonthlyExceptional(id) {
   const e = monthlyExpenses.find(x => x.id === id);
@@ -4775,17 +5031,13 @@ function openEditSaving(id){
 function deleteSaving(id){
   const s=savings.find(x=>x.id===id);
   if(!s||!canEdit(s.member))return;
-  showConfirm(`Supprimer l'entrée ${s?.month||''} ${s?.year||''} ?`,'Cette entrée sera définitivement supprimée.',async ()=>{
-    showLoading();
-    try{
-      await API.savings.delete(id);
-      savings=savings.filter(x=>x.id!==id);
-      renderSavings();
-      if (currentTab === 'entries' && document.getElementById('entries-mensuel').style.display !== 'none') renderMonthly();
-    }catch(err){
-      showApiError('Erreur lors de la suppression : '+err.message);
-    }finally{hideLoading();}
-  });
+  savings=savings.filter(x=>x.id!==id);
+  renderSavings();
+  if(currentTab==='entries'&&document.getElementById('entries-mensuel').style.display!=='none')renderMonthly();
+  _showUndoToast(`Épargne ${s.month} ${s.year} supprimée`,
+    async()=>{ try{ await API.savings.delete(id); }catch(err){ savings.push(s); renderSavings(); showApiError('Erreur : '+err.message); } },
+    ()=>{ savings.push(s); renderSavings(); }
+  );
 }
 document.getElementById('modal-saving-cancel').onclick=()=>document.getElementById('modal-saving').classList.remove('open');
 document.getElementById('modal-saving').addEventListener('click',e=>{if(e.target.id==='modal-saving')document.getElementById('modal-saving').classList.remove('open');});
@@ -4806,11 +5058,11 @@ document.getElementById('modal-saving-save').onclick=async ()=>{
     if(editSavingId){
       const updated=await API.savings.update(editSavingId,{member,year,month,amount});
       savings=savings.map(s=>s.id===editSavingId?{...s,...updated}:s);
-      showToast('Épargne modifiée ✓');
+      showToast('Épargne modifiée ✓');addInAppNotif('Épargne mise à jour','Votre relevé d\'épargne a été modifié.');
     } else {
       const created=await API.savings.create({member,year,month,amount});
       savings.push(created);
-      showToast('Épargne enregistrée ✓');
+      showToast('Épargne enregistrée ✓');addInAppNotif('Épargne enregistrée','Votre épargne du mois a bien été saisie.');
     }
     renderSavings();
     if (currentTab === 'entries' && document.getElementById('entries-mensuel').style.display !== 'none') renderMonthly();
@@ -6310,7 +6562,8 @@ async function _doLoginWithCredentials(userIdOrEmail,password){
         await loadData();
       }catch(e){console.warn('Auto-join failed:',e.message);}
     }
-    initUserContext();renderMemberTabs();updateNavForDataState();renderDashboard();renderEntries();document.getElementById('fab-entry').style.display='none';document.getElementById('fab-saving').style.display='none';
+    initUserContext();renderMemberTabs();updateNavForDataState();renderDashboard();renderEntries();document.getElementById('fab-entry').style.display='none';document.getElementById('fab-saving').style.display='none';document.getElementById('fab-dashboard').style.display='none';
+    _updateMemberBadge();_renderNotifBadge();_renderNotifList();
     if(window.location.pathname==='/banque'){switchTab('banque');}
     registerPushSubscription();
     _scheduleTokenExpiry(); connectSSE(); _startPoll();
@@ -6336,7 +6589,8 @@ async function doLogin(){
     if(errEl) errEl.classList.remove('show');
     showScreen('app');
     await loadData();
-    initUserContext();renderMemberTabs();updateNavForDataState();renderDashboard();renderEntries();document.getElementById('fab-entry').style.display='none';document.getElementById('fab-saving').style.display='none';
+    initUserContext();renderMemberTabs();updateNavForDataState();renderDashboard();renderEntries();document.getElementById('fab-entry').style.display='none';document.getElementById('fab-saving').style.display='none';document.getElementById('fab-dashboard').style.display='none';
+    _updateMemberBadge();_renderNotifBadge();_renderNotifList();
     if(window.location.pathname==='/banque'){switchTab('banque');}
     registerPushSubscription();
     _scheduleTokenExpiry(); connectSSE(); _startPoll();
@@ -6365,10 +6619,12 @@ async function doRegister(){
     currentUser=result.user;
     showScreen('app');
     await loadData();
-    initUserContext();renderMemberTabs();updateNavForDataState();renderDashboard();renderEntries();document.getElementById('fab-entry').style.display='none';document.getElementById('fab-saving').style.display='none';
+    initUserContext();renderMemberTabs();updateNavForDataState();renderDashboard();renderEntries();document.getElementById('fab-entry').style.display='none';document.getElementById('fab-saving').style.display='none';document.getElementById('fab-dashboard').style.display='none';
+    _updateMemberBadge();_renderNotifBadge();_renderNotifList();
     if(window.location.pathname==='/banque'){switchTab('banque');}
     registerPushSubscription();
     _scheduleTokenExpiry(); connectSSE(); _startPoll();
+    maybeShowOnboarding();
   }catch(apiErr){
     err.textContent=apiErr.message||'Erreur lors de la création du compte.';
     err.classList.add('show');
@@ -7425,6 +7681,29 @@ async function connectBank(){
 }
 </script>
 <div id="app-toast"></div>
+
+<!-- ══════ NOTIFICATION PANEL ══════ -->
+<div id="notif-panel">
+  <div class="notif-header">
+    <span>Notifications</span>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button onclick="_markAllNotifsRead()" style="font-size:11px;font-weight:600;color:var(--blue);background:none;border:none;cursor:pointer;padding:0">Tout lire</button>
+      <button onclick="_toggleNotifPanel()" style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:17px;line-height:1;padding:2px 4px">✕</button>
+    </div>
+  </div>
+  <div class="notif-list" id="notif-list"></div>
+</div>
+
+<!-- ══════ ONBOARDING WIZARD ══════ -->
+<div id="wizard-overlay">
+  <div class="wizard-card">
+    <div class="wizard-step-dots" id="wizard-dots"></div>
+    <div class="wizard-icon" id="wizard-icon"></div>
+    <div class="wizard-title" id="wizard-title"></div>
+    <div class="wizard-sub" id="wizard-sub"></div>
+    <div class="wizard-actions" id="wizard-actions"></div>
+  </div>
+</div>
 <div id="rep-exp-backdrop" style="display:none;position:fixed;inset:0;z-index:9998;background:rgba(0,0,0,.35)" onclick="_closeRepTip()"></div>
 <div id="rep-exp-tooltip" style="display:none;position:fixed;z-index:9999;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px;box-shadow:0 24px 64px rgba(0,0,0,.4);width:340px;max-width:calc(100vw - 32px);max-height:85vh;overflow-y:auto">
   <button onclick="_closeRepTip()" style="position:absolute;top:12px;right:12px;background:none;border:none;cursor:pointer;color:var(--muted);font-size:18px;line-height:1;padding:4px 6px">✕</button>

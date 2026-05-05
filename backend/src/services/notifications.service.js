@@ -247,6 +247,34 @@ function startScheduler() {
     console.log('[Push] Résumé hebdo envoyé');
   }, { timezone: 'Europe/Paris' });
 
+  // Chaque jour à 8h — rappel des prélèvements du jour
+  cron.schedule('0 8 * * *', async () => {
+    const today = new Date().getDate();
+    const rows = db.prepare(`
+      SELECT e.user_id, e.name, e.amount
+      FROM entries e
+      WHERE e.cat = 'fixe' AND e.debit_day = ?
+    `).all(today);
+
+    // Grouper par user_id
+    const byUser = {};
+    for (const row of rows) {
+      if (!byUser[row.user_id]) byUser[row.user_id] = [];
+      byUser[row.user_id].push(row);
+    }
+
+    for (const [userId, charges] of Object.entries(byUser)) {
+      const total = charges.reduce((s, c) => s + Math.abs(c.amount), 0);
+      const liste = charges.map(c => c.name).join(', ');
+      await sendToUser(Number(userId), {
+        title: 'Prélèvement aujourd\'hui',
+        body: `${liste} — ${Math.round(total).toLocaleString('fr-FR')} € débité ce jour.`,
+        url: '/',
+      });
+    }
+    if (rows.length > 0) console.log(`[Push] Rappels prélèvements envoyés (jour ${today})`);
+  }, { timezone: 'Europe/Paris' });
+
   // Chaque jour à 13h — vérification des alertes budgétaires
   cron.schedule('0 13 * * *', async () => {
     const users = db.prepare('SELECT id, name FROM users').all();
