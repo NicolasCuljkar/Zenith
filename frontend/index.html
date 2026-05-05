@@ -213,7 +213,8 @@ html.dark .bnav-btn{color:#aaa}
 
 /* ── KPI ── */
 .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:var(--sg)}
-.kpi-budget{display:grid;grid-template-columns:repeat(2,1fr);gap:var(--sg);margin-bottom:var(--sg)}
+.kpi-budget{display:grid;grid-template-columns:repeat(2,1fr);gap:var(--sg);margin-bottom:var(--sg);align-items:stretch}
+.kpi-budget>*,.kpi-budget .card{height:100%;box-sizing:border-box}
 @media(min-width:641px){.kpi-budget{grid-template-columns:repeat(4,1fr)}}
 .kpi{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px 11px;position:relative;overflow:visible;transition:box-shadow .22s,transform .18s;display:flex;flex-direction:column;cursor:default}
 .kpi:hover{box-shadow:0 8px 32px color-mix(in srgb,var(--kc,rgba(0,0,0,.8)) 28%,transparent);transform:translateY(-2px);z-index:10}
