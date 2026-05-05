@@ -1341,7 +1341,7 @@ window.onerror = function(msg, src, line) {
       </div>
       <div class="frow">
         <div class="fgrp"><label>Catégorie</label>
-          <select id="fme-cat">
+          <select id="fme-cat" onchange="_allowedCats=[this.value];_loadExpenseLabels([this.value],'')">
             <option value="variable">Variable</option>
             <option value="loisir">Loisir</option>
             <option value="revenu">Revenu</option>
@@ -4418,7 +4418,7 @@ function openAddMonthlyExpense(defaultCat = 'variable', locked = false, allowedC
     variable: 'Ajouter une dépense variable',
     loisir:   'Ajouter un loisir',
   };
-  document.getElementById('modal-me-title').textContent = locked ? (titles[defaultCat] || 'Ajouter une dépense') : (defaultCat === 'revenu' ? 'Ajouter revenu / impôt exceptionnel' : (titles[defaultCat] || 'Ajouter une dépense'));
+  document.getElementById('modal-me-title').textContent = locked ? (titles[defaultCat] || 'Ajouter une dépense') : (!allowedCats && defaultCat === 'variable' ? 'Ajouter une dépense' : (defaultCat === 'revenu' ? 'Ajouter revenu / impôt exceptionnel' : (titles[defaultCat] || 'Ajouter une dépense')));
   const catEl = document.getElementById('fme-cat');
   const allCats = ['variable','loisir','revenu','impot','fixe'];
   const visible = allowedCats || allCats;
