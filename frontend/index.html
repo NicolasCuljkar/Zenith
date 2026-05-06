@@ -2922,9 +2922,9 @@ async function renderDashboard(){
 
   // ── 4 cartes budget ──
   const _cats=_budgetKpiGrid(
-    _budgetKpiCard('Fixes',    fixA,        fixBudget, '#d93535'),
-    _budgetKpiCard('Variables',varA,        varBudget, '#e05a2b'),
-    _budgetKpiCard('Loisir',   loiA,        loiBudget, '#f59e0b'),
+    `<div onclick="_dashAddExpense('fixe')" title="Ajouter une charge fixe" style="cursor:pointer">${_budgetKpiCard('Fixes',    fixA,        fixBudget, '#d93535')}</div>`,
+    `<div onclick="_dashAddExpense('variable')" title="Ajouter une dépense variable" style="cursor:pointer">${_budgetKpiCard('Variables',varA,        varBudget, '#e05a2b')}</div>`,
+    `<div onclick="_dashAddExpense('loisir')" title="Ajouter un loisir" style="cursor:pointer">${_budgetKpiCard('Loisir',   loiA,        loiBudget, '#f59e0b')}</div>`,
     epMonthDelta<0?_retraitKpiCard(epMonthDelta,_balBefore,_balAfter):`<div onclick="openAddSaving()" title="Saisir l'épargne du mois" style="cursor:pointer">${_budgetKpiCard('Épargne',epMonthDelta,epBudget,'#2979c8',true)}</div>`,
   );
 
@@ -3994,7 +3994,7 @@ function _renderMonthlySections(stats, expenses, savingsData = [], entryStats = 
     `<div onclick="openAddMonthlyExpense('fixe',true,['fixe'])" title="Ajouter une charge fixe" style="cursor:pointer">${_budgetKpiCard('Fixes',    fixeActual,    fixe.budget,  '#d93535')}</div>`,
     `<div onclick="openAddMonthlyExpense('variable',true,['variable'])" title="Ajouter une dépense variable" style="cursor:pointer">${_budgetKpiCard('Variables',vari.actual,   vari.budget,  '#e05a2b')}</div>`,
     `<div onclick="openAddMonthlyExpense('loisir',true,['loisir'])" title="Ajouter un loisir" style="cursor:pointer">${_budgetKpiCard('Loisir',   loi.actual,    loiBudgetMly, '#f59e0b')}</div>`,
-    (epMonthDelta<0?_retraitKpiCard(epMonthDelta,_mlyBalBefore,_mlyBalAfter):_budgetKpiCard('Épargne',epMonthDelta,epBudget0,'#2979c8',true))
+    (epMonthDelta<0?_retraitKpiCard(epMonthDelta,_mlyBalBefore,_mlyBalAfter):`<div onclick="openMonthlySaving(${monthlyYear},${monthlyMonth})" title="Saisir l'épargne du mois" style="cursor:pointer">${_budgetKpiCard('Épargne',epMonthDelta,epBudget0,'#2979c8',true)}</div>`)
   );
   setTimeout(fillAllTracks, 0);
 
@@ -4791,11 +4791,17 @@ document.getElementById('modal-me-save').onclick = async () => {
     }
     editMonthlyEntryId = null;
     await renderMonthly();
+    if (window._mlyCtxDash) { window._mlyCtxDash = false; renderDash().catch(()=>{}); }
   } catch(err) {
     showApiError('Erreur lors de la sauvegarde : ' + err.message);
     document.getElementById('modal-monthly-expense').classList.add('open');
   } finally { hideLoading(); btn.disabled = false; }
 };
+function _dashAddExpense(cat) {
+  monthlyYear = dashYear; monthlyMonth = dashMonth;
+  window._mlyCtxDash = true;
+  openAddMonthlyExpense(cat, true, [cat]);
+}
 
 // ══════════════════════════════════════════════
 // SAVINGS
