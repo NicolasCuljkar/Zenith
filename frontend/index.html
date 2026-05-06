@@ -1113,6 +1113,7 @@ window.onerror = function(msg, src, line) {
       <button class="stab active" id="stab-apparence" onclick="switchSettingsTab('apparence')">Apparence</button>
       <button class="stab" id="stab-compte" onclick="switchSettingsTab('compte')">Compte</button>
       <button class="stab" id="stab-securite" onclick="switchSettingsTab('securite')">Sécurité</button>
+      <button class="stab" id="stab-notifs" onclick="switchSettingsTab('notifs')">Notifications</button>
     </div>
 
     <!-- Tab Apparence : photo + couleur -->
@@ -1164,6 +1165,24 @@ window.onerror = function(msg, src, line) {
         </div>
         <div id="set-pwd-msg" style="font-size:var(--fs-sm);min-height:18px"></div>
         <button class="btn-add" onclick="saveSettingsPassword()" style="width:100%;justify-content:center;margin-top:4px">Changer le mot de passe</button>
+      </div>
+    </div>
+
+    <!-- Tab Notifications -->
+    <div id="settings-tab-notifs" style="display:none">
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="padding:12px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);font-size:var(--fs-sm);color:var(--muted);line-height:1.6">
+          Testez la réception des notifications push et leur enregistrement dans l'historique.
+        </div>
+        <button class="btn-add" id="btn-test-notif" onclick="_testNotif()" style="width:100%;justify-content:center">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+          Envoyer une notification test
+        </button>
+        <button class="btn-add" onclick="_triggerPushAlertCheck();showToast('Vérification des alertes déclenchée');document.getElementById('modal-settings').classList.remove('open')" style="width:100%;justify-content:center;background:var(--surface2);color:var(--text);border:1px solid var(--border)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          Vérifier les alertes budgétaires
+        </button>
+        <div id="test-notif-msg" style="font-size:var(--fs-sm);min-height:18px;text-align:center"></div>
       </div>
     </div>
 
@@ -2336,7 +2355,7 @@ document.getElementById('modal-settings').addEventListener('click',e=>{if(e.targ
 document.getElementById('modal-foyer').addEventListener('click',e=>{if(e.target.id==='modal-foyer'){closeQRScanner();document.getElementById('modal-foyer').classList.remove('open');}});
 
 function switchSettingsTab(tab){
-  ['apparence','compte','securite'].forEach(t=>{
+  ['apparence','compte','securite','notifs'].forEach(t=>{
     document.getElementById('settings-tab-'+t).style.display=t===tab?'':'none';
     const btn=document.getElementById('stab-'+t);
     if(btn) btn.classList.toggle('active',t===tab);
@@ -7537,6 +7556,22 @@ function _updateBell(alerts) {
 }
 
 // Déclenche une vérification push côté serveur (non bloquant)
+async function _testNotif(){
+  const btn=document.getElementById('btn-test-notif');
+  const msg=document.getElementById('test-notif-msg');
+  if(btn){btn.disabled=true;btn.textContent='Envoi…';}
+  if(msg){msg.style.color='var(--muted)';msg.textContent='';}
+  try{
+    await fetch('/api/notifications/test',{method:'POST',headers:{'Authorization':`Bearer ${API.getToken()}`,'Content-Type':'application/json'}});
+    if(msg){msg.style.color='var(--green)';msg.textContent='✓ Notification envoyée — vérifiez la cloche !';}
+    await _loadNotifs();
+  }catch(e){
+    if(msg){msg.style.color='var(--red)';msg.textContent='Erreur : '+(e.message||'inconnue');}
+  }finally{
+    if(btn){btn.disabled=false;btn.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg> Envoyer une notification test';}
+  }
+}
+
 function _triggerPushAlertCheck() {
   if (!API.auth.isLoggedIn()) return;
   fetch('/api/notifications/check-alerts', {
