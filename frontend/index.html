@@ -2965,6 +2965,38 @@ async function renderDashboard(){
   for(const r of _postesRows){if(!_catGroups[r.cat])_catGroups[r.cat]={items:[],total:0};_catGroups[r.cat].items.push(r);_catGroups[r.cat].total+=r.total;}
   const _catBudgets={fixe:fixBudget,variable:varBudget,loisir:loiBudget,epargne:epBudget};
 
+  // Sparklines 6 mois par catégorie
+  const _spkM=[];
+  for(let i=5;i>=0;i--){const d=new Date(dashYear,dashMonth-1-i,1);_spkM.push({year:d.getFullYear(),month:d.getMonth()+1});}
+  const _spkTotals={};
+  for(const sc of ['fixe','variable','loisir']){
+    _spkTotals[sc]=_spkM.map(({year,month})=>
+      (allMlyExp||[]).filter(e=>e.year===year&&e.month===month&&e.cat===sc&&!e.is_exceptional)
+        .reduce((s,e)=>s+Math.abs(e.amount),0)
+    );
+  }
+  const _FR_M=['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+  _spkTotals['epargne']=_spkM.map(({year,month})=>
+    (savingsDash||[]).filter(s=>s.year===year&&s.month===_FR_M[month-1]&&(s.delta||0)>0)
+      .reduce((s,sv)=>s+(sv.delta||0),0)
+  );
+  const _svgSpk=(vals,col,bgt=0)=>{
+    const W=88,H=22,P=2;
+    const max=Math.max(...vals,bgt,1);
+    const pts=vals.map((v,i)=>{
+      const x=P+(i/(vals.length-1))*(W-P*2);
+      const y=H-P-(v/max)*(H-P*2);
+      return x.toFixed(1)+','+y.toFixed(1);
+    });
+    const lx=(W-P).toFixed(1),ly=(H-P-(vals[vals.length-1]/max)*(H-P*2)).toFixed(1);
+    const bgtY=bgt>0?(H-P-(Math.min(bgt,max)/max)*(H-P*2)).toFixed(1):null;
+    return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="overflow:visible;display:block">
+      ${bgtY!==null?`<line x1="${P}" y1="${bgtY}" x2="${W-P}" y2="${bgtY}" stroke="${col}" stroke-width="1" stroke-dasharray="3,2" opacity=".35"/>`:''}
+      <polyline points="${pts.join(' ')}" fill="none" stroke="${col}" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" opacity=".8"/>
+      <circle cx="${lx}" cy="${ly}" r="2.5" fill="${col}"/>
+    </svg>`;
+  };
+
   const _ovaItem=(r, catTotal=0)=>{
     const isNeg=r.total<0;
     const col=isNeg?'var(--red)':(_catColP[r.cat]||'#6b7280');
@@ -3015,11 +3047,11 @@ async function renderDashboard(){
               ${chevronSvg}
             </div>
           </div>
-          <div style="font-size:1.25rem;font-weight:900;letter-spacing:-.03em;color:${col};line-height:1;margin-bottom:4px">${eur(g.total)}</div>
-          <div style="font-size:var(--fs-xs);color:var(--muted);margin-bottom:6px">${subtext}</div>
-          <div style="height:4px;background:var(--surface2);border-radius:99px;overflow:hidden">
-            <div style="width:${barW}%;height:100%;background:${barCol};border-radius:99px;transition:width .5s ease"></div>
+          <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:8px;margin-bottom:2px">
+            <div style="font-size:1.25rem;font-weight:900;letter-spacing:-.03em;color:${col};line-height:1">${eur(g.total)}</div>
+            <div style="flex-shrink:0;opacity:.85">${_svgSpk(_spkTotals[c]||[],col,bgt)}</div>
           </div>
+          <div style="font-size:var(--fs-xs);color:var(--muted);margin-top:3px">${subtext}</div>
         </div>
         <div id="ova-items-${c}" class="ova-items" style="max-height:0">
           ${g.items.map(r=>_ovaItem(r,g.total)).join('')}
@@ -3035,9 +3067,11 @@ async function renderDashboard(){
       <span style="width:7px;height:7px;border-radius:50%;background:var(--red);flex-shrink:0"></span>
       <span style="font-size:10px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--red)">Retrait épargne</span>
     </div>
-    <div style="font-size:1.25rem;font-weight:900;letter-spacing:-.03em;color:var(--red);line-height:1;margin-bottom:4px">−${eur(Math.abs(epMonthDelta))}</div>
-    ${_balBefore!==null?`<div style="font-size:var(--fs-xs);color:var(--muted);margin-bottom:6px">${eur(_balBefore)} → <b style="color:var(--red)">${eur(_balAfter)}</b></div>`:'<div style="margin-bottom:6px"></div>'}
-    <div style="height:4px;background:var(--surface2);border-radius:99px;overflow:hidden"><div style="width:100%;height:100%;background:var(--red);border-radius:99px"></div></div>
+    <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:8px;margin-bottom:2px">
+      <div style="font-size:1.25rem;font-weight:900;letter-spacing:-.03em;color:var(--red);line-height:1">−${eur(Math.abs(epMonthDelta))}</div>
+      <div style="flex-shrink:0;opacity:.85">${_svgSpk(_spkTotals['epargne']||[],'var(--red)',0)}</div>
+    </div>
+    ${_balBefore!==null?`<div style="font-size:var(--fs-xs);color:var(--muted);margin-top:3px">${eur(_balBefore)} → <b style="color:var(--red)">${eur(_balAfter)}</b></div>`:''}
   </div>`:'';
   const _ova=`<div class="card" style="padding:0;overflow:hidden">
     <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid var(--border)">
