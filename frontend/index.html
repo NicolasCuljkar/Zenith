@@ -4300,7 +4300,7 @@ ${bar}    <div class="tbl-wrap"><table style="width:100%;table-layout:fixed">
 // Groupe épargne — lié à la table savings (même données que l'onglet Épargne)
 function _monthlyEpargneGroup(savingRecord, g, budgetTotal, actualTotal, revNet, isMobile) {
   _monthlySavingRec = savingRecord || null;
-  const addBtn = MLY_ADD_BTN(`openMonthlySaving(${monthlyYear},${monthlyMonth})`);
+  const addBtn = '';
   const hasDelta = !!savingRecord;
   const deltaVal = savingRecord ? (savingRecord.delta != null ? savingRecord.delta : savingRecord.amount) : null;
   const deltaStr = hasDelta ? (deltaVal >= 0 ? '+' : '') + eur(deltaVal) : '—';
