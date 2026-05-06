@@ -4536,14 +4536,17 @@ async function _loadExpenseLabels(cats, selectValue = '') {
     ]);
     catsArr.forEach((cat, i) => {
       // Dédoublonner : historique en premier, labels perso en complément
+      const labelMap = new Map(labelArrays[i].map(l => [l.name, l.id]));
       const seen = new Set();
       const names = [
         ...histArrays[i],
         ...labelArrays[i].map(l => l.name)
-      ].filter(n => { if (seen.has(n)) return false; seen.add(n); return true; });
+      ].filter(n => { if (seen.has(n)) return false; seen.add(n); return true; })
+        .filter(n => !['impôt','impot'].includes(n.toLowerCase()));
       names.forEach(name => {
         const o = document.createElement('option');
         o.value = name; o.textContent = name; o.dataset.cat = cat;
+        if (labelMap.has(name)) o.dataset.id = labelMap.get(name);
         sel.appendChild(o);
       });
     });
