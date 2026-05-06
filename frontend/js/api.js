@@ -449,6 +449,8 @@ const _monthlyExpenses = {
   getHistory(params = {}) { return get('/monthly-expenses/history', params); },
   /** Ajouter une dépense manuelle */
   create(data) { return post('/monthly-expenses', data); },
+  /** Noms distincts utilisés pour une catégorie */
+  getNames(cat) { return get('/monthly-expenses/names', { cat }); },
   /** Modifier une dépense */
   update(id, data) { return put(`/monthly-expenses/${id}`, data); },
   /** Supprimer une dépense */

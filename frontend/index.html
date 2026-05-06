@@ -4532,12 +4532,21 @@ async function _loadExpenseLabels(cats, selectValue = '') {
   sel.disabled = false;
   sel.innerHTML = '<option value="">— Sélectionner —</option>';
   try {
-    const all = await Promise.all(catsArr.map(c => API.expenseLabels.getAll({ cat: c })));
-    all.forEach((labels, i) => {
-      const cat = catsArr[i];
-      labels.forEach(l => {
+    // Fusionner historique réel + labels perso pour chaque catégorie
+    const [histArrays, labelArrays] = await Promise.all([
+      Promise.all(catsArr.map(c => API.monthlyExpenses.getNames(c).catch(()=>[]))),
+      Promise.all(catsArr.map(c => API.expenseLabels.getAll({ cat: c }).catch(()=>[])))
+    ]);
+    catsArr.forEach((cat, i) => {
+      // Dédoublonner : historique en premier, labels perso en complément
+      const seen = new Set();
+      const names = [
+        ...histArrays[i],
+        ...labelArrays[i].map(l => l.name)
+      ].filter(n => { if (seen.has(n)) return false; seen.add(n); return true; });
+      names.forEach(name => {
         const o = document.createElement('option');
-        o.value = l.name; o.textContent = l.name; o.dataset.cat = cat; o.dataset.id = l.id;
+        o.value = name; o.textContent = name; o.dataset.cat = cat;
         sel.appendChild(o);
       });
     });
@@ -4550,7 +4559,6 @@ async function _loadExpenseLabels(cats, selectValue = '') {
         sel.value = selectValue;
       }
     }
-    // Sync catégorie si data-cat présent
     _syncCatFromLabel();
   } catch(e) { console.error('Labels:', e); }
 }

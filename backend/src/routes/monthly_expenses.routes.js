@@ -10,6 +10,7 @@ router.use(requireAuth);
 // NOTE: /stats et /history avant /:id pour éviter les conflits de routes
 router.get('/stats',   monthlyCtrl.getStats);
 router.get('/history', monthlyCtrl.getHistory);
+router.get('/names',   monthlyCtrl.getNames);
 router.get('/',        monthlyCtrl.listExpenses);
 router.post('/',       monthlyCtrl.createExpense);
 router.put('/:id',     monthlyCtrl.updateExpense);

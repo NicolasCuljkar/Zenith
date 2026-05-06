@@ -78,6 +78,17 @@ function getById(id) {
   return db.prepare('SELECT * FROM monthly_expenses WHERE id = ?').get(id) || null;
 }
 
+// Noms distincts utilisés par un user pour une catégorie donnée (triés par fréquence)
+function getDistinctNames(userId, cat) {
+  return db.prepare(`
+    SELECT name, COUNT(*) AS freq
+    FROM monthly_expenses
+    WHERE user_id = ? AND cat = ? AND entry_id IS NULL
+    GROUP BY name
+    ORDER BY freq DESC, name ASC
+  `).all(userId, cat).map(r => r.name);
+}
+
 // Retourne les stats comparatives budget prévu vs réel pour un mois donné
 function getStats(filters = {}) {
   const entryScope = filters.userIds ? { userIds: filters.userIds } : { userId: filters.userId };
@@ -232,4 +243,4 @@ function remove(id, userId) {
   return { deleted: true };
 }
 
-module.exports = { getAll, getById, getStats, getHistory, create, update, remove };
+module.exports = { getAll, getById, getStats, getHistory, create, update, remove, getDistinctNames };

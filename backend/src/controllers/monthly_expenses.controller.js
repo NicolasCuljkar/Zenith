@@ -62,4 +62,13 @@ async function deleteExpense(req, res, next) {
   } catch (err) { next(err); }
 }
 
-module.exports = { listExpenses, getStats, getHistory, createExpense, updateExpense, deleteExpense };
+async function getNames(req, res, next) {
+  try {
+    const { cat } = req.query;
+    if (!cat) return res.status(400).json({ success: false, error: 'Paramètre cat requis.' });
+    const names = monthlyService.getDistinctNames(req.user.id, cat);
+    res.json({ success: true, data: names });
+  } catch (err) { next(err); }
+}
+
+module.exports = { listExpenses, getStats, getHistory, createExpense, updateExpense, deleteExpense, getNames };
