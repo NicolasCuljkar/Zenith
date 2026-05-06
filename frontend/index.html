@@ -1980,7 +1980,7 @@ function _budgetKpiCard(lbl, act, bgt, col, isEp=false) {
   } else if (bgt > 0) {
     const rem = bgt - act;
     const remCol = rem>=0 ? 'var(--green)' : 'var(--red)';
-    const remStr = rem>=0 ? `+${eur(rem)}` : `−${eur(Math.abs(rem))}`;
+    const remStr = rem>=0 ? eur(rem) : `−${eur(Math.abs(rem))}`;
     return `<div class="card" style="padding:14px 16px;margin-bottom:0">
       <div style="font-size:10px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:${col};margin-bottom:6px">${lbl}</div>
       <div style="font-size:1.5rem;font-weight:900;letter-spacing:-.03em;color:${remCol};line-height:1">${remStr}</div>
