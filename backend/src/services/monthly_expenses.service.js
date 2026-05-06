@@ -115,12 +115,12 @@ function getStats(filters = {}) {
         const ov = overrides.get(e.id);
         return s + (ov !== undefined ? Math.abs(ov.amount) : Math.abs(e.amount));
       }, 0);
-      // Plus dépenses manuelles pour ce cat (sans entry_id)
-      actual += manualExpenses.filter(e => e.cat === cat && !e.entry_id).reduce((s, e) => s + Math.abs(e.amount), 0);
+      // Plus dépenses manuelles pour ce cat (sans entry_id, hors exceptionnelles)
+      actual += manualExpenses.filter(e => e.cat === cat && !e.entry_id && !e.is_exceptional).reduce((s, e) => s + Math.abs(e.amount), 0);
     } else if (cat === 'epargne') {
       actual = epargneActual;
     } else {
-      actual = manualExpenses.filter(e => e.cat === cat && !e.entry_id).reduce((s, e) => s + Math.abs(e.amount), 0);
+      actual = manualExpenses.filter(e => e.cat === cat && !e.entry_id && !e.is_exceptional).reduce((s, e) => s + Math.abs(e.amount), 0);
     }
 
     result[cat] = { budget, actual, diff: budget - actual };
@@ -143,6 +143,7 @@ function getHistory(filters = {}) {
     expCond.push('member = ?'); expParams.push(filters.member);
   }
   expCond.push("cat IN ('fixe','variable','loisir')");
+  expCond.push('(is_exceptional IS NULL OR is_exceptional = 0)');
   const expenses = db.prepare(`
     SELECT year, month, cat, entry_id, amount
     FROM monthly_expenses

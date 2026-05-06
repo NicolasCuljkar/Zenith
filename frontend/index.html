@@ -993,14 +993,17 @@ window.onerror = function(msg, src, line) {
       <div id="monthly-ret-banner" style="margin-bottom:var(--sg)"></div>
       <div id="monthly-solde-hero" style="margin-bottom:var(--sg)"></div>
       <div id="monthly-kpis"></div>
-      <div id="monthly-search-bar" style="display:flex;gap:6px;margin-bottom:var(--sg)">
-        <input type="text" id="mly-search-input" class="inp search-inp" placeholder="Rechercher…" style="flex:1;min-width:0">
-        <select id="mly-filter-cat" class="inp" style="flex-shrink:0;width:auto">
-          <option value="">Toutes catégories</option>
-          <option value="revenu">Revenu</option><option value="impot">Impôt</option>
-          <option value="fixe">Fixe</option><option value="variable">Variable</option>
-          <option value="epargne">Épargne</option><option value="loisir">Loisir</option>
-        </select>
+      <div id="monthly-search-bar" style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:var(--sg)">
+        <div style="flex:1;display:flex;flex-direction:row;gap:6px;min-width:0">
+          <input type="text" id="mly-search-input" class="inp search-inp" placeholder="Rechercher…" style="flex:1;min-width:0">
+          <select id="mly-filter-cat" class="inp" style="flex-shrink:0;width:auto">
+            <option value="">Toutes catégories</option>
+            <option value="revenu">Revenu</option><option value="impot">Impôt</option>
+            <option value="fixe">Fixe</option><option value="variable">Variable</option>
+            <option value="epargne">Épargne</option><option value="loisir">Loisir</option>
+          </select>
+        </div>
+        <button class="btn-add btn-add-desktop" id="btn-add-monthly" onclick="openAddMonthlyExpense()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Ajouter</button>
       </div>
       <div id="monthly-sections"></div>
     </div>
@@ -1077,7 +1080,6 @@ window.onerror = function(msg, src, line) {
 
 <button class="fab" id="fab-dashboard" style="display:none" aria-label="Ajouter une dépense"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
 <button class="fab" id="fab-entry" aria-label="Ajouter une ligne budgétaire"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
-<button class="fab" id="fab-saving" style="display:none" aria-label="Ajouter une épargne"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
 
 <nav class="bottom-nav">
   <div class="bottom-nav-inner">
@@ -2317,7 +2319,7 @@ function switchTab(id){
   document.querySelectorAll(`[data-tab="${id}"]`).forEach(b=>b.classList.add('active'));
   const isS=id==='savings',isE=id==='entries',isD=id==='dashboard';
   document.getElementById('fab-entry').style.display=isE?'':'none';
-  document.getElementById('fab-saving').style.display=(isS&&savingsStabActive==='month')?'':'none';
+  
   document.getElementById('fab-dashboard').style.display=isD&&!hasNoData()?'':'none';
   _updateMemberBadge();
   const me=myRole();
@@ -4767,7 +4769,6 @@ document.querySelectorAll('#tab-savings .stab').forEach(btn=>{
     if(savingsStabActive==='year')savingsYearFilter='all';
     document.querySelectorAll('#tab-savings .stab').forEach(b=>b.classList.remove('active'));btn.classList.add('active');
     const isYear=savingsStabActive==='year';
-    document.getElementById('fab-saving').style.display=isYear?'none':(currentTab==='savings'?'':'none');
     renderSavings();
   });
 });
@@ -4803,7 +4804,6 @@ function renderSavings(){
     : savings.filter(s=>s.member===savingsMember).length===0;
   if(_savNoData){
     barChart=destroyChart(barChart);
-    if(currentTab==='savings')document.getElementById('fab-saving').style.display='none';
     document.getElementById('savings-nodata').style.display='';
     document.getElementById('savings-nodata').innerHTML=`
       <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:3rem 1.5rem;text-align:center;background:var(--surface);border:1px solid var(--border);border-radius:var(--rl)">
@@ -4826,7 +4826,6 @@ function renderSavings(){
   document.getElementById('savings-nodata').style.display='none';
   document.getElementById('savings-content').style.display='';
   const _canAddS=savingsMember!=='all'&&savingsMember===myRole()&&savingsStabActive!=='year';
-  if(currentTab==='savings')document.getElementById('fab-saving').style.display=_canAddS?'':'none';
   if(!document.getElementById('bar-chart')) document.getElementById('bar-chart-wrap').innerHTML='<canvas id="bar-chart"></canvas>';
   const isYear=savingsStabActive==='year',isMobile=window.innerWidth<=640;
   const [first,second]=orderedMembers();
@@ -5114,7 +5113,7 @@ function setSavingAmountMode(mode){
     inp.value='';
   }
 }
-document.getElementById('fab-saving').addEventListener('click',openAddSaving);
+
 function openEditSaving(id){
   const s=savings.find(x=>x.id===id);if(!s||!canEdit(s.member))return;editSavingId=id;
   document.getElementById('modal-saving-title').textContent='Modifier';
@@ -6683,7 +6682,7 @@ async function _doLoginWithCredentials(userIdOrEmail,password){
         await loadData();
       }catch(e){console.warn('Auto-join failed:',e.message);}
     }
-    initUserContext();renderMemberTabs();updateNavForDataState();renderDashboard();renderEntries();document.getElementById('fab-entry').style.display='none';document.getElementById('fab-saving').style.display='none';document.getElementById('fab-dashboard').style.display='none';
+    initUserContext();renderMemberTabs();updateNavForDataState();renderDashboard();renderEntries();document.getElementById('fab-entry').style.display='none';document.getElementById('fab-dashboard').style.display='none';
     _updateMemberBadge();_loadNotifs();
     if(window.location.pathname==='/banque'){switchTab('banque');}
     registerPushSubscription();
@@ -6710,7 +6709,7 @@ async function doLogin(){
     if(errEl) errEl.classList.remove('show');
     showScreen('app');
     await loadData();
-    initUserContext();renderMemberTabs();updateNavForDataState();renderDashboard();renderEntries();document.getElementById('fab-entry').style.display='none';document.getElementById('fab-saving').style.display='none';document.getElementById('fab-dashboard').style.display='none';
+    initUserContext();renderMemberTabs();updateNavForDataState();renderDashboard();renderEntries();document.getElementById('fab-entry').style.display='none';document.getElementById('fab-dashboard').style.display='none';
     _updateMemberBadge();_loadNotifs();
     if(window.location.pathname==='/banque'){switchTab('banque');}
     registerPushSubscription();
@@ -6740,7 +6739,7 @@ async function doRegister(){
     currentUser=result.user;
     showScreen('app');
     await loadData();
-    initUserContext();renderMemberTabs();updateNavForDataState();renderDashboard();renderEntries();document.getElementById('fab-entry').style.display='none';document.getElementById('fab-saving').style.display='none';document.getElementById('fab-dashboard').style.display='none';
+    initUserContext();renderMemberTabs();updateNavForDataState();renderDashboard();renderEntries();document.getElementById('fab-entry').style.display='none';document.getElementById('fab-dashboard').style.display='none';
     _updateMemberBadge();_loadNotifs();
     if(window.location.pathname==='/banque'){switchTab('banque');}
     registerPushSubscription();
