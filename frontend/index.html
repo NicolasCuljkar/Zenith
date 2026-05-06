@@ -472,6 +472,14 @@ input[type=range]:hover::-moz-range-thumb{transform:scale(1.1)}
   .main{padding:0 2.5rem 5rem}
 }
 @media(max-width:900px){.g3{grid-template-columns:1fr 1fr}}
+/* ══ 641–1023px — tablette ══ */
+@media(min-width:641px) and (max-width:1023px){
+  .main{padding:0 1.5rem 4rem}
+  .kpi-grid{grid-template-columns:repeat(3,1fr);gap:10px}
+  .kpi-budget{grid-template-columns:repeat(2,1fr)}
+  .tabs-row{gap:4px}
+  .tab-btn{padding:7px 14px;font-size:var(--fs-xs)}
+}
 /* ══ 640px — mise en page uniquement (zéro changement de taille) ══ */
 @media(max-width:640px){
   :root{--sg:.625rem}
@@ -763,15 +771,18 @@ html.light .auth-card{box-shadow:0 4px 40px rgba(0,0,0,.08)}
 <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
 </head>
 <body>
-<!-- Diagnostic : affiche les erreurs JS en rouge sur la page -->
 <script>
-window.onerror = function(msg, src, line) {
-  var d = document.getElementById('js-error-banner');
-  if (!d) { d = document.createElement('div'); d.id='js-error-banner';
-    d.style.cssText='position:fixed;top:0;left:0;right:0;background:#ff4444;color:#fff;padding:10px 14px;font-size:var(--fs-sm);z-index:9999;font-family:monospace;white-space:pre-wrap';
-    document.body.appendChild(d); }
-  d.textContent = '⚠ Erreur JS : ' + msg + '\n  Fichier : ' + src + ' (ligne ' + line + ')';
-};
+// Bannière d'erreur JS uniquement en dev (localhost)
+if(window.location.hostname==='localhost'||window.location.hostname==='127.0.0.1'){
+  window.onerror=function(msg,src,line){
+    var d=document.getElementById('js-error-banner');
+    if(!d){d=document.createElement('div');d.id='js-error-banner';
+      d.style.cssText='position:fixed;top:0;left:0;right:0;background:#ff4444;color:#fff;padding:10px 14px;font-size:var(--fs-sm);z-index:9999;font-family:monospace;white-space:pre-wrap;cursor:pointer';
+      d.onclick=function(){d.remove();};
+      document.body.appendChild(d);}
+    d.textContent='⚠ Erreur JS : '+msg+'\n  Fichier : '+src+' (ligne '+line+') — cliquer pour fermer';
+  };
+}
 </script>
 <!-- ══════ SPLASH — chargement initial ══════ -->
 <div id="screen-splash" style="position:fixed;inset:0;z-index:9999;background:var(--bg);display:flex;align-items:center;justify-content:center">
@@ -874,7 +885,7 @@ window.onerror = function(msg, src, line) {
   <span id="topbar-member-badge"></span>
 
   <!-- In-app notification button -->
-  <button class="icon-btn" id="topbar-notif-btn" onclick="_toggleNotifPanel()" title="Notifications" style="flex-shrink:0">
+  <button class="icon-btn" id="topbar-notif-btn" onclick="_toggleNotifPanel()" title="Notifications" aria-label="Notifications" style="flex-shrink:0">
     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
     <span id="notif-badge"></span>
   </button>
@@ -886,7 +897,7 @@ window.onerror = function(msg, src, line) {
   </button>
 
   <!-- Refresh button (desktop only) -->
-  <button class="icon-btn btn-add-desktop" id="topbar-refresh-btn" onclick="_refreshAndRender(true)" title="Actualiser les données" style="flex-shrink:0">
+  <button class="icon-btn btn-add-desktop" id="topbar-refresh-btn" onclick="_refreshAndRender(true)" title="Actualiser les données" aria-label="Actualiser les données" style="flex-shrink:0">
     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
   </button>
 
@@ -1173,9 +1184,24 @@ window.onerror = function(msg, src, line) {
     <!-- Tab Notifications -->
     <div id="settings-tab-notifs" style="display:none">
       <div style="display:flex;flex-direction:column;gap:10px">
-        <div style="padding:12px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);font-size:var(--fs-sm);color:var(--muted);line-height:1.6">
-          Testez la réception des notifications push et leur enregistrement dans l'historique.
+        <!-- Préférences -->
+        <div style="font-size:var(--fs-xs);font-weight:700;color:var(--hint);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px">Préférences</div>
+        <div style="display:flex;flex-direction:column;gap:6px;padding:12px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r)">
+          <label style="display:flex;align-items:center;justify-content:space-between;gap:8px;cursor:pointer">
+            <span style="font-size:var(--fs-sm);color:var(--text)">Alertes dépassement budget</span>
+            <input type="checkbox" id="notif-pref-budget" onchange="_saveNotifPrefs()" style="width:36px;height:20px;cursor:pointer;accent-color:var(--blue)">
+          </label>
+          <label style="display:flex;align-items:center;justify-content:space-between;gap:8px;cursor:pointer">
+            <span style="font-size:var(--fs-sm);color:var(--text)">Récapitulatif mensuel</span>
+            <input type="checkbox" id="notif-pref-recap" onchange="_saveNotifPrefs()" style="width:36px;height:20px;cursor:pointer;accent-color:var(--blue)">
+          </label>
+          <label style="display:flex;align-items:center;justify-content:space-between;gap:8px;cursor:pointer">
+            <span style="font-size:var(--fs-sm);color:var(--text)">Rappels de saisie</span>
+            <input type="checkbox" id="notif-pref-reminders" onchange="_saveNotifPrefs()" style="width:36px;height:20px;cursor:pointer;accent-color:var(--blue)">
+          </label>
         </div>
+        <!-- Tests -->
+        <div style="font-size:var(--fs-xs);font-weight:700;color:var(--hint);text-transform:uppercase;letter-spacing:.06em;margin-top:4px;margin-bottom:2px">Outils</div>
         <button class="btn-add" id="btn-test-notif" onclick="_testNotif()" style="width:100%;justify-content:center">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
           Envoyer une notification test
@@ -1566,13 +1592,13 @@ function _renderNotifList(){
     return d.toLocaleDateString('fr-FR',{day:'numeric',month:'short'});
   };
   list.innerHTML=_inAppNotifs.map(n=>`
-    <div class="notif-item${n.is_read?'':' unread'}" style="display:flex;align-items:flex-start;gap:8px">
+    <div class="notif-item${n.is_read?'':' unread'}" onclick="_markNotifRead(${n.id})" style="display:flex;align-items:flex-start;gap:8px;cursor:pointer" title="${n.is_read?'':'Marquer comme lu'}">
       <div style="flex:1;min-width:0">
-        <div class="ni-title">${n.title}</div>
-        <div class="ni-body">${n.body}</div>
+        <div class="ni-title">${esc(n.title)}</div>
+        <div class="ni-body">${esc(n.body)}</div>
         <div class="ni-time">${fmt(n.created_at)}</div>
       </div>
-      <button onclick="_deleteNotif(${n.id})" style="background:none;border:none;cursor:pointer;color:var(--hint);flex-shrink:0;padding:2px 4px;font-size:14px;line-height:1;border-radius:4px" title="Supprimer">✕</button>
+      <button onclick="event.stopPropagation();_deleteNotif(${n.id})" style="background:none;border:none;cursor:pointer;color:var(--hint);flex-shrink:0;padding:2px 4px;font-size:14px;line-height:1;border-radius:4px" title="Supprimer">✕</button>
     </div>`).join('');
 }
 
@@ -1595,6 +1621,15 @@ async function _toggleNotifPanel(){
       _renderNotifBadge();
     }
   }
+}
+
+async function _markNotifRead(id){
+  const n=_inAppNotifs.find(x=>x.id===id);
+  if(!n||n.is_read)return;
+  n.is_read=1;
+  _renderNotifList();
+  _renderNotifBadge();
+  try{ await API.notifications.markRead(); }catch(_){}
 }
 
 async function _deleteNotif(id){
@@ -1919,6 +1954,7 @@ function saveData(){
 }
 
 // ── Utils ──
+const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 const eur=n=>n==null?'—':Math.round(n).toLocaleString('fr-FR')+' €';
 const dlt=n=>n==null?'—':(n>=0?'+':'')+Math.round(n).toLocaleString('fr-FR')+' €';
 const fmtPct=p=>p==null?'—':(p>=0?'+':'')+p.toFixed(1)+'%';
@@ -2374,6 +2410,7 @@ function switchSettingsTab(tab){
     ['set-pwd-cur','set-pwd-new','set-pwd-cfm'].forEach(id=>document.getElementById(id).value='');
     document.getElementById('set-pwd-msg').textContent='';
   }
+  if(tab==='notifs') _applyNotifPrefsToUI();
 }
 // ══════════════════════════════════════════════
 // FOYER (HOUSEHOLD)
@@ -3758,6 +3795,7 @@ let monthlySelected = new Set();
 let monthlySelectedSuppress = new Map(); // entryId → entry (lignes auto à supprimer ce mois)
 let editMonthlyId      = null;
 let editMonthlyEntryId = null; // non-null → correction d'une ligne auto
+let _lastMonthlyCat    = 'variable'; // mémorise la dernière catégorie utilisée
 let _monthlyAutoMap    = {};   // entry.id → entry (pour openMonthlyAutoOverride)
 let _monthlySavingRec  = null; // saving record du mois affiché (pour édition depuis suivi mensuel)
 let monthlySectionCollapsed = { revenus: true, fixe: true, variable: true, loisir: true, epargne: true };
@@ -4530,7 +4568,8 @@ function suppressMonthlyLine(entryId, name) {
 let _labelCat = 'variable';
 let _allowedCats = null;
 const CAT_LABELS = { revenu:'Revenu', impot:'Impôt', fixe:'Charge fixe', variable:'Variable', loisir:'Loisir' };
-function openAddMonthlyExpense(defaultCat = 'variable', locked = false, allowedCats = null) {
+function openAddMonthlyExpense(defaultCat = null, locked = false, allowedCats = null) {
+  if (!defaultCat) defaultCat = _lastMonthlyCat;
   editMonthlyId      = null;
   editMonthlyEntryId = null;
   const titles = {
@@ -4776,6 +4815,8 @@ document.getElementById('modal-me-save').onclick = async () => {
   const cat  = catEl.value || catEl.options[catEl.selectedIndex]?.value || 'variable';
   const note = document.getElementById('fme-note').value.trim();
   if (!name || isNaN(amt) || amt <= 0) return alert('Sélectionnez une désignation et renseignez un montant.');
+  // Mémorise la catégorie pour la prochaine ouverture
+  _lastMonthlyCat = cat;
   // Revenus : montant positif ; dépenses : montant négatif
   const amount = cat === 'revenu' ? Math.abs(amt) : -Math.abs(amt);
   const member = entriesMember === 'Commun' ? myRole() : entriesMember;
@@ -6391,6 +6432,11 @@ document.addEventListener('keydown', e => {
     _swX=null;_swY=null;
     if(Math.abs(dx)<80||Math.abs(dx)<Math.abs(dy)*1.6)return; // seuil plus strict
     try{
+      // Dans l'onglet Suivi mensuel : swipe = navigation mois
+      if(currentTab==='entries'){
+        if(dx<0) monthlyNavNext?.(); else monthlyNavPrev?.();
+        return;
+      }
       const idx=_TAB_ORDER.indexOf(currentTab);
       if(idx===-1)return;
       const next=dx<0?_TAB_ORDER[idx+1]:_TAB_ORDER[idx-1];
@@ -7601,6 +7647,29 @@ function _updateBell(alerts) {
 }
 
 // Déclenche une vérification push côté serveur (non bloquant)
+// ── Notification preferences (stored in localStorage) ────────────────────────
+const _NOTIF_PREF_KEY = 'zenith_notif_prefs';
+function _loadNotifPrefs() {
+  try { return JSON.parse(localStorage.getItem(_NOTIF_PREF_KEY) || '{}'); } catch(_){ return {}; }
+}
+function _saveNotifPrefs() {
+  const prefs = {
+    budget:    document.getElementById('notif-pref-budget')?.checked ?? true,
+    recap:     document.getElementById('notif-pref-recap')?.checked ?? true,
+    reminders: document.getElementById('notif-pref-reminders')?.checked ?? false,
+  };
+  localStorage.setItem(_NOTIF_PREF_KEY, JSON.stringify(prefs));
+}
+function _applyNotifPrefsToUI() {
+  const prefs = _loadNotifPrefs();
+  const b = document.getElementById('notif-pref-budget');
+  const r = document.getElementById('notif-pref-recap');
+  const rm = document.getElementById('notif-pref-reminders');
+  if(b) b.checked = prefs.budget !== false;
+  if(r) r.checked = prefs.recap !== false;
+  if(rm) rm.checked = prefs.reminders === true;
+}
+
 async function _testNotif(){
   const btn=document.getElementById('btn-test-notif');
   const msg=document.getElementById('test-notif-msg');
