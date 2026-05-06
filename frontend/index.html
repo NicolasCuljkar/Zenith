@@ -971,6 +971,7 @@ if(window.location.hostname==='localhost'||window.location.hostname==='127.0.0.1
     <div style="display:flex;align-items:center;gap:0;border-bottom:1px solid var(--border);margin-bottom:.75rem">
       <button class="stab active" data-etab="previsionnel" onclick="switchEntriesTab('previsionnel')">Prévisionnel</button>
       <button class="stab" data-etab="mensuel" onclick="switchEntriesTab('mensuel')">Suivi mensuel</button>
+      <button class="stab" data-etab="simulation" onclick="switchEntriesTab('simulation')" style="color:var(--amber)">Simulation</button>
     </div>
 
     <!-- ── PRÉVISIONNEL ── -->
@@ -991,6 +992,27 @@ if(window.location.hostname==='localhost'||window.location.hostname==='127.0.0.1
       </div>
       <div id="entries-sections"></div>
       <div id="entries-profile-wrap" style="margin-top:.75rem"></div>
+    </div>
+
+    <!-- ── SIMULATION ── -->
+    <div id="entries-simulation" style="display:none">
+      <!-- Bandeau simulation -->
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:color-mix(in srgb,var(--amber) 8%,var(--surface));border:1px solid color-mix(in srgb,var(--amber) 28%,var(--border));border-radius:var(--r);margin-bottom:.75rem">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <span style="font-size:var(--fs-xs);color:var(--text);flex:1">Mode simulation — vos modifications <strong>n'affectent pas</strong> le prévisionnel.</span>
+        <button onclick="_simReset()" class="btn" style="padding:4px 10px;font-size:var(--fs-xs);flex-shrink:0">Réinitialiser</button>
+      </div>
+      <!-- Sélecteur de membre + bouton ajout -->
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:.75rem">
+        <select id="sim-member-sel" onchange="renderSimulation()" class="inp" style="flex:1;max-width:200px"></select>
+        <button onclick="_simOpenAdd()" class="btn-add" style="flex-shrink:0"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Ajouter</button>
+      </div>
+      <!-- KPI -->
+      <div id="sim-kpis" class="kpi-grid" style="margin-bottom:.75rem"></div>
+      <!-- Delta bar -->
+      <div id="sim-delta" style="margin-bottom:.75rem"></div>
+      <!-- Sections -->
+      <div id="sim-sections"></div>
     </div>
 
     <!-- ── SUIVI MENSUEL ── -->
@@ -1222,7 +1244,7 @@ if(window.location.hostname==='localhost'||window.location.hostname==='127.0.0.1
 
 <!-- FOYER MODAL -->
 <div class="overlay" id="modal-foyer">
-  <div class="modal" style="max-width:400px">
+  <div class="modal" style="max-width:520px;overflow-y:hidden;max-height:none">
     <div class="modal-drag"></div>
 
     <!-- Header -->
@@ -1308,14 +1330,16 @@ if(window.location.hostname==='localhost'||window.location.hostname==='127.0.0.1
 
       <!-- QR section (inside active, shown on demand) -->
       <div id="foyer-qr-section" style="display:none;margin-bottom:1rem">
-        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:20px;text-align:center">
-          <div style="font-size:var(--fs-xs);font-weight:700;color:var(--hint);text-transform:uppercase;letter-spacing:.06em;margin-bottom:14px">Scanner pour rejoindre</div>
-          <div id="foyer-qr-code" style="display:inline-block;padding:10px;background:#fff;border-radius:12px;margin-bottom:14px;box-shadow:0 2px 12px rgba(0,0,0,.08)"></div>
-          <div style="display:flex;align-items:center;justify-content:center;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 16px;margin-bottom:8px">
-            <span style="font-size:var(--fs-xs);color:var(--hint);font-weight:600;text-transform:uppercase;letter-spacing:.05em">Code</span>
-            <span id="foyer-invite-code" style="font-size:1.2rem;font-weight:800;letter-spacing:.2em;color:var(--text);font-variant-numeric:tabular-nums"></span>
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:20px;display:flex;gap:20px;align-items:center;flex-wrap:wrap">
+          <div id="foyer-qr-code" style="display:inline-block;padding:10px;background:#fff;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,.08);flex-shrink:0"></div>
+          <div style="flex:1;min-width:140px;display:flex;flex-direction:column;gap:10px;text-align:center">
+            <div style="font-size:var(--fs-xs);font-weight:700;color:var(--hint);text-transform:uppercase;letter-spacing:.06em">Scanner pour rejoindre</div>
+            <div style="display:flex;align-items:center;justify-content:center;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 16px">
+              <span style="font-size:var(--fs-xs);color:var(--hint);font-weight:600;text-transform:uppercase;letter-spacing:.05em">Code</span>
+              <span id="foyer-invite-code" style="font-size:1.2rem;font-weight:800;letter-spacing:.2em;color:var(--text);font-variant-numeric:tabular-nums"></span>
+            </div>
+            <div id="foyer-invite-expiry" style="font-size:var(--fs-xs);color:var(--hint)"></div>
           </div>
-          <div id="foyer-invite-expiry" style="font-size:var(--fs-xs);color:var(--hint)"></div>
         </div>
       </div>
 
@@ -1385,6 +1409,34 @@ if(window.location.hostname==='localhost'||window.location.hostname==='127.0.0.1
     <div class="modal-footer">
       <button class="btn" id="modal-entry-cancel">Annuler</button>
       <button class="btn-add" id="modal-entry-save">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- SIMULATION ENTRY MODAL -->
+<div class="overlay" id="modal-sim-entry">
+  <div class="modal">
+    <div class="modal-drag"></div>
+    <h3 id="sim-modal-title">Ajouter une ligne simulée</h3>
+    <div class="fstack">
+      <div class="fgrp"><label>Désignation</label><input type="text" id="sim-f-name" placeholder="ex. Loyer" autocomplete="off"></div>
+      <div class="frow">
+        <div class="fgrp"><label>Type</label>
+          <select id="sim-f-sign" onchange="_simSignChange(this.value)">
+            <option value="neg">Dépense (−)</option>
+            <option value="pos">Revenu (+)</option>
+          </select>
+        </div>
+        <div class="fgrp"><label>Catégorie</label><select id="sim-f-cat"></select></div>
+      </div>
+      <div class="frow">
+        <div class="fgrp"><label>Montant (€)</label><input type="number" id="sim-f-amount" min="0" step="0.01" placeholder="0" inputmode="decimal"></div>
+        <div class="fgrp" id="sim-f-member-wrap"><label>Membre</label><select id="sim-f-member"></select></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="document.getElementById('modal-sim-entry').classList.remove('open')">Annuler</button>
+      <button class="btn-add" onclick="_simSaveEntry()">Enregistrer</button>
     </div>
   </div>
 </div>
@@ -3813,7 +3865,9 @@ function switchEntriesTab(tab) {
   document.querySelectorAll('[data-etab]').forEach(b => b.classList.toggle('active', b.dataset.etab === tab));
   document.getElementById('entries-previsionnel').style.display = tab === 'previsionnel' ? '' : 'none';
   document.getElementById('entries-mensuel').style.display      = tab === 'mensuel'      ? '' : 'none';
-  if (tab === 'mensuel') { _updateMonthlyNavNext(); _updateMonthlyNavPrev(); renderMonthly(); }
+  document.getElementById('entries-simulation').style.display   = tab === 'simulation'   ? '' : 'none';
+  if (tab === 'mensuel')    { _updateMonthlyNavNext(); _updateMonthlyNavPrev(); renderMonthly(); }
+  if (tab === 'simulation') { _simLoaded = false; _simLoad(); renderSimulation(); }
 }
 let MONTHLY_MIN_YEAR = new Date().getFullYear(), MONTHLY_MIN_MONTH = new Date().getMonth() + 1;
 function monthlyNavPrev() {
@@ -4843,6 +4897,261 @@ function _dashAddExpense(cat) {
   window._mlyCtxDash = true;
   openAddMonthlyExpense(cat, true, [cat]);
 }
+
+// ══════════════════════════════════════════════
+// SIMULATION
+// ══════════════════════════════════════════════
+const _simKey = () => `zenith_sim_${currentUser?.id || ''}`;
+let _simEntries     = [];   // copy on which user works
+let _simOrigEntries = [];   // snapshot from real entries (for delta)
+let _simEditId      = null; // _simId being edited
+let _simLoaded      = false;
+
+function _simLoad() {
+  if (_simLoaded) return;
+  _simLoaded = true;
+  try {
+    const d = JSON.parse(localStorage.getItem(_simKey()) || 'null');
+    if (d?.entries && Array.isArray(d.entries)) {
+      _simEntries     = d.entries;
+      _simOrigEntries = d.orig || [];
+      return;
+    }
+  } catch(_) {}
+  _simResetSilent();
+}
+
+function _simResetSilent() {
+  _simEntries     = entries.map(e => ({...e, _simId: String(e.id), _simNew: false}));
+  _simOrigEntries = _simEntries.map(e => ({...e}));
+  _simPersist();
+}
+
+function _simReset() {
+  const doIt = () => { _simResetSilent(); renderSimulation(); };
+  const hasChanges = _simEntries.some(e => e._simNew ||
+    _simOrigEntries.some(o => o._simId === e._simId && Math.abs(o.amount) !== Math.abs(e.amount))) ||
+    _simOrigEntries.some(o => !_simEntries.find(e => e._simId === o._simId));
+  if (!hasChanges) { doIt(); return; }
+  showConfirm('Réinitialiser la simulation ?', 'Les modifications seront perdues et rechargées depuis le prévisionnel actuel.', doIt);
+}
+
+function _simPersist() {
+  try { localStorage.setItem(_simKey(), JSON.stringify({entries: _simEntries, orig: _simOrigEntries})); } catch(_) {}
+}
+
+function _simGetMember() {
+  return document.getElementById('sim-member-sel')?.value || myRole();
+}
+
+function renderSimulation() {
+  // Populate member selector
+  const sel = document.getElementById('sim-member-sel');
+  if (sel) {
+    const mems = [...new Set(entries.map(e => e.member))].filter(Boolean);
+    const curVal = sel.value || (entriesMember !== 'Commun' ? entriesMember : myRole());
+    let opts = mems.map(m => `<option value="${m}"${m === curVal ? ' selected' : ''}>${m}</option>`).join('');
+    if (mems.length > 1) opts = `<option value="Commun"${curVal === 'Commun' ? ' selected' : ''}>Foyer complet</option>` + opts;
+    sel.innerHTML = opts;
+  }
+
+  const mem   = _simGetMember();
+  const simF  = mem === 'Commun' ? _simEntries : _simEntries.filter(e => e.member === mem);
+  const origF = mem === 'Commun' ? _simOrigEntries : _simOrigEntries.filter(e => e.member === mem);
+
+  const stats     = calcStats(simF);
+  const origStats = calcStats(origF);
+
+  // KPI delta badge helper
+  const dBadge = (d, goodWhenPos = true) => {
+    if (Math.abs(Math.round(d)) < 1) return '';
+    const good = goodWhenPos ? d > 0 : d < 0;
+    const col  = good ? 'var(--green)' : 'var(--red)';
+    return `<span style="font-size:10px;font-weight:700;color:${col};margin-left:4px">${d > 0 ? '+' : ''}${eur(d)}</span><span style="font-size:10px;color:var(--hint)"> vs prév.</span>`;
+  };
+
+  // KPI cards
+  const kpiEl = document.getElementById('sim-kpis');
+  if (kpiEl) {
+    const kpis = [
+      {label:'Rev. net',  val: stats.revNet,              d: stats.revNet - origStats.revNet,                                      good: true},
+      {label:'Charges',   val: stats.fix + stats.vari,    d: (stats.fix + stats.vari) - (origStats.fix + origStats.vari),          good: false},
+      {label:'Épargne',   val: stats.ep,                  d: stats.ep - origStats.ep,                                              good: true},
+      {label:'Solde net', val: stats.solde,               d: stats.solde - origStats.solde,                                        good: true},
+    ];
+    kpiEl.innerHTML = kpis.map(k => `
+      <div class="kpi">
+        <div class="kpi-header"><div class="kpi-label">${k.label}</div></div>
+        <div class="kpi-value" style="color:${k.val >= 0 ? 'var(--text)' : 'var(--red)'};font-size:var(--fs-md)">${eur(k.val)}</div>
+        <div style="font-size:10px;margin-top:3px;min-height:14px;line-height:1.3">${dBadge(k.d, k.good)}</div>
+      </div>`).join('');
+  }
+
+  // Deleted entries (in orig, absent from sim)
+  const simIds        = new Set(_simEntries.map(e => e._simId));
+  const deletedEntries = origF.filter(e => !simIds.has(e._simId));
+
+  // Change counts
+  const nAdded    = simF.filter(e => e._simNew).length;
+  const nModified = simF.filter(e => !e._simNew && origF.some(o => o._simId === e._simId && Math.abs(o.amount) !== Math.abs(e.amount))).length;
+  const nDeleted  = deletedEntries.length;
+
+  // Delta summary bar
+  const deltaEl = document.getElementById('sim-delta');
+  if (deltaEl) {
+    const dSolde = stats.solde - origStats.solde;
+    const total  = nAdded + nModified + nDeleted;
+    deltaEl.innerHTML = total > 0 ? `
+      <div style="padding:8px 12px;background:color-mix(in srgb,var(--amber) 8%,var(--surface));border:1px solid color-mix(in srgb,var(--amber) 22%,var(--border));border-radius:var(--r);font-size:var(--fs-xs);color:var(--muted);display:flex;flex-wrap:wrap;gap:6px;align-items:center">
+        <span>${[nAdded && `+${nAdded} ajoutée${nAdded > 1 ? 's' : ''}`, nModified && `${nModified} modifiée${nModified > 1 ? 's' : ''}`, nDeleted && `−${nDeleted} supprimée${nDeleted > 1 ? 's' : ''}`].filter(Boolean).join(' · ')}</span>
+        <span style="margin-left:auto;font-weight:600;color:var(--text)">Impact solde : <span style="color:${dSolde >= 0 ? 'var(--green)' : 'var(--red)'}">${dSolde > 0 ? '+' : ''}${eur(dSolde)}</span></span>
+      </div>` : '';
+  }
+
+  // Sections
+  const GROUPS = [
+    {key:'revenus',   label:'Revenus & Impôts',  cats:['revenu','impot'], color:'#0d9e6e'},
+    {key:'fixes',     label:'Charges fixes',      cats:['fixe'],           color:'#d93535'},
+    {key:'variables', label:'Dépenses variables', cats:['variable'],       color:'#e05a2b'},
+    {key:'loisir',    label:'Loisir',             cats:['loisir'],         color:'#f59e0b'},
+    {key:'epargne',   label:'Épargne',            cats:['epargne'],        color:'#2979c8'},
+  ];
+
+  const cont = document.getElementById('sim-sections');
+  if (!cont) return;
+
+  cont.innerHTML = GROUPS.map(g => {
+    const gSim = simF.filter(e => g.cats.includes(e.cat));
+    const gDel = deletedEntries.filter(e => g.cats.includes(e.cat));
+    if (!gSim.length && !gDel.length) return '';
+
+    const rows = gSim.map(e => {
+      const orig    = origF.find(o => o._simId === e._simId);
+      const isNew   = e._simNew;
+      const isMod   = !isNew && orig && Math.abs(orig.amount) !== Math.abs(e.amount);
+      const badge   = isNew
+        ? `<span style="font-size:9px;font-weight:700;background:var(--green);color:#fff;border-radius:3px;padding:1px 5px;flex-shrink:0">AJOUTÉ</span>`
+        : isMod
+        ? `<span style="font-size:9px;font-weight:700;background:var(--amber);color:#fff;border-radius:3px;padding:1px 5px;flex-shrink:0">MODIFIÉ</span>`
+        : '';
+      return `<div style="display:flex;align-items:center;gap:8px;padding:9px 2px;border-bottom:1px solid var(--border)">
+        <div style="flex:1;min-width:0;display:flex;flex-wrap:wrap;align-items:center;gap:5px">
+          <span style="font-size:var(--fs-sm);font-weight:600">${esc(e.name)}</span>${badge}
+          ${mem === 'Commun' ? `<span style="font-size:10px;color:var(--muted)">${esc(e.member)}</span>` : ''}
+        </div>
+        <div style="text-align:right;flex-shrink:0">
+          <div style="font-size:var(--fs-sm);font-weight:700;color:${g.color}">${eur(Math.abs(e.amount))}</div>
+          ${isMod ? `<div style="font-size:10px;color:var(--hint);text-decoration:line-through">${eur(Math.abs(orig.amount))}</div>` : ''}
+        </div>
+        <button onclick="_simOpenEdit('${e._simId}')" style="background:none;border:none;cursor:pointer;color:var(--muted);padding:3px;font-size:14px;line-height:1" title="Modifier">✎</button>
+        <button onclick="_simDelete('${e._simId}')" style="background:none;border:none;cursor:pointer;color:var(--hint);padding:3px;font-size:14px;line-height:1" title="Supprimer">✕</button>
+      </div>`;
+    }).join('');
+
+    const delRows = gDel.map(e => `
+      <div style="display:flex;align-items:center;gap:8px;padding:9px 2px;border-bottom:1px solid var(--border);opacity:.4">
+        <div style="flex:1;min-width:0;text-decoration:line-through;font-size:var(--fs-sm)">${esc(e.name)}
+          <span style="font-size:9px;font-weight:700;background:var(--red);color:#fff;border-radius:3px;padding:1px 5px;margin-left:4px;text-decoration:none;display:inline-block;vertical-align:middle">SUPPRIMÉ</span>
+        </div>
+        <span style="font-size:var(--fs-sm);font-weight:700;color:var(--hint)">${eur(Math.abs(e.amount))}</span>
+        <button onclick="_simRestore('${e._simId}')" style="background:none;border:none;cursor:pointer;color:var(--blue);padding:3px;font-size:13px;font-weight:700;line-height:1" title="Restaurer">↩</button>
+      </div>`).join('');
+
+    const tot = gSim.reduce((s, e) => s + Math.abs(e.amount), 0);
+    return `<div class="card" style="margin-bottom:.75rem;padding:0">
+      <div style="display:flex;align-items:center;padding:12px 14px 10px;border-bottom:1px solid var(--border)">
+        <div style="width:8px;height:8px;border-radius:50%;background:${g.color};margin-right:8px;flex-shrink:0"></div>
+        <span style="font-weight:700;font-size:var(--fs-sm);flex:1">${g.label}</span>
+        <span style="font-weight:700;font-size:var(--fs-sm);color:${g.color}">${eur(tot)}</span>
+      </div>
+      <div style="padding:0 14px">${rows}${delRows}</div>
+    </div>`;
+  }).join('');
+}
+
+function _simDelete(simId) {
+  _simEntries = _simEntries.filter(e => e._simId !== simId);
+  _simPersist();
+  renderSimulation();
+}
+
+function _simRestore(simId) {
+  const orig = _simOrigEntries.find(e => e._simId === simId);
+  if (!orig || _simEntries.find(e => e._simId === simId)) return;
+  _simEntries.push({...orig});
+  _simPersist();
+  renderSimulation();
+}
+
+function _simOpenAdd() {
+  _simEditId = null;
+  document.getElementById('sim-modal-title').textContent = 'Ajouter une ligne simulée';
+  document.getElementById('sim-f-name').value   = '';
+  document.getElementById('sim-f-amount').value = '';
+  document.getElementById('sim-f-sign').value   = 'neg';
+  _simSignChange('neg');
+  const mems = [...new Set(entries.map(e => e.member))].filter(Boolean);
+  const cur  = _simGetMember() === 'Commun' ? myRole() : _simGetMember();
+  const msel = document.getElementById('sim-f-member');
+  msel.innerHTML = mems.map(m => `<option value="${m}"${m === cur ? ' selected' : ''}>${m}</option>`).join('');
+  const mWrap = document.getElementById('sim-f-member-wrap');
+  if (mWrap) mWrap.style.display = mems.length > 1 ? '' : 'none';
+  document.getElementById('modal-sim-entry').classList.add('open');
+}
+
+function _simOpenEdit(simId) {
+  const e = _simEntries.find(x => x._simId === simId);
+  if (!e) return;
+  _simEditId = simId;
+  document.getElementById('sim-modal-title').textContent = 'Modifier la ligne simulée';
+  document.getElementById('sim-f-name').value   = e.name;
+  document.getElementById('sim-f-amount').value = Math.abs(e.amount);
+  const sign = e.amount >= 0 ? 'pos' : 'neg';
+  document.getElementById('sim-f-sign').value = sign;
+  _simSignChange(sign);
+  document.getElementById('sim-f-cat').value = e.cat;
+  const mems = [...new Set(entries.map(x => x.member))].filter(Boolean);
+  const msel = document.getElementById('sim-f-member');
+  msel.innerHTML = mems.map(m => `<option value="${m}"${m === e.member ? ' selected' : ''}>${m}</option>`).join('');
+  const mWrap = document.getElementById('sim-f-member-wrap');
+  if (mWrap) mWrap.style.display = mems.length > 1 ? '' : 'none';
+  document.getElementById('modal-sim-entry').classList.add('open');
+}
+
+function _simSignChange(sign) {
+  const cat = document.getElementById('sim-f-cat');
+  if (sign === 'pos') {
+    cat.innerHTML = '<option value="revenu">Revenu</option>';
+  } else {
+    cat.innerHTML = '<option value="fixe">Fixe</option><option value="variable">Variable</option><option value="impot">Impôt</option><option value="epargne">Épargne</option><option value="loisir">Loisir</option>';
+  }
+}
+
+function _simSaveEntry() {
+  const name   = document.getElementById('sim-f-name').value.trim();
+  const amt    = parseFloat(document.getElementById('sim-f-amount').value);
+  const sign   = document.getElementById('sim-f-sign').value === 'pos' ? 1 : -1;
+  const cat    = document.getElementById('sim-f-cat').value;
+  const member = document.getElementById('sim-f-member').value || myRole();
+  if (!name || isNaN(amt) || amt <= 0) { alert('Remplissez tous les champs.'); return; }
+  const amount = sign * Math.abs(amt);
+  document.getElementById('modal-sim-entry').classList.remove('open');
+
+  if (_simEditId) {
+    const idx = _simEntries.findIndex(e => e._simId === _simEditId);
+    if (idx >= 0) _simEntries[idx] = {..._simEntries[idx], name, amount, cat, member};
+  } else {
+    const newId = 'sim_' + Date.now();
+    _simEntries.push({_simId: newId, _simNew: true, id: newId, name, amount, cat, member});
+  }
+  _simPersist();
+  renderSimulation();
+}
+
+// Fermeture modale simulation
+document.getElementById('modal-sim-entry').addEventListener('click', e => {
+  if (e.target.id === 'modal-sim-entry') document.getElementById('modal-sim-entry').classList.remove('open');
+});
 
 // ══════════════════════════════════════════════
 // SAVINGS
