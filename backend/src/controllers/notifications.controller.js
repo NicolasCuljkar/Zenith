@@ -49,8 +49,8 @@ async function test(req, res, next) {
 
 async function checkAlerts(req, res, next) {
   try {
-    await notifService.checkBudgetAlerts(req.user.id, req.user.name);
-    res.json({ success: true });
+    const result = await notifService.checkBudgetAlerts(req.user.id, req.user.name, true /* force */);
+    res.json({ success: true, data: result });
   } catch (err) { next(err); }
 }
 

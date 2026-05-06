@@ -143,7 +143,7 @@ function markAlertSent(userId, alertKey) {
 
 // ── Vérification et envoi des alertes budgétaires ────────────────────────────
 
-async function checkBudgetAlerts(userId, memberName) {
+async function checkBudgetAlerts(userId, memberName, force = false) {
   const s = getMonthlyStats(userId);
   if (s.revenu === 0) return; // pas de données ce mois → rien à vérifier
 
@@ -223,13 +223,16 @@ async function checkBudgetAlerts(userId, memberName) {
     },
   ];
 
+  const triggered = [];
   for (const alert of ALERTS) {
-    if (alert.condition && !wasAlertSentToday(userId, alert.key)) {
+    if (alert.condition && (force || !wasAlertSentToday(userId, alert.key))) {
       await sendToUser(userId, { title: alert.title, body: alert.body, url: '/' });
       markAlertSent(userId, alert.key);
+      triggered.push(alert.key);
       console.log(`[Push] Alerte "${alert.key}" envoyée → user ${userId}`);
     }
   }
+  return { checked: ALERTS.length, triggered };
 }
 
 // ── Scheduler ─────────────────────────────────────────────────────────────────

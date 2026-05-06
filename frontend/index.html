@@ -1178,7 +1178,7 @@ window.onerror = function(msg, src, line) {
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
           Envoyer une notification test
         </button>
-        <button class="btn-add" onclick="_triggerPushAlertCheck();showToast('Vérification des alertes déclenchée');document.getElementById('modal-settings').classList.remove('open')" style="width:100%;justify-content:center;background:var(--surface2);color:var(--text);border:1px solid var(--border)">
+        <button class="btn-add" id="btn-check-alerts" onclick="_checkAlertsManual()" style="width:100%;justify-content:center;background:var(--surface2);color:var(--text);border:1px solid var(--border)">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
           Vérifier les alertes budgétaires
         </button>
@@ -7569,6 +7569,27 @@ async function _testNotif(){
     if(msg){msg.style.color='var(--red)';msg.textContent='Erreur : '+(e.message||'inconnue');}
   }finally{
     if(btn){btn.disabled=false;btn.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg> Envoyer une notification test';}
+  }
+}
+
+async function _checkAlertsManual(){
+  const btn=document.getElementById('btn-check-alerts');
+  const msg=document.getElementById('test-notif-msg');
+  if(btn){btn.disabled=true;btn.textContent='Vérification…';}
+  if(msg){msg.style.color='var(--muted)';msg.textContent='';}
+  try{
+    const res=await fetch('/api/notifications/check-alerts',{method:'POST',headers:{'Authorization':`Bearer ${API.getToken()}`,'Content-Type':'application/json'}});
+    const json=await res.json();
+    const n=json.data?.triggered?.length||0;
+    if(msg){
+      msg.style.color=n>0?'var(--green)':'var(--muted)';
+      msg.textContent=n>0?`✓ ${n} alerte${n>1?'s':''} envoyée${n>1?'s':''}`:' Aucune alerte à déclencher (budget sain)';
+    }
+    if(n>0) await _loadNotifs();
+  }catch(e){
+    if(msg){msg.style.color='var(--red)';msg.textContent='Erreur : '+(e.message||'inconnue');}
+  }finally{
+    if(btn){btn.disabled=false;btn.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> Vérifier les alertes budgétaires';}
   }
 }
 
