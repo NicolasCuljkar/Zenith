@@ -3957,9 +3957,9 @@ function _renderMonthlySections(stats, expenses, savingsData = [], entryStats = 
   const loiBudgetMly = loi.budget > 0 ? loi.budget
     : (entryStats ? Math.round(entryStats.rav * (100-(savingPct[epMember0]??60)) / 100) : 0);
   document.getElementById('monthly-kpis').innerHTML = _budgetKpiGrid(
-    _budgetKpiCard('Fixes',    fixeActual,    fixe.budget,  '#d93535'),
-    _budgetKpiCard('Variables',vari.actual,   vari.budget,  '#e05a2b'),
-    _budgetKpiCard('Loisir',   loi.actual,    loiBudgetMly, '#f59e0b'),
+    `<div onclick="openAddMonthlyExpense('fixe',true,['fixe'])" title="Ajouter une charge fixe" style="cursor:pointer">${_budgetKpiCard('Fixes',    fixeActual,    fixe.budget,  '#d93535')}</div>`,
+    `<div onclick="openAddMonthlyExpense('variable',true,['variable'])" title="Ajouter une dépense variable" style="cursor:pointer">${_budgetKpiCard('Variables',vari.actual,   vari.budget,  '#e05a2b')}</div>`,
+    `<div onclick="openAddMonthlyExpense('loisir',true,['loisir'])" title="Ajouter un loisir" style="cursor:pointer">${_budgetKpiCard('Loisir',   loi.actual,    loiBudgetMly, '#f59e0b')}</div>`,
     (epMonthDelta<0?_retraitKpiCard(epMonthDelta,_mlyBalBefore,_mlyBalAfter):_budgetKpiCard('Épargne',epMonthDelta,epBudget0,'#2979c8',true))
   );
   setTimeout(fillAllTracks, 0);
