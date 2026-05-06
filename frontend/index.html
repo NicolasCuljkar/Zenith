@@ -4715,12 +4715,12 @@ async function deleteSelectedMonthly() {
 function deleteMonthlyExpense(id) {
   const e = monthlyExpenses.find(x => x.id === id);
   if (!e) return;
-  monthlyExpenses = monthlyExpenses.filter(x => x.id !== id);
-  renderMonthly();
-  _showUndoToast(`"${e.name}" supprimé`,
-    async () => { try { await API.monthlyExpenses.delete(id); } catch(err) { monthlyExpenses.push(e); renderMonthly(); showApiError('Erreur : ' + err.message); } },
-    () => { monthlyExpenses.push(e); renderMonthly(); }
-  );
+  showConfirm(`Supprimer "${e.name}" ?`, 'Cette dépense sera définitivement supprimée.', async () => {
+    showLoading();
+    try { await API.monthlyExpenses.delete(id); await renderMonthly(); }
+    catch(err) { showApiError('Erreur : ' + err.message); }
+    finally { hideLoading(); }
+  });
 }
 async function toggleMonthlyExceptional(id) {
   const e = monthlyExpenses.find(x => x.id === id);
