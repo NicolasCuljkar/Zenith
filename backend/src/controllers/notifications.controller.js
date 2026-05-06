@@ -54,4 +54,32 @@ async function checkAlerts(req, res, next) {
   } catch (err) { next(err); }
 }
 
-module.exports = { getVapidKey, subscribe, unsubscribe, test, debug, checkAlerts };
+async function getNotifs(req, res, next) {
+  try {
+    const notifs = notifService.getNotifications(req.user.id);
+    res.json({ success: true, data: notifs });
+  } catch (err) { next(err); }
+}
+
+async function markRead(req, res, next) {
+  try {
+    notifService.markAllRead(req.user.id);
+    res.json({ success: true });
+  } catch (err) { next(err); }
+}
+
+async function deleteNotif(req, res, next) {
+  try {
+    notifService.deleteNotification(Number(req.params.id), req.user.id);
+    res.json({ success: true });
+  } catch (err) { next(err); }
+}
+
+async function clearNotifs(req, res, next) {
+  try {
+    notifService.clearNotifications(req.user.id);
+    res.json({ success: true });
+  } catch (err) { next(err); }
+}
+
+module.exports = { getVapidKey, subscribe, unsubscribe, test, debug, checkAlerts, getNotifs, markRead, deleteNotif, clearNotifs };

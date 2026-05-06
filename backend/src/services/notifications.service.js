@@ -57,6 +57,11 @@ function unsubscribe(userId, endpoint) {
 // ── Envoi ─────────────────────────────────────────────────────────────────────
 
 async function sendToUser(userId, payload) {
+  // Persiste la notification en base (historique consultable)
+  try {
+    db.prepare('INSERT INTO notifications (user_id, title, body) VALUES (?, ?, ?)').run(userId, payload.title, payload.body);
+  } catch (_) { /* notifications table peut ne pas encore exister en dev */ }
+
   const subs = db.prepare('SELECT * FROM push_subscriptions WHERE user_id = ?').all(userId);
   const body  = JSON.stringify(payload);
 
@@ -73,6 +78,24 @@ async function sendToUser(userId, payload) {
       }
     }
   }
+}
+
+// ── Historique notifications ──────────────────────────────────────────────────
+
+function getNotifications(userId) {
+  return db.prepare('SELECT * FROM notifications WHERE user_id = ? ORDER BY created_at DESC LIMIT 100').all(userId);
+}
+
+function markAllRead(userId) {
+  db.prepare('UPDATE notifications SET is_read = 1 WHERE user_id = ? AND is_read = 0').run(userId);
+}
+
+function deleteNotification(id, userId) {
+  db.prepare('DELETE FROM notifications WHERE id = ? AND user_id = ?').run(id, userId);
+}
+
+function clearNotifications(userId) {
+  db.prepare('DELETE FROM notifications WHERE user_id = ?').run(userId);
 }
 
 // ── Stats budgétaires du mois en cours ───────────────────────────────────────
@@ -287,4 +310,4 @@ function startScheduler() {
   console.log('[Push] Scheduler démarré');
 }
 
-module.exports = { init, getPublicKey, subscribe, unsubscribe, sendToUser, startScheduler, checkBudgetAlerts };
+module.exports = { init, getPublicKey, subscribe, unsubscribe, sendToUser, startScheduler, checkBudgetAlerts, getNotifications, markAllRead, deleteNotification, clearNotifications };

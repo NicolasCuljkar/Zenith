@@ -13,4 +13,10 @@ router.post('/test',         requireAuth, ctrl.test);
 router.post('/check-alerts', requireAuth, ctrl.checkAlerts);
 router.get('/debug',         requireAuth, ctrl.debug);
 
+// Historique notifications
+router.get('/',              requireAuth, ctrl.getNotifs);
+router.post('/mark-read',    requireAuth, ctrl.markRead);
+router.delete('/clear',      requireAuth, ctrl.clearNotifs);
+router.delete('/:id',        requireAuth, ctrl.deleteNotif);
+
 module.exports = router;

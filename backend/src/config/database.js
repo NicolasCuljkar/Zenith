@@ -301,6 +301,17 @@ UPDATE households SET creator_id = (
   // v26 — jour de prélèvement sur les charges fixes (1-31, nullable)
   `ALTER TABLE entries ADD COLUMN debit_day INTEGER`,
 
+  // v27 — historique des notifications push envoyées
+  `CREATE TABLE IF NOT EXISTS notifications (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    title      TEXT    NOT NULL,
+    body       TEXT    NOT NULL,
+    is_read    INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT    NOT NULL DEFAULT (datetime('now'))
+  );
+  CREATE INDEX IF NOT EXISTS idx_notif_user ON notifications(user_id)`,
+
 ];
 
 // ── Apply pending migrations ──────────────────────────────────────────────────

@@ -464,7 +464,17 @@ const _expenseLabels = {
   delete(id)           { return del(`/expense-labels/${id}`); },
 };
 
-const API = { auth: _auth, entries: _entries, savings: _savings, users: _users, bridge: _bridge, household: _household, import: _import, monthlyExpenses: _monthlyExpenses, expenseLabels: _expenseLabels, getToken, clearAuth };
+/**
+ * notifications — Historique des notifications push
+ */
+const _notifications = {
+  getAll()       { return get('/notifications'); },
+  markRead()     { return post('/notifications/mark-read'); },
+  delete(id)     { return del(`/notifications/${id}`); },
+  clear()        { return del('/notifications/clear'); },
+};
+
+const API = { auth: _auth, entries: _entries, savings: _savings, users: _users, bridge: _bridge, household: _household, import: _import, monthlyExpenses: _monthlyExpenses, expenseLabels: _expenseLabels, notifications: _notifications, getToken, clearAuth };
 
 // Attach to window for global access in inline scripts
 if (typeof window !== 'undefined') {

@@ -1521,40 +1521,26 @@ function _updateMemberBadge(){
 // ══════════════════════════════════════════════
 // IN-APP NOTIFICATIONS
 // ══════════════════════════════════════════════
-let _inAppNotifs=JSON.parse(localStorage.getItem('zenith_notifs')||'[]');
-let _notifUnread=_inAppNotifs.filter(n=>!n.read).length;
-
-function _saveNotifs(){ localStorage.setItem('zenith_notifs',JSON.stringify(_inAppNotifs.slice(0,30))); }
-
-function addInAppNotif(title, body, type='info'){
-  const n={ id:Date.now(), title, body, type, read:false, ts:new Date().toISOString() };
-  _inAppNotifs.unshift(n);
-  _notifUnread++;
-  _saveNotifs();
-  _renderNotifBadge();
-  _renderNotifList();
-}
+let _inAppNotifs=[];
+let _notifUnread=0;
 
 function _renderNotifBadge(){
   const b=document.getElementById('notif-badge');
   if(!b)return;
-  if(_notifUnread>0){
-    b.textContent=_notifUnread>9?'9+':_notifUnread;
-    b.style.display='flex';
-  } else {
-    b.style.display='none';
-  }
+  const unread=_inAppNotifs.filter(n=>!n.is_read).length;
+  if(unread>0){ b.textContent=unread>9?'9+':unread; b.style.display='flex'; }
+  else { b.style.display='none'; }
 }
 
 function _renderNotifList(){
   const list=document.getElementById('notif-list');
   if(!list)return;
   if(_inAppNotifs.length===0){
-    list.innerHTML='<div class="notif-empty">Aucune notification</div>';
+    list.innerHTML='<div class="notif-empty">Aucune notification pour le moment</div>';
     return;
   }
   const fmt=ts=>{
-    const d=new Date(ts), now=new Date();
+    const d=new Date(ts+'Z'), now=new Date();
     const diff=Math.round((now-d)/60000);
     if(diff<1)return'À l\'instant';
     if(diff<60)return`Il y a ${diff} min`;
@@ -1562,27 +1548,49 @@ function _renderNotifList(){
     return d.toLocaleDateString('fr-FR',{day:'numeric',month:'short'});
   };
   list.innerHTML=_inAppNotifs.map(n=>`
-    <div class="notif-item${n.read?'':' unread'}">
-      <div class="ni-title">${n.title}</div>
-      <div class="ni-body">${n.body}</div>
-      <div class="ni-time">${fmt(n.ts)}</div>
+    <div class="notif-item${n.is_read?'':' unread'}" style="display:flex;align-items:flex-start;gap:8px">
+      <div style="flex:1;min-width:0">
+        <div class="ni-title">${n.title}</div>
+        <div class="ni-body">${n.body}</div>
+        <div class="ni-time">${fmt(n.created_at)}</div>
+      </div>
+      <button onclick="_deleteNotif(${n.id})" style="background:none;border:none;cursor:pointer;color:var(--hint);flex-shrink:0;padding:2px 4px;font-size:14px;line-height:1;border-radius:4px" title="Supprimer">✕</button>
     </div>`).join('');
 }
 
-function _toggleNotifPanel(){
+async function _loadNotifs(){
+  if(!API.auth.isLoggedIn())return;
+  try{ _inAppNotifs=await API.notifications.getAll(); }catch(_){ _inAppNotifs=[]; }
+  _renderNotifBadge();
+  _renderNotifList();
+}
+
+async function _toggleNotifPanel(){
   const p=document.getElementById('notif-panel');
   if(!p)return;
   const wasOpen=p.classList.contains('open');
   p.classList.toggle('open');
-  if(!wasOpen){ _markAllNotifsRead(); }
+  if(!wasOpen){
+    await _loadNotifs();
+    if(_inAppNotifs.some(n=>!n.is_read)){
+      try{ await API.notifications.markRead(); _inAppNotifs.forEach(n=>n.is_read=1); }catch(_){}
+      _renderNotifBadge();
+    }
+  }
 }
 
-function _markAllNotifsRead(){
-  _inAppNotifs.forEach(n=>n.read=true);
-  _notifUnread=0;
-  _saveNotifs();
-  _renderNotifBadge();
+async function _deleteNotif(id){
+  try{ await API.notifications.delete(id); }catch(_){}
+  _inAppNotifs=_inAppNotifs.filter(n=>n.id!==id);
   _renderNotifList();
+  _renderNotifBadge();
+}
+
+async function _clearAllNotifs(){
+  try{ await API.notifications.clear(); }catch(_){}
+  _inAppNotifs=[];
+  _renderNotifList();
+  _renderNotifBadge();
 }
 
 // Ferme le panel si clic en dehors
@@ -6654,7 +6662,7 @@ async function _doLoginWithCredentials(userIdOrEmail,password){
       }catch(e){console.warn('Auto-join failed:',e.message);}
     }
     initUserContext();renderMemberTabs();updateNavForDataState();renderDashboard();renderEntries();document.getElementById('fab-entry').style.display='none';document.getElementById('fab-saving').style.display='none';document.getElementById('fab-dashboard').style.display='none';
-    _updateMemberBadge();_renderNotifBadge();_renderNotifList();
+    _updateMemberBadge();_loadNotifs();
     if(window.location.pathname==='/banque'){switchTab('banque');}
     registerPushSubscription();
     _scheduleTokenExpiry(); connectSSE(); _startPoll();
@@ -6681,7 +6689,7 @@ async function doLogin(){
     showScreen('app');
     await loadData();
     initUserContext();renderMemberTabs();updateNavForDataState();renderDashboard();renderEntries();document.getElementById('fab-entry').style.display='none';document.getElementById('fab-saving').style.display='none';document.getElementById('fab-dashboard').style.display='none';
-    _updateMemberBadge();_renderNotifBadge();_renderNotifList();
+    _updateMemberBadge();_loadNotifs();
     if(window.location.pathname==='/banque'){switchTab('banque');}
     registerPushSubscription();
     _scheduleTokenExpiry(); connectSSE(); _startPoll();
@@ -6711,7 +6719,7 @@ async function doRegister(){
     showScreen('app');
     await loadData();
     initUserContext();renderMemberTabs();updateNavForDataState();renderDashboard();renderEntries();document.getElementById('fab-entry').style.display='none';document.getElementById('fab-saving').style.display='none';document.getElementById('fab-dashboard').style.display='none';
-    _updateMemberBadge();_renderNotifBadge();_renderNotifList();
+    _updateMemberBadge();_loadNotifs();
     if(window.location.pathname==='/banque'){switchTab('banque');}
     registerPushSubscription();
     _scheduleTokenExpiry(); connectSSE(); _startPoll();
@@ -7416,6 +7424,7 @@ async function initApp(){
       updateNavForDataState();
       renderDashboard();
       renderEntries();
+      _loadNotifs();
       registerPushSubscription(); // non-bloquant
       connectSSE(); _startPoll();
     } else {
@@ -7778,11 +7787,11 @@ async function connectBank(){
   <div class="notif-header">
     <span>Notifications</span>
     <div style="display:flex;gap:8px;align-items:center">
-      <button onclick="_markAllNotifsRead()" style="font-size:11px;font-weight:600;color:var(--blue);background:none;border:none;cursor:pointer;padding:0">Tout lire</button>
+      <button onclick="_clearAllNotifs()" style="font-size:11px;font-weight:600;color:var(--red);background:none;border:none;cursor:pointer;padding:0">Tout supprimer</button>
       <button onclick="_toggleNotifPanel()" style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:17px;line-height:1;padding:2px 4px">✕</button>
     </div>
   </div>
-  <div class="notif-list" id="notif-list"></div>
+  <div class="notif-list" id="notif-list"><div class="notif-empty">Aucune notification pour le moment</div></div>
 </div>
 
 <!-- ══════ ONBOARDING WIZARD ══════ -->
