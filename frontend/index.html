@@ -6002,11 +6002,11 @@ async function renderAnalysis(){
                     ${hasDetail?repChevron:''}
                   </div>
                 </div>
-                <div style="font-size:1.25rem;font-weight:900;letter-spacing:-.03em;color:${c.col};line-height:1;margin-bottom:4px">${eur(c.amt)}<span style="font-size:var(--fs-xs);font-weight:500;color:var(--muted);letter-spacing:0"> /mois</span></div>
-                <div style="font-size:var(--fs-xs);color:var(--muted);margin-bottom:6px">${pct}% des revenus nets</div>
-                <div style="height:4px;background:var(--surface2);border-radius:99px;overflow:hidden">
-                  <div style="width:${barW}%;height:100%;background:${c.col};border-radius:99px;transition:width .5s ease"></div>
+                <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:8px;margin-bottom:2px">
+                  <div style="font-size:1.25rem;font-weight:900;letter-spacing:-.03em;color:${c.col};line-height:1">${eur(c.amt)}<span style="font-size:var(--fs-xs);font-weight:500;color:var(--muted);letter-spacing:0"> /mois</span></div>
+                  <div style="flex-shrink:0;opacity:.85">${_sparklineSvg(_last6.map(mk=>c.key==='ep'?Math.max(0,_epByMk.get(mk)||0):(_byMkExp.get(mk)?.[c.key==='var'?'variable':c.key==='loi'?'loisir':c.key]||0)),c.col,88,22)}</div>
                 </div>
+                <div style="font-size:var(--fs-xs);color:var(--muted);margin-top:3px">${pct}% des revenus nets</div>
               </div>
               ${hasDetail?`<div id="rep-detail-${c.key}" class="ova-items" style="max-height:0">${detailRows}</div>`:''}
             </div>`;
