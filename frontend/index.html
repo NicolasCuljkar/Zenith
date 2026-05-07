@@ -3293,11 +3293,12 @@ async function renderDashboard(){
   // ── Insights du mois ──
   const _dIns=[];
   try {
-    // 1. Taux d'épargne du mois
-    if(revNetA>0&&epMonthDelta>=0){
+    // 1. Taux d'épargne du mois (vs objectif du slider)
+    if(revNetA>0&&epMonthDelta>=0&&epBudget>=0){
       const _epPct=Math.round(epMonthDelta/revNetA*100);
-      const _ec=_epPct>=20?'var(--green)':_epPct>=10?'var(--amber)':'var(--red)';
-      _dIns.push({icon:_epPct>=20?'\u2713':'\u26a0',col:_ec,text:'Taux d\'\u00e9pargne\u00a0: '+_epPct+'%',sub:eur(epMonthDelta)+' \u00e9pargn\u00e9s \u00b7 objectif 20%\u00a0= '+eur(Math.round(revNetA*0.2))});
+      const _epBgtPct=epBudget>0?Math.round(epBudget/revNetA*100):0;
+      const _ec=epMonthDelta>=epBudget?'var(--green)':_epPct>=_epBgtPct*0.7?'var(--amber)':'var(--red)';
+      _dIns.push({icon:epMonthDelta>=epBudget?'\u2713':'\u26a0',col:_ec,text:'Taux d\'\u00e9pargne\u00a0: '+_epPct+'% (objectif\u00a0'+_epBgtPct+'%)',sub:eur(epMonthDelta)+' \u00e9pargn\u00e9s \u00b7 objectif\u00a0: '+eur(epBudget)});
     }
 
     // 2. Budget dépassé par catégorie
@@ -3311,13 +3312,14 @@ async function renderDashboard(){
       }
     }
 
-    // 3. Dépenses totales vs mois précédent
-    if(prevH&&totalDep>0&&prevH.total>0){
-      var _depDiff=totalDep-prevH.total;
+    // 3. Dépenses (hors épargne) vs mois précédent
+    var _actualDep=fixA+varA+loiA;
+    if(prevH&&_actualDep>0&&prevH.total>0){
+      var _depDiff=_actualDep-prevH.total;
       var _depPct=Math.round(_depDiff/prevH.total*100);
       if(Math.abs(_depPct)>=15){
         var _dpCol=_depPct>0?'var(--amber)':'var(--green)';
-        _dIns.push({icon:_depPct>0?'\u2191':'\u2193',col:_dpCol,text:'D\u00e9penses '+(_depPct>0?'+':'')+_depPct+'% vs mois pr\u00e9c\u00e9dent',sub:eur(totalDep)+' ce mois \u00b7 '+eur(prevH.total)+' le mois pr\u00e9c\u00e9dent'});
+        _dIns.push({icon:_depPct>0?'\u2191':'\u2193',col:_dpCol,text:'D\u00e9penses '+(_depPct>0?'+':'')+_depPct+'% vs mois pr\u00e9c\u00e9dent',sub:eur(_actualDep)+' ce mois \u00b7 '+eur(prevH.total)+' le mois pr\u00e9c\u00e9dent'});
       }
     }
 
