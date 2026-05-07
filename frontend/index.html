@@ -7094,36 +7094,36 @@ function _closeRepTip(){
     const vals=last12.map(h=>h.amount);
     const avg=Math.round(vals.reduce((s,v)=>s+v,0)/vals.length);
     const mn=Math.min(...vals),mx=Math.max(...vals);
-    const rowsHtml=last12.slice().reverse().map(h=>{
-      const pct=mx>mn?Math.round((h.amount-mn)/(mx-mn)*100):50;
-      const isAvg=h.amount===avg;
-      const aboveAvg=h.amount>avg;
-      const barCol=aboveAvg?'#e05a2b':'#2979c8';
-      return`<div style="display:flex;align-items:center;gap:10px;padding:3px 0">
-        <span style="font-size:11px;color:var(--muted);flex-shrink:0;width:46px">${_MNX[h.month-1]} ${String(h.year).slice(2)}</span>
-        <div style="flex:1;height:5px;background:var(--surface2);border-radius:99px;overflow:hidden"><div style="width:${pct||4}%;height:100%;background:${barCol};border-radius:99px"></div></div>
-        <span style="font-size:12px;font-weight:700;color:var(--text);flex-shrink:0;min-width:54px;text-align:right">${eur(h.amount)}</span>
+    const trend=vals.length>=2?vals[vals.length-1]-vals[vals.length-2]:0;
+    const trendHtml=vals.length>=2
+      ?trend>0?`<span style="font-size:11px;font-weight:700;color:var(--red)">↑ ${eur(Math.abs(trend))}</span>`
+              :trend<0?`<span style="font-size:11px;font-weight:700;color:var(--green)">↓ ${eur(Math.abs(trend))}</span>`
+              :`<span style="font-size:11px;color:var(--muted)">= stable</span>`:'';
+    const rowsHtml=last12.slice().reverse().map((h,i)=>{
+      const diff=h.amount-avg;
+      const isMin=h.amount===mn,isMax=h.amount===mx;
+      const tagHtml=isMin?`<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px;background:color-mix(in srgb,var(--green) 15%,var(--surface));color:var(--green);border:1px solid color-mix(in srgb,var(--green) 30%,transparent)">MIN</span>`
+        :isMax?`<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px;background:color-mix(in srgb,var(--red) 15%,var(--surface));color:var(--red);border:1px solid color-mix(in srgb,var(--red) 30%,transparent)">MAX</span>`:'';
+      const diffStr=diff===0?''
+        :diff>0?`<span style="font-size:10px;color:var(--red);font-weight:600">+${eur(diff)}</span>`
+               :`<span style="font-size:10px;color:var(--green);font-weight:600">-${eur(Math.abs(diff))}</span>`;
+      const isLatest=i===0;
+      return`<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-top:1px solid var(--border)${isLatest?';background:color-mix(in srgb,var(--blue) 5%,transparent);margin:0 -20px;padding:7px 20px':''} ">
+        <span style="font-size:11px;color:var(--muted);flex-shrink:0;width:40px">${_MNX[h.month-1]} ${String(h.year).slice(2)}</span>
+        ${tagHtml?`<span style="flex-shrink:0">${tagHtml}</span>`:'<span style="width:28px;flex-shrink:0"></span>'}
+        <span style="flex:1;min-width:0"></span>
+        ${diffStr?`<span style="flex-shrink:0">${diffStr}</span>`:''}
+        <span style="font-size:13px;font-weight:800;color:var(--text);flex-shrink:0;min-width:50px;text-align:right">${eur(h.amount)}</span>
       </div>`;
     }).join('');
     tc.innerHTML=`
-      <div style="font-size:15px;font-weight:800;margin-bottom:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${name}</div>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px">
-        <div style="background:var(--surface2);border-radius:10px;padding:8px 10px;text-align:center">
-          <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:3px">Moyenne</div>
-          <div style="font-size:13px;font-weight:800;color:#2979c8">${eur(avg)}</div>
-        </div>
-        <div style="background:var(--surface2);border-radius:10px;padding:8px 10px;text-align:center">
-          <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:3px">Min</div>
-          <div style="font-size:13px;font-weight:800;color:var(--green)">${eur(mn)}</div>
-        </div>
-        <div style="background:var(--surface2);border-radius:10px;padding:8px 10px;text-align:center">
-          <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:3px">Max</div>
-          <div style="font-size:13px;font-weight:800;color:var(--red)">${eur(mx)}</div>
-        </div>
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:4px">
+        <div style="font-size:15px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">${name}</div>
+        ${trendHtml}
       </div>
-      <div style="margin-bottom:14px;width:100%">${_sparklineSvg(vals,'#2979c8',300,60)}</div>
-      <div style="font-size:10px;color:var(--muted);margin-bottom:8px">${last12.length} mois d'historique</div>
-      <div style="border-top:1px solid var(--border);padding-top:10px;display:flex;flex-direction:column;gap:4px">${rowsHtml}</div>`;
+      <div style="font-size:10px;color:var(--muted);margin-bottom:14px">${last12.length} mois · moy. ${eur(avg)}/mois</div>
+      <div style="margin-bottom:16px;width:100%">${_sparklineSvg(vals,'#2979c8',300,60)}</div>
+      <div style="display:flex;flex-direction:column">${rowsHtml}</div>`;
     tip.style.display='';
     if(bd)bd.style.display='';
   });
