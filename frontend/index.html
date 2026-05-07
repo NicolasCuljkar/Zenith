@@ -3043,8 +3043,11 @@ async function renderDashboard(){
     const p=_postesMap.get(k);p.total+=Math.abs(e.amount);p.count++;
   }
   // Ajoute les entrées fixes budgétaires sans override ce mois
+  // Si mois courant : seulement celles dont le jour de prélèvement est passé (ou sans date)
   const _overriddenIds=new Set(mExpenses.filter(e=>e.entry_id).map(e=>e.entry_id));
-  const _fixeBase=entries.filter(e=>e.cat==='fixe'&&!_overriddenIds.has(e.id)&&(dashboardMember==='all'||e.member===dashboardMember));
+  const _isCurrentMonth=(dashYear===new Date().getFullYear()&&dashMonth===new Date().getMonth()+1);
+  const _todayDay=new Date().getDate();
+  const _fixeBase=entries.filter(e=>e.cat==='fixe'&&!_overriddenIds.has(e.id)&&(dashboardMember==='all'||e.member===dashboardMember)&&(!_isCurrentMonth||!e.debit_day||e.debit_day<=_todayDay));
   for(const fe of _fixeBase){
     const k=fe.name.trim();
     if(!_postesMap.has(k))_postesMap.set(k,{name:k,cat:'fixe',total:0,count:0});
