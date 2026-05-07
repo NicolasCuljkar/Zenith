@@ -6229,16 +6229,18 @@ async function renderMonthlyComparison(member, nMonths) {
   }).join('');
 
   // Graphique
-  const _ccHcol='#d93535', _ccEcol='#2979c8', _ccRcol='#0d9e6e';
+  const _ccHcol='#d93535', _ccEcol='#2979c8', _ccRcol='#0d9e6e', _ccScol='#7c3aed';
   const _ccLabels=rows.map(r=>mLabel(r.year,r.month));
   const _ccDepVals=rows.map(r=>r.hasData?r.dep:null);
   const _ccEpVals=rows.map(r=>(r.hasData&&r.ep>0)?r.ep:null);
   const _ccRevVals=rows.map(r=>r.hasData?r.revNet:null);
+  const _ccSoldeVals=rows.map(r=>r.hasData?r.solde:null);
   const _ccHasEp=_ccEpVals.some(v=>v!==null);
   const _ccLegend=`<div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:8px">
     <div style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:3px;border-radius:2px;background:${_ccRcol};display:inline-block"></span><span style="font-size:11px;font-weight:600;color:${_ccRcol}">Rev. nets</span></div>
     <div style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:3px;border-radius:2px;background:${_ccHcol};display:inline-block"></span><span style="font-size:11px;font-weight:600;color:${_ccHcol}">Dépenses</span></div>
     ${_ccHasEp?`<div style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:3px;border-radius:2px;background:${_ccEcol};display:inline-block"></span><span style="font-size:11px;font-weight:600;color:${_ccEcol}">Épargne</span></div>`:''}
+    <div style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:3px;border-radius:2px;background:${_ccScol};display:inline-block;border-top:2px dashed ${_ccScol}"></span><span style="font-size:11px;font-weight:600;color:${_ccScol}">Solde</span></div>
   </div>`;
 
   content.innerHTML = _kpiBar + `${_ccLegend}<div style="position:relative;height:160px;margin-bottom:16px"><canvas id="ana-compare-chart"></canvas></div>
@@ -6277,6 +6279,12 @@ async function renderMonthlyComparison(member, nMonths) {
       borderWidth:2.5,pointRadius:_single?5:0,pointHoverRadius:5,
       pointBackgroundColor:_ccEcol,pointBorderColor:'#fff',pointBorderWidth:2,spanGaps:true,
     });
+    _datasets.push({
+      label:'Solde',data:_ccSoldeVals,tension:.45,fill:false,
+      borderColor:_ccScol,backgroundColor:_ccScol+'22',
+      borderWidth:2,borderDash:[4,3],pointRadius:_single?5:0,pointHoverRadius:5,
+      pointBackgroundColor:_ccScol,pointBorderColor:'#fff',pointBorderWidth:2,spanGaps:true,
+    });
     anaCompareChart=new Chart(_ccCtx,{
       type:'line',plugins:[ChartDataLabels],
       data:{labels:_ccLabels,datasets:_datasets},
@@ -6284,9 +6292,9 @@ async function renderMonthlyComparison(member, nMonths) {
         layout:{padding:{top:8,right:16}},
         plugins:{legend:{display:false},
           tooltip:{backgroundColor:darkVal('rgba(255,255,255,1)','rgba(28,28,32,1)'),borderColor:darkVal('rgba(0,0,0,.15)','rgba(255,255,255,.2)'),borderWidth:1,titleColor:_tc2,bodyColor:_tc2,titleFont:{size:fsPx('--fs-sm'),weight:'700'},bodyFont:{size:fsPx('--fs-xs')},padding:12,cornerRadius:10,callbacks:{label:c=>c.raw!=null?` ${c.dataset.label} : ${eur(c.raw)}`:''}},
-          datalabels:{display:c=>c.raw!=null&&c.dataIndex===rows.length-1,anchor:'end',align:'top',formatter:v=>v!=null?(v/1000).toFixed(1)+'k€':'',color:(c)=>[_ccRcol,_ccHcol,_ccEcol][c.datasetIndex]||_ccHcol,font:{size:fsPx('--fs-xs'),weight:'800'},backgroundColor:darkVal('#fff','#1a1a18'),borderRadius:4,padding:{top:3,bottom:3,left:6,right:6},borderWidth:1,borderColor:(c)=>([_ccRcol,_ccHcol,_ccEcol][c.datasetIndex]||_ccHcol)+'44'}
+          datalabels:{display:c=>c.raw!=null&&c.dataIndex===rows.length-1,anchor:'end',align:'top',formatter:v=>v!=null?(v/1000).toFixed(1)+'k€':'',color:(c)=>[_ccRcol,_ccHcol,_ccEcol,_ccScol][c.datasetIndex]||_ccHcol,font:{size:fsPx('--fs-xs'),weight:'800'},backgroundColor:darkVal('#fff','#1a1a18'),borderRadius:4,padding:{top:3,bottom:3,left:6,right:6},borderWidth:1,borderColor:(c)=>([_ccRcol,_ccHcol,_ccEcol,_ccScol][c.datasetIndex]||_ccHcol)+'44'}
         },
-        scales:{x:{grid:{display:false},ticks:{color:_tc2,font:{size:fsPx('--fs-xs')},maxRotation:0},border:{display:false}},y:{beginAtZero:true,ticks:{callback:v=>(v/1000).toFixed(0)+'k€',font:{size:fsPx('--fs-xs')},color:_tc2,maxTicksLimit:4},grid:{color:darkVal('rgba(0,0,0,.06)','rgba(255,255,255,.06)')},border:{display:false}}}
+        scales:{x:{grid:{display:false},ticks:{color:_tc2,font:{size:fsPx('--fs-xs')},maxRotation:0},border:{display:false}},y:{beginAtZero:false,ticks:{callback:v=>(v/1000).toFixed(0)+'k€',font:{size:fsPx('--fs-xs')},color:_tc2,maxTicksLimit:4},grid:{color:darkVal('rgba(0,0,0,.06)','rgba(255,255,255,.06)')},border:{display:false}}}
       }
     });
   }
@@ -6812,17 +6820,19 @@ async function renderAnalysis(){
     try {
       const _insEl=document.getElementById('analysis-insights');
       if(_insEl && _dataStats.length>=1){
-        const _iN=_dataStats.length;
-        // Moyennes cumulées sur tous les mois
-        const _iRevNet=Math.round(_dataStats.reduce(function(a,r){return a+r.revNet;},0)/_iN);
-        const _iDep=Math.round(_dataStats.reduce(function(a,r){return a+r.dep;},0)/_iN);
-        const _iFixe=Math.round(_dataStats.reduce(function(a,r){return a+r.fixe;},0)/_iN);
-        const _iLoi=Math.round(_dataStats.reduce(function(a,r){return a+r.loisir;},0)/_iN);
-        const _iEp=Math.round(_dataStats.reduce(function(a,r){return a+r.ep;},0)/_iN);
-        const _iSolde=Math.round(_dataStats.reduce(function(a,r){return a+r.solde;},0)/_iN);
-        const _iPos=_dataStats.filter(function(r){return r.solde>=0;}).length;
-        const _iErPts=_dataStats.filter(function(r){return r.revNet>0;});
-        const _iEpRate=_iErPts.length>0?Math.round(_iErPts.reduce(function(a,r){return a+r.ep/r.revNet*100;},0)/_iErPts.length):null;
+        // Moyennes cumulées : uniquement mois avec revenu réel saisi
+        const _iWithRev=_dataStats.filter(function(r){return r.revNet>0&&r.dep>0;});
+        const _iN=_iWithRev.length>0?_iWithRev.length:_dataStats.length;
+        const _iBase=_iWithRev.length>0?_iWithRev:_dataStats;
+        const _iRevNet=Math.round(_iBase.reduce(function(a,r){return a+r.revNet;},0)/_iN);
+        const _iDep=Math.round(_iBase.reduce(function(a,r){return a+r.dep;},0)/_iN);
+        const _iFixe=Math.round(_iBase.reduce(function(a,r){return a+r.fixe;},0)/_iN);
+        const _iLoi=Math.round(_iBase.reduce(function(a,r){return a+r.loisir;},0)/_iN);
+        const _iEp=Math.round(_iBase.reduce(function(a,r){return a+r.ep;},0)/_iN);
+        const _iSolde=Math.round(_iBase.reduce(function(a,r){return a+r.solde;},0)/_iN);
+        const _iPos=_iBase.filter(function(r){return r.solde>=0;}).length;
+        const _iErPts=_iBase;
+        const _iEpRate=_iErPts.length>0&&_iRevNet>0?Math.round(_iErPts.reduce(function(a,r){return a+(r.revNet>0?r.ep/r.revNet*100:0);},0)/_iErPts.length):null;
         const _ins=[];
 
         // 1. Taux d'épargne moyen
@@ -6883,8 +6893,8 @@ async function renderAnalysis(){
         // 7. Progression épargne (1ère vs 2ème moitié de la période)
         if(_iN>=4){
           var _half=Math.floor(_iN/2);
-          var _iFirst=_dataStats.slice(0,_half).filter(function(r){return r.revNet>0;});
-          var _iSecond=_dataStats.slice(-_half).filter(function(r){return r.revNet>0;});
+          var _iFirst=_iBase.slice(0,_half);
+          var _iSecond=_iBase.slice(-_half);
           if(_iFirst.length>=1&&_iSecond.length>=1){
             var _iR1=Math.round(_iFirst.reduce(function(a,r){return a+r.ep/r.revNet*100;},0)/_iFirst.length);
             var _iR2=Math.round(_iSecond.reduce(function(a,r){return a+r.ep/r.revNet*100;},0)/_iSecond.length);
