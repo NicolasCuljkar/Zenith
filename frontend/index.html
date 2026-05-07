@@ -3289,8 +3289,6 @@ async function renderDashboard(){
     `<div id="dash-charts" style="display:none"></div>`;
 
   // Ouvre automatiquement la catégorie avec le plus de dépenses
-  const _biggestCat=_catOrder.filter(c=>_catGroups[c]).sort((a,b)=>(_catGroups[b]?.total||0)-(_catGroups[a]?.total||0))[0];
-  if(_biggestCat) requestAnimationFrame(()=>_ovaToggle(_biggestCat));
 
   // Init donut OVA
   const _ovaDCtx=document.getElementById('ova-donut-chart');
@@ -6733,14 +6731,14 @@ async function renderAnalysis(){
     }
 
     // ── Insights actionnables ──
-    {
+    try {
       const _insEl=document.getElementById('analysis-insights');
       if(_insEl && _dataStats.length>=2){
         const _curMkI=_last6[_last6.length-1];
         const _latest=_dataStats[_dataStats.length-1];
-        const _insights=[];
+        const _ins=[];
 
-        // 1. Tendance taux d'épargne (3 derniers vs 3 précédents)
+        // 1. Tendance taux d'epargne (3 derniers vs 3 precedents)
         if(_dataStats.length>=4){
           const _r3=_dataStats.slice(-3).filter(r=>r.revNet>0);
           const _p3=_dataStats.slice(-6,-3).filter(r=>r.revNet>0);
@@ -6748,77 +6746,76 @@ async function renderAnalysis(){
             const rRate=Math.round(_r3.reduce((a,r)=>a+r.ep/r.revNet*100,0)/_r3.length);
             const pRate=Math.round(_p3.reduce((a,r)=>a+r.ep/r.revNet*100,0)/_p3.length);
             const d=rRate-pRate;
-            if(d>=3)_insights.push({icon:'↑',col:'var(--green)',text:`Taux d'épargne en hausse`,sub:`+${d} pts sur 3 mois · ${pRate}% → ${rRate}%`});
-            else if(d<=-3)_insights.push({icon:'↓',col:'var(--red)',text:`Taux d'épargne en baisse`,sub:`${d} pts sur 3 mois · ${pRate}% → ${rRate}%`});
+            if(d>=3)_ins.push({icon:'\u2191',col:'var(--green)',text:"Taux d\u2019\u00e9pargne en hausse",sub:'+'+d+' pts sur 3 mois \u00b7 '+pRate+'% \u2192 '+rRate+'%'});
+            else if(d<=-3)_ins.push({icon:'\u2193',col:'var(--red)',text:"Taux d\u2019\u00e9pargne en baisse",sub:d+' pts sur 3 mois \u00b7 '+pRate+'% \u2192 '+rRate+'%'});
           }
         }
 
-        // 2. Mois déficitaires consécutifs
+        // 2. Mois deficitaires consecutifs
         const _negLast=_dataStats.slice(-3).filter(r=>r.solde<0).length;
-        if(_negLast>=2)_insights.push({icon:'⚠',col:'var(--red)',text:`${_negLast} mois consécutifs en déficit`,sub:'Réduire les dépenses ou augmenter les revenus'});
+        if(_negLast>=2)_ins.push({icon:'\u26a0',col:'var(--red)',text:_negLast+' mois cons\u00e9cutifs en d\u00e9ficit',sub:'R\u00e9duire les d\u00e9penses ou augmenter les revenus'});
 
         // 3. Loisirs ce mois vs moyenne
-        const _latestLoi=_byMkExp.get(_curMkI)?.loisir||0;
+        const _latestLoi=(_byMkExp.get(_curMkI)||{}).loisir||0;
         if(_latestLoi>0&&_avg6Loi>0){
           const _loiPct=Math.round((_latestLoi-_avg6Loi)/_avg6Loi*100);
-          if(Math.abs(_loiPct)>=20)_insights.push({icon:_loiPct>0?'↑':'↓',col:_loiPct>0?'var(--amber)':'var(--green)',text:`Loisirs ${_loiPct>0?'+':''}${_loiPct}% vs moyenne`,sub:`${eur(_latestLoi)} ce mois · moy. ${eur(_avg6Loi)}`});
+          if(Math.abs(_loiPct)>=20)_ins.push({icon:_loiPct>0?'\u2191':'\u2193',col:_loiPct>0?'var(--amber)':'var(--green)',text:'Loisirs '+(_loiPct>0?'+':'')+_loiPct+'% vs moyenne',sub:eur(_latestLoi)+' ce mois \u00b7 moy. '+eur(_avg6Loi)});
         }
 
         // 4. Variables ce mois vs moyenne
-        const _latestVar=_byMkExp.get(_curMkI)?.variable||0;
+        const _latestVar=(_byMkExp.get(_curMkI)||{}).variable||0;
         if(_latestVar>0&&_avg6Var>0){
           const _varPct=Math.round((_latestVar-_avg6Var)/_avg6Var*100);
-          if(_varPct>=30)_insights.push({icon:'↑',col:'var(--amber)',text:`Dépenses variables +${_varPct}% vs moyenne`,sub:`${eur(_latestVar)} ce mois · moy. ${eur(_avg6Var)}`});
+          if(_varPct>=30)_ins.push({icon:'\u2191',col:'var(--amber)',text:'D\u00e9penses variables +'+_varPct+'% vs moyenne',sub:eur(_latestVar)+' ce mois \u00b7 moy. '+eur(_avg6Var)});
         }
 
         // 5. Poste avec la plus forte hausse ce mois
-        {
-          const _spikeMap=new Map();
-          for(const e of (_anaAllExp||[]).filter(e=>!['revenu','impot'].includes(e.cat)&&!e.is_exceptional)){
-            const k=e.name.trim(),mk=`${e.year}-${String(e.month).padStart(2,'0')}`;
-            if(!_spikeMap.has(k))_spikeMap.set(k,new Map());
-            _spikeMap.get(k).set(mk,(_spikeMap.get(k).get(mk)||0)+Math.abs(e.amount));
-          }
-          let _bestSpike=null,_bestDelta=0;
-          for(const [name,mm] of _spikeMap){
-            const vals=_last6.map(mk=>mm.get(mk)||0);
-            const latestVal=vals[vals.length-1];
-            const prevVals=vals.slice(0,-1).filter(v=>v>0);
-            if(prevVals.length<2||latestVal===0)continue;
-            const avg=prevVals.reduce((a,v)=>a+v,0)/prevVals.length;
-            const pct=avg>0?(latestVal-avg)/avg*100:0;
-            if(pct>=30&&latestVal-avg>_bestDelta){_bestDelta=latestVal-avg;_bestSpike={name,latestVal,avg,pct:Math.round(pct)};}
-          }
-          if(_bestSpike)_insights.push({icon:'↑',col:'var(--amber)',text:`"${_bestSpike.name}" en hausse +${_bestSpike.pct}%`,sub:`${eur(_bestSpike.latestVal)} ce mois · moy. ${eur(Math.round(_bestSpike.avg))}`});
+        const _spikeMap=new Map();
+        for(const _se of (_anaAllExp||[])){
+          if(['revenu','impot'].includes(_se.cat)||_se.is_exceptional)continue;
+          const _sk=_se.name.trim(),_smk=_se.year+'-'+String(_se.month).padStart(2,'0');
+          if(!_spikeMap.has(_sk))_spikeMap.set(_sk,new Map());
+          _spikeMap.get(_sk).set(_smk,(_spikeMap.get(_sk).get(_smk)||0)+Math.abs(_se.amount));
         }
+        let _bestSpike=null,_bestDelta=0;
+        for(const [_sn,_smm] of _spikeMap){
+          const _svals=_last6.map(function(_mk){return _smm.get(_mk)||0;});
+          const _slv=_svals[_svals.length-1];
+          const _spv=_svals.slice(0,-1).filter(function(v){return v>0;});
+          if(_spv.length<2||_slv===0)continue;
+          const _savg=_spv.reduce(function(a,v){return a+v;},0)/_spv.length;
+          const _spct=_savg>0?(_slv-_savg)/_savg*100:0;
+          if(_spct>=30&&_slv-_savg>_bestDelta){_bestDelta=_slv-_savg;_bestSpike={name:_sn,lv:_slv,avg:_savg,pct:Math.round(_spct)};}
+        }
+        if(_bestSpike)_ins.push({icon:'\u2191',col:'var(--amber)',text:'"'+_bestSpike.name+'" en hausse +'+_bestSpike.pct+'%',sub:eur(_bestSpike.lv)+' ce mois \u00b7 moy. '+eur(Math.round(_bestSpike.avg))});
 
-        // 6. Très faible épargne ce mois
+        // 6. Epargne tres faible ce mois
         if(_latest&&_latest.revNet>0&&_latest.epRate!==null&&_latest.epRate<5&&_latest.ep>=0){
-          _insights.push({icon:'⚠',col:'var(--amber)',text:`Épargne très faible (${_latest.epRate}%)`,sub:`Objectif conseillé : 20% soit ${eur(Math.round(_latest.revNet*0.2))}/mois`});
+          _ins.push({icon:'\u26a0',col:'var(--amber)',text:'\u00c9pargne tr\u00e8s faible ('+_latest.epRate+'%)',sub:'Objectif conseill\u00e9 : 20% soit '+eur(Math.round(_latest.revNet*0.2))+'/mois'});
         }
 
         // 7. Excellent mois
         if(_latest&&_latest.solde>0&&_latest.epRate!==null&&_latest.epRate>=20){
-          _insights.push({icon:'✓',col:'var(--green)',text:`Excellent mois — épargne à ${_latest.epRate}%`,sub:`Solde positif de ${eur(_latest.solde)}`});
+          _ins.push({icon:'\u2713',col:'var(--green)',text:"Excellent mois \u2014 \u00e9pargne \u00e0 "+_latest.epRate+'%',sub:'Solde positif de '+eur(_latest.solde)});
         }
 
-        if(_insights.length===0)_insights.push({icon:'✓',col:'var(--green)',text:'Aucune anomalie détectée',sub:'Vos finances semblent équilibrées'});
+        if(_ins.length===0)_ins.push({icon:'\u2713',col:'var(--green)',text:'Aucune anomalie d\u00e9tect\u00e9e',sub:'Vos finances semblent \u00e9quilibr\u00e9es'});
 
-        _insEl.innerHTML=`<div class="card" style="padding:0;overflow:hidden">
-          <div style="padding:14px 16px;border-bottom:1px solid var(--border)">
-            <span style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)">Insights</span>
-          </div>
-          <div>${_insights.map((ins,i)=>`<div style="display:flex;align-items:flex-start;gap:12px;padding:11px 16px;${i<_insights.length-1?'border-bottom:1px solid var(--border)':''}">
-            <div style="width:26px;height:26px;border-radius:50%;background:color-mix(in srgb,${ins.col} 15%,var(--surface2));display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:12px;font-weight:800;color:${ins.col}">${ins.icon}</div>
-            <div style="flex:1;min-width:0">
-              <div style="font-size:var(--fs-sm);font-weight:700;color:var(--text)">${ins.text}</div>
-              ${ins.sub?`<div style="font-size:var(--fs-xs);color:var(--muted);margin-top:2px">${ins.sub}</div>`:''}
-            </div>
-          </div>`).join('')}</div>
-        </div>`;
+        const _insRows=_ins.map(function(ins,i){
+          return '<div style="display:flex;align-items:flex-start;gap:12px;padding:11px 16px;'+(i<_ins.length-1?'border-bottom:1px solid var(--border)':'')+'">'
+            +'<div style="width:26px;height:26px;border-radius:50%;background:var(--surface2);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:12px;font-weight:800;color:'+ins.col+'">'+ins.icon+'</div>'
+            +'<div style="flex:1;min-width:0">'
+            +'<div style="font-size:var(--fs-sm);font-weight:700;color:var(--text)">'+ins.text+'</div>'
+            +(ins.sub?'<div style="font-size:var(--fs-xs);color:var(--muted);margin-top:2px">'+ins.sub+'</div>':'')
+            +'</div></div>';
+        }).join('');
+        _insEl.innerHTML='<div class="card" style="padding:0;overflow:hidden">'
+          +'<div style="padding:14px 16px;border-bottom:1px solid var(--border)">'
+          +'<span style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)">Insights</span>'
+          +'</div><div>'+_insRows+'</div></div>';
         _insEl.style.display='block';
       } else if(_insEl){_insEl.style.display='none';}
-    }
+    } catch(_insErr){console.warn('insights error',_insErr);}
 
     // Force-hide legacy sections (data preserved, elements hidden)
     ['analysis-kpi-summary','analysis-avg-kpis','analysis-health-card','analysis-ova-card','member-bars-card'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
