@@ -3113,6 +3113,15 @@ async function renderDashboard(){
       const idx=_spkM.findIndex(m=>m.year===year&&m.month===month);
       if(idx>=0)_itemSpkData.get(k)[idx]+=Math.abs(fe.amount);
     }
+    // épargne
+    const idx2=_spkM.findIndex(m=>m.year===year&&m.month===month);
+    if(idx2>=0){
+      const mSav=(savingsDash||[]).filter(s=>s.year===year&&s.month===_FR_M[month-1]&&(s.delta||0)>0);
+      for(const sv of mSav){
+        if(!_itemSpkData.has('Épargne'))_itemSpkData.set('Épargne',Array(6).fill(0));
+        _itemSpkData.get('Épargne')[idx2]+=(sv.delta||0);
+      }
+    }
   }
 
   const _svgSpk=(vals,col,bgt=0)=>{
