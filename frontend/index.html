@@ -7033,26 +7033,27 @@ function _closeOvaTip(){
     }
     const col=_CATS_COL[items[0].cat]||'var(--red)';
     const total=items.reduce((s,x)=>s+Math.abs(x.amount||x._fromEntry?Math.abs(x.amount):0),0);
+    const isFoyer=dashboardMember==='all';
     const rowsHtml=items.map(x=>{
       const amt=Math.abs(x.amount);
-      const note=x.note?`<div style="font-size:var(--fs-xs);color:var(--muted);margin-top:1px">${x.note}</div>`:'';
+      const note=x.note?`<div style="font-size:var(--fs-xs);color:var(--muted);margin-top:2px">${x.note}</div>`:'';
       const badge=x._fromEntry?`<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px;background:var(--surface2);color:var(--muted);border:1px solid var(--border)">prévisionnel</span>`:'';
-      return`<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:8px 0;border-top:1px solid var(--border)">
+      const hasContent=note||badge||(isFoyer&&x.member);
+      return`<div style="display:flex;align-items:${hasContent?'flex-start':'center'};justify-content:space-between;gap:12px;padding:8px 0;border-top:1px solid var(--border)">
         <div style="min-width:0;flex:1">
-          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-            <span style="font-size:var(--fs-sm);font-weight:600;color:var(--text)">${x.name}</span>
-            ${badge}
-          </div>
+          ${badge?`<div style="margin-bottom:2px">${badge}</div>`:''}
           ${note}
-          ${x.member?`<div style="font-size:var(--fs-xs);color:var(--hint);margin-top:1px">${x.member}</div>`:''}
+          ${isFoyer&&x.member?`<div style="font-size:var(--fs-xs);color:var(--hint);margin-top:1px">${x.member}</div>`:''}
+          ${!note&&!badge&&!(isFoyer&&x.member)?`<span style="font-size:var(--fs-xs);color:var(--muted)">—</span>`:''}
         </div>
         <span style="font-size:var(--fs-sm);font-weight:700;color:${col};flex-shrink:0">${eur(amt)}</span>
       </div>`;
     }).join('');
     tc.innerHTML=`
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:8px;padding-right:28px">
-        <div style="font-size:15px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${name}</div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+        <div style="font-size:15px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">${name}</div>
         <span style="font-size:var(--fs-sm);font-weight:800;color:${col};flex-shrink:0">${eur(total)}</span>
+        <button onclick="_closeOvaTip()" style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:18px;line-height:1;padding:2px 4px;flex-shrink:0">✕</button>
       </div>
       <div>${rowsHtml}</div>`;
     tip.style.display=''; if(bd)bd.style.display='';
@@ -8660,7 +8661,6 @@ document.addEventListener('keydown', e => {
 </div>
 <div id="ova-exp-backdrop" style="display:none;position:fixed;inset:0;z-index:9998;background:rgba(0,0,0,.35)" onclick="_closeOvaTip()"></div>
 <div id="ova-exp-tooltip" style="display:none;position:fixed;z-index:9999;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px;box-shadow:0 24px 64px rgba(0,0,0,.4);width:340px;max-width:calc(100vw - 32px);max-height:85vh;overflow-y:auto">
-  <button onclick="_closeOvaTip()" style="position:absolute;top:12px;right:12px;background:none;border:none;cursor:pointer;color:var(--muted);font-size:18px;line-height:1;padding:4px 6px">✕</button>
   <div id="ova-exp-tooltip-content"></div>
 </div>
 <div id="rep-exp-backdrop" style="display:none;position:fixed;inset:0;z-index:9998;background:rgba(0,0,0,.35)" onclick="_closeRepTip()"></div>
