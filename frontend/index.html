@@ -1068,6 +1068,9 @@ if(window.location.hostname==='localhost'||window.location.hostname==='127.0.0.1
     <!-- NEW: Hero metrics card -->
     <div id="analysis-hero" style="display:none;margin-bottom:var(--sg)"></div>
 
+    <!-- Insights actionnables -->
+    <div id="analysis-insights" style="display:none;margin-bottom:var(--sg)"></div>
+
     <!-- KEPT: Comparaison mensuelle -->
     <div class="card" id="monthly-compare-card" style="display:none"><div class="card-head">Comparaison mensuelle</div><div id="monthly-compare-content"><div style="padding:20px;text-align:center;color:var(--muted);font-size:var(--fs-sm)">Chargement…</div></div></div>
 
@@ -6727,6 +6730,94 @@ async function renderAnalysis(){
         ${_ovaSections}
       </div>`;
       _ovaAnaEl.style.display='block';
+    }
+
+    // ── Insights actionnables ──
+    {
+      const _insEl=document.getElementById('analysis-insights');
+      if(_insEl && _dataStats.length>=2){
+        const _curMkI=_last6[_last6.length-1];
+        const _latest=_dataStats[_dataStats.length-1];
+        const _insights=[];
+
+        // 1. Tendance taux d'épargne (3 derniers vs 3 précédents)
+        if(_dataStats.length>=4){
+          const _r3=_dataStats.slice(-3).filter(r=>r.revNet>0);
+          const _p3=_dataStats.slice(-6,-3).filter(r=>r.revNet>0);
+          if(_r3.length>=2&&_p3.length>=1){
+            const rRate=Math.round(_r3.reduce((a,r)=>a+r.ep/r.revNet*100,0)/_r3.length);
+            const pRate=Math.round(_p3.reduce((a,r)=>a+r.ep/r.revNet*100,0)/_p3.length);
+            const d=rRate-pRate;
+            if(d>=3)_insights.push({icon:'↑',col:'var(--green)',text:`Taux d'épargne en hausse`,sub:`+${d} pts sur 3 mois · ${pRate}% → ${rRate}%`});
+            else if(d<=-3)_insights.push({icon:'↓',col:'var(--red)',text:`Taux d'épargne en baisse`,sub:`${d} pts sur 3 mois · ${pRate}% → ${rRate}%`});
+          }
+        }
+
+        // 2. Mois déficitaires consécutifs
+        const _negLast=_dataStats.slice(-3).filter(r=>r.solde<0).length;
+        if(_negLast>=2)_insights.push({icon:'⚠',col:'var(--red)',text:`${_negLast} mois consécutifs en déficit`,sub:'Réduire les dépenses ou augmenter les revenus'});
+
+        // 3. Loisirs ce mois vs moyenne
+        const _latestLoi=_byMkExp.get(_curMkI)?.loisir||0;
+        if(_latestLoi>0&&_avg6Loi>0){
+          const _loiPct=Math.round((_latestLoi-_avg6Loi)/_avg6Loi*100);
+          if(Math.abs(_loiPct)>=20)_insights.push({icon:_loiPct>0?'↑':'↓',col:_loiPct>0?'var(--amber)':'var(--green)',text:`Loisirs ${_loiPct>0?'+':''}${_loiPct}% vs moyenne`,sub:`${eur(_latestLoi)} ce mois · moy. ${eur(_avg6Loi)}`});
+        }
+
+        // 4. Variables ce mois vs moyenne
+        const _latestVar=_byMkExp.get(_curMkI)?.variable||0;
+        if(_latestVar>0&&_avg6Var>0){
+          const _varPct=Math.round((_latestVar-_avg6Var)/_avg6Var*100);
+          if(_varPct>=30)_insights.push({icon:'↑',col:'var(--amber)',text:`Dépenses variables +${_varPct}% vs moyenne`,sub:`${eur(_latestVar)} ce mois · moy. ${eur(_avg6Var)}`});
+        }
+
+        // 5. Poste avec la plus forte hausse ce mois
+        {
+          const _spikeMap=new Map();
+          for(const e of (_anaAllExp||[]).filter(e=>!['revenu','impot'].includes(e.cat)&&!e.is_exceptional)){
+            const k=e.name.trim(),mk=`${e.year}-${String(e.month).padStart(2,'0')}`;
+            if(!_spikeMap.has(k))_spikeMap.set(k,new Map());
+            _spikeMap.get(k).set(mk,(_spikeMap.get(k).get(mk)||0)+Math.abs(e.amount));
+          }
+          let _bestSpike=null,_bestDelta=0;
+          for(const [name,mm] of _spikeMap){
+            const vals=_last6.map(mk=>mm.get(mk)||0);
+            const latestVal=vals[vals.length-1];
+            const prevVals=vals.slice(0,-1).filter(v=>v>0);
+            if(prevVals.length<2||latestVal===0)continue;
+            const avg=prevVals.reduce((a,v)=>a+v,0)/prevVals.length;
+            const pct=avg>0?(latestVal-avg)/avg*100:0;
+            if(pct>=30&&latestVal-avg>_bestDelta){_bestDelta=latestVal-avg;_bestSpike={name,latestVal,avg,pct:Math.round(pct)};}
+          }
+          if(_bestSpike)_insights.push({icon:'↑',col:'var(--amber)',text:`"${_bestSpike.name}" en hausse +${_bestSpike.pct}%`,sub:`${eur(_bestSpike.latestVal)} ce mois · moy. ${eur(Math.round(_bestSpike.avg))}`});
+        }
+
+        // 6. Très faible épargne ce mois
+        if(_latest&&_latest.revNet>0&&_latest.epRate!==null&&_latest.epRate<5&&_latest.ep>=0){
+          _insights.push({icon:'⚠',col:'var(--amber)',text:`Épargne très faible (${_latest.epRate}%)`,sub:`Objectif conseillé : 20% soit ${eur(Math.round(_latest.revNet*0.2))}/mois`});
+        }
+
+        // 7. Excellent mois
+        if(_latest&&_latest.solde>0&&_latest.epRate!==null&&_latest.epRate>=20){
+          _insights.push({icon:'✓',col:'var(--green)',text:`Excellent mois — épargne à ${_latest.epRate}%`,sub:`Solde positif de ${eur(_latest.solde)}`});
+        }
+
+        if(_insights.length===0)_insights.push({icon:'✓',col:'var(--green)',text:'Aucune anomalie détectée',sub:'Vos finances semblent équilibrées'});
+
+        _insEl.innerHTML=`<div class="card" style="padding:0;overflow:hidden">
+          <div style="padding:14px 16px;border-bottom:1px solid var(--border)">
+            <span style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)">Insights</span>
+          </div>
+          <div>${_insights.map((ins,i)=>`<div style="display:flex;align-items:flex-start;gap:12px;padding:11px 16px;${i<_insights.length-1?'border-bottom:1px solid var(--border)':''}">
+            <div style="width:26px;height:26px;border-radius:50%;background:color-mix(in srgb,${ins.col} 15%,var(--surface2));display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:12px;font-weight:800;color:${ins.col}">${ins.icon}</div>
+            <div style="flex:1;min-width:0">
+              <div style="font-size:var(--fs-sm);font-weight:700;color:var(--text)">${ins.text}</div>
+              ${ins.sub?`<div style="font-size:var(--fs-xs);color:var(--muted);margin-top:2px">${ins.sub}</div>`:''}
+            </div>
+          </div>`).join('')}</div>
+        </div>`;
+        _insEl.style.display='block';
+      } else if(_insEl){_insEl.style.display='none';}
     }
 
     // Force-hide legacy sections (data preserved, elements hidden)
