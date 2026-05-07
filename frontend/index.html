@@ -969,13 +969,13 @@ if(window.location.hostname==='localhost'||window.location.hostname==='127.0.0.1
 
     <!-- Sous-onglets Prévisionnel / Suivi mensuel -->
     <div style="display:flex;align-items:center;gap:0;border-bottom:1px solid var(--border);margin-bottom:.75rem">
-      <button class="stab active" data-etab="previsionnel" onclick="switchEntriesTab('previsionnel')">Prévisionnel</button>
-      <button class="stab" data-etab="mensuel" onclick="switchEntriesTab('mensuel')">Suivi mensuel</button>
+      <button class="stab active" data-etab="mensuel" onclick="switchEntriesTab('mensuel')">Suivi mensuel</button>
+      <button class="stab" data-etab="previsionnel" onclick="switchEntriesTab('previsionnel')">Prévisionnel</button>
       <button class="stab" data-etab="simulation" onclick="switchEntriesTab('simulation')" style="color:var(--amber)">Simulation</button>
     </div>
 
     <!-- ── PRÉVISIONNEL ── -->
-    <div id="entries-previsionnel">
+    <div id="entries-previsionnel" style="display:none">
       <div id="entries-nodata" style="display:none"></div>
       <div class="kpi-grid" id="entries-summary" style="margin-bottom:.75rem"></div>
       <div id="entries-toolbar" style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:.75rem;gap:8px">
@@ -1008,7 +1008,7 @@ if(window.location.hostname==='localhost'||window.location.hostname==='127.0.0.1
     </div>
 
     <!-- ── SUIVI MENSUEL ── -->
-    <div id="entries-mensuel" style="display:none">
+    <div id="entries-mensuel">
       <!-- Navigateur de mois (style toolbar) -->
       <div id="monthly-toolbar" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--sg);gap:8px">
         <button id="monthly-nav-prev" onclick="monthlyNavPrev()" aria-label="Mois précédent" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 20px;cursor:pointer;color:var(--fg);font-size:1.2rem;line-height:1;flex-shrink:0;min-height:44px">‹</button>
@@ -1522,6 +1522,18 @@ if(window.location.hostname==='localhost'||window.location.hostname==='127.0.0.1
   </div>
 </div>
 
+<!-- PENDING FIXES MODAL -->
+<div class="overlay" id="modal-pending-fixes">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-drag"></div>
+    <h3 id="modal-pf-title">Charges fixes</h3>
+    <div id="modal-pf-body" style="max-height:60vh;overflow-y:auto"></div>
+    <div class="modal-footer">
+      <button class="btn" onclick="document.getElementById('modal-pending-fixes').classList.remove('open')">Fermer</button>
+    </div>
+  </div>
+</div>
+
 <!-- CONFIRM MODAL -->
 <div class="overlay" id="modal-confirm">
   <div class="modal" style="max-width:380px;overflow:hidden">
@@ -1682,6 +1694,13 @@ async function _deleteNotif(id){
   _inAppNotifs=_inAppNotifs.filter(n=>n.id!==id);
   _renderNotifList();
   _renderNotifBadge();
+}
+
+function addInAppNotif(title, body, type='info'){
+  const n={id:Date.now(),title,body,type,is_read:0,created_at:new Date().toISOString().replace('Z','')};
+  _inAppNotifs.unshift(n);
+  _renderNotifBadge();
+  _renderNotifList();
 }
 
 async function _clearAllNotifs(){
@@ -2405,7 +2424,7 @@ function switchTab(id){
   _updateMemberBadge();
   const me=myRole();
   if(id==='dashboard'){if(dashboardMember==='all')setDashboardMember(me);else renderDashboard();}
-  if(id==='entries'){if(entriesMember==='Commun')setEntriesMember(me);else renderEntries();}
+  if(id==='entries'){if(entriesMember==='Commun')setEntriesMember(me);else{renderEntries();const _activeEtab=document.querySelector('[data-etab].active')?.dataset.etab;if(_activeEtab==='mensuel'){_updateMonthlyNavNext();_updateMonthlyNavPrev();renderMonthly();}}}
   if(id==='savings'){if(savingsMember==='all')setSavingsMember(me);else renderSavings();}
   if(id==='analysis'){if(analysisMember==='all')setAnalysisMember(me);else renderAnalysis();}
   if(id==='banque')renderBank();
@@ -3004,10 +3023,10 @@ async function renderDashboard(){
 
   // ── 4 cartes budget ──
   const _cats=_budgetKpiGrid(
-    `<div onclick="_dashAddExpense('fixe')" title="Ajouter une charge fixe" style="cursor:pointer">${_budgetKpiCard('Fixes',    fixA,        fixBudget, '#d93535')}</div>`,
-    `<div onclick="_dashAddExpense('variable')" title="Ajouter une dépense variable" style="cursor:pointer">${_budgetKpiCard('Variables',varA,        varBudget, '#e05a2b')}</div>`,
-    `<div onclick="_dashAddExpense('loisir')" title="Ajouter un loisir" style="cursor:pointer">${_budgetKpiCard('Loisir',   loiA,        loiBudget, '#f59e0b')}</div>`,
-    epMonthDelta<0?_retraitKpiCard(epMonthDelta,_balBefore,_balAfter):`<div onclick="openAddSaving()" title="Saisir l'épargne du mois" style="cursor:pointer">${_budgetKpiCard('Épargne',epMonthDelta,epBudget,'#2979c8',true)}</div>`,
+    `<div onclick="_dashShowPendingFixes()" style="cursor:pointer">${_budgetKpiCard('Fixes',    fixA,        fixBudget, '#d93535')}</div>`,
+    `${_budgetKpiCard('Variables',varA,        varBudget, '#e05a2b')}`,
+    `${_budgetKpiCard('Loisir',   loiA,        loiBudget, '#f59e0b')}`,
+    epMonthDelta<0?_retraitKpiCard(epMonthDelta,_balBefore,_balAfter):`${_budgetKpiCard('Épargne',epMonthDelta,epBudget,'#2979c8',true)}`,
   );
 
   // ── Où va l'argent ? ──
@@ -3243,6 +3262,47 @@ function _ovaGoto(label){
   setTimeout(()=>{const s=document.getElementById('mly-search-input');if(s){s.value=label;s.dispatchEvent(new Event('input'));}},150);
 }
 
+function _dashShowPendingFixes(){
+  const now=new Date();
+  const isCurrentMonth=dashYear===now.getFullYear()&&dashMonth===now.getMonth()+1;
+  const todayDay=isCurrentMonth?now.getDate():31;
+  const memberEntries=dashboardMember==='all'?entries:entries.filter(e=>e.member===dashboardMember);
+  const fixes=memberEntries.filter(e=>e.cat==='fixe');
+  const FR_M=['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+  const frMonth=FR_M[dashMonth-1];
+  document.getElementById('modal-pf-title').textContent=`Charges fixes — ${frMonth} ${dashYear}`;
+  const pending=isCurrentMonth?fixes.filter(e=>e.debit_day!=null&&e.debit_day>todayDay):[];
+  const done=isCurrentMonth?fixes.filter(e=>!e.debit_day||e.debit_day<=todayDay):fixes;
+  const row=(e,isPending)=>{
+    const dayHtml=e.debit_day?`<span style="font-size:var(--fs-xs);color:${isPending?'var(--amber)':'var(--muted)'};font-weight:600">le ${e.debit_day}</span>`:`<span style="font-size:var(--fs-xs);color:var(--hint)">—</span>`;
+    const statusDot=isPending?`<span style="width:7px;height:7px;border-radius:50%;background:var(--amber);flex-shrink:0;display:inline-block"></span>`:`<span style="width:7px;height:7px;border-radius:50%;background:var(--green);opacity:.7;flex-shrink:0;display:inline-block"></span>`;
+    return`<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)">
+      <div style="display:flex;align-items:center;gap:8px;min-width:0;flex:1">
+        ${statusDot}
+        <span style="font-size:var(--fs-sm);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${e.name}</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;flex-shrink:0">
+        ${dayHtml}
+        <span style="font-size:var(--fs-sm);font-weight:700;color:var(--red)">${eur(Math.abs(e.amount))}</span>
+      </div>
+    </div>`;
+  };
+  let html='';
+  if(pending.length>0){
+    const tot=pending.reduce((s,e)=>s+Math.abs(e.amount),0);
+    html+=`<div style="font-size:9px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--amber);margin-bottom:4px;margin-top:4px">À venir · ${eur(tot)}</div>`;
+    html+=pending.sort((a,b)=>(a.debit_day||99)-(b.debit_day||99)).map(e=>row(e,true)).join('');
+  }
+  if(done.length>0){
+    const tot=done.reduce((s,e)=>s+Math.abs(e.amount),0);
+    html+=`<div style="font-size:9px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--green);margin-bottom:4px;margin-top:${pending.length?'14px':'4px'}">Passées · ${eur(tot)}</div>`;
+    html+=done.sort((a,b)=>(a.debit_day||99)-(b.debit_day||99)).map(e=>row(e,false)).join('');
+  }
+  if(!fixes.length)html=`<div style="text-align:center;color:var(--muted);padding:24px 0;font-size:var(--fs-sm)">Aucune charge fixe définie</div>`;
+  document.getElementById('modal-pf-body').innerHTML=html;
+  document.getElementById('modal-pending-fixes').classList.add('open');
+}
+
 // ══════════════════════════════════════════════
 // ENTRIES
 // ══════════════════════════════════════════════
@@ -3357,30 +3417,32 @@ function memberTableHtml(rows,isMobile,memberName){
       </div>
     </div>`;
     if(!gRows.length)return`<div style="margin-bottom:var(--sg)">${hdr}</div>`;
-    const tableRows=gRows.map(e=>{const c=CATS[e.cat];const ac=e.cat==='revenu'?'var(--green)':e.cat==='impot'?'var(--amber)':e.cat==='epargne'?'var(--blue)':'var(--red)';return`<tr data-id="${e.id||''}">
+    const tableRows=gRows.map(e=>{const c=CATS[e.cat];const ac=e.cat==='revenu'?'var(--green)':e.cat==='impot'?'var(--amber)':e.cat==='epargne'?'var(--blue)':'var(--red)';const debitCell=g.key==='fixes'?`<td style="color:var(--muted);font-size:var(--fs-xs)">${e.debit_day?`le ${e.debit_day}`:'—'}</td>`:'';return`<tr data-id="${e.id||''}">
       <td style="font-weight:500">${e.name}</td>
       <td><span class="badge" style="background:${c.bg};color:${c.text};border:${c.border}">${c.label}</span></td>
+      ${debitCell}
       <td style="text-align:right;font-weight:600;color:${ac}">${eur(Math.abs(e.amount))}</td>
       <td><div style="display:flex;gap:4px;align-items:center">
         ${e._synthetic?`<span style="font-size:var(--fs-xs);color:var(--muted);font-style:italic">calculé</span>`:canEdit(e.member)?`<button class="btn-act" onclick="openEditEntry(${e.id})"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="btn-act btn-act-danger" onclick="deleteEntry(${e.id})"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg></button>`:'<span style="display:inline-block;width:52px"></span>'}
       </div></td>
     </tr>`}).join('');
-    const mobileRows=gRows.map(e=>{const c=CATS[e.cat];const amtColor=e.cat==='revenu'?'var(--green)':e.cat==='impot'?'var(--amber)':e.cat==='epargne'?'var(--blue)':'var(--red)';return`<div class="entry-card" data-id="${e.id||''}" style="border-left-color:${c.hex};background:${c.bg};padding:13px 14px 11px 14px${e._synthetic?';opacity:.8':''}">
+    const mobileRows=gRows.map(e=>{const c=CATS[e.cat];const amtColor=e.cat==='revenu'?'var(--green)':e.cat==='impot'?'var(--amber)':e.cat==='epargne'?'var(--blue)':'var(--red)';const debitBadge=g.key==='fixes'&&e.debit_day?`<span style="font-size:var(--fs-xs);color:var(--muted);font-weight:600">↓ le ${e.debit_day}</span>`:'';return`<div class="entry-card" data-id="${e.id||''}" style="border-left-color:${c.hex};background:${c.bg};padding:13px 14px 11px 14px${e._synthetic?';opacity:.8':''}">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
         <span style="font-weight:700;font-size:var(--fs-base);flex:1;line-height:1.3;letter-spacing:-.01em">${e.name}</span>
         <span style="font-size:var(--fs-base);font-weight:800;color:${amtColor};flex-shrink:0;letter-spacing:-.02em">${eur(Math.abs(e.amount))}</span>
       </div>
       <div style="height:1px;background:${c.hex}22;margin:9px 0 8px"></div>
       <div style="display:flex;justify-content:space-between;align-items:center">
-        <span style="font-size:var(--fs-xs);font-weight:700;color:${c.text};letter-spacing:.05em;text-transform:uppercase">${c.label}</span>
+        <div style="display:flex;align-items:center;gap:8px"><span style="font-size:var(--fs-xs);font-weight:700;color:${c.text};letter-spacing:.05em;text-transform:uppercase">${c.label}</span>${debitBadge}</div>
         ${e._synthetic?`<span style="font-size:var(--fs-xs);color:var(--muted);font-style:italic">calculé</span>`:canEdit(e.member)?`<div style="display:flex;gap:5px"><button class="btn-act" onclick="openEditEntry(${e.id})"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="btn-act btn-act-danger" onclick="deleteEntry(${e.id})"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg></button></div>`:''}
       </div>
     </div>`}).join('');
+    const _isFixGrp=g.key==='fixes';
     const inner=isMobile?mobileRows:`<div class="tbl-wrap"><table style="width:100%;table-layout:fixed">
-      <colgroup><col style="width:42%"><col style="width:23%"><col style="width:20%"><col style="width:15%"></colgroup>
-      <thead><tr><th>Désignation</th><th>Catégorie</th><th style="text-align:right">Montant</th><th></th></tr></thead>
+      ${_isFixGrp?`<colgroup><col style="width:36%"><col style="width:19%"><col style="width:14%"><col style="width:17%"><col style="width:14%"></colgroup>`:`<colgroup><col style="width:42%"><col style="width:23%"><col style="width:20%"><col style="width:15%"></colgroup>`}
+      <thead><tr><th>Désignation</th><th>Catégorie</th>${_isFixGrp?'<th>Prélèvement</th>':''}<th style="text-align:right">Montant</th><th></th></tr></thead>
       <tbody id="drag-${memberName}-${g.key}">${tableRows}
-        <tr style="background:var(--surface2)"><td style="font-size:var(--fs-sm);font-weight:600;color:var(--muted)">Total ${g.label.toLowerCase()}</td><td></td><td style="text-align:right;font-weight:700;color:${g.totColor}">${eur(tot)}</td><td></td></tr>
+        <tr style="background:var(--surface2)"><td style="font-size:var(--fs-sm);font-weight:600;color:var(--muted)">Total ${g.label.toLowerCase()}</td><td></td>${_isFixGrp?'<td></td>':''}<td style="text-align:right;font-weight:700;color:${g.totColor}">${eur(tot)}</td><td></td></tr>
       </tbody></table></div>`;
     return`<div style="margin-bottom:var(--sg)">${hdr}<div id="${uid}" style="${collapsed?'display:none':''}">${inner}</div></div>`;
   }).join('');
@@ -7163,7 +7225,7 @@ async function _doLoginWithCredentials(userIdOrEmail,password){
         await loadData();
       }catch(e){console.warn('Auto-join failed:',e.message);}
     }
-    initUserContext();renderMemberTabs();updateNavForDataState();renderDashboard();renderEntries();document.getElementById('fab-entry').style.display='none';document.getElementById('fab-dashboard').style.display='none';
+    initUserContext();renderMemberTabs();updateNavForDataState();renderDashboard();renderEntries();_updateMonthlyNavNext();_updateMonthlyNavPrev();renderMonthly();document.getElementById('fab-entry').style.display='none';document.getElementById('fab-dashboard').style.display='none';
     _updateMemberBadge();_loadNotifs();
     if(window.location.pathname==='/banque'){switchTab('banque');}
     registerPushSubscription();
@@ -7190,7 +7252,7 @@ async function doLogin(){
     if(errEl) errEl.classList.remove('show');
     showScreen('app');
     await loadData();
-    initUserContext();renderMemberTabs();updateNavForDataState();renderDashboard();renderEntries();document.getElementById('fab-entry').style.display='none';document.getElementById('fab-dashboard').style.display='none';
+    initUserContext();renderMemberTabs();updateNavForDataState();renderDashboard();renderEntries();_updateMonthlyNavNext();_updateMonthlyNavPrev();renderMonthly();document.getElementById('fab-entry').style.display='none';document.getElementById('fab-dashboard').style.display='none';
     _updateMemberBadge();_loadNotifs();
     if(window.location.pathname==='/banque'){switchTab('banque');}
     registerPushSubscription();
@@ -7220,7 +7282,7 @@ async function doRegister(){
     currentUser=result.user;
     showScreen('app');
     await loadData();
-    initUserContext();renderMemberTabs();updateNavForDataState();renderDashboard();renderEntries();document.getElementById('fab-entry').style.display='none';document.getElementById('fab-dashboard').style.display='none';
+    initUserContext();renderMemberTabs();updateNavForDataState();renderDashboard();renderEntries();_updateMonthlyNavNext();_updateMonthlyNavPrev();renderMonthly();document.getElementById('fab-entry').style.display='none';document.getElementById('fab-dashboard').style.display='none';
     _updateMemberBadge();_loadNotifs();
     if(window.location.pathname==='/banque'){switchTab('banque');}
     registerPushSubscription();
