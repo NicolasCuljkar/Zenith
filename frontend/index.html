@@ -3776,7 +3776,7 @@ function onEntryCatChange(cat){
   }
 }
 document.getElementById('btn-add-entry').addEventListener('click',openAddEntry);
-document.getElementById('fab-dashboard').addEventListener('click',()=>openAddMonthlyExpense());
+document.getElementById('fab-dashboard').addEventListener('click',()=>{ monthlyYear = dashYear; monthlyMonth = dashMonth; window._mlyCtxDash = true; openAddMonthlyExpense(); });
 document.getElementById('fab-entry').addEventListener('click',()=>{
   const mensuelActive=document.getElementById('entries-mensuel').style.display!=='none';
   if(mensuelActive)openAddMonthlyExpense();else openAddEntry();
@@ -4884,12 +4884,13 @@ document.getElementById('modal-me-save').onclick = async () => {
       showToast('Dépense ajoutée ✓');
     }
     editMonthlyEntryId = null;
-    await renderMonthly();
-    if (window._mlyCtxDash) { window._mlyCtxDash = false; renderDash().catch(()=>{}); }
   } catch(err) {
     showApiError('Erreur lors de la sauvegarde : ' + err.message);
     document.getElementById('modal-monthly-expense').classList.add('open');
+    return;
   } finally { hideLoading(); btn.disabled = false; }
+  renderMonthly().catch(()=>{});
+  if (window._mlyCtxDash) { window._mlyCtxDash = false; renderDash().catch(()=>{}); }
 };
 function _dashAddExpense(cat) {
   monthlyYear = dashYear; monthlyMonth = dashMonth;
