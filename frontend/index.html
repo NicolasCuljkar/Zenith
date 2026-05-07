@@ -6247,9 +6247,8 @@ async function renderMonthlyComparison(member, nMonths) {
     const _tc2=darkVal('#666','#999');
     const _single=rows.filter(r=>r.hasData).length<=1;
     const _datasets=[{
-      label:'Dépenses',data:_ccDepVals,tension:.45,fill:true,
-      borderColor:_ccHcol,
-      backgroundColor:(c)=>{const{chart:{ctx:c2,chartArea}}=c;if(!chartArea)return _ccHcol+'22';const g=c2.createLinearGradient(0,chartArea.top,0,chartArea.bottom);g.addColorStop(0,_ccHcol+'55');g.addColorStop(1,_ccHcol+'05');return g;},
+      label:'Dépenses',data:_ccDepVals,tension:.45,fill:false,
+      borderColor:_ccHcol,backgroundColor:'transparent',
       borderWidth:2.5,pointRadius:_single?5:0,pointHoverRadius:5,
       pointBackgroundColor:_ccHcol,pointBorderColor:'#fff',pointBorderWidth:2,spanGaps:true,
     }];
