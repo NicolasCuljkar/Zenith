@@ -2934,14 +2934,14 @@ async function renderDashboard(){
   if(dashboardMember!=='all') apiParams.member=dashboardMember;
   const savingsParams=dashboardMember!=='all'?{year:dashYear,member:dashboardMember}:{year:dashYear};
   const histParams=dashboardMember!=='all'?{member:dashboardMember}:{};
-  let mStats=null,mExpenses=[],savingsDash=[],dashHistory=[],allMlyExp=[];
-  try{[mStats,mExpenses,savingsDash,dashHistory,allMlyExp]=await Promise.all([
+  let mStats=null,savingsDash=[],dashHistory=[],allMlyExp=[];
+  try{[mStats,savingsDash,dashHistory,allMlyExp]=await Promise.all([
     API.monthlyExpenses.getStats(apiParams),
-    API.monthlyExpenses.getAll(apiParams),
     API.savings.getAll(savingsParams),
     API.monthlyExpenses.getHistory(histParams).catch(()=>[]),
     API.monthlyExpenses.getAll(histParams).catch(()=>[]),
   ]);}catch(e){}
+  const mExpenses=allMlyExp.filter(e=>e.year===dashYear&&e.month===dashMonth);
   // ── Valeurs réelles ──
   const revA  = mStats?.revenu?.actual   ??0;
   const taxA  = mStats?.impot?.actual    ??0;
@@ -4907,15 +4907,22 @@ async function _mlySwipeSuppress(entryId, ovId) {
   const entry = _monthlyAutoMap[entryId];
   if (!entry) return;
   const member = entriesMember === 'Commun' ? myRole() : entriesMember;
+  const origOv = ovId ? monthlyExpenses.find(x => x.id === ovId) : null;
   showLoading();
   try {
-    if (ovId) {
-      await API.monthlyExpenses.delete(ovId);
-      await API.monthlyExpenses.create({ year: monthlyYear, month: monthlyMonth, name: entry.name, amount: 0, cat: entry.cat, member, note: null, entry_id: entry.id });
-    } else {
-      await API.monthlyExpenses.create({ year: monthlyYear, month: monthlyMonth, name: entry.name, amount: 0, cat: entry.cat, member, note: null, entry_id: entry.id });
-    }
+    if (ovId) await API.monthlyExpenses.delete(ovId);
+    const created = await API.monthlyExpenses.create({ year: monthlyYear, month: monthlyMonth, name: entry.name, amount: 0, cat: entry.cat, member, note: null, entry_id: entry.id });
     await renderMonthly();
+    _showUndoToast(`"${entry.name}" supprimé`,
+      async () => {},
+      async () => {
+        try {
+          await API.monthlyExpenses.delete(created.id);
+          if (origOv) await API.monthlyExpenses.create({ year: origOv.year, month: origOv.month, name: origOv.name, amount: origOv.amount, cat: origOv.cat, member: origOv.member, note: origOv.note, entry_id: origOv.entry_id });
+          await renderMonthly();
+        } catch(err) { showApiError('Erreur : ' + err.message); }
+      }
+    );
   } catch(err) { showApiError('Erreur : ' + err.message); }
   finally { hideLoading(); }
 }
