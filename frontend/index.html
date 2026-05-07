@@ -1002,18 +1002,15 @@ if(window.location.hostname==='localhost'||window.location.hostname==='127.0.0.1
         <span style="font-size:var(--fs-xs);color:var(--text);flex:1">Mode simulation — vos modifications <strong>n'affectent pas</strong> le prévisionnel.</span>
         <button onclick="_simReset()" class="btn" style="padding:4px 10px;font-size:var(--fs-xs);flex-shrink:0">Réinitialiser</button>
       </div>
-      <!-- Sélecteur de membre + bouton ajout -->
-      <div style="display:flex;gap:8px;align-items:center;margin-bottom:.75rem">
-        <select id="sim-member-sel" onchange="renderSimulation()" class="inp" style="flex:1;max-width:200px"></select>
-        <button onclick="_simOpenAdd()" class="btn-add" style="flex-shrink:0"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Ajouter</button>
+      <!-- Bouton ajout -->
+      <div style="display:flex;justify-content:flex-end;margin-bottom:.75rem">
+        <button onclick="_simOpenAdd()" class="btn-add"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Ajouter</button>
       </div>
       <!-- KPI -->
       <div id="sim-kpis" class="kpi-grid" style="margin-bottom:.75rem"></div>
       <!-- Delta bar -->
       <div id="sim-delta" style="margin-bottom:.75rem"></div>
-      <!-- Slider RAV -->
-      <div id="sim-rav-block" style="margin-bottom:.75rem"></div>
-      <!-- Sections -->
+      <!-- Sections (le bloc RAV est inséré après variables dans le rendu) -->
       <div id="sim-sections"></div>
     </div>
 
@@ -4945,20 +4942,10 @@ function _simPersist() {
 }
 
 function _simGetMember() {
-  return document.getElementById('sim-member-sel')?.value || myRole();
+  return entriesMember || myRole();
 }
 
 function renderSimulation() {
-  // Populate member selector
-  const sel = document.getElementById('sim-member-sel');
-  if (sel) {
-    const mems = [...new Set(entries.map(e => e.member))].filter(Boolean);
-    const curVal = sel.value || (entriesMember !== 'Commun' ? entriesMember : myRole());
-    let opts = mems.map(m => `<option value="${m}"${m === curVal ? ' selected' : ''}>${m}</option>`).join('');
-    if (mems.length > 1) opts = `<option value="Commun"${curVal === 'Commun' ? ' selected' : ''}>Foyer complet</option>` + opts;
-    sel.innerHTML = opts;
-  }
-
   const mem   = _simGetMember();
   const simF  = mem === 'Commun' ? _simEntries : _simEntries.filter(e => e.member === mem);
   const origF = mem === 'Commun' ? _simOrigEntries : _simOrigEntries.filter(e => e.member === mem);
@@ -5012,21 +4999,20 @@ function renderSimulation() {
       </div>` : '';
   }
 
-  // Bloc RAV avec slider épargne/loisir
-  const _simRavEl = document.getElementById('sim-rav-block');
-  if (_simRavEl) {
-    const mems = mem === 'Commun' ? [...new Set(_simEntries.map(e => e.member))].filter(Boolean) : [mem];
-    const ravBlocks = mems.map(m => {
+  // Bloc RAV — construit en HTML string, inséré entre variables et loisir
+  const _simRavMems = mem === 'Commun' ? [...new Set(_simEntries.map(e => e.member))].filter(Boolean) : [mem];
+  const _simRavHtml = (() => {
+    const blocks = _simRavMems.map(m => {
       const ms  = calcStats(_simEntries.filter(e => e.member === m));
       const pct = _simSavingPct[m] ?? (savingPct[m] ?? 60);
       const ep  = Math.max(0, Math.round(ms.rav * pct / 100));
       const loi = Math.max(0, Math.round(ms.rav * (100 - pct) / 100));
       const mc  = getMC(m);
       const ravGlow = ms.rav >= 0 ? '#0d9e6e' : '#d93535';
-      return `<div style="${mems.length > 1 ? 'margin-bottom:10px' : ''}">
-        ${mems.length > 1 ? `<div style="font-size:var(--fs-xs);font-weight:700;color:${mc};text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">${esc(m)}</div>` : ''}
+      return `<div style="${_simRavMems.length > 1 ? 'margin-bottom:10px' : ''}">
+        ${_simRavMems.length > 1 ? `<div style="font-size:var(--fs-xs);font-weight:700;color:${mc};text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">${esc(m)}</div>` : ''}
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;gap:8px;flex-wrap:wrap">
-          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <div style="display:flex;align-items:center;gap:8px">
             <span style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:${ravGlow}">RAV simulé</span>
             <span style="font-size:var(--fs-sm);font-weight:800;color:${ravGlow}">${ms.rav >= 0 ? '+' : ''}${eur(ms.rav)}</span>
           </div>
@@ -5034,19 +5020,19 @@ function renderSimulation() {
         </div>
         <input type="range" min="0" max="100" step="1" value="${pct}"
           style="width:100%;accent-color:${mc};--accent-c:${mc};--track-right:var(--amber);margin-bottom:5px"
-          oninput="_simSliderChange('${m}',+this.value,${Math.round(ms.rav)})">
+          oninput="_simSliderLive('${m}',+this.value,${Math.round(ms.rav)})"
+          onchange="_simSliderDone('${m}',+this.value)">
         <div style="display:flex;justify-content:space-between">
           <span style="font-size:var(--fs-xs);color:var(--muted)">→ <span style="color:var(--blue);font-weight:700">Épargne</span> <span id="sim-ep-${m}">${eur(ep)}</span></span>
           <span style="font-size:var(--fs-xs);color:var(--muted)">→ <span style="color:var(--amber);font-weight:700">Loisir</span> <span id="sim-loi-${m}">${eur(loi)}</span></span>
         </div>
       </div>`;
     }).join('<hr style="border:none;border-top:1px solid var(--border);margin:10px 0">');
-    _simRavEl.innerHTML = `<div class="card" style="margin-bottom:.75rem;padding:14px 16px">
+    return `<div class="card" style="margin-bottom:.75rem;padding:14px 16px">
       <div style="font-size:9px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:10px">Répartition du reste à vivre</div>
-      ${ravBlocks}
+      ${blocks}
     </div>`;
-    setTimeout(fillAllTracks, 0);
-  }
+  })();
 
   // Sections
   const GROUPS = [
@@ -5129,8 +5115,8 @@ function renderSimulation() {
     const tot = g.key === 'revenus'
       ? gSim.filter(e => e.cat === 'revenu').reduce((s, e) => s + Math.abs(e.amount), 0)
         - gSim.filter(e => e.cat === 'impot').reduce((s, e) => s + Math.abs(e.amount), 0)
-      : gSim.reduce((s, e) => s + Math.abs(e.amount), 0);
-    return `<div class="card" style="margin-bottom:.75rem;padding:0">
+      : gSim.filter(e => !e._synthetic).reduce((s, e) => s + Math.abs(e.amount), 0);
+    const groupCard = `<div class="card" style="margin-bottom:.75rem;padding:0">
       <div style="display:flex;align-items:center;padding:12px 14px 10px;border-bottom:1px solid var(--border)">
         <div style="width:8px;height:8px;border-radius:50%;background:${g.color};margin-right:8px;flex-shrink:0"></div>
         <span style="font-weight:700;font-size:var(--fs-sm);flex:1">${g.label}${g.key === 'revenus' ? '<span style="font-size:9px;font-weight:500;color:var(--hint);margin-left:5px">net</span>' : ''}</span>
@@ -5138,7 +5124,10 @@ function renderSimulation() {
       </div>
       <div style="padding:0 14px">${rows}${delRows}</div>
     </div>`;
+    // Insérer le bloc RAV après les dépenses variables
+    return g.key === 'variables' ? groupCard + _simRavHtml : groupCard;
   }).join('');
+  setTimeout(fillAllTracks, 0);
 }
 
 function _simDelete(simId) {
@@ -5155,19 +5144,23 @@ function _simRestore(simId) {
   renderSimulation();
 }
 
-function _simSliderChange(member, pct, rav) {
+// Mise à jour live (pendant le drag) — seulement texte, pas de re-render DOM
+function _simSliderLive(member, pct, rav) {
   _simSavingPct[member] = pct;
-  _simPersist();
-  // Mise à jour légère sans re-render complet
+  const ep  = Math.max(0, Math.round(rav * pct / 100));
+  const loi = Math.max(0, Math.round(rav * (100 - pct) / 100));
   const pctvEl = document.getElementById('sim-pctv-' + member);
   const epEl   = document.getElementById('sim-ep-'   + member);
   const loiEl  = document.getElementById('sim-loi-'  + member);
-  const ep  = Math.max(0, Math.round(rav * pct / 100));
-  const loi = Math.max(0, Math.round(rav * (100 - pct) / 100));
   if (pctvEl) pctvEl.textContent = pct + '%';
   if (epEl)   epEl.textContent   = eur(ep);
   if (loiEl)  loiEl.textContent  = eur(loi);
-  // Re-render les sections épargne/loisir synthétiques seulement
+}
+
+// Fin du drag (mouseup/touchend) — persiste + re-render complet
+function _simSliderDone(member, pct) {
+  _simSavingPct[member] = pct;
+  _simPersist();
   renderSimulation();
 }
 
@@ -5179,7 +5172,7 @@ function _simOpenAdd() {
   document.getElementById('sim-f-sign').value   = 'neg';
   _simSignChange('neg');
   const mems = [...new Set(entries.map(e => e.member))].filter(Boolean);
-  const cur  = _simGetMember() === 'Commun' ? myRole() : _simGetMember();
+  const cur  = (entriesMember === 'Commun' ? myRole() : entriesMember) || myRole();
   const msel = document.getElementById('sim-f-member');
   msel.innerHTML = mems.map(m => `<option value="${m}"${m === cur ? ' selected' : ''}>${m}</option>`).join('');
   const mWrap = document.getElementById('sim-f-member-wrap');
