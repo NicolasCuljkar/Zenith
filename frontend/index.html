@@ -3046,7 +3046,6 @@ async function renderDashboard(){
   // Si mois courant : seulement celles dont le jour de prélèvement est passé (ou sans date)
   const _overriddenIds=new Set(mExpenses.filter(e=>e.entry_id).map(e=>e.entry_id));
   const _isCurrentMonth=(dashYear===new Date().getFullYear()&&dashMonth===new Date().getMonth()+1);
-  const _todayDay=new Date().getDate();
   const _fixeBase=entries.filter(e=>e.cat==='fixe'&&!_overriddenIds.has(e.id)&&(dashboardMember==='all'||e.member===dashboardMember)&&(!_isCurrentMonth||!e.debit_day||e.debit_day<=_todayDay));
   for(const fe of _fixeBase){
     const k=fe.name.trim();
