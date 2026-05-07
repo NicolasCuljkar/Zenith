@@ -5063,7 +5063,10 @@ function renderSimulation() {
   const _simRavHtml = (() => {
     const blocks = _simRavMems.map(m => {
       const ms  = calcStats(_simEntries.filter(e => e.member === m));
-      const pct = _simSavingPct[m] ?? (savingPct[m] ?? 60);
+      const _prevRav = calcStats(entries.filter(e => e.member === m)).rav;
+      const _prevEp  = Math.max(0, Math.round(_prevRav * (savingPct[m] ?? 60) / 100));
+      const _initPct = ms.rav > 0 ? Math.min(100, Math.max(0, Math.round(_prevEp / ms.rav * 100))) : (savingPct[m] ?? 60);
+      const pct = _simSavingPct[m] ?? _initPct;
       const ep  = Math.max(0, Math.round(ms.rav * pct / 100));
       const loi = Math.max(0, Math.round(ms.rav * (100 - pct) / 100));
       const mc  = getMC(m);
@@ -5130,7 +5133,7 @@ function renderSimulation() {
       if (e._synthetic) {
         return `<div style="display:flex;align-items:center;gap:8px;padding:8px 2px;border-bottom:1px solid var(--border);opacity:.65">
           <span style="flex:1;font-size:var(--fs-sm);font-style:italic;color:var(--muted)">${esc(e.name)}${mem==='Commun'?` <span style="font-size:10px">${esc(e.member)}</span>`:''}</span>
-          <span style="font-size:var(--fs-sm);font-weight:700;color:${g.color}">${eur(Math.abs(e.amount))}</span>
+          <span id="sim-synth-${e._simId}" style="font-size:var(--fs-sm);font-weight:700;color:${g.color}">${eur(Math.abs(e.amount))}</span>
           <span style="display:inline-block;width:58px"></span>
         </div>`;
       }
@@ -5174,7 +5177,7 @@ function renderSimulation() {
       <div style="display:flex;align-items:center;padding:10px 14px 8px;border-bottom:1px solid var(--border)">
         <div style="width:8px;height:8px;border-radius:50%;background:${g.color};margin-right:8px;flex-shrink:0"></div>
         <span style="font-weight:700;font-size:var(--fs-sm);flex:1">${g.label}${g.key==='revenus'?'<span style="font-size:9px;font-weight:500;color:var(--hint);margin-left:5px">net</span>':''}</span>
-        <span style="font-weight:700;font-size:var(--fs-sm);color:${g.color}">${eur(tot)}</span>
+        <span id="sim-gtot-${g.key}" style="font-weight:700;font-size:var(--fs-sm);color:${g.color}">${eur(tot)}</span>
       </div>
       <div style="padding:0 14px">${rows}${delRows}</div>
     </div>`;
@@ -5208,6 +5211,13 @@ function _simSliderLive(member, pct, rav) {
   if (pctvEl) pctvEl.textContent = pct + '%';
   if (epEl)   epEl.textContent   = eur(ep);
   if (loiEl)  loiEl.textContent  = eur(loi);
+  // Mise à jour des montants synthétiques dans les sections ci-dessous
+  const synthEp  = document.getElementById('sim-synth-_synth_ep_'  + member);
+  const synthLoi = document.getElementById('sim-synth-_synth_loi_' + member);
+  const gtotEp   = document.getElementById('sim-gtot-epargne');
+  const gtotLoi  = document.getElementById('sim-gtot-loisir');
+  if (synthEp)  { synthEp.textContent  = eur(ep);  if (gtotEp)  gtotEp.textContent  = eur(ep); }
+  if (synthLoi) { synthLoi.textContent = eur(loi); if (gtotLoi) gtotLoi.textContent = eur(loi); }
 }
 
 // Fin du drag (mouseup/touchend) — persiste + re-render complet
