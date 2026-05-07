@@ -4972,7 +4972,6 @@ function _simLoad() {
     if (d?.entries && Array.isArray(d.entries)) {
       _simEntries     = d.entries;
       _simOrigEntries = d.orig || [];
-      _simSavingPct   = d.savingPct || {};
       return;
     }
   } catch(_) {}
@@ -4982,6 +4981,7 @@ function _simLoad() {
 function _simResetSilent() {
   _simEntries     = entries.map(e => ({...e, _simId: String(e.id), _simNew: false}));
   _simOrigEntries = _simEntries.map(e => ({...e}));
+  _simSavingPct   = {};
   _simPersist();
 }
 
@@ -4995,7 +4995,7 @@ function _simReset() {
 }
 
 function _simPersist() {
-  try { localStorage.setItem(_simKey(), JSON.stringify({entries: _simEntries, orig: _simOrigEntries, savingPct: _simSavingPct})); } catch(_) {}
+  try { localStorage.setItem(_simKey(), JSON.stringify({entries: _simEntries, orig: _simOrigEntries})); } catch(_) {}
 }
 
 function _simGetMember() {
@@ -5081,7 +5081,7 @@ function renderSimulation() {
           <span id="sim-pctv-${m}" style="font-size:var(--fs-xs);font-weight:700;color:${mc}">${pct}%</span>
         </div>
         <input type="range" min="0" max="100" step="1" value="${pct}"
-          style="width:100%;accent-color:${mc};margin-bottom:5px"
+          style="width:100%;accent-color:${mc};--accent-c:${mc};--track-right:var(--amber);margin-bottom:5px"
           oninput="_simSliderLive('${m}',+this.value,${Math.round(ms.rav)})"
           onchange="_simSliderDone('${m}',+this.value)">
         <div style="display:flex;justify-content:space-between">
@@ -5218,6 +5218,9 @@ function _simSliderLive(member, pct, rav) {
   const gtotLoi  = document.getElementById('sim-gtot-loisir');
   if (synthEp)  { synthEp.textContent  = eur(ep);  if (gtotEp)  gtotEp.textContent  = eur(ep); }
   if (synthLoi) { synthLoi.textContent = eur(loi); if (gtotLoi) gtotLoi.textContent = eur(loi); }
+  // Mettre à jour la couleur du track en temps réel
+  const sliderEl = document.querySelector(`input[oninput*="_simSliderLive('${member}'"]`);
+  if (sliderEl) _fillTrackVisual(sliderEl, pct / 100);
 }
 
 // Fin du drag (mouseup/touchend) — persiste + re-render complet
