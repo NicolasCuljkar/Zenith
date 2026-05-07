@@ -5059,10 +5059,7 @@ function renderSimulation() {
   const _simRavHtml = (() => {
     const blocks = _simRavMems.map(m => {
       const ms  = calcStats(_simEntries.filter(e => e.member === m));
-      const _prevRav = calcStats(entries.filter(e => e.member === m)).rav;
-      const _prevEp  = Math.max(0, Math.round(_prevRav * (savingPct[m] ?? 60) / 100));
-      const _initPct = ms.rav > 0 ? Math.min(100, Math.max(0, Math.round(_prevEp / ms.rav * 100))) : (savingPct[m] ?? 60);
-      const pct = _simSavingPct[m] ?? _initPct;
+      const pct = _simSavingPct[m] ?? (savingPct[m] ?? 60);
       const ep  = Math.max(0, Math.round(ms.rav * pct / 100));
       const loi = Math.max(0, Math.round(ms.rav * (100 - pct) / 100));
       const mc  = getMC(m);
