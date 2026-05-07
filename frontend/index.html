@@ -6208,7 +6208,6 @@ async function renderMonthlyComparison(member, nMonths) {
     const curBadge = isCurrent ? `<span style="font-size:9px;font-weight:700;color:var(--blue);margin-left:3px;vertical-align:middle;border:1px solid var(--blue);border-radius:3px;padding:0 3px">•</span>` : '';
     const monthLbl = `${mLabel(r.year, r.month)}${curBadge}${previBadge}`;
     const prevReal = rows.slice(0, i).reverse().find(x => x.isReal);
-    const depTrend = (r.isReal && prevReal) ? (r.dep < prevReal.dep ? `<span style="color:var(--green);font-size:9px;line-height:1;display:inline-block;vertical-align:middle;margin-left:2px">↓</span>` : r.dep > prevReal.dep ? `<span style="color:var(--red);font-size:9px;line-height:1;display:inline-block;vertical-align:middle;margin-left:2px">↑</span>` : '') : '';
     if (!r.hasData) return `<tr style="${bg}${borderStyle}opacity:.4">
       <td style="font-weight:500;font-size:var(--fs-xs);${isCurrent?'color:var(--blue);font-weight:700':''}">${monthLbl}</td>
       <td style="text-align:right;color:var(--muted);font-size:var(--fs-xs)">—</td>
@@ -6219,7 +6218,7 @@ async function renderMonthlyComparison(member, nMonths) {
     return `<tr style="${bg}${borderStyle}">
       <td style="font-weight:600;font-size:var(--fs-xs);${isCurrent?'color:var(--blue)':''}">${monthLbl}</td>
       <td style="text-align:right;font-size:var(--fs-xs);font-weight:600;color:var(--green)">${fmtU(r.revNet)}</td>
-      <td style="text-align:right;font-size:var(--fs-xs);white-space:nowrap;${depStyle}">${fmtU(r.dep)}${depTrend}</td>
+      <td style="text-align:right;font-size:var(--fs-xs);${depStyle}">${fmtU(r.dep)}</td>
       <td style="text-align:right;font-size:var(--fs-xs);font-weight:600;color:${r.ep>0?'#2979c8':r.ep<0?'var(--red)':'var(--muted)'}">${fmtV(r.ep)}</td>
     </tr>`;
   }).join('');
