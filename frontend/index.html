@@ -3432,7 +3432,7 @@ function memberTableHtml(rows,isMobile,memberName){
       </div>
       <div style="height:1px;background:${c.hex}22;margin:9px 0 8px"></div>
       <div style="display:flex;justify-content:space-between;align-items:center">
-        <div style="display:flex;align-items:center;gap:8px"><span style="font-size:var(--fs-xs);font-weight:700;color:${c.text};letter-spacing:.05em;text-transform:uppercase">${c.label}</span>${debitBadge}</div>
+        <div style="display:flex;align-items:center;gap:8px">${debitBadge}</div>
         ${e._synthetic?`<span style="font-size:var(--fs-xs);color:var(--muted);font-style:italic">calculé</span>`:canEdit(e.member)?`<div style="display:flex;gap:5px"><button class="btn-act" onclick="openEditEntry(${e.id})"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="btn-act btn-act-danger" onclick="deleteEntry(${e.id})"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg></button></div>`:''}
       </div>
     </div>`}).join('');
@@ -3556,7 +3556,6 @@ function renderEntries(){
               </div>
               <div style="height:1px;background:${c.hex}22;margin:9px 0 8px"></div>
               <div style="display:flex;justify-content:space-between;align-items:center">
-                <span style="font-size:var(--fs-xs);font-weight:700;color:${c.text};letter-spacing:.05em;text-transform:uppercase">${c.label}</span>
                 <div style="display:flex;gap:8px;align-items:center">
                   ${ea?`<span style="display:inline-flex;align-items:center;gap:3px;font-size:var(--fs-xs);font-weight:700;color:${mc1}"><span style="width:6px;height:6px;border-radius:50%;background:${mc1};flex-shrink:0"></span>${eur(Math.abs(ea.amount))}</span>`:''}
                   ${bothExist?`<span style="color:var(--hint);font-size:var(--fs-xs)">·</span>`:''}
@@ -4296,7 +4295,6 @@ function _monthlyAutoGroup(rows, overrides, extras, g, isMobile) {
         </div>
         <div style="height:1px;background:${(isSuppressed?'#d93535':isOverridden?'#c49a00':c.hex)}22;margin:9px 0 8px"></div>
         <div style="display:flex;justify-content:space-between;align-items:center">
-          <span style="font-size:var(--fs-xs);font-weight:700;color:${c.text};letter-spacing:.05em;text-transform:uppercase">${c.label}</span>
           <div style="display:flex;gap:5px">
             ${!isSuppressed?`<button class="btn-act" onclick="openMonthlyAutoOverride(${e.id},${ov?ov.id:'null'})" title="Corriger pour ce mois">${EDIT_ICON}</button>`:''}
             ${isOverridden ? `<button class="btn-act btn-act-danger" onclick="deleteMonthlyOverride(${ov.id})" title="${isSuppressed?'Restaurer':'Réinitialiser'}">${isSuppressed?RESTORE_ICON:DEL_ICON}</button>` : ''}
@@ -4316,7 +4314,6 @@ function _monthlyAutoGroup(rows, overrides, extras, g, isMobile) {
         ${e.note ? `<div style="font-size:var(--fs-xs);color:var(--muted);margin-top:4px">${e.note}</div>` : ''}
         <div style="height:1px;background:${c.hex}22;margin:9px 0 8px"></div>
         <div style="display:flex;justify-content:space-between;align-items:center">
-          <span style="font-size:var(--fs-xs);font-weight:700;color:${c.text};letter-spacing:.05em;text-transform:uppercase">${c.label}</span>
           <div style="display:flex;gap:5px">
             <button class="btn-act ${e.is_exceptional?'btn-act-active':''}" onclick="toggleMonthlyExceptional(${e.id})" title="Exceptionnel">${EXCL_ICON}</button>
             <button class="btn-act" onclick="openEditMonthlyExpense(${e.id})">${EDIT_ICON}</button>
@@ -4436,7 +4433,6 @@ function _monthlyManualGroup(rows, g, budgetTotal, isMobile, revNet = 0) {
         ${e.note ? `<div style="font-size:var(--fs-xs);color:var(--muted);margin-top:4px">${e.note}</div>` : ''}
         <div style="height:1px;background:${c.hex}22;margin:9px 0 8px"></div>
         <div style="display:flex;justify-content:space-between;align-items:center">
-          <span style="font-size:var(--fs-xs);font-weight:700;color:${c.text};letter-spacing:.05em;text-transform:uppercase">${c.label}</span>
           <div style="display:flex;gap:5px">
             <button class="btn-act ${e.is_exceptional?'btn-act-active':''}" onclick="toggleMonthlyExceptional(${e.id})" title="Exceptionnel">${EXCL_ICON}</button>
             <button class="btn-act" onclick="openEditMonthlyExpense(${e.id})">${EDIT_ICON}</button>
