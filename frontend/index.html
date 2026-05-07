@@ -1468,6 +1468,15 @@ if(window.location.hostname==='localhost'||window.location.hostname==='127.0.0.1
       </div>
       <div class="fgrp"><label>Montant (€)</label><input type="number" id="fme-amount" min="0" step="0.01" placeholder="0" inputmode="decimal"></div>
       <div class="fgrp"><label>Note <span style="font-weight:400;color:var(--muted)">(optionnel)</span></label><input type="text" id="fme-note" placeholder="Ex. Leclerc, Total…"></div>
+      <div id="fme-exceptional-row" style="display:none">
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px 12px;background:var(--surface2);border-radius:var(--r);border:1px solid var(--border)">
+          <input type="checkbox" id="fme-exceptional" style="width:16px;height:16px;flex-shrink:0;cursor:pointer">
+          <div>
+            <div style="font-weight:600;font-size:var(--fs-sm)">Dépense exceptionnelle</div>
+            <div style="font-size:var(--fs-xs);color:var(--muted)">Exclue des moyennes et tendances</div>
+          </div>
+        </label>
+      </div>
     </div>
     <div class="modal-footer">
       <button class="btn" id="modal-me-cancel">Annuler</button>
@@ -4293,6 +4302,7 @@ function _monthlyAutoGroup(rows, overrides, extras, g, isMobile) {
           ${isOverridden && !isSuppressed ? `<span style="font-size:10px;color:var(--muted);text-decoration:line-through;flex-shrink:0">${eur(Math.abs(e.amount))}</span>` : ''}
           <span style="font-size:var(--fs-sm);font-weight:700;color:${amtCol};flex-shrink:0">${isSuppressed?'—':eur(displayAmt)}</span>
         </div>
+        ${ov?.note?`<div style="font-size:var(--fs-xs);color:var(--muted);margin-top:3px;padding-left:2px">${ov.note}</div>`:''}
       </div></div>`;
     }).join('')}${extras.map(e => {
       const c = CATS[e.cat];
@@ -4303,8 +4313,8 @@ function _monthlyAutoGroup(rows, overrides, extras, g, isMobile) {
           <input type="checkbox" class="monthly-cb" data-id="${e.id}" ${monthlySelected.has(e.id)?'checked':''} onchange="event.stopPropagation();toggleMonthlySelect(${e.id},this)" style="flex-shrink:0">
           <span style="font-weight:600;font-size:var(--fs-sm);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;${e.is_exceptional?'text-decoration:line-through;':''}">${e.name}</span>
           <span style="font-size:var(--fs-sm);font-weight:700;color:${exAc};flex-shrink:0">${eur(Math.abs(e.amount))}</span>
-          <button class="btn-act ${e.is_exceptional?'btn-act-active':''}" onclick="event.stopPropagation();toggleMonthlyExceptional(${e.id})" title="Exceptionnel">${EXCL_ICON}</button>
         </div>
+        ${e.note?`<div style="font-size:var(--fs-xs);color:var(--muted);margin-top:3px;padding-left:2px">${e.note}</div>`:''}
       </div></div>`;
     }).join('')}</div></div>`;
   }
@@ -4416,8 +4426,8 @@ function _monthlyManualGroup(rows, g, budgetTotal, isMobile, revNet = 0) {
           <input type="checkbox" class="monthly-cb" data-id="${e.id}" ${monthlySelected.has(e.id)?'checked':''} onchange="event.stopPropagation();toggleMonthlySelect(${e.id},this)" style="flex-shrink:0">
           <span style="font-weight:600;font-size:var(--fs-sm);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;${e.is_exceptional?'text-decoration:line-through;':''}">${e.name}</span>
           <span style="font-size:var(--fs-sm);font-weight:700;color:${mAc};flex-shrink:0">${eur(Math.abs(e.amount))}</span>
-          <button class="btn-act ${e.is_exceptional?'btn-act-active':''}" onclick="event.stopPropagation();toggleMonthlyExceptional(${e.id})" title="Exceptionnel">${EXCL_ICON}</button>
         </div>
+        ${e.note?`<div style="font-size:var(--fs-xs);color:var(--muted);margin-top:3px;padding-left:2px">${e.note}</div>`:''}
       </div></div>`;
     }).join('')}</div></div>`;
   }
@@ -4614,6 +4624,8 @@ function openMonthlyAutoOverride(entryId, overrideId) {
   document.getElementById('fme-note').value = overrideId
     ? (monthlyExpenses.find(x => x.id === overrideId)?.note || '')
     : '';
+  const _aorExcRow = document.getElementById('fme-exceptional-row');
+  if (_aorExcRow) _aorExcRow.style.display = 'none';
   document.getElementById('modal-monthly-expense').classList.add('open');
 }
 
@@ -4673,6 +4685,8 @@ function openAddMonthlyExpense(defaultCat = null, locked = false, allowedCats = 
   const delBtn = document.getElementById('fme-label-delete');
   if (delBtn) delBtn.style.display = 'none';
   _loadExpenseLabels(_allowedCats, '');
+  const _excRow = document.getElementById('fme-exceptional-row');
+  if (_excRow) _excRow.style.display = 'none';
   document.getElementById('modal-monthly-expense').classList.add('open');
 }
 async function _loadExpenseLabels(cats, selectValue = '') {
@@ -4775,6 +4789,10 @@ function openEditMonthlyExpense(id) {
   const delBtn2 = document.getElementById('fme-label-delete');
   if (delBtn2) delBtn2.style.display = 'none';
   _loadExpenseLabels(e.cat, e.name);
+  const excRow = document.getElementById('fme-exceptional-row');
+  const excCb  = document.getElementById('fme-exceptional');
+  if (excRow) excRow.style.display = '';
+  if (excCb)  excCb.checked = !!e.is_exceptional;
   document.getElementById('modal-monthly-expense').classList.add('open');
 }
 function toggleEntriesProfile() {
@@ -4918,9 +4936,10 @@ document.getElementById('modal-me-save').onclick = async () => {
   const member = entriesMember === 'Commun' ? myRole() : entriesMember;
   document.getElementById('modal-monthly-expense').classList.remove('open');
   btn.disabled = true; showLoading();
+  const isExceptional = document.getElementById('fme-exceptional')?.checked ? 1 : 0;
   try {
     if (editMonthlyId) {
-      await API.monthlyExpenses.update(editMonthlyId, { name, amount, cat, member, note, entry_id: editMonthlyEntryId });
+      await API.monthlyExpenses.update(editMonthlyId, { name, amount, cat, member, note, entry_id: editMonthlyEntryId, is_exceptional: isExceptional });
       showToast('Dépense modifiée ✓');
     } else {
       await API.monthlyExpenses.create({ year: monthlyYear, month: monthlyMonth, name, amount, cat, member, note, entry_id: editMonthlyEntryId });
