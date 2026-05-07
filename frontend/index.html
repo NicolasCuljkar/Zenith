@@ -3042,6 +3042,14 @@ async function renderDashboard(){
     if(!_postesMap.has(k))_postesMap.set(k,{name:k,cat:e.cat,total:0,count:0});
     const p=_postesMap.get(k);p.total+=Math.abs(e.amount);p.count++;
   }
+  // Ajoute les entrées fixes budgétaires sans override ce mois
+  const _overriddenIds=new Set(mExpenses.filter(e=>e.entry_id).map(e=>e.entry_id));
+  const _fixeBase=entries.filter(e=>e.cat==='fixe'&&!_overriddenIds.has(e.id)&&(dashboardMember==='all'||e.member===dashboardMember));
+  for(const fe of _fixeBase){
+    const k=fe.name.trim();
+    if(!_postesMap.has(k))_postesMap.set(k,{name:k,cat:'fixe',total:0,count:0});
+    const p=_postesMap.get(k);p.total+=Math.abs(fe.amount);p.count++;
+  }
   const _postesRows=[..._postesMap.values()];
   const _hasSavRec=savingsDash.some(s=>s.year===dashYear&&s.month===frMonth);
   if(_hasSavRec&&epMonthDelta>=0)_postesRows.push({name:'Épargne',cat:'epargne',total:epMonthDelta,count:1});
