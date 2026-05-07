@@ -3289,10 +3289,76 @@ async function renderDashboard(){
       <div style="font-size:var(--fs-xs);color:var(--fg);line-height:1.5">${_consecutive?'Attention — votre épargne diminue depuis plusieurs mois. ':''}Vous avez puisé <b>${eur(Math.abs(epMonthDelta))}</b> dans votre épargne${_balBefore!==null&&_balAfter!==null?` (solde\u00a0: ${eur(_balBefore)} → <b>${eur(_balAfter)}</b>)`:''}.</div>
     </div>
   </div>`:'';
+
+  // ── Insights du mois ──
+  const _dIns=[];
+  try {
+    // 1. Taux d'épargne du mois
+    if(revNetA>0&&epMonthDelta>=0){
+      const _epPct=Math.round(epMonthDelta/revNetA*100);
+      const _ec=_epPct>=20?'var(--green)':_epPct>=10?'var(--amber)':'var(--red)';
+      _dIns.push({icon:_epPct>=20?'\u2713':'\u26a0',col:_ec,text:'Taux d\'\u00e9pargne\u00a0: '+_epPct+'%',sub:eur(epMonthDelta)+' \u00e9pargn\u00e9s \u00b7 objectif 20%\u00a0= '+eur(Math.round(revNetA*0.2))});
+    }
+
+    // 2. Budget dépassé par catégorie
+    var _bChecks=[{lbl:'Fixes',actual:fixA,budget:fixBudget,col:'#d93535'},{lbl:'Variables',actual:varA,budget:varBudget,col:'#e05a2b'},{lbl:'Loisirs',actual:loiA,budget:loiBudget,col:'#f59e0b'}];
+    for(var _bci=0;_bci<_bChecks.length;_bci++){
+      var _bc=_bChecks[_bci];
+      if(_bc.budget>0&&_bc.actual>_bc.budget){
+        var _over=Math.round(_bc.actual-_bc.budget);
+        var _overPct=Math.round(_over/_bc.budget*100);
+        _dIns.push({icon:'\u26a0',col:'var(--red)',text:_bc.lbl+' : budget d\u00e9pass\u00e9 de +'+eur(_over),sub:eur(_bc.actual)+' / budget '+eur(_bc.budget)+' (+'+_overPct+'%)'});
+      }
+    }
+
+    // 3. Dépenses totales vs mois précédent
+    if(prevH&&totalDep>0&&prevH.total>0){
+      var _depDiff=totalDep-prevH.total;
+      var _depPct=Math.round(_depDiff/prevH.total*100);
+      if(Math.abs(_depPct)>=15){
+        var _dpCol=_depPct>0?'var(--amber)':'var(--green)';
+        _dIns.push({icon:_depPct>0?'\u2191':'\u2193',col:_dpCol,text:'D\u00e9penses '+(_depPct>0?'+':'')+_depPct+'% vs mois pr\u00e9c\u00e9dent',sub:eur(totalDep)+' ce mois \u00b7 '+eur(prevH.total)+' le mois pr\u00e9c\u00e9dent'});
+      }
+    }
+
+    // 4. Poste le plus lourd ce mois (si > 30% du total)
+    if(_postesRows.length>0&&_postesTotal>0){
+      var _dpTop=_postesRows[0];
+      var _dpTopPct=Math.round(_dpTop.total/_postesTotal*100);
+      if(_dpTopPct>=30){
+        _dIns.push({icon:'\u25b2',col:'var(--muted)',text:'"'+_dpTop.name+'" repr\u00e9sente '+_dpTopPct+'% des d\u00e9penses',sub:eur(_dpTop.total)+' ce mois'});
+      }
+    }
+
+    // 5. Poste avec la plus forte hausse vs moyenne 6 mois
+    var _topSpike=null,_topSpikeDelta=0;
+    for(var _sEntry of _itemSpkData){
+      var _sn=_sEntry[0],_sv=_sEntry[1];
+      var _sCur=_sv[5];
+      var _sPrev=_sv.slice(0,5).filter(function(v){return v>0;});
+      if(_sPrev.length<2||_sCur===0)continue;
+      var _sAvg=_sPrev.reduce(function(a,v){return a+v;},0)/_sPrev.length;
+      var _sPct=_sAvg>0?(_sCur-_sAvg)/_sAvg*100:0;
+      if(_sPct>=40&&_sCur-_sAvg>_topSpikeDelta){_topSpikeDelta=_sCur-_sAvg;_topSpike={name:_sn,cur:_sCur,avg:Math.round(_sAvg),pct:Math.round(_sPct)};}
+    }
+    if(_topSpike){
+      _dIns.push({icon:'\u2191',col:'var(--amber)',text:'"'+_topSpike.name+'" en hausse +'+_topSpike.pct+'% vs moyenne',sub:eur(_topSpike.cur)+' ce mois \u00b7 moy. 6 mois\u00a0: '+eur(_topSpike.avg)});
+    }
+
+    // 6. Dépenses exceptionnelles ce mois
+    var _excDeps=(mExpenses||[]).filter(function(e){return e.is_exceptional&&!['revenu','impot'].includes(e.cat);});
+    if(_excDeps.length>0){
+      var _excTotal=Math.round(_excDeps.reduce(function(a,e){return a+Math.abs(e.amount);},0));
+      _dIns.push({icon:'\u2139',col:'var(--muted)',text:_excDeps.length+' d\u00e9pense'+(_excDeps.length>1?'s':'')+' exceptionnelle'+(_excDeps.length>1?'s':'')+' ce mois',sub:'Total\u00a0: '+eur(_excTotal)+' (exclues des moyennes)'});
+    }
+  } catch(_diErr){console.warn('dash insights error',_diErr);}
+
+  const _dashInsHtml=_dIns.length===0?'':'<div class="card" style="padding:0;overflow:hidden;margin-bottom:var(--sg)"><div style="padding:12px 16px;border-bottom:1px solid var(--border)"><span style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)">Insights du mois</span></div><div>'+_dIns.map(function(ins,ii){return '<div style="display:flex;align-items:flex-start;gap:12px;padding:10px 16px;'+(ii<_dIns.length-1?'border-bottom:1px solid var(--border)':'')+'"><div style="width:24px;height:24px;border-radius:50%;background:var(--surface2);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:11px;font-weight:800;color:'+ins.col+'">'+ins.icon+'</div><div style="flex:1;min-width:0"><div style="font-size:var(--fs-sm);font-weight:700;color:var(--text)">'+ins.text+'</div>'+(ins.sub?'<div style="font-size:var(--fs-xs);color:var(--muted);margin-top:2px">'+ins.sub+'</div>':'')+'</div></div>';}).join('')+'</div></div>';
+
   content.innerHTML=_monthNav+
     `<div id="dash-alert"></div>`+
     _savWarnHtml+
-    _hero+_cats+_ova+
+    _hero+_cats+_dashInsHtml+_ova+
     `<div id="dash-charts" style="display:none"></div>`;
 
   // Ouvre automatiquement la catégorie avec le plus de dépenses
