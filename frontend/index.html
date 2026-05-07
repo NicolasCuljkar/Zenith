@@ -6219,10 +6219,10 @@ async function renderMonthlyComparison(member, nMonths) {
   const _ccHcol='#d93535', _ccEcol='#2979c8', _ccRcol='#0d9e6e', _ccScol='#7c3aed';
   const _ccLabels=rows.map(r=>mLabel(r.year,r.month));
   const _ccDepVals=rows.map(r=>r.hasData?r.dep:null);
-  const _ccEpVals=rows.map(r=>(r.hasData&&r.ep>0)?r.ep:null);
+  const _ccEpVals=rows.map(r=>r.hasData&&r.ep!==0?r.ep:null);
   const _ccRevVals=rows.map(r=>r.hasData?r.revNet:null);
   const _ccSoldeVals=rows.map(r=>r.hasData?r.solde:null);
-  const _ccHasEp=_ccEpVals.some(v=>v!==null);
+  const _ccHasEp=rows.some(r=>r.hasData&&r.ep!==0);
   const _ccLegend=`<div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:8px">
     <div style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:3px;border-radius:2px;background:${_ccRcol};display:inline-block"></span><span style="font-size:11px;font-weight:600;color:${_ccRcol}">Rev. nets</span></div>
     <div style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:3px;border-radius:2px;background:${_ccHcol};display:inline-block"></span><span style="font-size:11px;font-weight:600;color:${_ccHcol}">Dépenses</span></div>
@@ -6263,7 +6263,7 @@ async function renderMonthlyComparison(member, nMonths) {
       label:'Épargne',data:_ccEpVals,tension:.45,fill:false,
       borderColor:_ccEcol,backgroundColor:_ccEcol+'33',
       borderWidth:2.5,pointRadius:_single?5:0,pointHoverRadius:5,
-      pointBackgroundColor:_ccEcol,pointBorderColor:'#fff',pointBorderWidth:2,spanGaps:false,
+      pointBackgroundColor:_ccEcol,pointBorderColor:'#fff',pointBorderWidth:2,spanGaps:true,
     });
     anaCompareChart=new Chart(_ccCtx,{
       type:'line',plugins:[ChartDataLabels],
@@ -6274,7 +6274,7 @@ async function renderMonthlyComparison(member, nMonths) {
           tooltip:{backgroundColor:darkVal('rgba(255,255,255,1)','rgba(28,28,32,1)'),borderColor:darkVal('rgba(0,0,0,.15)','rgba(255,255,255,.2)'),borderWidth:1,titleColor:_tc2,bodyColor:_tc2,titleFont:{size:fsPx('--fs-sm'),weight:'700'},bodyFont:{size:fsPx('--fs-xs')},padding:12,cornerRadius:10,callbacks:{label:c=>c.raw!=null?` ${c.dataset.label} : ${eur(c.raw)}`:null}},
           datalabels:{display:c=>c.raw!=null&&c.dataIndex===rows.length-1,anchor:'end',align:'top',formatter:v=>v!=null?(v/1000).toFixed(1)+'k€':'',color:(c)=>[_ccRcol,_ccHcol,_ccEcol][c.datasetIndex]||_ccHcol,font:{size:fsPx('--fs-xs'),weight:'800'},backgroundColor:darkVal('#fff','#1a1a18'),borderRadius:4,padding:{top:3,bottom:3,left:6,right:6},borderWidth:1,borderColor:(c)=>([_ccRcol,_ccHcol,_ccEcol][c.datasetIndex]||_ccHcol)+'44'}
         },
-        scales:{x:{grid:{display:false},ticks:{color:_tc2,font:{size:fsPx('--fs-xs')},maxRotation:0},border:{display:false}},y:{beginAtZero:true,ticks:{callback:v=>(v/1000).toFixed(0)+'k€',font:{size:fsPx('--fs-xs')},color:_tc2,maxTicksLimit:4},grid:{color:darkVal('rgba(0,0,0,.06)','rgba(255,255,255,.06)')},border:{display:false}}}
+        scales:{x:{grid:{display:false},ticks:{color:_tc2,font:{size:fsPx('--fs-xs')},maxRotation:0},border:{display:false}},y:{beginAtZero:false,ticks:{callback:v=>(v/1000).toFixed(0)+'k€',font:{size:fsPx('--fs-xs')},color:_tc2,maxTicksLimit:4},grid:{color:darkVal('rgba(0,0,0,.06)','rgba(255,255,255,.06)')},border:{display:false}}}
       }
     });
   }
