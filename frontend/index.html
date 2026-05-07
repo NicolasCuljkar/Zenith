@@ -3332,7 +3332,7 @@ async function renderDashboard(){
     }
   } catch(_diErr){console.warn('dash insights error',_diErr);}
 
-  const _dashInsHtml=_dIns.length===0?'':'<div class="card" style="padding:0;overflow:hidden;margin-bottom:var(--sg)"><div style="padding:12px 16px;border-bottom:1px solid var(--border)"><span style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)">Insights du mois</span></div><div>'+_dIns.map(function(ins,ii){return '<div style="display:flex;align-items:flex-start;gap:12px;padding:10px 16px;'+(ii<_dIns.length-1?'border-bottom:1px solid var(--border)':'')+'"><div style="width:24px;height:24px;border-radius:50%;background:var(--surface2);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:11px;font-weight:800;color:'+ins.col+'">'+ins.icon+'</div><div style="flex:1;min-width:0"><div style="font-size:var(--fs-sm);font-weight:700;color:var(--text)">'+ins.text+'</div>'+(ins.sub?'<div style="font-size:var(--fs-xs);color:var(--muted);margin-top:2px">'+ins.sub+'</div>':'')+'</div></div>';}).join('')+'</div></div>';
+  const _dashInsHtml=_dIns.length===0?'':'<div class="card" style="padding:0;overflow:hidden;margin-bottom:var(--sg)"><div style="padding:10px 14px;border-bottom:1px solid var(--border)"><span style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)">Insights du mois</span></div><div>'+_dIns.map(function(ins,ii){return '<div style="display:flex;align-items:center;gap:10px;padding:9px 14px;'+(ii<_dIns.length-1?'border-bottom:1px solid var(--border)':'')+'"><span style="width:7px;height:7px;border-radius:50%;background:'+ins.col+';flex-shrink:0"></span><span style="flex:1;min-width:0;font-size:var(--fs-xs);font-weight:600;color:var(--text)">'+ins.text+(ins.sub?'<span style="font-weight:400;color:var(--muted)"> · '+ins.sub+'</span>':'')+'</span></div>';}).join('')+'</div></div>';
 
   content.innerHTML=_monthNav+
     `<div id="dash-alert"></div>`+
@@ -6842,16 +6842,15 @@ async function renderAnalysis(){
         }
 
         const _insRows=_ins.map(function(ins,ii){
-          return '<div style="display:flex;align-items:flex-start;gap:12px;padding:11px 16px;'+(ii<_ins.length-1?'border-bottom:1px solid var(--border)':'')+'">'
-            +'<div style="width:26px;height:26px;border-radius:50%;background:var(--surface2);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:12px;font-weight:800;color:'+ins.col+'">'+ins.icon+'</div>'
-            +'<div style="flex:1;min-width:0">'
-            +'<div style="font-size:var(--fs-sm);font-weight:700;color:var(--text)">'+ins.text+'</div>'
-            +(ins.sub?'<div style="font-size:var(--fs-xs);color:var(--muted);margin-top:2px">'+ins.sub+'</div>':'')
-            +'</div></div>';
+          return '<div style="display:flex;align-items:center;gap:10px;padding:9px 14px;'+(ii<_ins.length-1?'border-bottom:1px solid var(--border)':'')+'">'
+            +'<span style="width:7px;height:7px;border-radius:50%;background:'+ins.col+';flex-shrink:0"></span>'
+            +'<span style="flex:1;min-width:0;font-size:var(--fs-xs);font-weight:600;color:var(--text)">'+ins.text
+            +(ins.sub?'<span style="font-weight:400;color:var(--muted)"> · '+ins.sub+'</span>':'')
+            +'</span></div>';
         }).join('');
         _insEl.innerHTML='<div class="card" style="padding:0;overflow:hidden">'
-          +'<div style="padding:14px 16px;border-bottom:1px solid var(--border)">'
-          +'<span style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)">Insights</span>'
+          +'<div style="padding:10px 14px;border-bottom:1px solid var(--border)">'
+          +'<span style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)">Insights · moyennes cumulées</span>'
           +'</div><div>'+_insRows+'</div></div>';
         _insEl.style.display='block';
       } else if(_insEl){_insEl.style.display='none';}
