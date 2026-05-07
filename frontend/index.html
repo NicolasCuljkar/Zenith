@@ -1082,21 +1082,6 @@ if(window.location.hostname==='localhost'||window.location.hostname==='127.0.0.1
     <!-- KEPT: Moyennes par poste -->
     <div class="card" id="analysis-avg-card" style="display:none"><div id="analysis-avg-content"></div></div>
 
-    <!-- LEGACY (hidden, kept for reference) -->
-    <div style="display:none">
-      <div id="analysis-kpi-summary" style="grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:var(--sg)"></div>
-      <div id="analysis-avg-kpis"></div>
-      <div id="analysis-health-card"></div>
-      <div id="analysis-ova-card"></div>
-      <div id="gauge-chart-wrap"><canvas id="gauge-chart"></canvas></div>
-      <div id="radar-chart-wrap"><canvas id="radar-chart"></canvas></div>
-      <div id="member-bars-card"><div class="card-head">Comparaison membres</div><div id="member-bars-wrap" style="position:relative;height:210px"><canvas id="member-bars-chart"></canvas></div></div>
-      <div id="analysis-donut-wrap" style="position:relative;height:0"><canvas id="analysis-donut-chart"></canvas></div>
-      <div id="analysis-donut-legend"></div>
-      <div id="analysis-eprate-card"><div class="card-head">Taux d'épargne mensuel (%)</div><div id="analysis-eprate-wrap" style="position:relative;height:180px"><canvas id="analysis-eprate-chart"></canvas></div></div>
-      <div id="analysis-stacked-card"><div class="card-head">Répartition mensuelle des dépenses</div><div style="display:flex;gap:10px;flex-wrap:wrap;margin:4px 0 10px" id="analysis-stacked-legend"></div><div id="analysis-stacked-wrap" style="position:relative;height:200px"><canvas id="analysis-stacked-chart"></canvas></div></div>
-      <div id="analysis-solde-card"><div class="card-head">Solde mensuel</div><div id="analysis-solde-wrap" style="position:relative;height:180px"><canvas id="analysis-solde-chart"></canvas></div></div>
-    </div>
 
     </div><!-- /#analysis-content -->
   </div>
@@ -2423,6 +2408,7 @@ const PAGE_NAMES={dashboard:'Résumé',entries:'Lignes',savings:'Épargne',analy
 function switchTab(id){
   if(hasNoData() && DATA_TABS.includes(id)) id='entries';
   currentTab=id;
+  try{localStorage.setItem('zenith_tab',id);}catch(_){}
   const pt=document.getElementById('topbar-page-title');
   if(pt) pt.textContent=PAGE_NAMES[id]||'';
   document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
@@ -3299,6 +3285,10 @@ async function renderDashboard(){
     _hero+_cats+_ova+
     `<div id="dash-charts" style="display:none"></div>`;
 
+  // Ouvre automatiquement la catégorie avec le plus de dépenses
+  const _biggestCat=_catOrder.filter(c=>_catGroups[c]).sort((a,b)=>(_catGroups[b]?.total||0)-(_catGroups[a]?.total||0))[0];
+  if(_biggestCat) requestAnimationFrame(()=>_ovaToggle(_biggestCat));
+
   // Init donut OVA
   const _ovaDCtx=document.getElementById('ova-donut-chart');
   if(_ovaDCtx&&_donutData.length>0){
@@ -3965,7 +3955,7 @@ document.getElementById('modal-entry-save').onclick=async ()=>{
   if(btn.disabled)return;
   const name=document.getElementById('f-name').value.trim(),amt=parseFloat(document.getElementById('f-amount').value);
   const sign=document.getElementById('f-sign').value==='pos'?1:-1,cat=document.getElementById('f-cat').value,member=document.getElementById('f-member').value;
-  if(!name||isNaN(amt))return alert('Remplissez tous les champs.');
+  if(!name||isNaN(amt))return showApiError('Remplissez tous les champs.');
   const amount=sign*Math.abs(amt);
   const _dd=document.getElementById('f-debit-day').value;
   const debit_day=cat==='fixe'&&_dd!==''?parseInt(_dd):null;
@@ -4992,12 +4982,12 @@ async function deleteSelectedMonthly() {
 function deleteMonthlyExpense(id) {
   const e = monthlyExpenses.find(x => x.id === id);
   if (!e) return;
-  showConfirm(`Supprimer "${e.name}" ?`, 'Cette dépense sera définitivement supprimée.', async () => {
-    showLoading();
-    try { await API.monthlyExpenses.delete(id); await renderMonthly(); }
-    catch(err) { showApiError('Erreur : ' + err.message); }
-    finally { hideLoading(); }
-  });
+  monthlyExpenses = monthlyExpenses.filter(x => x.id !== id);
+  _renderMonthlySections(_lastMonthlyStats, monthlyExpenses, _lastMonthlySavings, _lastMonthlyEntryStats, _lastMlyMemberStats);
+  _showUndoToast(`"${e.name}" supprimé`,
+    async () => { try { await API.monthlyExpenses.delete(id); } catch(err) { monthlyExpenses.push(e); _renderMonthlySections(_lastMonthlyStats, monthlyExpenses, _lastMonthlySavings, _lastMonthlyEntryStats, _lastMlyMemberStats); showApiError('Erreur : ' + err.message); } },
+    () => { monthlyExpenses.push(e); _renderMonthlySections(_lastMonthlyStats, monthlyExpenses, _lastMonthlySavings, _lastMonthlyEntryStats, _lastMlyMemberStats); }
+  );
 }
 async function toggleMonthlyExceptional(id) {
   const e = monthlyExpenses.find(x => x.id === id);
@@ -5018,7 +5008,7 @@ document.getElementById('modal-me-save').onclick = async () => {
   const catEl = document.getElementById('fme-cat');
   const cat  = catEl.value || catEl.options[catEl.selectedIndex]?.value || 'variable';
   const note = document.getElementById('fme-note').value.trim();
-  if (!name || isNaN(amt) || amt <= 0) return alert('Sélectionnez une désignation et renseignez un montant.');
+  if (!name || isNaN(amt) || amt <= 0) return showApiError('Sélectionnez une désignation et renseignez un montant.');
   // Mémorise la catégorie pour la prochaine ouverture
   _lastMonthlyCat = cat;
   // Revenus : montant positif ; dépenses : montant négatif
@@ -5383,7 +5373,7 @@ function _simSaveEntry() {
   const amt    = parseFloat(document.getElementById('sim-f-amount').value);
   const cat    = document.getElementById('sim-f-cat').value;
   const member = document.getElementById('sim-f-member').value || myRole();
-  if (!name || isNaN(amt) || amt <= 0) { alert('Remplissez tous les champs.'); return; }
+  if (!name || isNaN(amt) || amt <= 0) { showApiError('Remplissez tous les champs.'); return; }
   const sign   = cat === 'revenu' ? 1 : -1;
   const amount = sign * Math.abs(amt);
   document.getElementById('modal-sim-entry').classList.remove('open');
@@ -5784,7 +5774,7 @@ document.getElementById('modal-saving-save').onclick=async ()=>{
   const member=document.getElementById('fs-member').value,year=parseInt(document.getElementById('fs-year').value);
   const month=document.getElementById('fs-month').value;
   let amount=parseFloat(document.getElementById('fs-amount').value);
-  if(isNaN(amount))return alert('Montant requis.');
+  if(isNaN(amount))return showApiError('Montant requis.');
   if(savingAmountMode==='delta'&&!editSavingId){
     const prev=savings.filter(s=>s.member===member&&(s.year<year||(s.year===year&&MONTHS.indexOf(s.month)<MONTHS.indexOf(month)))).sort((a,b)=>b.year-a.year||MONTHS.indexOf(b.month)-MONTHS.indexOf(a.month))[0];
     amount=(prev?.amount||0)+amount;
@@ -7401,6 +7391,7 @@ async function _doLoginWithCredentials(userIdOrEmail,password){
     initUserContext();renderMemberTabs();updateNavForDataState();renderDashboard();renderEntries();_updateMonthlyNavNext();_updateMonthlyNavPrev();renderMonthly();document.getElementById('fab-entry').style.display='none';document.getElementById('fab-dashboard').style.display='none';
     _updateMemberBadge();_loadNotifs();
     if(window.location.pathname==='/banque'){switchTab('banque');}
+    else{try{const _st=localStorage.getItem('zenith_tab');if(_st&&_st!=='dashboard')switchTab(_st);}catch(_){}}
     registerPushSubscription();
     _scheduleTokenExpiry(); connectSSE(); _startPoll();
   }catch(err){
@@ -7428,6 +7419,7 @@ async function doLogin(){
     initUserContext();renderMemberTabs();updateNavForDataState();renderDashboard();renderEntries();_updateMonthlyNavNext();_updateMonthlyNavPrev();renderMonthly();document.getElementById('fab-entry').style.display='none';document.getElementById('fab-dashboard').style.display='none';
     _updateMemberBadge();_loadNotifs();
     if(window.location.pathname==='/banque'){switchTab('banque');}
+    else{try{const _st=localStorage.getItem('zenith_tab');if(_st&&_st!=='dashboard')switchTab(_st);}catch(_){}}
     registerPushSubscription();
     _scheduleTokenExpiry(); connectSSE(); _startPoll();
   }catch(err){
@@ -8619,6 +8611,28 @@ async function connectBank(){
     }
   },{passive:true});
 })();
+
+// ── Raccourcis clavier globaux ──
+document.addEventListener('keydown', e => {
+  // Escape — ferme toute modale/overlay ouverte ou les tooltips
+  if (e.key === 'Escape') {
+    const openOverlay = document.querySelector('.overlay.open');
+    if (openOverlay) { openOverlay.classList.remove('open'); return; }
+    if (document.getElementById('ova-exp-tooltip')?.style.display !== 'none') { _closeOvaTip(); return; }
+    if (document.getElementById('rep-exp-tooltip')?.style.display !== 'none') { _closeRepTip(); return; }
+    const notifPanel = document.getElementById('notif-panel');
+    if (notifPanel?.classList.contains('open')) { _toggleNotifPanel(); return; }
+  }
+  // ← → — navigation entre mois (dashboard et suivi mensuel)
+  if ((e.key === 'ArrowLeft' || e.key === 'ArrowRight') && !e.target.matches('input,textarea,select')) {
+    if (currentTab === 'dashboard') {
+      e.key === 'ArrowLeft' ? dashNavPrev() : dashNavNext();
+    } else if (currentTab === 'entries') {
+      const etab = document.querySelector('[data-etab].active')?.dataset.etab;
+      if (etab === 'mensuel') e.key === 'ArrowLeft' ? monthlyNavPrev() : monthlyNavNext();
+    }
+  }
+});
 </script>
 <div id="app-toast"></div>
 
