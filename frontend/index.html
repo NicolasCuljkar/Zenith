@@ -1830,6 +1830,7 @@ let _anaCachedExp=null, _anaAvgPeriod=6, _anaAvgLabel='';
 let _anaComparePeriod=6;
 let anaEvolChart=null; let _anaMthStats=[]; let _anaEvolPeriod=6;
 let _repExpHistory=new Map();
+let _ovaMonthExpByName=new Map(); // name → [{name,amount,cat,note,member}] pour le mois courant du dashboard
 function _sparklineSvg(vals,col,w=300,h=60){
   const nums=vals.map(v=>v??0);
   const mn=Math.min(...nums),mx=Math.max(...nums),rng=mx-mn||1;
@@ -3123,6 +3124,21 @@ async function renderDashboard(){
       }
     }
   }
+  // Populate _ovaMonthExpByName : expenses du mois courant par nom de poste
+  _ovaMonthExpByName.clear();
+  for(const e of mExpenses.filter(x=>!['revenu','impot'].includes(x.cat))){
+    const k=e.name?.trim()||'—';
+    if(!_ovaMonthExpByName.has(k))_ovaMonthExpByName.set(k,[]);
+    _ovaMonthExpByName.get(k).push(e);
+  }
+  // Ajoute les fixes sans override ce mois
+  const _ovaOvIds=new Set(mExpenses.filter(x=>x.entry_id).map(x=>x.entry_id));
+  for(const fe of entries.filter(x=>x.cat==='fixe'&&(dashboardMember==='all'||x.member===dashboardMember)&&!_ovaOvIds.has(x.id))){
+    const k=fe.name.trim();
+    if(!_ovaMonthExpByName.has(k))_ovaMonthExpByName.set(k,[]);
+    _ovaMonthExpByName.get(k).push({...fe,_fromEntry:true});
+  }
+
   // Populate _repExpHistory from dashboard data (enables tooltip on _ovaItem click)
   _repExpHistory.clear();
   const _dashRepRaw=new Map();
@@ -3194,8 +3210,8 @@ async function renderDashboard(){
       :'';
     const amtStr=isNeg?`−${eur(Math.abs(r.total))}`:eur(r.total);
     const spkVals=_itemSpkData.get(r.name)||Array(6).fill(0);
-    const hasHist=!r._synthetic&&r.cat!=='epargne';
-    return `<div data-rep-exp-name="${hasHist?(r.name||'').replace(/"/g,'&quot;'):''}" style="padding:6px 18px 6px 22px;border-top:1px solid var(--border);${hasHist?'cursor:pointer;transition:background .15s':''}" ${hasHist?`onmouseenter="this.style.background='var(--surface2)'" onmouseleave="this.style.background=''"`:''}">
+    const hasHist=!r._synthetic;
+    return `<div data-ova-exp-name="${hasHist?(r.name||'').replace(/"/g,'&quot;'):''}" style="padding:6px 18px 6px 22px;border-top:1px solid var(--border);${hasHist?'cursor:pointer;transition:background .15s':''}" ${hasHist?`onmouseenter="this.style.background='var(--surface2)'" onmouseleave="this.style.background=''"`:''}>
       <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
         <div style="display:flex;align-items:center;gap:6px;min-width:0;flex:1">
           <span style="width:5px;height:5px;border-radius:50%;background:${col};flex-shrink:0;opacity:.7"></span>
@@ -7001,6 +7017,58 @@ document.addEventListener('keydown', e => {
   },{passive:true});
 }
 
+// ── OVA item detail modal ──
+function _closeOvaTip(){
+  const tip=document.getElementById('ova-exp-tooltip');
+  const bd=document.getElementById('ova-exp-backdrop');
+  if(tip)tip.style.display='none';
+  if(bd)bd.style.display='none';
+}
+{
+  const _CATS_COL={fixe:'#d93535',variable:'#e05a2b',loisir:'#f59e0b',epargne:'#2979c8'};
+  document.addEventListener('click', e => {
+    if(e.target.closest('#ova-exp-tooltip'))return;
+    const row=e.target.closest('[data-ova-exp-name]');
+    if(!row)return;
+    const name=row.dataset.ovaExpName;
+    if(!name)return;
+    const items=_ovaMonthExpByName.get(name)||_ovaMonthExpByName.get(name.replace(/&quot;/g,'"'));
+    const tip=document.getElementById('ova-exp-tooltip');
+    const tc=document.getElementById('ova-exp-tooltip-content');
+    const bd=document.getElementById('ova-exp-backdrop');
+    if(!tip||!tc)return;
+    if(!items||items.length===0){
+      tc.innerHTML=`<div style="font-size:15px;font-weight:800;margin-bottom:12px">${name}</div><div style="color:var(--muted);font-size:var(--fs-sm);text-align:center;padding:16px 0">Aucune dépense ce mois</div>`;
+      tip.style.display=''; if(bd)bd.style.display=''; return;
+    }
+    const col=_CATS_COL[items[0].cat]||'var(--red)';
+    const total=items.reduce((s,x)=>s+Math.abs(x.amount||x._fromEntry?Math.abs(x.amount):0),0);
+    const rowsHtml=items.map(x=>{
+      const amt=Math.abs(x.amount);
+      const note=x.note?`<div style="font-size:var(--fs-xs);color:var(--muted);margin-top:1px">${x.note}</div>`:'';
+      const badge=x._fromEntry?`<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px;background:var(--surface2);color:var(--muted);border:1px solid var(--border)">prévisionnel</span>`:'';
+      return`<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:8px 0;border-top:1px solid var(--border)">
+        <div style="min-width:0;flex:1">
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+            <span style="font-size:var(--fs-sm);font-weight:600;color:var(--text)">${x.name}</span>
+            ${badge}
+          </div>
+          ${note}
+          ${x.member?`<div style="font-size:var(--fs-xs);color:var(--hint);margin-top:1px">${x.member}</div>`:''}
+        </div>
+        <span style="font-size:var(--fs-sm);font-weight:700;color:${col};flex-shrink:0">${eur(amt)}</span>
+      </div>`;
+    }).join('');
+    tc.innerHTML=`
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:8px">
+        <div style="font-size:15px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${name}</div>
+        <span style="font-size:var(--fs-sm);font-weight:800;color:${col};flex-shrink:0">${eur(total)}</span>
+      </div>
+      <div>${rowsHtml}</div>`;
+    tip.style.display=''; if(bd)bd.style.display='';
+  });
+}
+
 // ── Répartition expense modal ──
 function _closeRepTip(){
   const tip=document.getElementById('rep-exp-tooltip');
@@ -8573,6 +8641,11 @@ async function connectBank(){
     <div class="wizard-sub" id="wizard-sub"></div>
     <div class="wizard-actions" id="wizard-actions"></div>
   </div>
+</div>
+<div id="ova-exp-backdrop" style="display:none;position:fixed;inset:0;z-index:9998;background:rgba(0,0,0,.35)" onclick="_closeOvaTip()"></div>
+<div id="ova-exp-tooltip" style="display:none;position:fixed;z-index:9999;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px;box-shadow:0 24px 64px rgba(0,0,0,.4);width:340px;max-width:calc(100vw - 32px);max-height:85vh;overflow-y:auto">
+  <button onclick="_closeOvaTip()" style="position:absolute;top:12px;right:12px;background:none;border:none;cursor:pointer;color:var(--muted);font-size:18px;line-height:1;padding:4px 6px">✕</button>
+  <div id="ova-exp-tooltip-content"></div>
 </div>
 <div id="rep-exp-backdrop" style="display:none;position:fixed;inset:0;z-index:9998;background:rgba(0,0,0,.35)" onclick="_closeRepTip()"></div>
 <div id="rep-exp-tooltip" style="display:none;position:fixed;z-index:9999;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px;box-shadow:0 24px 64px rgba(0,0,0,.4);width:340px;max-width:calc(100vw - 32px);max-height:85vh;overflow-y:auto">
