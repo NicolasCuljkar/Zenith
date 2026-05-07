@@ -1071,12 +1071,6 @@ if(window.location.hostname==='localhost'||window.location.hostname==='127.0.0.1
     <!-- Synthèse mensuelle -->
     <div id="analysis-hero" style="display:none;margin-bottom:var(--sg)"></div>
 
-    <!-- Graphique total dépenses -->
-    <div class="card" style="margin-bottom:var(--sg);padding:16px 18px">
-      <div id="analysis-donut-wrap" style="position:relative;height:220px"></div>
-      <div id="analysis-donut-legend" style="margin-top:12px"></div>
-    </div>
-
     <!-- Comparaison mensuelle -->
     <div class="card" id="monthly-compare-card" style="display:none"><div class="card-head">Comparaison mensuelle</div><div id="monthly-compare-content"><div style="padding:20px;text-align:center;color:var(--muted);font-size:var(--fs-sm)">Chargement…</div></div></div>
 
@@ -6315,41 +6309,7 @@ async function renderAnalysis(){
   const aMember=analysisMember;
   const aEntries=aMember==='all'?entries:entries.filter(e=>e.member===aMember);
   const aStats=calcStats(aEntries);
-  const aMembers=aMember==='all'?orderedMembers():[aMember];
-  let aDsEp=0,aDsLoi=0;
-  aMembers.forEach(m=>{const sm=calcStats(entries.filter(e=>e.member===m));const p=savingPct[m]??60;aDsEp+=sm.rav*p/100;aDsLoi+=sm.rav*(100-p)/100;});
-  const aDonutData=[
-    {label:'Impôts',value:aStats.tax,color:'#c49a00'},
-    {label:'Fixes',value:aStats.fix,color:'#d93535'},
-    {label:'Variables',value:aStats.vari,color:'#e07020'},
-    {label:'Épargne',value:aDsEp,color:'#2979c8'},
-    {label:'Loisir',value:aDsLoi,color:'#f59e0b'}
-  ].filter(d=>d.value>0);
-  const aDonutTotal=aDonutData.reduce((s,d)=>s+d.value,0);
-  if(!document.getElementById('analysis-donut-chart'))document.getElementById('analysis-donut-wrap').innerHTML='<canvas id="analysis-donut-chart"></canvas>';
   analysisDonut=destroyChart(analysisDonut);
-  if(aDonutTotal>0){
-    analysisDonut=new Chart(document.getElementById('analysis-donut-chart'),{
-      type:'doughnut',
-      data:{labels:aDonutData.map(d=>d.label),datasets:[
-        {data:aDonutData.map(d=>d.value),backgroundColor:aDonutData.map(d=>d.color),hoverBackgroundColor:aDonutData.map(d=>d.color+'dd'),borderWidth:0,hoverOffset:14,weight:1.6},
-        {data:aDonutData.map(d=>d.value),backgroundColor:aDonutData.map(d=>d.color+'44'),hoverBackgroundColor:aDonutData.map(d=>d.color+'66'),borderWidth:0,hoverOffset:0,weight:0.6}
-      ]},
-      options:{responsive:true,maintainAspectRatio:false,cutout:'62%',animation:{animateRotate:true,animateScale:true,duration:900,easing:'easeInOutQuart'},
-        plugins:{legend:{display:false},tooltip:{backgroundColor:darkVal('rgba(255,255,255,1)','rgba(28,28,32,1)'),borderColor:darkVal('rgba(0,0,0,.15)','rgba(255,255,255,.2)'),borderWidth:1,titleColor:cssCol('--text'),bodyColor:cssCol('--muted'),titleFont:{size:fsPx('--fs-sm'),weight:'700'},bodyFont:{size:fsPx('--fs-xs')},padding:10,cornerRadius:10,
-          callbacks:{label:ctx=>{if(ctx.datasetIndex!==0)return null;const pct=Math.round(ctx.raw/aDonutTotal*100);return` ${ctx.raw.toLocaleString('fr-FR')} € — ${pct}%`;}}}}},
-      plugins:[
-        {id:'centerText',beforeDraw(chart){const{ctx,chartArea:{left,right,top,bottom}}=chart;const cx=(left+right)/2,cy=(top+bottom)/2;ctx.save();ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle=cssCol('--text');ctx.font=`800 ${fsPx('--fs-lg')}px Inter,system-ui,sans-serif`;ctx.fillText(eur(aDonutTotal),cx,cy-11);ctx.fillStyle=cssCol('--muted');ctx.font=`500 ${fsPx('--fs-xs')}px Inter,system-ui,sans-serif`;ctx.fillText('Total dépenses',cx,cy+11);ctx.restore();}},
-        {id:'pctLabels',afterDraw(chart){const ctx=chart.ctx,meta=chart.getDatasetMeta(0);meta.data.forEach((arc,i)=>{const pct=aDonutData[i].value/aDonutTotal;if(pct<0.05)return;const angle=(arc.startAngle+arc.endAngle)/2,r=(arc.outerRadius+arc.innerRadius)/2,x=arc.x+Math.cos(angle)*r,y=arc.y+Math.sin(angle)*r;ctx.save();ctx.textAlign='center';ctx.textBaseline='middle';ctx.font=`700 ${fsPx('--fs-xs')}px Inter,system-ui,sans-serif`;ctx.fillStyle='rgba(255,255,255,.95)';ctx.fillText(Math.round(pct*100)+'%',x,y);ctx.restore();});}}
-      ]
-    });
-    const aLegendEl=document.getElementById('analysis-donut-legend');
-    if(aLegendEl){
-      const sorted=[...aDonutData].sort((a,b)=>b.value-a.value);
-      aLegendEl.innerHTML=`<div style="display:flex;flex-direction:column;gap:8px">${sorted.map(d=>{const pct=Math.round(d.value/aDonutTotal*100);return`<div style="display:grid;grid-template-columns:10px 1fr auto auto;align-items:center;gap:8px"><span style="width:10px;height:10px;border-radius:3px;background:${d.color};display:block"></span><div style="min-width:0"><div style="font-size:var(--fs-sm);font-weight:500;color:var(--text);margin-bottom:4px">${d.label}</div><div style="height:5px;background:var(--surface2);border-radius:3px;overflow:hidden;border:1px solid var(--border)"><div style="width:${pct}%;height:100%;background:${d.color};border-radius:3px;transition:width .4s ease"></div></div></div><span style="font-size:var(--fs-sm);font-weight:600;color:var(--muted);white-space:nowrap;padding-left:4px">${eur(d.value)}</span><span style="font-size:var(--fs-sm);font-weight:700;color:${d.color};min-width:30px;text-align:right">${pct}%</span></div>`;}).join('')}</div>`;
-    }
-  }
-
   gaugeChart=destroyChart(gaugeChart);
   radarChart=destroyChart(radarChart);
 
