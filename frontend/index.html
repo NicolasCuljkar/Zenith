@@ -6740,79 +6740,95 @@ async function renderAnalysis(){
       _ovaAnaEl.style.display='block';
     }
 
-    // ── Insights actionnables ──
+    // ── Insights (moyenne cumulée tous les mois) ──
     try {
       const _insEl=document.getElementById('analysis-insights');
-      if(_insEl && _dataStats.length>=2){
-        const _curMkI=_last6[_last6.length-1];
-        const _latest=_dataStats[_dataStats.length-1];
+      if(_insEl && _dataStats.length>=1){
+        const _iN=_dataStats.length;
+        // Moyennes cumulées sur tous les mois
+        const _iRevNet=Math.round(_dataStats.reduce(function(a,r){return a+r.revNet;},0)/_iN);
+        const _iDep=Math.round(_dataStats.reduce(function(a,r){return a+r.dep;},0)/_iN);
+        const _iFixe=Math.round(_dataStats.reduce(function(a,r){return a+r.fixe;},0)/_iN);
+        const _iLoi=Math.round(_dataStats.reduce(function(a,r){return a+r.loisir;},0)/_iN);
+        const _iEp=Math.round(_dataStats.reduce(function(a,r){return a+r.ep;},0)/_iN);
+        const _iSolde=Math.round(_dataStats.reduce(function(a,r){return a+r.solde;},0)/_iN);
+        const _iPos=_dataStats.filter(function(r){return r.solde>=0;}).length;
+        const _iErPts=_dataStats.filter(function(r){return r.revNet>0;});
+        const _iEpRate=_iErPts.length>0?Math.round(_iErPts.reduce(function(a,r){return a+r.ep/r.revNet*100;},0)/_iErPts.length):null;
         const _ins=[];
 
-        // 1. Tendance taux d'epargne (3 derniers vs 3 precedents)
-        if(_dataStats.length>=4){
-          const _r3=_dataStats.slice(-3).filter(r=>r.revNet>0);
-          const _p3=_dataStats.slice(-6,-3).filter(r=>r.revNet>0);
-          if(_r3.length>=2&&_p3.length>=1){
-            const rRate=Math.round(_r3.reduce((a,r)=>a+r.ep/r.revNet*100,0)/_r3.length);
-            const pRate=Math.round(_p3.reduce((a,r)=>a+r.ep/r.revNet*100,0)/_p3.length);
-            const d=rRate-pRate;
-            if(d>=3)_ins.push({icon:'\u2191',col:'var(--green)',text:"Taux d\u2019\u00e9pargne en hausse",sub:'+'+d+' pts sur 3 mois \u00b7 '+pRate+'% \u2192 '+rRate+'%'});
-            else if(d<=-3)_ins.push({icon:'\u2193',col:'var(--red)',text:"Taux d\u2019\u00e9pargne en baisse",sub:d+' pts sur 3 mois \u00b7 '+pRate+'% \u2192 '+rRate+'%'});
+        // 1. Taux d'épargne moyen
+        if(_iEpRate!==null){
+          const _erC=_iEpRate>=20?'var(--green)':_iEpRate>=10?'var(--amber)':'var(--red)';
+          const _erI=_iEpRate>=20?'\u2713':'\u26a0';
+          const _erS=_iEpRate>=20?'Objectif atteint (\u226520%)':_iEpRate>=10?'En dessous de l\'objectif (20%)':'Tr\u00e8s insuffisant \u2014 objectif 20%';
+          _ins.push({icon:_erI,col:_erC,text:'Taux d\'\u00e9pargne moyen\u00a0: '+_iEpRate+'%',sub:_erS+'\u00a0\u00b7 '+_iN+' mois analys\u00e9s'});
+        }
+
+        // 2. Bilan mensuel moyen
+        if(_iRevNet>0){
+          const _sc=_iSolde>=0?'var(--green)':'var(--red)';
+          _ins.push({icon:_iSolde>=0?'\u2713':'\u26a0',col:_sc,text:'Solde mensuel moyen\u00a0: '+(_iSolde>=0?'+':'')+eur(_iSolde),sub:_iPos+'/'+_iN+' mois positifs ('+Math.round(_iPos/_iN*100)+'%)'});
+        }
+
+        // 3. Part des charges fixes
+        if(_iRevNet>0&&_iFixe>0){
+          const _fp=Math.round(_iFixe/_iRevNet*100);
+          const _fc=_fp>55?'var(--red)':_fp>45?'var(--amber)':'var(--green)';
+          _ins.push({icon:_fp>45?'\u26a0':'\u2713',col:_fc,text:'Charges fixes\u00a0: '+_fp+'% des revenus nets',sub:eur(_iFixe)+'/mois en moy. \u00b7 objectif \u2264\u202f50%'});
+        }
+
+        // 4. Part des loisirs
+        if(_iRevNet>0&&_iLoi>0){
+          const _lp=Math.round(_iLoi/_iRevNet*100);
+          const _lc=_lp>30?'var(--amber)':'var(--green)';
+          _ins.push({icon:_lp>30?'\u26a0':'\u2713',col:_lc,text:'Loisirs\u00a0: '+_lp+'% des revenus nets',sub:eur(_iLoi)+'/mois en moy. \u00b7 objectif \u2264\u202f30%'});
+        }
+
+        // 5. Projection annuelle épargne
+        if(_iEp>0){
+          _ins.push({icon:'\u2192',col:'var(--green)',text:'Projection\u00a0: '+eur(_iEp*12)+' \u00e9pargn\u00e9s/an',sub:'Si tendance maintenue \u00b7 '+eur(_iEp)+'/mois en moy.'});
+        } else if(_iEp<0){
+          _ins.push({icon:'\u26a0',col:'var(--red)',text:'D\u00e9s\u00e9pargne moyen de '+eur(Math.abs(_iEp))+'/mois',sub:'Les retraits d\u00e9passent les apports'});
+        }
+
+        // 6. Poste le plus coûteux en moyenne
+        const _iMap=new Map();
+        for(var _ie=0;_ie<(_anaAllExp||[]).length;_ie++){
+          var _eit=_anaAllExp[_ie];
+          if(['revenu','impot'].includes(_eit.cat)||_eit.is_exceptional)continue;
+          var _ek=_eit.name.trim(),_emk=_eit.year+'-'+String(_eit.month).padStart(2,'0');
+          if(!_iMap.has(_ek))_iMap.set(_ek,new Map());
+          _iMap.get(_ek).set(_emk,(_iMap.get(_ek).get(_emk)||0)+Math.abs(_eit.amount));
+        }
+        var _topItm=null,_topAvg=0;
+        for(var _iEntry of _iMap){
+          var _iVals=[..._iEntry[1].values()];
+          var _iAvg=_iVals.reduce(function(a,v){return a+v;},0)/_iVals.length;
+          if(_iAvg>_topAvg){_topAvg=_iAvg;_topItm={name:_iEntry[0],avg:Math.round(_iAvg),months:_iVals.length};}
+        }
+        if(_topItm&&_iDep>0){
+          var _tpct=Math.round(_topItm.avg/_iDep*100);
+          _ins.push({icon:'\u25b2',col:'var(--muted)',text:'"'+_topItm.name+'" \u2014 poste le plus co\u00fbteux',sub:eur(_topItm.avg)+'/mois en moy. \u00b7 '+_tpct+'% des d\u00e9penses'});
+        }
+
+        // 7. Progression épargne (1ère vs 2ème moitié de la période)
+        if(_iN>=4){
+          var _half=Math.floor(_iN/2);
+          var _iFirst=_dataStats.slice(0,_half).filter(function(r){return r.revNet>0;});
+          var _iSecond=_dataStats.slice(-_half).filter(function(r){return r.revNet>0;});
+          if(_iFirst.length>=1&&_iSecond.length>=1){
+            var _iR1=Math.round(_iFirst.reduce(function(a,r){return a+r.ep/r.revNet*100;},0)/_iFirst.length);
+            var _iR2=Math.round(_iSecond.reduce(function(a,r){return a+r.ep/r.revNet*100;},0)/_iSecond.length);
+            var _iD=_iR2-_iR1;
+            if(Math.abs(_iD)>=3){
+              _ins.push({icon:_iD>0?'\u2191':'\u2193',col:_iD>0?'var(--green)':'var(--red)',text:'\u00c9pargne en '+(_iD>0?'progression':'r\u00e9gression')+' sur la p\u00e9riode',sub:(_iD>0?'+':'')+_iD+' pts \u00b7 '+_iR1+'% \u2192 '+_iR2+'% (1\u1d49\u02b3\u1d49 vs 2\u1d49\u1d50\u1d49 moiti\u00e9)'});
+            }
           }
         }
 
-        // 2. Mois deficitaires consecutifs
-        const _negLast=_dataStats.slice(-3).filter(r=>r.solde<0).length;
-        if(_negLast>=2)_ins.push({icon:'\u26a0',col:'var(--red)',text:_negLast+' mois cons\u00e9cutifs en d\u00e9ficit',sub:'R\u00e9duire les d\u00e9penses ou augmenter les revenus'});
-
-        // 3. Loisirs ce mois vs moyenne
-        const _latestLoi=(_byMkExp.get(_curMkI)||{}).loisir||0;
-        if(_latestLoi>0&&_avg6Loi>0){
-          const _loiPct=Math.round((_latestLoi-_avg6Loi)/_avg6Loi*100);
-          if(Math.abs(_loiPct)>=20)_ins.push({icon:_loiPct>0?'\u2191':'\u2193',col:_loiPct>0?'var(--amber)':'var(--green)',text:'Loisirs '+(_loiPct>0?'+':'')+_loiPct+'% vs moyenne',sub:eur(_latestLoi)+' ce mois \u00b7 moy. '+eur(_avg6Loi)});
-        }
-
-        // 4. Variables ce mois vs moyenne
-        const _latestVar=(_byMkExp.get(_curMkI)||{}).variable||0;
-        if(_latestVar>0&&_avg6Var>0){
-          const _varPct=Math.round((_latestVar-_avg6Var)/_avg6Var*100);
-          if(_varPct>=30)_ins.push({icon:'\u2191',col:'var(--amber)',text:'D\u00e9penses variables +'+_varPct+'% vs moyenne',sub:eur(_latestVar)+' ce mois \u00b7 moy. '+eur(_avg6Var)});
-        }
-
-        // 5. Poste avec la plus forte hausse ce mois
-        const _spikeMap=new Map();
-        for(const _se of (_anaAllExp||[])){
-          if(['revenu','impot'].includes(_se.cat)||_se.is_exceptional)continue;
-          const _sk=_se.name.trim(),_smk=_se.year+'-'+String(_se.month).padStart(2,'0');
-          if(!_spikeMap.has(_sk))_spikeMap.set(_sk,new Map());
-          _spikeMap.get(_sk).set(_smk,(_spikeMap.get(_sk).get(_smk)||0)+Math.abs(_se.amount));
-        }
-        let _bestSpike=null,_bestDelta=0;
-        for(const [_sn,_smm] of _spikeMap){
-          const _svals=_last6.map(function(_mk){return _smm.get(_mk)||0;});
-          const _slv=_svals[_svals.length-1];
-          const _spv=_svals.slice(0,-1).filter(function(v){return v>0;});
-          if(_spv.length<2||_slv===0)continue;
-          const _savg=_spv.reduce(function(a,v){return a+v;},0)/_spv.length;
-          const _spct=_savg>0?(_slv-_savg)/_savg*100:0;
-          if(_spct>=30&&_slv-_savg>_bestDelta){_bestDelta=_slv-_savg;_bestSpike={name:_sn,lv:_slv,avg:_savg,pct:Math.round(_spct)};}
-        }
-        if(_bestSpike)_ins.push({icon:'\u2191',col:'var(--amber)',text:'"'+_bestSpike.name+'" en hausse +'+_bestSpike.pct+'%',sub:eur(_bestSpike.lv)+' ce mois \u00b7 moy. '+eur(Math.round(_bestSpike.avg))});
-
-        // 6. Epargne tres faible ce mois
-        if(_latest&&_latest.revNet>0&&_latest.epRate!==null&&_latest.epRate<5&&_latest.ep>=0){
-          _ins.push({icon:'\u26a0',col:'var(--amber)',text:'\u00c9pargne tr\u00e8s faible ('+_latest.epRate+'%)',sub:'Objectif conseill\u00e9 : 20% soit '+eur(Math.round(_latest.revNet*0.2))+'/mois'});
-        }
-
-        // 7. Excellent mois
-        if(_latest&&_latest.solde>0&&_latest.epRate!==null&&_latest.epRate>=20){
-          _ins.push({icon:'\u2713',col:'var(--green)',text:"Excellent mois \u2014 \u00e9pargne \u00e0 "+_latest.epRate+'%',sub:'Solde positif de '+eur(_latest.solde)});
-        }
-
-        if(_ins.length===0)_ins.push({icon:'\u2713',col:'var(--green)',text:'Aucune anomalie d\u00e9tect\u00e9e',sub:'Vos finances semblent \u00e9quilibr\u00e9es'});
-
-        const _insRows=_ins.map(function(ins,i){
-          return '<div style="display:flex;align-items:flex-start;gap:12px;padding:11px 16px;'+(i<_ins.length-1?'border-bottom:1px solid var(--border)':'')+'">'
+        const _insRows=_ins.map(function(ins,ii){
+          return '<div style="display:flex;align-items:flex-start;gap:12px;padding:11px 16px;'+(ii<_ins.length-1?'border-bottom:1px solid var(--border)':'')+'">'
             +'<div style="width:26px;height:26px;border-radius:50%;background:var(--surface2);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:12px;font-weight:800;color:'+ins.col+'">'+ins.icon+'</div>'
             +'<div style="flex:1;min-width:0">'
             +'<div style="font-size:var(--fs-sm);font-weight:700;color:var(--text)">'+ins.text+'</div>'
