@@ -3093,6 +3093,28 @@ async function renderDashboard(){
     (savingsDash||[]).filter(s=>s.year===year&&s.month===_FR_M[month-1]&&(s.delta||0)>0)
       .reduce((s,sv)=>s+(sv.delta||0),0)
   );
+  // Sparklines par poste (6 mois)
+  const _itemSpkData=new Map();
+  for(const {year,month} of _spkM){
+    const mExp=(allMlyExp||[]).filter(e=>e.year===year&&e.month===month);
+    const mFix=entries.filter(e=>e.cat==='fixe'&&(dashboardMember==='all'||e.member===dashboardMember));
+    // monthly expenses by name
+    for(const e of mExp){
+      const k=e.name.trim();
+      if(!_itemSpkData.has(k))_itemSpkData.set(k,Array(6).fill(0));
+      const idx=_spkM.findIndex(m=>m.year===year&&m.month===month);
+      if(idx>=0)_itemSpkData.get(k)[idx]+=Math.abs(e.amount);
+    }
+    // fixed entries (recurring, no override this month)
+    const _ovIds=new Set(mExp.filter(e=>e.entry_id).map(e=>e.entry_id));
+    for(const fe of mFix.filter(e=>!_ovIds.has(e.id))){
+      const k=fe.name.trim();
+      if(!_itemSpkData.has(k))_itemSpkData.set(k,Array(6).fill(0));
+      const idx=_spkM.findIndex(m=>m.year===year&&m.month===month);
+      if(idx>=0)_itemSpkData.get(k)[idx]+=Math.abs(fe.amount);
+    }
+  }
+
   const _svgSpk=(vals,col,bgt=0)=>{
     const W=88,H=22,P=2;
     const max=Math.max(...vals,bgt,1);
@@ -3110,6 +3132,24 @@ async function renderDashboard(){
     </svg>`;
   };
 
+  const _svgSpkSm=(vals,col)=>{
+    const W=64,H=18,P=2;
+    const allZero=vals.every(v=>v===0);
+    if(allZero)return`<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"><line x1="${P}" y1="${H/2}" x2="${W-P}" y2="${H/2}" stroke="${col}" stroke-width="1" opacity=".2" stroke-dasharray="2,2"/></svg>`;
+    const max=Math.max(...vals,1);
+    const pts=vals.map((v,i)=>{
+      const x=P+(i/(vals.length-1||1))*(W-P*2);
+      const y=H-P-(v/max)*(H-P*2);
+      return x.toFixed(1)+','+y.toFixed(1);
+    });
+    const lx=parseFloat(pts[pts.length-1].split(',')[0]);
+    const ly=parseFloat(pts[pts.length-1].split(',')[1]);
+    return`<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="overflow:visible;display:block">
+      <polyline points="${pts.join(' ')}" fill="none" stroke="${col}" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" opacity=".75"/>
+      <circle cx="${lx}" cy="${ly}" r="2" fill="${col}"/>
+    </svg>`;
+  };
+
   const _ovaItem=(r, catTotal=0)=>{
     const isNeg=r.total<0;
     const col=isNeg?'var(--red)':(_catColP[r.cat]||'#6b7280');
@@ -3120,7 +3160,7 @@ async function renderDashboard(){
       :diff<0?`<span style="display:inline-flex;align-items:center;gap:2px;font-size:9px;color:var(--green);font-weight:700;background:color-mix(in srgb,var(--green) 12%,var(--surface));border-radius:4px;padding:1px 5px;white-space:nowrap">↓ ${eur(Math.abs(diff))}</span>`
       :'';
     const amtStr=isNeg?`−${eur(Math.abs(r.total))}`:eur(r.total);
-    const itemPct=catTotal>0?Math.round(r.total/catTotal*100):0;
+    const spkVals=_itemSpkData.get(r.name)||Array(6).fill(0);
     return `<div style="padding:6px 18px 6px 22px;border-top:1px solid var(--border)">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
         <div style="display:flex;align-items:center;gap:6px;min-width:0;flex:1">
@@ -3128,12 +3168,12 @@ async function renderDashboard(){
           <span style="font-size:var(--fs-xs);color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.name}</span>
           ${r.count>1?`<span style="font-size:9px;color:var(--hint)">×${r.count}</span>`:''}
         </div>
-        <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+        <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
           ${diffHtml}
-          <span style="font-size:var(--fs-xs);font-weight:700;color:${col};min-width:52px;text-align:right">${amtStr}</span>
+          <div style="opacity:.8">${_svgSpkSm(spkVals,col)}</div>
+          <span style="font-size:var(--fs-xs);font-weight:700;color:${col};min-width:48px;text-align:right">${amtStr}</span>
         </div>
       </div>
-      ${catTotal>0?`<div style="margin-top:4px;height:2px;background:var(--surface2);border-radius:99px;overflow:hidden;margin-left:11px"><div style="width:${itemPct}%;height:100%;background:${col};opacity:.5;border-radius:99px"></div></div>`:''}
     </div>`;
   };
 
