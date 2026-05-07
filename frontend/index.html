@@ -3123,6 +3123,30 @@ async function renderDashboard(){
       }
     }
   }
+  // Populate _repExpHistory from dashboard data (enables tooltip on _ovaItem click)
+  _repExpHistory.clear();
+  const _dashRepRaw=new Map();
+  for(const e of (allMlyExp||[]).filter(e=>!e.is_exceptional)){
+    const k=e.name?.trim()||'—';
+    const mk=`${e.year}-${String(e.month).padStart(2,'0')}`;
+    if(!_dashRepRaw.has(k))_dashRepRaw.set(k,new Map());
+    const mm=_dashRepRaw.get(k);
+    if(mm.has(mk))mm.get(mk).amount+=Math.abs(e.amount);
+    else mm.set(mk,{mk,year:e.year,month:e.month,amount:Math.abs(e.amount)});
+  }
+  for(const [k,mm] of _dashRepRaw)_repExpHistory.set(k,[...mm.values()]);
+  // Fill fixed entries for missing months
+  const _dashNow=new Date();
+  const _dash12Mks=[];
+  for(let i=11;i>=0;i--){const d=new Date(_dashNow.getFullYear(),_dashNow.getMonth()-i,1);_dash12Mks.push({mk:`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`,year:d.getFullYear(),month:d.getMonth()+1});}
+  for(const fe of entries.filter(e=>e.cat==='fixe'&&(dashboardMember==='all'||e.member===dashboardMember))){
+    const k=fe.name.trim();
+    const existing=_repExpHistory.get(k)||[];
+    const existingMks=new Set(existing.map(h=>h.mk));
+    const filled=[...existing];
+    for(const m of _dash12Mks)if(!existingMks.has(m.mk))filled.push({...m,amount:Math.abs(fe.amount)});
+    _repExpHistory.set(k,filled.sort((a,b)=>a.mk.localeCompare(b.mk)));
+  }
 
   const _svgSpk=(vals,col,bgt=0)=>{
     const W=88,H=22,P=2;
@@ -3170,7 +3194,8 @@ async function renderDashboard(){
       :'';
     const amtStr=isNeg?`−${eur(Math.abs(r.total))}`:eur(r.total);
     const spkVals=_itemSpkData.get(r.name)||Array(6).fill(0);
-    return `<div style="padding:6px 18px 6px 22px;border-top:1px solid var(--border)">
+    const hasHist=!r._synthetic&&r.cat!=='epargne';
+    return `<div data-rep-exp-name="${hasHist?(r.name||'').replace(/"/g,'&quot;'):''}" style="padding:6px 18px 6px 22px;border-top:1px solid var(--border);${hasHist?'cursor:pointer;transition:background .15s':''}" ${hasHist?`onmouseenter="this.style.background='var(--surface2)'" onmouseleave="this.style.background=''"`:''}">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
         <div style="display:flex;align-items:center;gap:6px;min-width:0;flex:1">
           <span style="width:5px;height:5px;border-radius:50%;background:${col};flex-shrink:0;opacity:.7"></span>
@@ -6990,6 +7015,7 @@ function _closeRepTip(){
     const row=e.target.closest('[data-rep-exp-name]');
     if(!row){return;}
     const name=row.dataset.repExpName;
+    if(!name){return;}
     const hist=_repExpHistory.get(name)||_repExpHistory.get(name.replace(/&quot;/g,'"'));
     const tip=document.getElementById('rep-exp-tooltip');
     const tc=document.getElementById('rep-exp-tooltip-content');
