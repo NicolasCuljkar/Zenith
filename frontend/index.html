@@ -7117,11 +7117,13 @@ function _closeRepTip(){
       </div>`;
     }).join('');
     tc.innerHTML=`
-      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:4px">
-        <div style="font-size:15px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">${name}</div>
+      <div style="padding-right:28px;margin-bottom:4px">
+        <div style="font-size:15px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${name}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+        <span style="font-size:10px;color:var(--muted)">${last12.length} mois · moy. ${eur(avg)}/mois</span>
         ${trendHtml}
       </div>
-      <div style="font-size:10px;color:var(--muted);margin-bottom:14px">${last12.length} mois · moy. ${eur(avg)}/mois</div>
       <div style="margin-bottom:16px;width:100%">${_sparklineSvg(vals,'#2979c8',300,60)}</div>
       <div style="display:flex;flex-direction:column">${rowsHtml}</div>`;
     tip.style.display='';
