@@ -3269,6 +3269,14 @@ async function renderDashboard(){
 
   // ── Assemblage ──
   ovaDashChart=destroyChart(ovaDashChart);
+  const _actualTotalDep=fixA+varA+loiA+Math.max(0,epMonthDelta);
+  const _deficitWarnHtml=(revNetA>0&&_actualTotalDep>revNetA)?`<div style="background:var(--red-bg,rgba(217,53,53,.08));border:1px solid var(--red);border-radius:var(--r);padding:12px 16px;margin-bottom:var(--sg);display:flex;align-items:flex-start;gap:10px">
+    <span style="font-size:1.1rem;flex-shrink:0">🔴</span>
+    <div>
+      <div style="font-size:var(--fs-sm);font-weight:700;color:var(--red);margin-bottom:2px">Dépenses supérieures aux revenus ce mois</div>
+      <div style="font-size:var(--fs-xs);color:var(--fg);line-height:1.5">Vous avez dépensé <b>${eur(_actualTotalDep)}</b> pour <b>${eur(revNetA)}</b> de revenus nets — déficit de <b>${eur(_actualTotalDep-revNetA)}</b>.</div>
+    </div>
+  </div>`:'';
   const _savWarnHtml=epMonthDelta<0?`<div style="background:var(--amber-bg);border:1px solid var(--amber);border-radius:var(--r);padding:12px 16px;margin-bottom:var(--sg);display:flex;align-items:flex-start;gap:10px">
     <span style="font-size:1.1rem;flex-shrink:0">⚠️</span>
     <div>
@@ -3346,6 +3354,7 @@ async function renderDashboard(){
 
   content.innerHTML=_monthNav+
     `<div id="dash-alert"></div>`+
+    _deficitWarnHtml+
     _savWarnHtml+
     _hero+_cats+_dashInsHtml+_ova+
     `<div id="dash-charts" style="display:none"></div>`;
