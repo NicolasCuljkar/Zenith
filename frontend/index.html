@@ -1065,22 +1065,22 @@ if(window.location.hostname==='localhost'||window.location.hostname==='127.0.0.1
     <div id="analysis-content">
     <div class="member-tabs" id="analysis-mtabs"></div>
 
-    <!-- Donut répartition -->
+    <!-- Insights actionnables -->
+    <div id="analysis-insights" style="display:none;margin-bottom:var(--sg)"></div>
+
+    <!-- Synthèse mensuelle -->
+    <div id="analysis-hero" style="display:none;margin-bottom:var(--sg)"></div>
+
+    <!-- Graphique total dépenses -->
     <div class="card" style="margin-bottom:var(--sg);padding:16px 18px">
       <div id="analysis-donut-wrap" style="position:relative;height:220px"></div>
       <div id="analysis-donut-legend" style="margin-top:12px"></div>
     </div>
 
-    <!-- NEW: Hero metrics card -->
-    <div id="analysis-hero" style="display:none;margin-bottom:var(--sg)"></div>
-
-    <!-- Insights actionnables -->
-    <div id="analysis-insights" style="display:none;margin-bottom:var(--sg)"></div>
-
-    <!-- KEPT: Comparaison mensuelle -->
+    <!-- Comparaison mensuelle -->
     <div class="card" id="monthly-compare-card" style="display:none"><div class="card-head">Comparaison mensuelle</div><div id="monthly-compare-content"><div style="padding:20px;text-align:center;color:var(--muted);font-size:var(--fs-sm)">Chargement…</div></div></div>
 
-    <!-- NEW: Répartition card -->
+    <!-- Répartition des dépenses -->
     <div class="card" id="analysis-repartition-card" style="display:none;margin-bottom:var(--sg);padding:0;overflow:hidden">
       <div style="display:flex;justify-content:space-between;align-items:center;padding:15px 18px;border-bottom:1px solid var(--border)">
         <span style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)">Répartition des dépenses</span>
@@ -1088,14 +1088,9 @@ if(window.location.hostname==='localhost'||window.location.hostname==='127.0.0.1
       <div id="analysis-repartition-content"></div>
     </div>
 
-    <!-- Règle 50/30/20 -->
-    <div class="card" style="margin-bottom:var(--sg)">
-      <div class="card-head">Règle 50/30/20</div>
-      <div id="analysis-flow"></div>
-    </div>
-
-    <!-- KEPT: Moyennes par poste -->
-    <div class="card" id="analysis-avg-card" style="display:none"><div id="analysis-avg-content"></div></div>
+    <!-- éléments cachés (référencés en JS) -->
+    <div id="analysis-flow" style="display:none"></div>
+    <div id="analysis-avg-card" style="display:none"><div id="analysis-avg-content"></div></div>
 
 
     </div><!-- /#analysis-content -->
