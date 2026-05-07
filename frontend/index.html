@@ -6537,17 +6537,29 @@ async function renderAnalysis(){
             const barW=Math.min(100,pct);
             const hasDetail=c.detail && c.detail.length>0;
             const repChevron=`<svg class="ova-chevron" data-rep-chevron="${c.key}" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>`;
-            const detailRows=hasDetail?c.detail.map(d=>{
-              const dPct=c.amt>0?Math.round(Math.abs(d.avg)/c.amt*100):0;
+            const _repSpkSm=(name,col)=>{
+              const hist=_repExpHistory.get(name)||[];
+              const vals=_last6.map(mk=>{const h=hist.find(x=>x.mk===mk);return h?h.amount:0;});
+              const allZero=vals.every(v=>v===0);
+              const W=64,H=18,P=2;
+              if(allZero)return`<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"><line x1="${P}" y1="${H/2}" x2="${W-P}" y2="${H/2}" stroke="${col}" stroke-width="1" opacity=".2" stroke-dasharray="2,2"/></svg>`;
+              const max=Math.max(...vals,1);
+              const pts=vals.map((v,i)=>`${(P+(i/(vals.length-1||1))*(W-P*2)).toFixed(1)},${(H-P-(v/max)*(H-P*2)).toFixed(1)}`);
+              const [lx,ly]=pts[pts.length-1].split(',');
+              return`<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="overflow:visible;display:block"><polyline points="${pts.join(' ')}" fill="none" stroke="${col}" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" opacity=".75"/><circle cx="${lx}" cy="${ly}" r="2" fill="${col}"/></svg>`;
+            };
+          const detailRows=hasDetail?c.detail.map(d=>{
               return`<div data-rep-exp-name="${(d.name||'').replace(/"/g,'&quot;')}" style="padding:6px 18px 6px 22px;border-top:1px solid var(--border);cursor:pointer;transition:background .15s" onmouseenter="this.style.background='var(--surface2)'" onmouseleave="this.style.background=''">
                 <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
                   <div style="display:flex;align-items:center;gap:6px;min-width:0;flex:1">
                     <span style="width:5px;height:5px;border-radius:50%;background:${c.col};flex-shrink:0;opacity:.7"></span>
                     <span style="font-size:var(--fs-xs);color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${d.name}</span>
                   </div>
-                  <span style="font-size:var(--fs-xs);font-weight:700;color:${c.col};flex-shrink:0">${eur(d.avg)}</span>
+                  <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+                    <div style="opacity:.8">${_repSpkSm(d.name,c.col)}</div>
+                    <span style="font-size:var(--fs-xs);font-weight:700;color:${c.col};min-width:48px;text-align:right">${eur(d.avg)}</span>
+                  </div>
                 </div>
-                ${c.amt>0?`<div style="margin-top:4px;height:2px;background:var(--surface2);border-radius:99px;overflow:hidden;margin-left:11px"><div style="width:${dPct}%;height:100%;background:${c.col};opacity:.5;border-radius:99px"></div></div>`:''}
               </div>`;
             }).join(''):'';
             return`<div style="border-top:1px solid var(--border);border-left:3px solid ${c.col}22">
