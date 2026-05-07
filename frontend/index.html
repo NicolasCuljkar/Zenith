@@ -6208,18 +6208,22 @@ async function renderMonthlyComparison(member, nMonths) {
     const curBadge = isCurrent ? `<span style="font-size:9px;font-weight:700;color:var(--blue);margin-left:3px;vertical-align:middle;border:1px solid var(--blue);border-radius:3px;padding:0 3px">•</span>` : '';
     const monthLbl = `${mLabel(r.year, r.month)}${curBadge}${previBadge}`;
     const prevReal = rows.slice(0, i).reverse().find(x => x.isReal);
+    const _trend=(cur,prev)=>{if(!r.isReal||!prev)return'';const _ic=cur<prev?'var(--green)':cur>prev?'var(--red)':'';const _ia=cur<prev?'↓':cur>prev?'↑':'';return _ia?`<span style="display:inline-block;width:10px;font-size:9px;font-weight:700;color:${_ic};text-align:center;flex-shrink:0">${_ia}</span>`:''};
+    const _cell=(val,col,fw,trend)=>`<td style="text-align:right;font-size:var(--fs-xs);font-weight:${fw};color:${col}"><span style="display:inline-flex;align-items:center;justify-content:flex-end;gap:2px">${trend}${val}</span></td>`;
     if (!r.hasData) return `<tr style="${bg}${borderStyle}opacity:.4">
       <td style="font-weight:500;font-size:var(--fs-xs);${isCurrent?'color:var(--blue);font-weight:700':''}">${monthLbl}</td>
       <td style="text-align:right;color:var(--muted);font-size:var(--fs-xs)">—</td>
       <td style="text-align:right;color:var(--muted);font-size:var(--fs-xs)">—</td>
       <td style="text-align:right;color:var(--muted);font-size:var(--fs-xs)">—</td>
     </tr>`;
-    const depStyle = r.isReal ? 'font-weight:700;color:var(--red)' : 'font-weight:500;color:var(--amber)';
+    const depCol = r.isReal ? 'var(--red)' : 'var(--amber)';
+    const depFw  = r.isReal ? '700' : '500';
+    const epCol  = r.ep>0?'#2979c8':r.ep<0?'var(--red)':'var(--muted)';
     return `<tr style="${bg}${borderStyle}">
       <td style="font-weight:600;font-size:var(--fs-xs);${isCurrent?'color:var(--blue)':''}">${monthLbl}</td>
-      <td style="text-align:right;font-size:var(--fs-xs);font-weight:600;color:var(--green)">${fmtU(r.revNet)}</td>
-      <td style="text-align:right;font-size:var(--fs-xs);${depStyle}">${fmtU(r.dep)}</td>
-      <td style="text-align:right;font-size:var(--fs-xs);font-weight:600;color:${r.ep>0?'#2979c8':r.ep<0?'var(--red)':'var(--muted)'}">${fmtV(r.ep)}</td>
+      ${_cell(fmtU(r.revNet),'var(--green)','600',_trend(r.revNet,prevReal?.revNet))}
+      ${_cell(fmtU(r.dep),depCol,depFw,_trend(r.dep,prevReal?.dep))}
+      ${_cell(fmtV(r.ep),epCol,'600','')}
     </tr>`;
   }).join('');
 
