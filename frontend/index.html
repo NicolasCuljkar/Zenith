@@ -3367,7 +3367,7 @@ async function renderDashboard(){
       <div style="display:flex">${[
         {label:'Besoins',pct:_nPct2,ideal:50,val:_needs,ok:_nOk,col:_nOk?'var(--green)':'var(--red)'},
         {label:'Envies', pct:_wPct2,ideal:30,val:_wants,ok:_wOk,col:_wOk?'var(--amber)':'var(--red)'},
-        {label:'Épargne',pct:_sPct2,ideal:20,val:_save, ok:_sOk,col:_sOk?'var(--blue)':'var(--hint)'},
+        {label:'Épargne',pct:_sPct2,ideal:20,val:_save, ok:_sOk,col:_sOk?'var(--blue)':'var(--red)'},
       ].map((it,i)=>`${i>0?'<div style="width:1px;background:var(--border)"></div>':''}
         <div style="flex:1;text-align:center;padding:0 6px">
           <div style="font-size:1.05rem;font-weight:900;color:${it.col}">${it.pct}%</div>
@@ -5636,7 +5636,7 @@ function _renderSimAnalysis(stats, origStats, simF, origF, nChanges, effEp, effL
     const items = [
       { key: 'needs', label: 'Besoins', pct: needsPct, ideal: 50, val: needs, ok: needsOk, color: needsOk ? 'var(--green)' : 'var(--red)' },
       { key: 'wants', label: 'Envies',  pct: wantsPct, ideal: 30, val: wants, ok: wantsOk, color: wantsOk ? 'var(--amber)' : 'var(--red)' },
-      { key: 'save',  label: 'Épargne', pct: savePct,  ideal: 20, val: save,  ok: saveOk,  color: saveOk  ? 'var(--blue)'  : 'var(--hint)' },
+      { key: 'save',  label: 'Épargne', pct: savePct,  ideal: 20, val: save,  ok: saveOk,  color: saveOk  ? 'var(--blue)'  : 'var(--red)' },
     ];
 
     ruleHtml = `<div class="card" style="margin-bottom:.75rem;padding:14px 16px">
