@@ -3355,14 +3355,39 @@ async function renderDashboard(){
 
   const _dashInsHtml=_dIns.length===0?'':'<div class="card" style="padding:0;overflow:hidden;margin-bottom:var(--sg)"><div style="padding:10px 14px;border-bottom:1px solid var(--border)"><span style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)">Insights du mois</span></div><div>'+_dIns.map(function(ins,ii){return '<div style="display:flex;align-items:center;gap:10px;padding:9px 14px;'+(ii<_dIns.length-1?'border-bottom:1px solid var(--border)':'')+'"><span style="width:7px;height:7px;border-radius:50%;background:'+ins.col+';flex-shrink:0"></span><span style="flex:1;min-width:0;font-size:var(--fs-xs);font-weight:600;color:var(--text)">'+ins.text+(ins.sub?'<span style="font-weight:400;color:var(--muted)"> · '+ins.sub+'</span>':'')+'</span></div>';}).join('')+'</div></div>';
 
+  const _dashMlyToolbar=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:var(--sg)">
+    <input id="dash-mly-search" type="search" placeholder="Rechercher…" class="inp search-inp" style="flex:1;min-width:0">
+    <select id="dash-mly-cat" class="inp" style="flex-shrink:0">
+      <option value="">Toutes catégories</option>
+      <option value="fixe">Charges fixes</option>
+      <option value="variable">Variables</option>
+      <option value="loisir">Loisir</option>
+      <option value="epargne">Épargne</option>
+      <option value="revenu">Revenus</option>
+    </select>
+    <button class="btn-act" onclick="monthlyYear=dashYear;monthlyMonth=dashMonth;window._mlyCtxDash=true;openAddMonthlyExpense()" style="flex-shrink:0;white-space:nowrap">+ Ajouter</button>
+  </div>
+  <div id="dash-monthly-sections"></div>`;
+
   content.innerHTML=_monthNav+
     `<div id="dash-alert"></div>`+
     _deficitWarnHtml+
     _savWarnHtml+
-    _hero+_cats+_ova+
+    _hero+_cats+_dashMlyToolbar+_ova+
     `<div id="dash-charts" style="display:none"></div>`;
 
-  // Ouvre automatiquement la catégorie avec le plus de dépenses
+  // ── Dashboard monthly sections ──
+  const _dashSecMember = dashboardMember === 'all' ? 'Commun' : dashboardMember;
+  const _dashEntryStats = { rav: bStats.rav };
+  const _dashSecOpts = { skipHero:true, containerId:'dash-monthly-sections', searchId:'dash-mly-search', catId:'dash-mly-cat', member:_dashSecMember, year:dashYear, month:dashMonth };
+  if (mStats) _renderMonthlySections(mStats, mExpenses, savingsDash, _dashEntryStats, null, _dashSecOpts);
+  ['dash-mly-search','dash-mly-cat'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.addEventListener('input',  () => { if(mStats) _renderMonthlySections(mStats, mExpenses, savingsDash, _dashEntryStats, null, _dashSecOpts); });
+      el.addEventListener('change', () => { if(mStats) _renderMonthlySections(mStats, mExpenses, savingsDash, _dashEntryStats, null, _dashSecOpts); });
+    }
+  });
 
   // Init donut OVA
   const _ovaDCtx=document.getElementById('ova-donut-chart');
@@ -4150,7 +4175,7 @@ async function renderMonthly() {
   } finally { hideLoading(); }
 }
 
-function _renderMonthlySections(stats, expenses, savingsData = [], entryStats = null, mlyMemberStats = null) {
+function _renderMonthlySections(stats, expenses, savingsData = [], entryStats = null, mlyMemberStats = null, opts = null) {
   const { revenu, impot, fixe, variable: vari, epargne: ep, loisir: loi } = stats;
   const frMonth      = MONTH_NAMES[monthlyMonth - 1];
   const savingRecord = savingsData.find(s => s.year === monthlyYear && s.month === frMonth);
@@ -4288,21 +4313,29 @@ function _renderMonthlySections(stats, expenses, savingsData = [], entryStats = 
       <div style="font-size:var(--fs-xs);color:var(--fg);line-height:1.5">${_mlyConsecutive?'Attention — votre épargne diminue depuis plusieurs mois. ':''}Vous avez puisé <b>${eur(Math.abs(epDelta))}</b> dans votre épargne${_mlyBalBefore!==null&&_mlyBalAfter!==null?` (solde\u00a0: ${eur(_mlyBalBefore)} → <b>${eur(_mlyBalAfter)}</b>)`:''}.</div>
     </div>
   </div>` : '';
-  document.getElementById('monthly-solde-hero').innerHTML = heroHtml;
-  document.getElementById('monthly-ret-banner').innerHTML = _mlyRetBanner;
+  if (!opts?.skipHero) {
+    document.getElementById('monthly-solde-hero').innerHTML = heroHtml;
+    document.getElementById('monthly-ret-banner').innerHTML = _mlyRetBanner;
 
-  const loiBudgetMly = loi.budget > 0 ? loi.budget
-    : (entryStats ? Math.round(entryStats.rav * (100-(savingPct[epMember0]??60)) / 100) : 0);
-  document.getElementById('monthly-kpis').innerHTML = _budgetKpiGrid(
-    `<div onclick="openAddMonthlyExpense('fixe',true,['fixe'])" title="Ajouter une charge fixe" style="cursor:pointer">${_budgetKpiCard('Fixes',    fixeActual,    fixe.budget,  '#d93535')}</div>`,
-    `<div onclick="openAddMonthlyExpense('variable',true,['variable'])" title="Ajouter une dépense variable" style="cursor:pointer">${_budgetKpiCard('Variables',vari.actual,   vari.budget,  '#e05a2b')}</div>`,
-    `<div onclick="openAddMonthlyExpense('loisir',true,['loisir'])" title="Ajouter un loisir" style="cursor:pointer">${_budgetKpiCard('Loisir',   loi.actual,    loiBudgetMly, '#f59e0b')}</div>`,
-    (epMonthDelta<0?_retraitKpiCard(epMonthDelta,_mlyBalBefore,_mlyBalAfter):`<div onclick="openMonthlySaving(${monthlyYear},${monthlyMonth})" title="Saisir l'épargne du mois" style="cursor:pointer">${_budgetKpiCard('Épargne',epMonthDelta,epBudget0,'#2979c8',true)}</div>`)
-  );
+    const loiBudgetMly = loi.budget > 0 ? loi.budget
+      : (entryStats ? Math.round(entryStats.rav * (100-(savingPct[epMember0]??60)) / 100) : 0);
+    document.getElementById('monthly-kpis').innerHTML = _budgetKpiGrid(
+      `<div onclick="openAddMonthlyExpense('fixe',true,['fixe'])" title="Ajouter une charge fixe" style="cursor:pointer">${_budgetKpiCard('Fixes',    fixeActual,    fixe.budget,  '#d93535')}</div>`,
+      `<div onclick="openAddMonthlyExpense('variable',true,['variable'])" title="Ajouter une dépense variable" style="cursor:pointer">${_budgetKpiCard('Variables',vari.actual,   vari.budget,  '#e05a2b')}</div>`,
+      `<div onclick="openAddMonthlyExpense('loisir',true,['loisir'])" title="Ajouter un loisir" style="cursor:pointer">${_budgetKpiCard('Loisir',   loi.actual,    loiBudgetMly, '#f59e0b')}</div>`,
+      (epMonthDelta<0?_retraitKpiCard(epMonthDelta,_mlyBalBefore,_mlyBalAfter):`<div onclick="openMonthlySaving(${monthlyYear},${monthlyMonth})" title="Saisir l'épargne du mois" style="cursor:pointer">${_budgetKpiCard('Épargne',epMonthDelta,epBudget0,'#2979c8',true)}</div>`)
+    );
+  }
   setTimeout(fillAllTracks, 0);
 
   // ── Sections groupées identiques au style prévisionnel ──
   const isMobile = window.innerWidth <= 640;
+  const _secYear    = opts?.year   ?? monthlyYear;
+  const _secMonth   = opts?.month  ?? monthlyMonth;
+  const _secMember  = opts?.member ?? entriesMember;
+  const _secContId  = opts?.containerId ?? 'monthly-sections';
+  const _secSearchId = opts?.searchId ?? 'mly-search-input';
+  const _secCatId    = opts?.catId    ?? 'mly-filter-cat';
 
   // Overrides : entries in monthly_expenses with entry_id set (corrections de lignes auto)
   const overrides = expenses.filter(e => e.entry_id != null);
@@ -4312,12 +4345,12 @@ function _renderMonthlySections(stats, expenses, savingsData = [], entryStats = 
   // Filtre les entrées auto par membre sélectionné (même logique que prévisionnel)
   const autoEntries = entries.filter(e =>
     ['revenu','impot','fixe'].includes(e.cat) &&
-    (entriesMember === 'Commun' || e.member === entriesMember)
+    (_secMember === 'Commun' || e.member === _secMember)
   );
 
   // Recherche / filtre catégorie
-  const _mlySearch = (document.getElementById('mly-search-input')?.value || '').toLowerCase().trim();
-  const _mlyCat    = document.getElementById('mly-filter-cat')?.value || '';
+  const _mlySearch = (document.getElementById(_secSearchId)?.value || '').toLowerCase().trim();
+  const _mlyCat    = document.getElementById(_secCatId)?.value || '';
   const _filterRow = r => (!_mlySearch || (r.name||'').toLowerCase().includes(_mlySearch)) && (!_mlyCat || r.cat === _mlyCat);
   const filteredAutoEntries  = _mlySearch || _mlyCat ? autoEntries.filter(_filterRow)    : autoEntries;
   const filteredManualExpenses = _mlySearch || _mlyCat ? manualExpenses.filter(_filterRow) : manualExpenses;
@@ -4332,9 +4365,9 @@ function _renderMonthlySections(stats, expenses, savingsData = [], entryStats = 
 
   const groupHtmls = GROUPS.map(g => {
     if (g.savings) {
-      const frMonth = MONTH_NAMES[monthlyMonth - 1];
-      const savingRecord = savingsData.find(s => s.year === monthlyYear && s.month === frMonth);
-      const epMember = entriesMember === 'Commun' ? myRole() : entriesMember;
+      const frMonth = MONTH_NAMES[_secMonth - 1];
+      const savingRecord = savingsData.find(s => s.year === _secYear && s.month === frMonth);
+      const epMember = _secMember === 'Commun' ? myRole() : _secMember;
       const epBudget = entryStats ? Math.round(entryStats.rav * (savingPct[epMember] ?? 60) / 100) : ep.budget;
       return _monthlyEpargneGroup(savingRecord, g, epBudget, ep.actual, revNet, isMobile);
     }
@@ -4347,13 +4380,13 @@ function _renderMonthlySections(stats, expenses, savingsData = [], entryStats = 
       const rows = filteredManualExpenses.filter(e => g.cats.includes(e.cat)).sort((a, b) => Math.abs(b.amount) - Math.abs(a.amount));
       let budgetTotal = g.cats.reduce((s, c) => s + (stats[c]?.budget || 0), 0);
       if (budgetTotal === 0 && g.key === 'loisir' && entryStats) {
-        const _loiMember = entriesMember === 'Commun' ? myRole() : entriesMember;
+        const _loiMember = _secMember === 'Commun' ? myRole() : _secMember;
         budgetTotal = Math.round(entryStats.rav * (100 - (savingPct[_loiMember] ?? 60)) / 100);
       }
       return _monthlyManualGroup(rows, g, budgetTotal, isMobile, revNet);
     }
   });
-  document.getElementById('monthly-sections').innerHTML = groupHtmls.join('');
+  document.getElementById(_secContId).innerHTML = groupHtmls.join('');
 }
 
 function _monthlyRavSliderHtml(entryStats, member) {
@@ -5108,7 +5141,7 @@ document.getElementById('modal-me-save').onclick = async () => {
     return;
   } finally { hideLoading(); btn.disabled = false; }
   renderMonthly().catch(()=>{});
-  if (window._mlyCtxDash) { window._mlyCtxDash = false; renderDash().catch(()=>{}); }
+  if (window._mlyCtxDash) { window._mlyCtxDash = false; renderDashboard().catch(()=>{}); }
 };
 function _dashAddExpense(cat) {
   monthlyYear = dashYear; monthlyMonth = dashMonth;
