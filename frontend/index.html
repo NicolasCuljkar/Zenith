@@ -5412,6 +5412,12 @@ function renderSimulation() {
         - gSim.filter(e => e.cat === 'impot').reduce((s, e) => s + Math.abs(e.amount), 0)
       : gSim.reduce((s, e) => s + Math.abs(e.amount), 0);
 
+    const gOrig = origF.filter(e => g.cats.includes(e.cat));
+    const origTot = g.key === 'revenus'
+      ? gOrig.filter(e => e.cat === 'revenu').reduce((s, e) => s + Math.abs(e.amount), 0)
+        - gOrig.filter(e => e.cat === 'impot').reduce((s, e) => s + Math.abs(e.amount), 0)
+      : gOrig.reduce((s, e) => s + Math.abs(e.amount), 0);
+
     if (!window.simSectionCollapsed) window.simSectionCollapsed = {};
     if (!(g.key in window.simSectionCollapsed)) window.simSectionCollapsed[g.key] = false;
     const collapsed = !!window.simSectionCollapsed[g.key];
@@ -5425,9 +5431,13 @@ function renderSimulation() {
       <div onclick="toggleSimSection('${g.key}')" style="cursor:pointer;display:flex;align-items:center;padding:10px 14px 8px;border-bottom:${collapsed?'none':'1px solid var(--border)'}">
         <button onclick="event.stopPropagation();toggleSimSection('${g.key}')" style="background:none;border:none;cursor:pointer;color:var(--muted);padding:0;display:flex;align-items:center;transition:transform .2s;${chevStyle};margin-right:7px;flex-shrink:0">${CHEVRON_SVG}</button>
         <div style="width:8px;height:8px;border-radius:50%;background:${g.color};margin-right:8px;flex-shrink:0"></div>
-        <span style="font-weight:700;font-size:var(--fs-sm);flex:1">${g.label}${g.key==='revenus'?'<span style="font-size:9px;font-weight:500;color:var(--hint);margin-left:5px">net</span>':''}</span>
-        <span style="font-size:var(--fs-xs);color:var(--hint);background:${g.color}18;border-radius:20px;padding:1px 7px;font-weight:700;margin-right:8px">${gSim.length}</span>
-        <span id="sim-gtot-${g.key}" style="font-weight:700;font-size:var(--fs-sm);color:${g.color}">${eur(tot)}</span>
+        <div style="flex:1;display:flex;align-items:center;gap:6px;flex-wrap:wrap;min-width:0">
+          <span style="font-size:9px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:${g.color}">${g.label}</span>
+          <span style="font-size:var(--fs-xs);color:var(--hint);background:${g.color}18;border-radius:20px;padding:1px 7px;font-weight:700">${gSim.length}</span>
+          <span id="sim-gtot-${g.key}" style="font-size:var(--fs-xs);font-weight:800;color:${g.color}">${eur(tot)}</span>
+          <span style="font-size:var(--fs-xs);color:var(--hint)">/ ${eur(origTot)}</span>
+        </div>
+        <span style="font-weight:800;font-size:var(--fs-sm);color:${g.color};flex-shrink:0">${g.key==='epargne'&&tot>0?'+':''}${eur(tot)}</span>
       </div>
       <div id="${bodyId}" style="${collapsed?'display:none':''}padding:0 14px">${ravBlock}${rows}${delRows}</div>
     </div>`;
