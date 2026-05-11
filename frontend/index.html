@@ -5346,7 +5346,7 @@ function renderSimulation() {
     const tot = g.key === 'revenus'
       ? gSim.filter(e => e.cat === 'revenu').reduce((s, e) => s + Math.abs(e.amount), 0)
         - gSim.filter(e => e.cat === 'impot').reduce((s, e) => s + Math.abs(e.amount), 0)
-      : gSim.filter(e => !e._synthetic).reduce((s, e) => s + Math.abs(e.amount), 0);
+      : gSim.reduce((s, e) => s + Math.abs(e.amount), 0);
 
     const groupCard = `<div class="card" style="margin-bottom:.75rem;padding:0">
       <div style="display:flex;align-items:center;padding:10px 14px 8px;border-bottom:1px solid var(--border)">
@@ -5511,26 +5511,26 @@ function _renderSimAnalysis(stats, origStats, simF, origF, nChanges, effEp, effL
       { pct: other,    color: 'var(--border)' },
     ].filter(s => s.pct > 0);
 
-    const barHtml = segs.map(s =>
-      `<div style="flex:${s.pct};height:100%;background:${s.color}"></div>`
+    const barHtml = segs.map((s, i) =>
+      `<div id="sim-rule-bar-${i}" style="flex:${s.pct};height:100%;background:${s.color}"></div>`
     ).join('');
 
     const items = [
-      { label: 'Besoins', pct: needsPct, ideal: 50, val: needs, ok: needsOk, color: needsOk ? 'var(--green)' : 'var(--red)' },
-      { label: 'Envies',  pct: wantsPct, ideal: 30, val: wants, ok: wantsOk, color: wantsOk ? 'var(--amber)' : 'var(--red)' },
-      { label: 'Épargne', pct: savePct,  ideal: 20, val: save,  ok: saveOk,  color: saveOk  ? 'var(--blue)'  : 'var(--hint)' },
+      { key: 'needs', label: 'Besoins', pct: needsPct, ideal: 50, val: needs, ok: needsOk, color: needsOk ? 'var(--green)' : 'var(--red)' },
+      { key: 'wants', label: 'Envies',  pct: wantsPct, ideal: 30, val: wants, ok: wantsOk, color: wantsOk ? 'var(--amber)' : 'var(--red)' },
+      { key: 'save',  label: 'Épargne', pct: savePct,  ideal: 20, val: save,  ok: saveOk,  color: saveOk  ? 'var(--blue)'  : 'var(--hint)' },
     ];
 
     ruleHtml = `<div class="card" style="margin-bottom:.75rem;padding:14px 16px">
       <div style="font-size:9px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:10px">Répartition 50 / 30 / 20</div>
-      <div style="display:flex;height:10px;border-radius:5px;overflow:hidden;gap:2px;margin-bottom:12px">${barHtml}</div>
+      <div id="sim-rule-bar" style="display:flex;height:10px;border-radius:5px;overflow:hidden;gap:2px;margin-bottom:12px">${barHtml}</div>
       <div style="display:flex">
         ${items.map((item, i) => `
           ${i > 0 ? '<div style="width:1px;background:var(--border)"></div>' : ''}
           <div style="flex:1;text-align:center;padding:0 6px">
-            <div style="font-size:1.05rem;font-weight:900;color:${item.color}">${item.pct}%</div>
+            <div id="sim-rule-pct-${item.key}" style="font-size:1.05rem;font-weight:900;color:${item.color}">${item.pct}%</div>
             <div style="font-size:var(--fs-xs);font-weight:600;color:var(--text);margin-bottom:1px">${item.label}</div>
-            <div style="font-size:10px;color:var(--hint)">${eur(item.val)}</div>
+            <div id="sim-rule-val-${item.key}" style="font-size:10px;color:var(--hint)">${eur(item.val)}</div>
             <div style="font-size:10px;margin-top:1px;color:${item.ok ? 'var(--green)' : 'var(--hint)'}">idéal ${item.ideal}%</div>
           </div>`).join('')}
       </div>
@@ -5559,6 +5559,28 @@ function _simSliderLive(member, pct, rav) {
   _simSavingPct[member] = pct;
   const ep  = Math.max(0, Math.round(rav * pct / 100));
   const loi = Math.max(0, Math.round(rav * (100 - pct) / 100));
+  // Mise à jour live du 50/30/20
+  const ms = calcStats(_simEntries.filter(e => e.member === member));
+  const _allMems = [...new Set(_simEntries.map(e => e.member))].filter(Boolean);
+  const totRevNet = _allMems.reduce((s, m) => s + calcStats(_simEntries.filter(e => e.member === m)).revNet, 0) || 1;
+  const totNeeds  = _allMems.reduce((s, m) => s + calcStats(_simEntries.filter(e => e.member === m)).fix, 0);
+  const totVari   = _allMems.reduce((s, m) => s + calcStats(_simEntries.filter(e => e.member === m)).vari, 0);
+  const totEp     = _allMems.reduce((s, m) => { const p2 = m === member ? pct : (_simSavingPct[m] ?? (savingPct[m] ?? 60)); const r = calcStats(_simEntries.filter(e => e.member === m)).rav; return s + Math.max(0, Math.round(r * p2 / 100)); }, 0);
+  const totLoi    = _allMems.reduce((s, m) => { const p2 = m === member ? pct : (_simSavingPct[m] ?? (savingPct[m] ?? 60)); const r = calcStats(_simEntries.filter(e => e.member === m)).rav; return s + Math.max(0, Math.round(r * (100 - p2) / 100)); }, 0);
+  const nPct = Math.round(totNeeds / totRevNet * 100);
+  const wPct = Math.round((totVari + totLoi) / totRevNet * 100);
+  const sPct = Math.round(totEp / totRevNet * 100);
+  const nEl = document.getElementById('sim-rule-pct-needs'); if (nEl) nEl.textContent = nPct + '%';
+  const wEl = document.getElementById('sim-rule-pct-wants'); if (wEl) wEl.textContent = wPct + '%';
+  const sEl = document.getElementById('sim-rule-pct-save');  if (sEl) sEl.textContent = sPct + '%';
+  const svEl = document.getElementById('sim-rule-val-save');  if (svEl) svEl.textContent = eur(totEp);
+  const wvEl = document.getElementById('sim-rule-val-wants'); if (wvEl) wvEl.textContent = eur(totVari + totLoi);
+  const bar = document.getElementById('sim-rule-bar');
+  if (bar) {
+    const other = Math.max(0, 100 - nPct - wPct - sPct);
+    const bSegs = [{p:nPct,c:'#0d9e6e'},{p:wPct,c:'#f59e0b'},{p:sPct,c:'#2979c8'},{p:other,c:'var(--border)'}].filter(x=>x.p>0);
+    bar.innerHTML = bSegs.map(x=>`<div style="flex:${x.p};height:100%;background:${x.c}"></div>`).join('');
+  }
   const pctvEl = document.getElementById('sim-pctv-' + member);
   const epEl   = document.getElementById('sim-ep-'   + member);
   const loiEl  = document.getElementById('sim-loi-'  + member);
