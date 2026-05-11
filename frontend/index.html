@@ -5607,9 +5607,9 @@ function _renderSimAnalysis(stats, origStats, simF, origF, nChanges, effEp, effL
   // ── Règle 50/30/20 ──
   let ruleHtml = '';
   if (stats.revNet > 0) {
-    const needs    = stats.fix + stats.vari;  // Besoins = fixes + variables
-    const wants    = effLoi ?? stats.loi;      // Envies = loisirs uniquement (slider RAV)
-    const save     = effEp ?? stats.ep;
+    const needs    = stats.fix + stats.vari;
+    const wants    = stats.loi > 0 ? stats.loi : (effLoi || 0);
+    const save     = stats.ep  > 0 ? stats.ep  : (effEp  || 0);
     const base     = stats.revNet;
 
     const needsPct = Math.round(needs / base * 100);
@@ -5681,8 +5681,8 @@ function _simSliderLive(member, pct, rav) {
   const _allMems = [...new Set(_simEntries.map(e => e.member))].filter(Boolean);
   const totRevNet = _allMems.reduce((s, m) => s + calcStats(_simEntries.filter(e => e.member === m)).revNet, 0) || 1;
   const totNeeds  = _allMems.reduce((s, m) => { const cs = calcStats(_simEntries.filter(e => e.member === m)); return s + cs.fix + cs.vari; }, 0);
-  const totEp     = _allMems.reduce((s, m) => { const p2 = m === member ? pct : (_simSavingPct[m] ?? (savingPct[m] ?? 60)); const r = calcStats(_simEntries.filter(e => e.member === m)).rav; return s + Math.max(0, Math.round(r * p2 / 100)); }, 0);
-  const totLoi    = _allMems.reduce((s, m) => { const p2 = m === member ? pct : (_simSavingPct[m] ?? (savingPct[m] ?? 60)); const r = calcStats(_simEntries.filter(e => e.member === m)).rav; return s + Math.max(0, Math.round(r * (100 - p2) / 100)); }, 0);
+  const totEp     = _allMems.reduce((s, m) => { const ms = calcStats(_simEntries.filter(e => e.member === m)); if (ms.ep  > 0) return s + ms.ep;  const p2 = m === member ? pct : (_simSavingPct[m] ?? (savingPct[m] ?? 60)); return s + Math.max(0, Math.round(ms.rav * p2 / 100)); }, 0);
+  const totLoi    = _allMems.reduce((s, m) => { const ms = calcStats(_simEntries.filter(e => e.member === m)); if (ms.loi > 0) return s + ms.loi; const p2 = m === member ? pct : (_simSavingPct[m] ?? (savingPct[m] ?? 60)); return s + Math.max(0, Math.round(ms.rav * (100 - p2) / 100)); }, 0);
   const nPct = Math.round(totNeeds / totRevNet * 100);
   const wPct = Math.round(totLoi   / totRevNet * 100);
   const sPct = Math.round(totEp    / totRevNet * 100);
