@@ -5454,7 +5454,7 @@ function renderSimulation() {
     const _mobileContent = isMobileSim ? (rows + delRows) : '';
 
     if (!window.simSectionCollapsed) window.simSectionCollapsed = {};
-    if (!(g.key in window.simSectionCollapsed)) window.simSectionCollapsed[g.key] = false;
+    if (!(g.key in window.simSectionCollapsed)) window.simSectionCollapsed[g.key] = true;
     const collapsed = !!window.simSectionCollapsed[g.key];
     const chevStyle = collapsed ? 'transform:rotate(-90deg);' : '';
     const bodyId = `sim-section-body-${g.key}`;
