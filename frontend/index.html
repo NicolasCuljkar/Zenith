@@ -5273,7 +5273,7 @@ function renderSimulation() {
   const effEp  = simF.some(e => e.cat === 'epargne') ? stats.ep  : _simRavMemsAll.reduce((s, m) => s + _simCalcEp(m),  0);
   const effLoi = simF.some(e => e.cat === 'loisir')  ? stats.loi : _simRavMemsAll.reduce((s, m) => s + _simCalcLoi(m), 0);
 
-  _renderSimAnalysis(stats, origStats, simF, origF, nChanges, effEp, effLoi);
+  _renderSimAnalysis(stats, origStats, simF, origF, nChanges, effEp, effLoi, _simRavHtml);
 
   const GROUPS = [
     {key:'revenus',   label:'Revenus & Impôts',  cats:['revenu','impot'], color:'#0d9e6e'},
@@ -5356,12 +5356,12 @@ function renderSimulation() {
       </div>
       <div style="padding:0 14px">${rows}${delRows}</div>
     </div>`;
-    return g.key === 'variables' ? groupCard + _simRavHtml : groupCard;
+    return groupCard;
   }).join('');
   setTimeout(fillAllTracks, 0);
 }
 
-function _renderSimAnalysis(stats, origStats, simF, origF, nChanges, effEp, effLoi) {
+function _renderSimAnalysis(stats, origStats, simF, origF, nChanges, effEp, effLoi, ravHtml) {
   const el = document.getElementById('sim-analysis');
   if (!el) return;
 
@@ -5537,7 +5537,7 @@ function _renderSimAnalysis(stats, origStats, simF, origF, nChanges, effEp, effL
     </div>`;
   }
 
-  el.innerHTML = impactHtml + alertsHtml + ruleHtml;
+  el.innerHTML = impactHtml + alertsHtml + ruleHtml + (ravHtml || '');
 }
 
 function _simDelete(simId) {
