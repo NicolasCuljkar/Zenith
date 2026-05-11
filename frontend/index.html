@@ -3422,13 +3422,14 @@ async function renderDashboard(){
   </div>` : '';
 
   content.innerHTML=_monthNav+
-    `<div style="display:flex;align-items:center;gap:0;border-bottom:1px solid var(--border);margin-bottom:var(--sg)">
+    `<div id="dash-alert"></div>
+    ${_deficitWarnHtml}${_savWarnHtml}${_hero}${_cats}
+    <div style="display:flex;align-items:center;gap:0;border-bottom:1px solid var(--border);margin-bottom:var(--sg)">
       <button class="stab active" id="dash-stab-data"    onclick="switchDashTab('data')">Données</button>
       <button class="stab"        id="dash-stab-analyse" onclick="switchDashTab('analyse')">Analyse</button>
     </div>
     <div id="dash-tab-data">
-      <div id="dash-alert"></div>
-      ${_deficitWarnHtml}${_savWarnHtml}${_hero}${_cats}${_dashMlyToolbar}
+      ${_dashMlyToolbar}
     </div>
     <div id="dash-tab-analyse" style="display:none">
       ${_dashInsHtml}${_dash5030Html}${_ova}${_bvrHtml}
@@ -5264,9 +5265,9 @@ function renderSimulation() {
   const origStats = calcStats(origF);
   const dSolde    = stats.solde - origStats.solde;
 
-  // Helpers épargne/loisir synthétiques (RAV slider) — définis tôt pour le hero et l'analyse
-  const _simCalcEpEarly  = m => { const ms=calcStats(_simEntries.filter(e=>e.member===m)); const p=_simSavingPct[m]??(savingPct[m]??60); return Math.max(0,Math.round(ms.rav*p/100)); };
-  const _simCalcLoiEarly = m => { const ms=calcStats(_simEntries.filter(e=>e.member===m)); const p=_simSavingPct[m]??(savingPct[m]??60); return Math.max(0,Math.round(ms.rav*(100-p)/100)); };
+  // Suggestion 50/30/20 : épargne = 40% du disponible (≈20% revNet), loisir = 60% (≈30% revNet)
+  const _simCalcEpEarly  = m => { const ms=calcStats(_simEntries.filter(e=>e.member===m)); return Math.round(Math.max(0,ms.revNet-ms.fix-ms.vari)*0.4); };
+  const _simCalcLoiEarly = m => { const ms=calcStats(_simEntries.filter(e=>e.member===m)); return Math.round(Math.max(0,ms.revNet-ms.fix-ms.vari)*0.6); };
   const _ravMemsEarly = mem === 'Commun' ? [...new Set(_simEntries.map(e=>e.member))].filter(Boolean) : [mem];
   const effEpEarly  = simF.some(e=>e.cat==='epargne') ? stats.ep  : _ravMemsEarly.reduce((s,m)=>s+_simCalcEpEarly(m), 0);
   const effLoiEarly = simF.some(e=>e.cat==='loisir')  ? stats.loi : _ravMemsEarly.reduce((s,m)=>s+_simCalcLoiEarly(m), 0);
@@ -5304,47 +5305,49 @@ function renderSimulation() {
     </div>`;
   }
 
-  // Bloc RAV (intégré dans la section Épargne)
-  const _simRavMems = mem === 'Commun' ? [...new Set(_simEntries.map(e => e.member))].filter(Boolean) : [mem];
-  const _simRavInner = _simRavMems.map(m => {
-    const ms  = calcStats(_simEntries.filter(e => e.member === m));
-    const pct = _simSavingPct[m] ?? (savingPct[m] ?? 60);
-    const ep  = Math.max(0, Math.round(ms.rav * pct / 100));
-    const loi = Math.max(0, Math.round(ms.rav * (100 - pct) / 100));
-    const mc  = getMC(m);
-    const ravGlow = ms.rav >= 0 ? '#0d9e6e' : '#d93535';
-    return `<div style="${_simRavMems.length > 1 ? 'margin-bottom:10px' : ''}">
-      ${_simRavMems.length > 1 ? `<div style="font-size:var(--fs-xs);font-weight:700;color:${mc};text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">${esc(m)}</div>` : ''}
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;gap:8px">
-        <div style="display:flex;align-items:center;gap:8px">
-          <span style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:${ravGlow}">RAV simulé</span>
-          <span style="font-size:var(--fs-sm);font-weight:800;color:${ravGlow}">${ms.rav >= 0 ? '+' : ''}${eur(ms.rav)}</span>
-        </div>
-        <span id="sim-pctv-${m}" style="font-size:var(--fs-xs);font-weight:700;color:${mc}">${pct}%</span>
-      </div>
-      <input type="range" min="0" max="100" step="1" value="${pct}"
-        style="width:100%;accent-color:${mc};--accent-c:${mc};--track-right:var(--amber);margin-bottom:5px"
-        oninput="_simSliderLive('${m}',+this.value,${Math.round(ms.rav)})"
-        onchange="_simSliderDone('${m}',+this.value)">
-      <div style="display:flex;justify-content:space-between">
-        <span style="font-size:var(--fs-xs);color:var(--muted)">→ <span style="color:var(--blue);font-weight:700">Épargne</span> <span id="sim-ep-${m}">${eur(ep)}</span></span>
-        <span style="font-size:var(--fs-xs);color:var(--muted)">→ <span style="color:var(--amber);font-weight:700">Loisir</span> <span id="sim-loi-${m}">${eur(loi)}</span></span>
-      </div>
+  // Suggestion 50/30/20 (remplace le slider RAV)
+  const _simSuggMems = mem === 'Commun' ? [...new Set(_simEntries.map(e => e.member))].filter(Boolean) : [mem];
+  const _hasRealEp   = simF.some(e => e.cat === 'epargne');
+  const _hasRealLoi  = simF.some(e => e.cat === 'loisir');
+  const _simSuggBlock = (_hasRealEp && _hasRealLoi) ? '' : (() => {
+    const inner = _simSuggMems.map(m => {
+      const ms    = calcStats(_simEntries.filter(e => e.member === m));
+      const avail = Math.max(0, ms.revNet - ms.fix - ms.vari);
+      const ep    = Math.round(avail * 0.4);
+      const loi   = Math.round(avail * 0.6);
+      const epPct  = ms.revNet > 0 ? Math.round(ep  / ms.revNet * 100) : 0;
+      const loiPct = ms.revNet > 0 ? Math.round(loi / ms.revNet * 100) : 0;
+      const mc = getMC(m);
+      return `${_simSuggMems.length > 1 ? `<div style="font-size:var(--fs-xs);font-weight:700;color:${mc};text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">${esc(m)}</div>` : ''}
+        ${!_hasRealEp ? `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
+          <span style="font-size:var(--fs-xs);color:var(--muted)">Épargne <span style="color:var(--hint)">(obj. 20%)</span></span>
+          <span style="font-size:var(--fs-xs);font-weight:700;color:var(--blue)">${eur(ep)} · ${epPct}%</span>
+        </div>` : ''}
+        ${!_hasRealLoi ? `<div style="display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:var(--fs-xs);color:var(--muted)">Loisir <span style="color:var(--hint)">(obj. 30%)</span></span>
+          <span style="font-size:var(--fs-xs);font-weight:700;color:var(--amber)">${eur(loi)} · ${loiPct}%</span>
+        </div>` : ''}`;
+    }).join('<hr style="border:none;border-top:1px solid var(--border);margin:8px 0">');
+    return `<div style="padding:8px 0 10px;border-bottom:1px solid var(--border);margin-bottom:4px">
+      <div style="font-size:9px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Suggestion 50/30/20</div>
+      ${inner}
     </div>`;
-  }).join('<hr style="border:none;border-top:1px solid var(--border);margin:10px 0">');
+  })();
 
-  // Épargne/loisir synthétiques (alias des helpers définis plus tôt)
+  // Épargne/loisir synthétiques
   const _simCalcEp  = _simCalcEpEarly;
   const _simCalcLoi = _simCalcLoiEarly;
 
   _renderSimAnalysis(stats, origStats, simF, origF, nChanges, effEpEarly, effLoiEarly);
 
+  const isMobileSim = window.innerWidth <= 640;
+
   const GROUPS = [
     {key:'revenus',   label:'Revenus & Impôts',  cats:['revenu','impot'], color:'#0d9e6e'},
     {key:'fixes',     label:'Charges fixes',      cats:['fixe'],           color:'#d93535'},
     {key:'variables', label:'Dépenses variables', cats:['variable'],       color:'#e05a2b'},
-    {key:'epargne',   label:'Épargne',            cats:['epargne'],        color:'#2979c8'},
     {key:'loisir',    label:'Loisir',             cats:['loisir'],         color:'#f59e0b'},
+    {key:'epargne',   label:'Épargne',            cats:['epargne'],        color:'#2979c8'},
   ];
 
   const cont = document.getElementById('sim-sections');
@@ -5418,31 +5421,59 @@ function renderSimulation() {
         - gOrig.filter(e => e.cat === 'impot').reduce((s, e) => s + Math.abs(e.amount), 0)
       : gOrig.reduce((s, e) => s + Math.abs(e.amount), 0);
 
+    // Progress bar
+    const _isRevGrp = g.key === 'revenus';
+    const _pct = origTot > 0 ? Math.round(tot / origTot * 100) : null;
+    const _pctCol = _pct === null ? 'var(--muted)' : _isRevGrp
+      ? (_pct >= 100 ? 'var(--green)' : 'var(--amber)')
+      : (_pct > 110 ? 'var(--red)' : _pct > 90 ? 'var(--amber)' : 'var(--green)');
+    const _barW = _pct !== null ? Math.min(_pct, 100) : 0;
+    const _bar = origTot > 0 ? `<div style="height:4px;background:var(--surface2);border-radius:99px;overflow:hidden;margin-bottom:8px"><div style="height:100%;width:${_barW}%;background:${_pctCol};border-radius:99px;transition:width .3s"></div></div>` : '';
+
+    // Desktop table rows
+    const _tblRows = isMobileSim ? '' : gSim.map(e => {
+      if (e._synthetic) {
+        return `<tr style="opacity:.65"><td></td><td style="font-style:italic;color:var(--muted)">${esc(e.name)}${mem==='Commun'?' <span style="font-size:10px">'+esc(e.member)+'</span>':''}</td><td style="text-align:right;font-weight:700;color:${g.color}">${eur(Math.abs(e.amount))}</td><td></td></tr>`;
+      }
+      const orig = origF.find(o => o._simId === e._simId);
+      const isNew = e._simNew;
+      const isMod = !isNew && orig && Math.abs(orig.amount) !== Math.abs(e.amount);
+      const dotCell = isNew ? `<td><span style="width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block" title="Ajouté"></span></td>`
+        : isMod ? `<td><span style="width:7px;height:7px;border-radius:50%;background:var(--amber);display:inline-block" title="Modifié"></span></td>`
+        : `<td></td>`;
+      const rowBg = isNew ? `border-left:3px solid var(--green);background:color-mix(in srgb,var(--green) 5%,var(--surface))`
+        : isMod ? `border-left:3px solid var(--amber);background:color-mix(in srgb,var(--amber) 5%,var(--surface))`
+        : `border-left:3px solid ${g.color}22`;
+      const nameCell = `<td style="font-weight:500">${esc(e.name)}${mem==='Commun'?' <span style="font-size:10px;color:var(--muted);margin-left:4px">'+esc(e.member)+'</span>':''}${isMod?'<div style="font-size:10px;color:var(--hint);text-decoration:line-through">'+eur(Math.abs(orig.amount))+'</div>':''}</td>`;
+      return `<tr style="${rowBg}">${dotCell}${nameCell}<td style="text-align:right;font-weight:700;color:${g.color}"><span onclick="_simInlineAmt(this,'${e._simId}')" style="cursor:pointer;border-bottom:1px dotted ${g.color}" title="Modifier">${eur(Math.abs(e.amount))}</span></td><td><div style="display:flex;gap:3px;justify-content:flex-end"><button class="btn-act" onclick="_simOpenEdit('${e._simId}')" title="Modifier">${EDIT_ICON}</button><button class="btn-act btn-act-danger" onclick="_simDelete('${e._simId}')" title="Supprimer">${DEL_ICON}</button></div></td></tr>`;
+    }).join('');
+    const _tblDelRows = isMobileSim ? '' : gDel.map(e =>
+      `<tr style="border-left:3px solid var(--red);background:color-mix(in srgb,var(--red) 6%,var(--surface));opacity:.55"><td><span style="width:7px;height:7px;border-radius:50%;background:var(--red);display:inline-block"></span></td><td style="text-decoration:line-through;color:var(--muted)">${esc(e.name)}</td><td style="text-align:right;font-weight:700;color:var(--hint)">${eur(Math.abs(e.amount))}</td><td><div style="display:flex;gap:3px;justify-content:flex-end"><button class="btn-act" onclick="_simRestore('${e._simId}')" title="Restaurer" style="color:var(--blue);border-color:color-mix(in srgb,var(--blue) 30%,var(--border))">${RESTORE_ICON}</button></div></td></tr>`
+    ).join('');
+    const _desktopContent = isMobileSim ? '' : `<div class="tbl-wrap"><table style="width:100%;table-layout:fixed"><colgroup><col style="width:4%"><col style="width:57%"><col style="width:27%"><col style="width:12%"></colgroup><thead><tr><th></th><th>Désignation</th><th style="text-align:right">Montant</th><th></th></tr></thead><tbody>${_tblRows}${_tblDelRows}</tbody></table></div>`;
+    const _mobileContent = isMobileSim ? (rows + delRows) : '';
+
     if (!window.simSectionCollapsed) window.simSectionCollapsed = {};
     if (!(g.key in window.simSectionCollapsed)) window.simSectionCollapsed[g.key] = false;
     const collapsed = !!window.simSectionCollapsed[g.key];
     const chevStyle = collapsed ? 'transform:rotate(-90deg);' : '';
     const bodyId = `sim-section-body-${g.key}`;
-    const ravBlock = g.key === 'epargne' ? `<div style="padding:10px 0 12px;border-bottom:1px solid var(--border);margin-bottom:2px">
-        <div style="font-size:9px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Répartition du reste à vivre</div>
-        ${_simRavInner}
-      </div>` : '';
-    const groupCard = `<div style="margin-bottom:var(--sg)">
+    const ravBlock = g.key === 'epargne' ? _simSuggBlock : '';
+    return `<div style="margin-bottom:var(--sg)">
       <div onclick="toggleSimSection('${g.key}')" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;padding:0 2px 6px;margin-bottom:5px;border-bottom:2px solid ${g.color}30">
         <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">
           <button onclick="event.stopPropagation();toggleSimSection('${g.key}')" style="background:none;border:none;cursor:pointer;color:var(--muted);padding:0;display:flex;align-items:center;transition:transform .2s;${chevStyle}">${CHEVRON_SVG}</button>
           <span style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:${g.color}">${g.label}</span>
           <span style="font-size:var(--fs-xs);color:var(--hint);background:${g.color}18;border-radius:20px;padding:1px 7px;font-weight:700">${gSim.length}</span>
-          <span id="sim-gtot-${g.key}" style="font-size:var(--fs-xs);font-weight:700;color:${g.color}">${eur(tot)}</span>
+          <span style="font-size:var(--fs-xs);font-weight:700;color:${_pctCol}">${eur(tot)}</span>
           <span style="font-size:var(--fs-xs);color:var(--muted)">/ ${eur(origTot)}</span>
         </div>
         <div style="display:flex;align-items:center;gap:8px">
           <span style="font-size:var(--fs-sm);font-weight:800;color:${g.color};letter-spacing:-.02em">${g.key==='epargne'&&tot>0?'+':''}${eur(tot)}</span>
         </div>
       </div>
-      <div id="${bodyId}" style="${collapsed?'display:none':''}">${ravBlock}${rows}${delRows}</div>
+      <div id="${bodyId}" style="${collapsed?'display:none':''}">${_bar}${ravBlock}${_desktopContent}${_mobileContent}</div>
     </div>`;
-    return groupCard;
   }).join('');
   setTimeout(fillAllTracks, 0);
 }
