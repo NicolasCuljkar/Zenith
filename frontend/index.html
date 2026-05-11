@@ -5427,8 +5427,8 @@ function renderSimulation() {
         <div style="font-size:9px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Répartition du reste à vivre</div>
         ${_simRavInner}
       </div>` : '';
-    const groupCard = `<div class="card" style="margin-bottom:.75rem;padding:0">
-      <div onclick="toggleSimSection('${g.key}')" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;padding:10px 14px 8px;border-bottom:${collapsed?'none':'1px solid var(--border)'}">
+    const groupCard = `<div style="margin-bottom:var(--sg)">
+      <div onclick="toggleSimSection('${g.key}')" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;padding:0 2px 6px;margin-bottom:5px;border-bottom:2px solid ${g.color}30">
         <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">
           <button onclick="event.stopPropagation();toggleSimSection('${g.key}')" style="background:none;border:none;cursor:pointer;color:var(--muted);padding:0;display:flex;align-items:center;transition:transform .2s;${chevStyle}">${CHEVRON_SVG}</button>
           <span style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:${g.color}">${g.label}</span>
@@ -5436,9 +5436,11 @@ function renderSimulation() {
           <span id="sim-gtot-${g.key}" style="font-size:var(--fs-xs);font-weight:700;color:${g.color}">${eur(tot)}</span>
           <span style="font-size:var(--fs-xs);color:var(--muted)">/ ${eur(origTot)}</span>
         </div>
-        <span style="font-size:var(--fs-sm);font-weight:800;color:${g.color};letter-spacing:-.02em">${g.key==='epargne'&&tot>0?'+':''}${eur(tot)}</span>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:var(--fs-sm);font-weight:800;color:${g.color};letter-spacing:-.02em">${g.key==='epargne'&&tot>0?'+':''}${eur(tot)}</span>
+        </div>
       </div>
-      <div id="${bodyId}" style="${collapsed?'display:none':''}padding:0 14px">${ravBlock}${rows}${delRows}</div>
+      <div id="${bodyId}" style="${collapsed?'display:none':''}">${ravBlock}${rows}${delRows}</div>
     </div>`;
     return groupCard;
   }).join('');
@@ -5451,9 +5453,7 @@ function toggleSimSection(key) {
   const collapsed = window.simSectionCollapsed[key];
   const body = document.getElementById('sim-section-body-' + key);
   if (body) body.style.display = collapsed ? 'none' : '';
-  const hdr = body?.previousElementSibling;
-  if (hdr) hdr.style.borderBottom = collapsed ? 'none' : '1px solid var(--border)';
-  const btn = hdr?.querySelector('button');
+  const btn = body?.previousElementSibling?.querySelector('button');
   if (btn) btn.style.transform = collapsed ? 'rotate(-90deg)' : '';
 }
 
