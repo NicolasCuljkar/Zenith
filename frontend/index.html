@@ -3360,7 +3360,7 @@ async function renderDashboard(){
     const _nPct2 = Math.round(_needs/revNetA*100), _wPct2 = Math.round(_wants/revNetA*100), _sPct2 = Math.round(_save/revNetA*100);
     const _other2 = Math.max(0,100-_nPct2-_wPct2-_sPct2);
     const _nOk=_nPct2<=55,_wOk=_wPct2<=35,_sOk=_sPct2>=15;
-    const _barSegs=[{p:_nPct2,c:_nOk?'#0d9e6e':'#d93535'},{p:_wPct2,c:_wOk?'#f59e0b':'#e05a2b'},{p:_sPct2,c:_sOk?'#2979c8':'#6e6c8a'},{p:_other2,c:'var(--border)'}].filter(s=>s.p>0);
+    const _barSegs=[{p:_nPct2,c:_nOk?'#0d9e6e':'#d93535'},{p:_wPct2,c:_wOk?'#f59e0b':'#e05a2b'},{p:_sPct2,c:_sOk?'#2979c8':'#d93535'},{p:_other2,c:'var(--border)'}].filter(s=>s.p>0);
     _dash5030Html=`<div class="card" style="margin-bottom:var(--sg);padding:14px 16px">
       <div style="font-size:9px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:10px">Répartition 50 / 30 / 20</div>
       <div style="display:flex;height:10px;border-radius:5px;overflow:hidden;gap:2px;margin-bottom:12px">${_barSegs.map(s=>`<div style="flex:${s.p};height:100%;background:${s.c}"></div>`).join('')}</div>
@@ -5655,7 +5655,7 @@ function _renderSimAnalysis(stats, origStats, simF, origF, nChanges, effEp, effL
     const segs = [
       { pct: needsPct, color: needsOk ? '#0d9e6e' : '#d93535' },
       { pct: wantsPct, color: wantsOk ? '#f59e0b' : '#e05a2b' },
-      { pct: savePct,  color: saveOk  ? '#2979c8' : '#6e6c8a' },
+      { pct: savePct,  color: saveOk  ? '#2979c8' : '#d93535' },
       { pct: other,    color: 'var(--border)' },
     ].filter(s => s.pct > 0);
 
