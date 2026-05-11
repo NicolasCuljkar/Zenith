@@ -3367,15 +3367,15 @@ async function renderDashboard(){
 
   content.innerHTML=_monthNav+
     `<div style="display:flex;align-items:center;gap:0;border-bottom:1px solid var(--border);margin-bottom:var(--sg)">
-      <button class="stab active" id="dash-stab-analyse" onclick="switchDashTab('analyse')">Analyse</button>
-      <button class="stab"        id="dash-stab-data"    onclick="switchDashTab('data')">Données</button>
+      <button class="stab active" id="dash-stab-data"    onclick="switchDashTab('data')">Données</button>
+      <button class="stab"        id="dash-stab-analyse" onclick="switchDashTab('analyse')">Analyse</button>
     </div>
-    <div id="dash-tab-analyse">
+    <div id="dash-tab-data">
+      ${_dashMlyToolbar}
+    </div>
+    <div id="dash-tab-analyse" style="display:none">
       <div id="dash-alert"></div>
       ${_deficitWarnHtml}${_savWarnHtml}${_hero}${_cats}${_ova}${_dashInsHtml}
-    </div>
-    <div id="dash-tab-data" style="display:none">
-      ${_dashMlyToolbar}
     </div>
     <div id="dash-charts" style="display:none"></div>`;
 
