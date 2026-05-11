@@ -5172,6 +5172,8 @@ function _simGetMember() {
 }
 
 function renderSimulation() {
+  // Si _simEntries est vide mais entries est chargé (race condition au démarrage), on rafraîchit
+  if (_simEntries.length === 0 && entries.length > 0) _simResetSilent();
   const mem   = _simGetMember();
   const simF  = mem === 'Commun' ? _simEntries : _simEntries.filter(e => e.member === mem);
   const origF = mem === 'Commun' ? _simOrigEntries : _simOrigEntries.filter(e => e.member === mem);
@@ -5485,57 +5487,68 @@ function _renderSimAnalysis(stats, origStats, simF, origF, nChanges, effEp, effL
     }).join('')}
   </div>` : '';
 
-  // ── Règle 50/30/20 ──
-  let ruleHtml = '';
+  // ── Recommandations ──
+  let suggestHtml = '';
   if (stats.revNet > 0) {
-    const needs    = stats.fix;
-    const wants    = stats.vari + (effLoi ?? stats.loi);
-    const save     = effEp ?? stats.ep;
-    const base     = stats.revNet;
+    const curEp  = effEp  ?? stats.ep;
+    const curLoi = effLoi ?? stats.loi;
+    const rav    = stats.rav;
 
-    const needsPct = Math.round(needs / base * 100);
-    const wantsPct = Math.round(wants / base * 100);
-    const savePct  = Math.round(save  / base * 100);
-    const other    = Math.max(0, 100 - needsPct - wantsPct - savePct);
+    // Cibles standards
+    const recEp      = Math.round(stats.revNet * 0.20); // 20% épargne idéale
+    const recLoiMin  = Math.round(stats.revNet * 0.10); // 10% loisirs minimum
+    const recLoiMax  = Math.round(stats.revNet * 0.30); // 30% loisirs maximum
+    // Suggestion basée sur le RAV disponible (60/40 par défaut)
+    const ravEp   = rav > 0 ? Math.round(rav * 0.60) : 0;
+    const ravLoi  = rav > 0 ? Math.round(rav * 0.40) : 0;
 
-    const needsOk = needsPct <= 55;
-    const wantsOk = wantsPct <= 35;
-    const saveOk  = savePct  >= 15;
+    // Statuts
+    const epPct  = Math.round(curEp  / stats.revNet * 100);
+    const loiPct = Math.round(curLoi / stats.revNet * 100);
+    const epOk   = curEp  >= recEp;
+    const loiOk  = curLoi >= recLoiMin && curLoi <= recLoiMax;
 
-    const segs = [
-      { pct: needsPct, color: needsOk ? '#0d9e6e' : '#d93535' },
-      { pct: wantsPct, color: wantsOk ? '#f59e0b' : '#e05a2b' },
-      { pct: savePct,  color: saveOk  ? '#2979c8' : '#6e6c8a' },
-      { pct: other,    color: 'var(--border)' },
-    ].filter(s => s.pct > 0);
+    const _badge = (ok, label) => `<span style="display:inline-block;padding:2px 7px;border-radius:99px;font-size:10px;font-weight:700;background:color-mix(in srgb,${ok?'var(--green)':'var(--amber)'} 14%,var(--surface));color:${ok?'var(--green)':'var(--amber)'}">${label}</span>`;
 
-    const barHtml = segs.map(s =>
-      `<div style="flex:${s.pct};height:100%;background:${s.color}"></div>`
-    ).join('');
+    const _row = (label, cur, rec, pct, ok, color, loiMax) => {
+      const diff = cur - rec;
+      const diffTxt = Math.abs(diff) < 1 ? 'Atteint' : diff > 0 ? `+${eur(diff)} vs cible` : `${eur(diff)} vs cible`;
+      const diffColor = diff >= 0 ? 'var(--green)' : 'var(--amber)';
+      const barW = Math.min(100, Math.round(cur / Math.max(rec, loiMax || rec) * 100));
+      return `<div style="padding:10px 12px;background:var(--surface2);border-radius:8px;border:1px solid var(--border)">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+          <span style="font-size:var(--fs-xs);font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">${label}</span>
+          ${_badge(ok, ok ? '✓ OK' : '⚡ À ajuster')}
+        </div>
+        <div style="font-size:1.35rem;font-weight:900;color:${color};line-height:1">${eur(rec)}</div>
+        <div style="font-size:10px;color:var(--hint);margin-bottom:8px">${loiMax ? `entre ${eur(rec)} et ${eur(loiMax)}` : '20% du revenu net'}</div>
+        <div style="height:5px;border-radius:3px;background:var(--border);overflow:hidden;margin-bottom:5px">
+          <div style="width:${barW}%;height:100%;background:${color};transition:width .3s"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:10px;color:var(--muted)">Actuel : <strong style="color:var(--text)">${eur(cur)}</strong> (${pct}%)</span>
+          <span style="font-size:10px;font-weight:700;color:${diffColor}">${diffTxt}</span>
+        </div>
+      </div>`;
+    };
 
-    const items = [
-      { label: 'Besoins', pct: needsPct, ideal: 50, val: needs, ok: needsOk, color: needsOk ? 'var(--green)' : 'var(--red)' },
-      { label: 'Envies',  pct: wantsPct, ideal: 30, val: wants, ok: wantsOk, color: wantsOk ? 'var(--amber)' : 'var(--red)' },
-      { label: 'Épargne', pct: savePct,  ideal: 20, val: save,  ok: saveOk,  color: saveOk  ? 'var(--blue)'  : 'var(--hint)' },
-    ];
-
-    ruleHtml = `<div class="card" style="margin-bottom:.75rem;padding:14px 16px">
-      <div style="font-size:9px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:10px">Répartition 50 / 30 / 20</div>
-      <div style="display:flex;height:10px;border-radius:5px;overflow:hidden;gap:2px;margin-bottom:12px">${barHtml}</div>
-      <div style="display:flex">
-        ${items.map((item, i) => `
-          ${i > 0 ? '<div style="width:1px;background:var(--border)"></div>' : ''}
-          <div style="flex:1;text-align:center;padding:0 6px">
-            <div style="font-size:1.05rem;font-weight:900;color:${item.color}">${item.pct}%</div>
-            <div style="font-size:var(--fs-xs);font-weight:600;color:var(--text);margin-bottom:1px">${item.label}</div>
-            <div style="font-size:10px;color:var(--hint)">${eur(item.val)}</div>
-            <div style="font-size:10px;margin-top:1px;color:${item.ok ? 'var(--green)' : 'var(--hint)'}">idéal ${item.ideal}%</div>
-          </div>`).join('')}
+    suggestHtml = `<div class="card" style="margin-bottom:.75rem;padding:14px 16px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <span style="font-size:9px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)">Recommandations</span>
+        <span style="font-size:10px;color:var(--hint)">sur ${eur(stats.revNet)} net</span>
       </div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        ${_row('Épargne',       curEp,  recEp,     epPct,  epOk,  'var(--blue)',  null)}
+        ${_row('Envies / Loisirs', curLoi, recLoiMin, loiPct, loiOk, 'var(--amber)', recLoiMax)}
+      </div>
+      ${rav > 0 ? `<div style="margin-top:10px;padding:8px 10px;background:var(--surface2);border-radius:8px;font-size:var(--fs-xs);color:var(--muted);line-height:1.6">
+        RAV disponible : <strong style="color:var(--text)">${eur(rav)}</strong> —
+        suggestion : <strong style="color:var(--blue)">${eur(ravEp)} épargne</strong> · <strong style="color:var(--amber)">${eur(ravLoi)} loisirs</strong>
+      </div>` : ''}
     </div>`;
   }
 
-  el.innerHTML = impactHtml + alertsHtml + ruleHtml;
+  el.innerHTML = impactHtml + alertsHtml + suggestHtml;
 }
 
 function _simDelete(simId) {
