@@ -5227,8 +5227,6 @@ function renderSimulation() {
     </div>`;
   }
 
-  _renderSimAnalysis(stats, origStats, simF, origF, nChanges);
-
   // Bloc RAV
   const _simRavMems = mem === 'Commun' ? [...new Set(_simEntries.map(e => e.member))].filter(Boolean) : [mem];
   const _simRavHtml = (() => {
@@ -5267,6 +5265,13 @@ function renderSimulation() {
   // Épargne/loisir synthétiques
   const _simCalcEp  = m => { const ms=calcStats(_simEntries.filter(e=>e.member===m)); const p=_simSavingPct[m]??(savingPct[m]??60); return Math.max(0,Math.round(ms.rav*p/100)); };
   const _simCalcLoi = m => { const ms=calcStats(_simEntries.filter(e=>e.member===m)); const p=_simSavingPct[m]??(savingPct[m]??60); return Math.max(0,Math.round(ms.rav*(100-p)/100)); };
+
+  // Valeurs effectives loisir/épargne pour la règle 50/30/20 (synthétiques si pas d'entrées réelles)
+  const _simRavMemsAll = mem === 'Commun' ? [...new Set(_simEntries.map(e => e.member))].filter(Boolean) : [mem];
+  const effEp  = simF.some(e => e.cat === 'epargne') ? stats.ep  : _simRavMemsAll.reduce((s, m) => s + _simCalcEp(m),  0);
+  const effLoi = simF.some(e => e.cat === 'loisir')  ? stats.loi : _simRavMemsAll.reduce((s, m) => s + _simCalcLoi(m), 0);
+
+  _renderSimAnalysis(stats, origStats, simF, origF, nChanges, effEp, effLoi);
 
   const GROUPS = [
     {key:'revenus',   label:'Revenus & Impôts',  cats:['revenu','impot'], color:'#0d9e6e'},
@@ -5354,7 +5359,7 @@ function renderSimulation() {
   setTimeout(fillAllTracks, 0);
 }
 
-function _renderSimAnalysis(stats, origStats, simF, origF, nChanges) {
+function _renderSimAnalysis(stats, origStats, simF, origF, nChanges, effEp, effLoi) {
   const el = document.getElementById('sim-analysis');
   if (!el) return;
 
@@ -5484,8 +5489,8 @@ function _renderSimAnalysis(stats, origStats, simF, origF, nChanges) {
   let ruleHtml = '';
   if (stats.revNet > 0) {
     const needs    = stats.fix;
-    const wants    = stats.vari + stats.loi;
-    const save     = stats.ep;
+    const wants    = stats.vari + (effLoi ?? stats.loi);
+    const save     = effEp ?? stats.ep;
     const base     = stats.revNet;
 
     const needsPct = Math.round(needs / base * 100);
