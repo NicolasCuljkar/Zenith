@@ -5350,17 +5350,36 @@ function renderSimulation() {
         - gSim.filter(e => e.cat === 'impot').reduce((s, e) => s + Math.abs(e.amount), 0)
       : gSim.reduce((s, e) => s + Math.abs(e.amount), 0);
 
+    if (!window.simSectionCollapsed) window.simSectionCollapsed = {};
+    if (!(g.key in window.simSectionCollapsed)) window.simSectionCollapsed[g.key] = false;
+    const collapsed = !!window.simSectionCollapsed[g.key];
+    const chevStyle = collapsed ? 'transform:rotate(-90deg);' : '';
+    const bodyId = `sim-section-body-${g.key}`;
     const groupCard = `<div class="card" style="margin-bottom:.75rem;padding:0">
-      <div style="display:flex;align-items:center;padding:10px 14px 8px;border-bottom:1px solid var(--border)">
+      <div onclick="toggleSimSection('${g.key}')" style="cursor:pointer;display:flex;align-items:center;padding:10px 14px 8px;border-bottom:${collapsed?'none':'1px solid var(--border)'}">
+        <button onclick="event.stopPropagation();toggleSimSection('${g.key}')" style="background:none;border:none;cursor:pointer;color:var(--muted);padding:0;display:flex;align-items:center;transition:transform .2s;${chevStyle};margin-right:7px;flex-shrink:0">${CHEVRON_SVG}</button>
         <div style="width:8px;height:8px;border-radius:50%;background:${g.color};margin-right:8px;flex-shrink:0"></div>
         <span style="font-weight:700;font-size:var(--fs-sm);flex:1">${g.label}${g.key==='revenus'?'<span style="font-size:9px;font-weight:500;color:var(--hint);margin-left:5px">net</span>':''}</span>
+        <span style="font-size:var(--fs-xs);color:var(--hint);background:${g.color}18;border-radius:20px;padding:1px 7px;font-weight:700;margin-right:8px">${gSim.length}</span>
         <span id="sim-gtot-${g.key}" style="font-weight:700;font-size:var(--fs-sm);color:${g.color}">${eur(tot)}</span>
       </div>
-      <div style="padding:0 14px">${rows}${delRows}</div>
+      <div id="${bodyId}" style="${collapsed?'display:none':''}padding:0 14px">${rows}${delRows}</div>
     </div>`;
     return groupCard;
   }).join('');
   setTimeout(fillAllTracks, 0);
+}
+
+function toggleSimSection(key) {
+  if (!window.simSectionCollapsed) window.simSectionCollapsed = {};
+  window.simSectionCollapsed[key] = !window.simSectionCollapsed[key];
+  const collapsed = window.simSectionCollapsed[key];
+  const body = document.getElementById('sim-section-body-' + key);
+  if (body) body.style.display = collapsed ? 'none' : '';
+  const hdr = body?.previousElementSibling;
+  if (hdr) hdr.style.borderBottom = collapsed ? 'none' : '1px solid var(--border)';
+  const btn = hdr?.querySelector('button');
+  if (btn) btn.style.transform = collapsed ? 'rotate(-90deg)' : '';
 }
 
 function _renderSimAnalysis(stats, origStats, simF, origF, nChanges, effEp, effLoi, ravHtml) {
