@@ -2916,6 +2916,7 @@ async function renderDashboard(){
     API.monthlyExpenses.getAll(histParams).catch(()=>[]),
   ]);}catch(e){}
   const mExpenses=allMlyExp.filter(e=>e.year===dashYear&&e.month===dashMonth);
+  monthlyExpenses=allMlyExp; // sync pour openEditMonthlyExpense / deleteMonthlyExpense
   // ── Valeurs réelles ──
   const revA  = mStats?.revenu?.actual   ??0;
   const taxA  = mStats?.impot?.actual    ??0;
@@ -7146,7 +7147,7 @@ document.addEventListener('keydown', e => {
   let _swX=null,_swY=null;
   document.addEventListener('touchstart',e=>{
     if(e.touches.length!==1)return; // multi-touch ignoré
-    if(e.target.closest('input[type=range],canvas,.tbl-wrap,textarea,select,.overlay,.modal'))return;
+    if(e.target.closest('input[type=range],canvas,.tbl-wrap,textarea,select,.overlay,.modal,.swipeable'))return;
     _swX=e.touches[0].clientX;_swY=e.touches[0].clientY;
   },{passive:true});
   document.addEventListener('touchcancel',()=>{_swX=null;_swY=null;},{passive:true});
