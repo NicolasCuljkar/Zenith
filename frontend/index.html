@@ -1004,6 +1004,7 @@ if(window.location.hostname==='localhost'||window.location.hostname==='127.0.0.1
       </div>
       <!-- Hero (solde + mini-stats + Ajouter) + Sections -->
       <div id="sim-hero"></div>
+      <div id="sim-analysis"></div>
       <div id="sim-sections"></div>
     </div>
 
@@ -5226,6 +5227,8 @@ function renderSimulation() {
     </div>`;
   }
 
+  _renderSimAnalysis(stats, origStats, simF, origF, nChanges);
+
   // Bloc RAV
   const _simRavMems = mem === 'Commun' ? [...new Set(_simEntries.map(e => e.member))].filter(Boolean) : [mem];
   const _simRavHtml = (() => {
@@ -5349,6 +5352,185 @@ function renderSimulation() {
     return g.key === 'variables' ? groupCard + _simRavHtml : groupCard;
   }).join('');
   setTimeout(fillAllTracks, 0);
+}
+
+function _renderSimAnalysis(stats, origStats, simF, origF, nChanges) {
+  const el = document.getElementById('sim-analysis');
+  if (!el) return;
+
+  const dSolde = stats.solde - origStats.solde;
+  const proj12 = dSolde * 12;
+
+  // ── Impact des modifications ──
+  let impactHtml = '';
+  if (nChanges > 0) {
+    const cats = [
+      { label: 'Rev. net',       sim: stats.revNet, orig: origStats.revNet, color: '#0d9e6e', sign:  1 },
+      { label: 'Charges fixes',  sim: stats.fix,    orig: origStats.fix,    color: '#d93535', sign: -1 },
+      { label: 'Dép. variables', sim: stats.vari,   orig: origStats.vari,   color: '#e05a2b', sign: -1 },
+      { label: 'Loisir',         sim: stats.loi,    orig: origStats.loi,    color: '#f59e0b', sign: -1 },
+      { label: 'Épargne',        sim: stats.ep,     orig: origStats.ep,     color: '#2979c8', sign:  1 },
+    ];
+    const changed = cats.filter(c => Math.abs(c.sim - c.orig) >= 1);
+    if (changed.length) {
+      const rows = changed.map(c => {
+        const delta     = c.sim - c.orig;
+        const budgetImp = delta * c.sign;
+        const pct       = c.orig > 0 ? Math.round(Math.abs(delta) / c.orig * 100) : null;
+        const impColor  = budgetImp > 0 ? 'var(--green)' : 'var(--red)';
+        const impPrefix = budgetImp > 0 ? '+' : '−';
+        const pctStr    = pct !== null ? ` (${delta > 0 ? '+' : '−'}${pct}%)` : '';
+        return `<div style="display:flex;align-items:center;gap:7px;padding:7px 0;border-bottom:1px solid var(--border)">
+          <div style="width:7px;height:7px;border-radius:50%;background:${c.color};flex-shrink:0"></div>
+          <span style="flex:1;font-size:var(--fs-sm)">${c.label}</span>
+          <span style="font-size:10px;color:var(--hint);text-decoration:line-through;margin-right:2px">${eur(c.orig)}</span>
+          <span style="font-size:var(--fs-sm);font-weight:700;color:${c.color};margin-right:4px">${eur(c.sim)}</span>
+          <span style="font-size:var(--fs-xs);font-weight:800;color:${impColor};min-width:56px;text-align:right">${impPrefix}${eur(Math.abs(budgetImp))}${pctStr}</span>
+        </div>`;
+      }).join('');
+      const netColor = dSolde >= 0 ? 'var(--green)' : 'var(--red)';
+      impactHtml = `<div class="card" style="margin-bottom:.75rem;padding:0;overflow:hidden">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px 8px;border-bottom:1px solid var(--border)">
+          <span style="font-size:9px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)">Impact des modifications</span>
+          <span style="font-size:var(--fs-xs);font-weight:800;color:${netColor}">${dSolde >= 0 ? 'Gain' : 'Perte'} ${dSolde >= 0 ? '+' : ''}${eur(dSolde)}/mois</span>
+        </div>
+        <div style="padding:0 14px">${rows}</div>
+        <div style="padding:8px 14px;border-top:1px solid var(--border);background:color-mix(in srgb,${dSolde>=0?'var(--green)':'var(--red)'} 5%,var(--surface2));font-size:var(--fs-xs);color:var(--muted)">
+          Projection 12 mois : <strong style="color:${netColor}">${dSolde>=0?'+':''}${eur(proj12)}</strong> sur ta capacité d'épargne
+        </div>
+      </div>`;
+    }
+  }
+
+  // ── Alertes intelligentes ──
+  const alerts = [];
+
+  if (stats.rav < 0) {
+    alerts.push({ level: 'danger', msg: `Reste à vivre négatif (${eur(stats.rav)}) — les charges fixes dépassent les revenus nets` });
+  }
+  if (stats.solde < 0) {
+    alerts.push({ level: 'danger', msg: `Solde négatif (${eur(stats.solde)}) — total des dépenses supérieur aux revenus` });
+  }
+
+  if (stats.revNet > 0) {
+    const txFix  = stats.fix  / stats.revNet * 100;
+    const txDep  = (stats.fix + stats.vari + stats.loi) / stats.revNet * 100;
+    const txEp   = stats.ep   / stats.revNet * 100;
+
+    if (txFix > 50) {
+      alerts.push({ level: 'danger', msg: `Charges fixes très élevées — ${Math.round(txFix)}% du revenu net (seuil critique : 50%)` });
+    } else if (txFix > 33) {
+      alerts.push({ level: 'warn', msg: `Charges fixes élevées — ${Math.round(txFix)}% du revenu net (idéal : < 33%)` });
+    }
+
+    if (txDep > 85) {
+      alerts.push({ level: 'danger', msg: `Dépenses totales très importantes — ${Math.round(txDep)}% du revenu net, marge critique` });
+    } else if (txDep > 70) {
+      alerts.push({ level: 'warn', msg: `Dépenses importantes — ${Math.round(txDep)}% du revenu net, peu de marge de manœuvre` });
+    }
+
+    if (stats.ep === 0) {
+      alerts.push({ level: 'warn', msg: 'Aucune épargne planifiée dans ce scénario' });
+    } else if (txEp < 10) {
+      alerts.push({ level: 'info', msg: `Taux d'épargne faible — ${Math.round(txEp)}% du revenu net (recommandé : ≥ 20%)` });
+    } else if (txEp >= 20) {
+      alerts.push({ level: 'ok', msg: `Bon taux d'épargne — ${Math.round(txEp)}% du revenu net` });
+    }
+
+    // Dépense individuelle trop lourde
+    simF.filter(e => !['revenu','epargne'].includes(e.cat) && !e._synthetic && Math.abs(e.amount) / stats.revNet > 0.3)
+      .forEach(e => {
+        const pct = Math.round(Math.abs(e.amount) / stats.revNet * 100);
+        alerts.push({ level: 'warn', msg: `"${esc(e.name)}" représente ${pct}% du revenu net — dépense élevée à surveiller` });
+      });
+  }
+
+  if (nChanges > 0) {
+    if (origStats.fix > 0 && stats.fix > origStats.fix * 1.15) {
+      alerts.push({ level: 'warn', msg: `Charges fixes en hausse de +${Math.round((stats.fix/origStats.fix-1)*100)}% vs prévisionnel` });
+    }
+    if (origStats.vari > 0 && stats.vari > origStats.vari * 1.20) {
+      alerts.push({ level: 'warn', msg: `Dépenses variables en hausse de +${Math.round((stats.vari/origStats.vari-1)*100)}% vs prévisionnel` });
+    }
+    if (dSolde <= -100) {
+      alerts.push({ level: 'warn', msg: `Ce scénario réduit le solde de ${eur(Math.abs(dSolde))}/mois vs prévisionnel` });
+    } else if (dSolde >= 100) {
+      alerts.push({ level: 'ok', msg: `Ce scénario améliore le solde de +${eur(dSolde)}/mois vs prévisionnel` });
+    }
+  }
+
+  if (stats.solde >= 0 && stats.rav >= 0 && !alerts.some(a => a.level === 'danger')) {
+    alerts.push({ level: 'ok', msg: `Budget équilibré — solde positif de ${eur(stats.solde)}` });
+  }
+
+  const levelCfg = {
+    danger: { bg: 'color-mix(in srgb,var(--red) 10%,var(--surface))',   border: 'color-mix(in srgb,var(--red) 28%,var(--border))',   color: 'var(--red)',   icon: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>' },
+    warn:   { bg: 'color-mix(in srgb,var(--amber) 9%,var(--surface))', border: 'color-mix(in srgb,var(--amber) 28%,var(--border))', color: 'var(--amber)', icon: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>' },
+    info:   { bg: 'color-mix(in srgb,var(--blue) 8%,var(--surface))',  border: 'color-mix(in srgb,var(--blue) 20%,var(--border))',  color: 'var(--blue)',  icon: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>' },
+    ok:     { bg: 'color-mix(in srgb,var(--green) 8%,var(--surface))', border: 'color-mix(in srgb,var(--green) 20%,var(--border))', color: 'var(--green)', icon: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>' },
+  };
+
+  const alertsHtml = alerts.length ? `<div style="display:flex;flex-direction:column;gap:5px;margin-bottom:.75rem">
+    ${alerts.map(a => {
+      const s = levelCfg[a.level];
+      return `<div style="display:flex;align-items:flex-start;gap:8px;padding:8px 12px;background:${s.bg};border:1px solid ${s.border};border-radius:var(--r)">
+        <span style="color:${s.color};flex-shrink:0;margin-top:1px">${s.icon}</span>
+        <span style="font-size:var(--fs-xs);line-height:1.5;color:var(--text)">${a.msg}</span>
+      </div>`;
+    }).join('')}
+  </div>` : '';
+
+  // ── Règle 50/30/20 ──
+  let ruleHtml = '';
+  if (stats.revNet > 0) {
+    const needs    = stats.fix;
+    const wants    = stats.vari + stats.loi;
+    const save     = stats.ep;
+    const base     = stats.revNet;
+
+    const needsPct = Math.round(needs / base * 100);
+    const wantsPct = Math.round(wants / base * 100);
+    const savePct  = Math.round(save  / base * 100);
+    const other    = Math.max(0, 100 - needsPct - wantsPct - savePct);
+
+    const needsOk = needsPct <= 55;
+    const wantsOk = wantsPct <= 35;
+    const saveOk  = savePct  >= 15;
+
+    const segs = [
+      { pct: needsPct, color: needsOk ? '#0d9e6e' : '#d93535' },
+      { pct: wantsPct, color: wantsOk ? '#f59e0b' : '#e05a2b' },
+      { pct: savePct,  color: saveOk  ? '#2979c8' : '#6e6c8a' },
+      { pct: other,    color: 'var(--border)' },
+    ].filter(s => s.pct > 0);
+
+    const barHtml = segs.map(s =>
+      `<div style="flex:${s.pct};height:100%;background:${s.color}"></div>`
+    ).join('');
+
+    const items = [
+      { label: 'Besoins', pct: needsPct, ideal: 50, val: needs, ok: needsOk, color: needsOk ? 'var(--green)' : 'var(--red)' },
+      { label: 'Envies',  pct: wantsPct, ideal: 30, val: wants, ok: wantsOk, color: wantsOk ? 'var(--amber)' : 'var(--red)' },
+      { label: 'Épargne', pct: savePct,  ideal: 20, val: save,  ok: saveOk,  color: saveOk  ? 'var(--blue)'  : 'var(--hint)' },
+    ];
+
+    ruleHtml = `<div class="card" style="margin-bottom:.75rem;padding:14px 16px">
+      <div style="font-size:9px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:10px">Répartition 50 / 30 / 20</div>
+      <div style="display:flex;height:10px;border-radius:5px;overflow:hidden;gap:2px;margin-bottom:12px">${barHtml}</div>
+      <div style="display:flex">
+        ${items.map((item, i) => `
+          ${i > 0 ? '<div style="width:1px;background:var(--border)"></div>' : ''}
+          <div style="flex:1;text-align:center;padding:0 6px">
+            <div style="font-size:1.05rem;font-weight:900;color:${item.color}">${item.pct}%</div>
+            <div style="font-size:var(--fs-xs);font-weight:600;color:var(--text);margin-bottom:1px">${item.label}</div>
+            <div style="font-size:10px;color:var(--hint)">${eur(item.val)}</div>
+            <div style="font-size:10px;margin-top:1px;color:${item.ok ? 'var(--green)' : 'var(--hint)'}">idéal ${item.ideal}%</div>
+          </div>`).join('')}
+      </div>
+    </div>`;
+  }
+
+  el.innerHTML = impactHtml + alertsHtml + ruleHtml;
 }
 
 function _simDelete(simId) {
