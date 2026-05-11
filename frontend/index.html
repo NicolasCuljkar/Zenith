@@ -2939,7 +2939,7 @@ async function renderDashboard(){
     API.monthlyExpenses.getHistory(histParams).catch(()=>[]),
     API.monthlyExpenses.getAll(histParams).catch(()=>[]),
   ]);}catch(e){}
-  if(!_undoEl) monthlyExpenses=allMlyExp; // sync sauf si suppression en attente d'undo
+  monthlyExpenses=allMlyExp;
   const mExpenses=monthlyExpenses.filter(e=>e.year===dashYear&&e.month===dashMonth);
   // ── Valeurs réelles ──
   const revA  = mStats?.revenu?.actual   ??0;
@@ -5085,13 +5085,12 @@ async function deleteSelectedMonthly() {
 function deleteMonthlyExpense(id) {
   const e = monthlyExpenses.find(x => x.id === id);
   if (!e) return;
-  _confirmDialog(`Supprimer "${e.name}" ?`, () => {
-    monthlyExpenses = monthlyExpenses.filter(x => x.id !== id);
-    renderDashboard().catch(()=>{});
-    _showUndoToast(`"${e.name}" supprimé`,
-      async () => { try { await API.monthlyExpenses.delete(id); } catch(err) { monthlyExpenses.push(e); renderDashboard().catch(()=>{}); showApiError('Erreur : ' + err.message); } },
-      () => { monthlyExpenses.push(e); renderDashboard().catch(()=>{}); }
-    );
+  _confirmDialog(`Supprimer "${e.name}" ?`, async () => {
+    try {
+      await API.monthlyExpenses.delete(id);
+      monthlyExpenses = monthlyExpenses.filter(x => x.id !== id);
+      renderDashboard().catch(()=>{});
+    } catch(err) { showApiError('Erreur : ' + err.message); }
   });
 }
 async function toggleMonthlyExceptional(id) {
