@@ -947,9 +947,7 @@ if(window.location.hostname==='localhost'||window.location.hostname==='127.0.0.1
     </div>
   </div>
 
-  <!-- Hidden old buttons kept for JS compatibility -->
-  <button id="btn-settings" style="display:none"></button>
-  <label id="btn-darkmode" style="display:none"></label>
+
 </header>
 
 <main class="main">
@@ -1832,13 +1830,12 @@ function _sparklineSvg(vals,col,w=300,h=60){
 let savingsStabActive='month';
 let savingsYearFilter=String(new Date().getFullYear());
 let currentTab='dashboard';
-let memberColors={Nicolas:'#3B8BD4',Carla:'#e06fa0'};
-let savingPct={Nicolas:60,Carla:50};
+let memberColors={};
+let savingPct={};
 let monthlyEpPct={};
 let savingsMember='all',analysisMember='all',dashboardMember='all',entriesMember='Commun';
 let dashYear=new Date().getFullYear(),dashMonth=new Date().getMonth()+1;
-let entryOrder={}; // kept for backward compat but no longer used for sorting
-localStorage.removeItem('bm_entry_order'); // supprime tout ordre drag-and-drop persisté
+localStorage.removeItem('bm_entry_order');
 // profilePhotos is now fetched from the API (stored in users table)
 // but we keep a local cache for fast rendering
 let profilePhotos={};
@@ -3485,12 +3482,6 @@ function getFiltered(){
     (!cat||e.cat===cat)
   );
 }
-function saveEntryOrder(){
-  // Keep local cache for instant UI re-renders
-  try{localStorage.setItem('bm_entry_order',JSON.stringify(entryOrder));}catch(e){}
-  // Sync to API (fire-and-forget — non-critical ordering)
-  // The API call is made in initDragDrop after drop completes
-}
 
 function getSortedGroupRows(gRows){
   return [...gRows].sort((a,b)=>Math.abs(b.amount)-Math.abs(a.amount));
@@ -3517,7 +3508,6 @@ function initDragDrop(container, memberName, groupKey){
         if(srcIdx>-1&&tgtIdx>-1){
           if(srcIdx<tgtIdx)el.after(dragSrc);else el.before(dragSrc);
           const newOrder=[...container.querySelectorAll('[draggable]')].map(x=>parseInt(x.dataset.id));
-          entryOrder[orderKey]=newOrder;saveEntryOrder();
           // Persist new order to the backend
           if(API.auth.isLoggedIn()){
             API.entries.updateOrder(memberName,groupKey,newOrder)

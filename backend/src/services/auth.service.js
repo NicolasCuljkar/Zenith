@@ -82,14 +82,11 @@ function loginById(userId, password) {
 function register(name, email, password, role = 'Autre') {
   if (!name || !email || !password) throw httpError('Tous les champs sont requis.', 400);
   if (password.length < 8)          throw httpError('Le mot de passe doit faire au moins 8 caractères.', 400);
-  if (!['Nicolas', 'Carla', 'Autre'].includes(role)) throw httpError('Rôle invalide.', 400);
-
   const existing = db.prepare('SELECT id FROM users WHERE email = ? COLLATE NOCASE').get(email.trim().toLowerCase());
   if (existing) throw httpError('Cet e-mail est déjà utilisé.', 409);
 
-  const defaultColors = { Nicolas: '#3B8BD4', Carla: '#e06fa0', Autre: '#9e7bca' };
   const password_hash = bcrypt.hashSync(password, 10);
-  const color         = defaultColors[role] || '#9e7bca';
+  const color         = '#9e7bca';
 
   const result = db.prepare('INSERT INTO users (name, email, password_hash, role, color) VALUES (?, ?, ?, ?, ?)')
     .run(name.trim(), email.trim().toLowerCase(), password_hash, role, color);
