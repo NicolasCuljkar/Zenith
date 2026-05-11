@@ -7586,6 +7586,7 @@ async function _doLoginWithCredentials(userIdOrEmail,password){
     _updateMemberBadge();_loadNotifs();
     if(window.location.pathname==='/banque'){switchTab('banque');}
     else{try{const _st=localStorage.getItem('zenith_tab');if(_st&&_st!=='dashboard')switchTab(_st);}catch(_){}}
+    if(currentTab==='dashboard'&&!hasNoData())document.getElementById('fab-dashboard').style.display='';
     registerPushSubscription();
     _scheduleTokenExpiry(); connectSSE(); _startPoll();
   }catch(err){
@@ -7614,6 +7615,7 @@ async function doLogin(){
     _updateMemberBadge();_loadNotifs();
     if(window.location.pathname==='/banque'){switchTab('banque');}
     else{try{const _st=localStorage.getItem('zenith_tab');if(_st&&_st!=='dashboard')switchTab(_st);}catch(_){}}
+    if(currentTab==='dashboard'&&!hasNoData())document.getElementById('fab-dashboard').style.display='';
     registerPushSubscription();
     _scheduleTokenExpiry(); connectSSE(); _startPoll();
   }catch(err){
