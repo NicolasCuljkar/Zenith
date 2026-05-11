@@ -8345,9 +8345,13 @@ async function initApp(){
       initUserContext();
       renderMemberTabs();
       updateNavForDataState();
-      renderDashboard();
+      document.getElementById('fab-entry').style.display='none';
+      document.getElementById('fab-dashboard').style.display='none';
+      renderDashboard().then(()=>{if(currentTab==='dashboard'&&!hasNoData())document.getElementById('fab-dashboard').style.display='';}).catch(()=>{});
       renderEntries();
       _loadNotifs();
+      if(window.location.pathname==='/banque'){switchTab('banque');}
+      else{try{const _st=localStorage.getItem('zenith_tab');if(_st&&_st!=='dashboard')switchTab(_st);}catch(_){}}
       registerPushSubscription(); // non-bloquant
       connectSSE(); _startPoll();
     } else {
