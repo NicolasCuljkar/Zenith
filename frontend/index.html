@@ -5182,6 +5182,13 @@ function renderSimulation() {
   const origStats = calcStats(origF);
   const dSolde    = stats.solde - origStats.solde;
 
+  // Helpers épargne/loisir synthétiques (RAV slider) — définis tôt pour le hero et l'analyse
+  const _simCalcEpEarly  = m => { const ms=calcStats(_simEntries.filter(e=>e.member===m)); const p=_simSavingPct[m]??(savingPct[m]??60); return Math.max(0,Math.round(ms.rav*p/100)); };
+  const _simCalcLoiEarly = m => { const ms=calcStats(_simEntries.filter(e=>e.member===m)); const p=_simSavingPct[m]??(savingPct[m]??60); return Math.max(0,Math.round(ms.rav*(100-p)/100)); };
+  const _ravMemsEarly = mem === 'Commun' ? [...new Set(_simEntries.map(e=>e.member))].filter(Boolean) : [mem];
+  const effEpEarly  = simF.some(e=>e.cat==='epargne') ? stats.ep  : _ravMemsEarly.reduce((s,m)=>s+_simCalcEpEarly(m), 0);
+  const effLoiEarly = simF.some(e=>e.cat==='loisir')  ? stats.loi : _ravMemsEarly.reduce((s,m)=>s+_simCalcLoiEarly(m), 0);
+
   // Entrées supprimées + compteurs de changements
   const simIds         = new Set(_simEntries.map(e => e._simId));
   const deletedEntries = origF.filter(e => !simIds.has(e._simId));
@@ -5222,7 +5229,7 @@ function renderSimulation() {
         <div style="width:1px;background:var(--border)"></div>
         <div style="flex:1;text-align:center">
           <div style="font-size:9px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:2px">Épargne</div>
-          <div style="font-size:var(--fs-sm);font-weight:800;color:var(--blue)">${eur(stats.ep)}</div>
+          <div id="sim-hero-ep" style="font-size:var(--fs-sm);font-weight:800;color:var(--blue)">${eur(effEpEarly)}</div>
         </div>
       </div>
       ${changeLine ? `<div style="margin-top:10px;padding:5px 10px;background:color-mix(in srgb,var(--amber) 10%,var(--surface));border-radius:6px;font-size:var(--fs-xs);color:var(--muted)">${changeLine}</div>` : ''}
@@ -5264,16 +5271,11 @@ function renderSimulation() {
     </div>`;
   })();
 
-  // Épargne/loisir synthétiques
-  const _simCalcEp  = m => { const ms=calcStats(_simEntries.filter(e=>e.member===m)); const p=_simSavingPct[m]??(savingPct[m]??60); return Math.max(0,Math.round(ms.rav*p/100)); };
-  const _simCalcLoi = m => { const ms=calcStats(_simEntries.filter(e=>e.member===m)); const p=_simSavingPct[m]??(savingPct[m]??60); return Math.max(0,Math.round(ms.rav*(100-p)/100)); };
+  // Épargne/loisir synthétiques (alias des helpers définis plus tôt)
+  const _simCalcEp  = _simCalcEpEarly;
+  const _simCalcLoi = _simCalcLoiEarly;
 
-  // Valeurs effectives loisir/épargne pour la règle 50/30/20 (synthétiques si pas d'entrées réelles)
-  const _simRavMemsAll = mem === 'Commun' ? [...new Set(_simEntries.map(e => e.member))].filter(Boolean) : [mem];
-  const effEp  = simF.some(e => e.cat === 'epargne') ? stats.ep  : _simRavMemsAll.reduce((s, m) => s + _simCalcEp(m),  0);
-  const effLoi = simF.some(e => e.cat === 'loisir')  ? stats.loi : _simRavMemsAll.reduce((s, m) => s + _simCalcLoi(m), 0);
-
-  _renderSimAnalysis(stats, origStats, simF, origF, nChanges, effEp, effLoi, _simRavHtml);
+  _renderSimAnalysis(stats, origStats, simF, origF, nChanges, effEpEarly, effLoiEarly, _simRavHtml);
 
   const GROUPS = [
     {key:'revenus',   label:'Revenus & Impôts',  cats:['revenu','impot'], color:'#0d9e6e'},
@@ -5574,6 +5576,7 @@ function _simSliderLive(member, pct, rav) {
   const wEl = document.getElementById('sim-rule-pct-wants'); if (wEl) wEl.textContent = wPct + '%';
   const sEl = document.getElementById('sim-rule-pct-save');  if (sEl) sEl.textContent = sPct + '%';
   const svEl = document.getElementById('sim-rule-val-save');  if (svEl) svEl.textContent = eur(totEp);
+  const heroEpEl = document.getElementById('sim-hero-ep'); if (heroEpEl) heroEpEl.textContent = eur(totEp);
   const wvEl = document.getElementById('sim-rule-val-wants'); if (wvEl) wvEl.textContent = eur(totVari + totLoi);
   const bar = document.getElementById('sim-rule-bar');
   if (bar) {
