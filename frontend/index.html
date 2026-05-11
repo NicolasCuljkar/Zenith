@@ -2916,7 +2916,7 @@ async function renderDashboard(){
     API.monthlyExpenses.getAll(histParams).catch(()=>[]),
   ]);}catch(e){}
   const mExpenses=allMlyExp.filter(e=>e.year===dashYear&&e.month===dashMonth);
-  monthlyExpenses=allMlyExp; // sync pour openEditMonthlyExpense / deleteMonthlyExpense
+  if(!_undoEl) monthlyExpenses=allMlyExp; // sync sauf si suppression en attente d'undo
   // ── Valeurs réelles ──
   const revA  = mStats?.revenu?.actual   ??0;
   const taxA  = mStats?.impot?.actual    ??0;
