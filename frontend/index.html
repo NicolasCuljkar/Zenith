@@ -3353,6 +3353,74 @@ async function renderDashboard(){
   </div>
   <div id="dash-monthly-sections"></div>`;
 
+  // ── Onglet Analyse : 50/30/20 ──
+  let _dash5030Html = '';
+  if (revNetA > 0) {
+    const _needs = fixA + varA, _wants = loiA, _save = Math.max(0, epMonthDelta);
+    const _nPct2 = Math.round(_needs/revNetA*100), _wPct2 = Math.round(_wants/revNetA*100), _sPct2 = Math.round(_save/revNetA*100);
+    const _other2 = Math.max(0,100-_nPct2-_wPct2-_sPct2);
+    const _nOk=_nPct2<=55,_wOk=_wPct2<=35,_sOk=_sPct2>=15;
+    const _barSegs=[{p:_nPct2,c:_nOk?'#0d9e6e':'#d93535'},{p:_wPct2,c:_wOk?'#f59e0b':'#e05a2b'},{p:_sPct2,c:_sOk?'#2979c8':'#6e6c8a'},{p:_other2,c:'var(--border)'}].filter(s=>s.p>0);
+    _dash5030Html=`<div class="card" style="margin-bottom:var(--sg);padding:14px 16px">
+      <div style="font-size:9px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:10px">Répartition 50 / 30 / 20</div>
+      <div style="display:flex;height:10px;border-radius:5px;overflow:hidden;gap:2px;margin-bottom:12px">${_barSegs.map(s=>`<div style="flex:${s.p};height:100%;background:${s.c}"></div>`).join('')}</div>
+      <div style="display:flex">${[
+        {label:'Besoins',pct:_nPct2,ideal:50,val:_needs,ok:_nOk,col:_nOk?'var(--green)':'var(--red)'},
+        {label:'Envies', pct:_wPct2,ideal:30,val:_wants,ok:_wOk,col:_wOk?'var(--amber)':'var(--red)'},
+        {label:'Épargne',pct:_sPct2,ideal:20,val:_save, ok:_sOk,col:_sOk?'var(--blue)':'var(--hint)'},
+      ].map((it,i)=>`${i>0?'<div style="width:1px;background:var(--border)"></div>':''}
+        <div style="flex:1;text-align:center;padding:0 6px">
+          <div style="font-size:1.05rem;font-weight:900;color:${it.col}">${it.pct}%</div>
+          <div style="font-size:var(--fs-xs);font-weight:600;color:var(--text);margin-bottom:1px">${it.label}</div>
+          <div style="font-size:10px;color:var(--hint)">${eur(it.val)}</div>
+          <div style="font-size:10px;margin-top:1px;color:${it.ok?'var(--green)':'var(--hint)'}">idéal ${it.ideal}%</div>
+        </div>`).join('')}
+      </div>
+    </div>`;
+  }
+
+  // ── Onglet Analyse : Bilan & projections ──
+  const _proj12 = mlyRavD * 12, _epProj12 = Math.max(0, epMonthDelta) * 12;
+  const _bilanHtml = revNetA > 0 ? `<div class="card" style="margin-bottom:var(--sg);padding:0;overflow:hidden">
+    <div style="padding:10px 14px;border-bottom:1px solid var(--border)"><span style="font-size:9px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)">Bilan & projections</span></div>
+    ${[
+      {label:'Solde du mois',         val:mlyRavD,     col:mlyRavD>=0?'var(--green)':'var(--red)',   sign:true},
+      {label:'Projection 12 mois',    val:_proj12,     col:_proj12>=0?'var(--green)':'var(--red)',   sign:true},
+      {label:'Épargne ce mois',       val:epMonthDelta,col:'var(--blue)',  sign:true,  hide:epMonthDelta<=0},
+      {label:'Projection épargne 12m',val:_epProj12,   col:'var(--blue)',  sign:true,  hide:epMonthDelta<=0},
+      {label:'Taux d\'épargne',       val:revNetA>0?Math.round(Math.max(0,epMonthDelta)/revNetA*100):0, isPercent:true, col:Math.round(Math.max(0,epMonthDelta)/revNetA*100)>=20?'var(--green)':'var(--amber)'},
+    ].filter(r=>!r.hide).map((r,i,a)=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 14px${i<a.length-1?';border-bottom:1px solid var(--border)':''}">
+      <span style="font-size:var(--fs-xs);color:var(--muted)">${r.label}</span>
+      <span style="font-size:var(--fs-sm);font-weight:800;color:${r.col}">${r.isPercent?(r.val+'%'):(r.sign&&r.val>=0?'+':'')+eur(r.val)}</span>
+    </div>`).join('')}
+  </div>` : '';
+
+  // ── Onglet Analyse : Budget vs Réel ──
+  const _bvrRows = [
+    {label:'Fixes',    actual:fixA,                     budget:fixBudget, color:'#d93535'},
+    {label:'Variables',actual:varA,                     budget:varBudget, color:'#e05a2b'},
+    {label:'Loisir',   actual:loiA,                     budget:loiBudget, color:'#f59e0b'},
+    {label:'Épargne',  actual:Math.max(0,epMonthDelta), budget:epBudget,  color:'#2979c8'},
+  ].filter(c=>c.budget>0||c.actual>0);
+  const _bvrHtml = _bvrRows.length > 0 ? `<div class="card" style="margin-bottom:var(--sg);padding:0;overflow:hidden">
+    <div style="padding:10px 14px;border-bottom:1px solid var(--border)"><span style="font-size:9px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)">Budget vs Réel</span></div>
+    ${_bvrRows.map((c,i,a)=>{
+      const pct=c.budget>0?Math.min(200,Math.round(c.actual/c.budget*100)):null;
+      const over=c.budget>0&&c.actual>c.budget;
+      return `<div style="padding:10px 14px${i<a.length-1?';border-bottom:1px solid var(--border)':''}">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <span style="font-size:var(--fs-xs);font-weight:700;color:${c.color}">${c.label}</span>
+          <div style="display:flex;align-items:center;gap:6px">
+            <span style="font-size:10px;color:var(--hint)">${eur(c.budget)}</span>
+            <span style="font-size:var(--fs-xs);font-weight:800;color:${over?'var(--red)':c.color}">${eur(c.actual)}</span>
+            ${pct!==null?`<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px;background:${over?'color-mix(in srgb,var(--red) 12%,var(--surface))':'var(--surface2)'};color:${over?'var(--red)':'var(--muted)'}">${pct}%</span>`:''}
+          </div>
+        </div>
+        ${c.budget>0?`<div style="height:5px;border-radius:3px;background:var(--surface2);overflow:hidden"><div style="height:100%;width:${Math.min(100,pct??0)}%;background:${over?'var(--red)':c.color};border-radius:3px"></div></div>`:''}
+      </div>`;
+    }).join('')}
+  </div>` : '';
+
   content.innerHTML=_monthNav+
     `<div style="display:flex;align-items:center;gap:0;border-bottom:1px solid var(--border);margin-bottom:var(--sg)">
       <button class="stab active" id="dash-stab-data"    onclick="switchDashTab('data')">Données</button>
@@ -3363,7 +3431,7 @@ async function renderDashboard(){
       ${_deficitWarnHtml}${_savWarnHtml}${_hero}${_cats}${_dashMlyToolbar}
     </div>
     <div id="dash-tab-analyse" style="display:none">
-      ${_dashInsHtml}${_ova}
+      ${_bilanHtml}${_dash5030Html}${_bvrHtml}${_dashInsHtml}${_ova}
     </div>
     <div id="dash-charts" style="display:none"></div>`;
 
