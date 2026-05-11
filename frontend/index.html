@@ -1495,17 +1495,6 @@ if(window.location.hostname==='localhost'||window.location.hostname==='127.0.0.1
   </div>
 </div>
 
-<!-- CONFIRM DIALOG -->
-<div class="overlay" id="modal-confirm">
-  <div class="modal" style="max-width:340px">
-    <div class="modal-drag"></div>
-    <p id="modal-confirm-msg" style="margin:0 0 1.25rem;font-size:var(--fs-base);line-height:1.5"></p>
-    <div class="modal-footer">
-      <button class="btn" id="modal-confirm-cancel">Annuler</button>
-      <button class="btn" id="modal-confirm-ok" style="background:var(--red);color:#fff;border-color:var(--red)">Supprimer</button>
-    </div>
-  </div>
-</div>
 
 <!-- PENDING FIXES MODAL -->
 <div class="overlay" id="modal-pending-fixes">
@@ -1568,17 +1557,6 @@ Chart.defaults.plugins.legend.labels.usePointStyle = true;
 // ══════════════════════════════════════════════
 let _undoTimer=null;
 let _undoEl=null;
-function _confirmDialog(msg, onOk) {
-  document.getElementById('modal-confirm-msg').textContent = msg;
-  const overlay = document.getElementById('modal-confirm');
-  overlay.classList.add('open');
-  const ok     = document.getElementById('modal-confirm-ok');
-  const cancel = document.getElementById('modal-confirm-cancel');
-  const close  = () => overlay.classList.remove('open');
-  ok.onclick     = () => { close(); onOk(); };
-  cancel.onclick = close;
-}
-document.getElementById('modal-confirm').addEventListener('click', e => { if(e.target.id==='modal-confirm') document.getElementById('modal-confirm').classList.remove('open'); });
 
 function _showUndoToast(label, onConfirm, onUndo){
   if(_undoEl){ clearTimeout(_undoTimer); _undoEl.remove(); _undoEl=null; }
@@ -4029,7 +4007,7 @@ function openEditEntry(id){
 function deleteEntry(id){
   const e=entries.find(x=>x.id===id);
   if(!e||!canEdit(e.member))return;
-  _confirmDialog(`Supprimer "${e.name}" ?`, ()=>{
+  showConfirm('Supprimer cette ligne ?', `"${e.name}" sera définitivement supprimée du prévisionnel.`, ()=>{
     entries=entries.filter(x=>x.id!==id);
     updateNavForDataState();renderEntries();renderDashboard();
     _showUndoToast(`"${e.name}" supprimé`,
@@ -5085,7 +5063,7 @@ async function deleteSelectedMonthly() {
 function deleteMonthlyExpense(id) {
   const e = monthlyExpenses.find(x => x.id === id);
   if (!e) return;
-  _confirmDialog(`Supprimer "${e.name}" ?`, async () => {
+  showConfirm('Supprimer cette dépense ?', `"${e.name}" sera supprimée du suivi de ce mois.`, async () => {
     try {
       await API.monthlyExpenses.delete(id);
       monthlyExpenses = monthlyExpenses.filter(x => x.id !== id);
@@ -5863,7 +5841,7 @@ function openEditSaving(id){
 function deleteSaving(id){
   const s=savings.find(x=>x.id===id);
   if(!s||!canEdit(s.member))return;
-  _confirmDialog(`Supprimer l'épargne ${s.month} ${s.year} ?`, () => {
+  showConfirm('Supprimer cette épargne ?', `${s.month} ${s.year} — cette entrée sera définitivement supprimée.`, () => {
     savings=savings.filter(x=>x.id!==id);
     renderSavings();
     if(currentTab==='dashboard')renderDashboard();
