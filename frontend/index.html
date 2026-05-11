@@ -968,15 +968,14 @@ if(window.location.hostname==='localhost'||window.location.hostname==='127.0.0.1
   <div id="tab-entries" class="tab-panel">
     <div class="member-tabs" id="entries-mtabs"></div>
 
-    <!-- Sous-onglets Prévisionnel / Suivi mensuel -->
+    <!-- Sous-onglets Budget / Simulation -->
     <div style="display:flex;align-items:center;gap:0;border-bottom:1px solid var(--border);margin-bottom:.75rem">
-      <button class="stab active" data-etab="mensuel" onclick="switchEntriesTab('mensuel')">Ce mois</button>
-      <button class="stab" data-etab="previsionnel" onclick="switchEntriesTab('previsionnel')">Budget</button>
+      <button class="stab active" data-etab="previsionnel" onclick="switchEntriesTab('previsionnel')">Budget</button>
       <button class="stab" data-etab="simulation" onclick="switchEntriesTab('simulation')" style="color:var(--amber)">Simulation</button>
     </div>
 
     <!-- ── PRÉVISIONNEL ── -->
-    <div id="entries-previsionnel" style="display:none">
+    <div id="entries-previsionnel">
       <div id="entries-nodata" style="display:none"></div>
       <div class="kpi-grid" id="entries-summary" style="margin-bottom:.75rem"></div>
       <div id="entries-toolbar" style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:.75rem;gap:8px">
@@ -1008,31 +1007,6 @@ if(window.location.hostname==='localhost'||window.location.hostname==='127.0.0.1
       <div id="sim-sections"></div>
     </div>
 
-    <!-- ── SUIVI MENSUEL ── -->
-    <div id="entries-mensuel">
-      <!-- Navigateur de mois (style toolbar) -->
-      <div id="monthly-toolbar" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--sg);gap:8px">
-        <button id="monthly-nav-prev" onclick="monthlyNavPrev()" aria-label="Mois précédent" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 20px;cursor:pointer;color:var(--fg);font-size:1.2rem;line-height:1;flex-shrink:0;min-height:44px">‹</button>
-        <span id="monthly-label" style="font-size:var(--fs-base);font-weight:700;letter-spacing:-.01em;text-align:center;flex:1"></span>
-        <button id="monthly-nav-next" onclick="monthlyNavNext()" aria-label="Mois suivant" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 20px;cursor:pointer;color:var(--fg);font-size:1.2rem;line-height:1;flex-shrink:0;min-height:44px">›</button>
-      </div>
-      <div id="monthly-ret-banner" style="margin-bottom:var(--sg)"></div>
-      <div id="monthly-solde-hero" style="margin-bottom:var(--sg)"></div>
-      <div id="monthly-kpis"></div>
-      <div id="monthly-search-bar" style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:var(--sg)">
-        <div style="flex:1;display:flex;flex-direction:row;gap:6px;min-width:0">
-          <input type="text" id="mly-search-input" class="inp search-inp" placeholder="Rechercher…" style="flex:1;min-width:0">
-          <select id="mly-filter-cat" class="inp" style="flex-shrink:0;width:auto">
-            <option value="">Toutes catégories</option>
-            <option value="revenu">Revenu</option><option value="impot">Impôt</option>
-            <option value="fixe">Fixe</option><option value="variable">Variable</option>
-            <option value="epargne">Épargne</option><option value="loisir">Loisir</option>
-          </select>
-        </div>
-        <button class="btn-add btn-add-desktop" id="btn-add-monthly" onclick="openAddMonthlyExpense()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Ajouter</button>
-      </div>
-      <div id="monthly-sections"></div>
-    </div>
   </div>
 
   <!-- SAVINGS -->
@@ -2424,7 +2398,7 @@ function switchTab(id){
   _updateMemberBadge();
   const me=myRole();
   if(id==='dashboard'){if(dashboardMember==='all')setDashboardMember(me);else renderDashboard();}
-  if(id==='entries'){if(entriesMember==='Commun')setEntriesMember(me);else{renderEntries();const _activeEtab=document.querySelector('[data-etab].active')?.dataset.etab;if(_activeEtab==='mensuel'){_updateMonthlyNavNext();_updateMonthlyNavPrev();renderMonthly();}}}
+  if(id==='entries'){if(entriesMember==='Commun')setEntriesMember(me);else renderEntries();}
   if(id==='savings'){if(savingsMember==='all')setSavingsMember(me);else renderSavings();}
   if(id==='analysis'){if(analysisMember==='all')setAnalysisMember(me);else renderAnalysis();}
   if(id==='banque')renderBank();
@@ -2824,7 +2798,6 @@ function setEntriesMember(m){
   entriesMember=m==='all'?'Commun':m;
   renderMemberTabsFor('entries-mtabs',m,'setEntriesMember');
   setTimeout(updateMtabColors,0);renderEntries();
-  if(document.getElementById('entries-mensuel')?.style.display!=='none')renderMonthly();
 }
 function setSavingsMember(m){savingsMember=m;renderMemberTabsFor('savings-mtabs',m,'setSavingsMember');setTimeout(updateMtabColors,0);renderSavings();}
 function setAnalysisMember(m){analysisMember=m;renderMemberTabsFor('analysis-mtabs',m,'setAnalysisMember');setTimeout(updateMtabColors,0);renderAnalysis();}
@@ -3449,9 +3422,7 @@ function _ovaToggle(cat){
   }
 }
 function _ovaGoto(label){
-  monthlyYear=dashYear;monthlyMonth=dashMonth;
-  switchTab('entries');switchEntriesTab('mensuel');
-  setTimeout(()=>{const s=document.getElementById('mly-search-input');if(s){s.value=label;s.dispatchEvent(new Event('input'));}},150);
+  setTimeout(()=>{const s=document.getElementById('dash-mly-search');if(s){s.value=label;s.dispatchEvent(new Event('input'));}},150);
 }
 
 function _dashShowPendingFixes(){
@@ -3933,7 +3904,6 @@ function renderEntries(){
   setTimeout(fillAllTracks, 0);
 }
 ['search-input','filter-cat'].forEach(id=>{const el=document.getElementById(id);el.addEventListener('input',renderEntries);el.addEventListener('change',renderEntries);});
-['mly-search-input','mly-filter-cat'].forEach(id=>{const el=document.getElementById(id);if(el){el.addEventListener('input',()=>{if(_lastMonthlyStats)_renderMonthlySections(_lastMonthlyStats,monthlyExpenses,_lastMonthlySavings,_lastMonthlyEntryStats,_lastMlyMemberStats);});el.addEventListener('change',()=>{if(_lastMonthlyStats)_renderMonthlySections(_lastMonthlyStats,monthlyExpenses,_lastMonthlySavings,_lastMonthlyEntryStats,_lastMlyMemberStats);});}});
 function openAddEntry(){
   editEntryId=null;
   impotMode='montant';
@@ -4100,9 +4070,7 @@ const MLY_ADD_BTN   = (onclick) => `<button onclick="event.stopPropagation();${o
 function switchEntriesTab(tab) {
   document.querySelectorAll('[data-etab]').forEach(b => b.classList.toggle('active', b.dataset.etab === tab));
   document.getElementById('entries-previsionnel').style.display = tab === 'previsionnel' ? '' : 'none';
-  document.getElementById('entries-mensuel').style.display      = tab === 'mensuel'      ? '' : 'none';
   document.getElementById('entries-simulation').style.display   = tab === 'simulation'   ? '' : 'none';
-  if (tab === 'mensuel')    { _updateMonthlyNavNext(); _updateMonthlyNavPrev(); renderMonthly(); }
   if (tab === 'simulation') { _simLoaded = false; _simLoad(); renderSimulation(); }
 }
 let MONTHLY_MIN_YEAR = new Date().getFullYear(), MONTHLY_MIN_MONTH = new Date().getMonth() + 1;
@@ -4736,7 +4704,7 @@ function _monthlyHistorySection(history, g, isMobile) {
   </div>`;
 }
 
-function monthlyGoTo(year, month) { monthlyYear = year; monthlyMonth = month; renderMonthly(); }
+function monthlyGoTo(year, month) { dashYear = year; dashMonth = month; switchTab('dashboard'); renderDashboard(); }
 
 // Ouvre le modal épargne pré-rempli pour le mois affiché (nouveau)
 function openMonthlySaving(year, month) {
@@ -4776,7 +4744,7 @@ function deleteMonthlySaving() {
       savings = savings.filter(x => x.id !== s.id);
       _monthlySavingRec = null;
       renderSavings();
-      await renderMonthly();
+      await renderDashboard();
     } catch(err) { showApiError('Erreur : ' + err.message); }
     finally { hideLoading(); }
   });
@@ -4814,7 +4782,7 @@ function openMonthlyAutoOverride(entryId, overrideId) {
 function deleteMonthlyOverride(id) {
   showConfirm('Réinitialiser cette ligne ?', 'La valeur du prévisionnel sera restaurée pour ce mois.', async () => {
     showLoading();
-    try { await API.monthlyExpenses.delete(id); await renderMonthly(); }
+    try { await API.monthlyExpenses.delete(id); await renderDashboard(); }
     catch(err) { showApiError('Erreur : ' + err.message); }
     finally { hideLoading(); }
   });
@@ -4831,7 +4799,7 @@ function suppressMonthlyLine(entryId, name) {
         cat: entry.cat, member: entry.member,
         note: null, entry_id: entryId
       });
-      await renderMonthly();
+      await renderDashboard();
     }
     catch(err) { showApiError('Erreur : ' + err.message); }
     finally { hideLoading(); }
@@ -5013,14 +4981,14 @@ async function _mlySwipeSuppress(entryId, ovId) {
   try {
     if (ovId) await API.monthlyExpenses.delete(ovId);
     const created = await API.monthlyExpenses.create({ year: monthlyYear, month: monthlyMonth, name: entry.name, amount: 0, cat: entry.cat, member, note: null, entry_id: entry.id });
-    await renderMonthly();
+    await renderDashboard();
     _showUndoToast(`"${entry.name}" supprimé`,
       async () => {},
       async () => {
         try {
           await API.monthlyExpenses.delete(created.id);
           if (origOv) await API.monthlyExpenses.create({ year: origOv.year, month: origOv.month, name: origOv.name, amount: origOv.amount, cat: origOv.cat, member: origOv.member, note: origOv.note, entry_id: origOv.entry_id });
-          await renderMonthly();
+          await renderDashboard();
         } catch(err) { showApiError('Erreur : ' + err.message); }
       }
     );
@@ -5082,7 +5050,7 @@ async function deleteSelectedMonthly() {
           : API.monthlyExpenses.create({ year: monthlyYear, month: monthlyMonth, name: entry.name, amount: 0, cat: entry.cat, member, note: null, entry_id: entry.id })
       )
       ]);
-      await renderMonthly();
+      await renderDashboard();
     } catch(err) { showApiError('Erreur : ' + err.message); }
     finally { hideLoading(); }
   });
@@ -5091,10 +5059,10 @@ function deleteMonthlyExpense(id) {
   const e = monthlyExpenses.find(x => x.id === id);
   if (!e) return;
   monthlyExpenses = monthlyExpenses.filter(x => x.id !== id);
-  _renderMonthlySections(_lastMonthlyStats, monthlyExpenses, _lastMonthlySavings, _lastMonthlyEntryStats, _lastMlyMemberStats);
+  renderDashboard().catch(()=>{});
   _showUndoToast(`"${e.name}" supprimé`,
-    async () => { try { await API.monthlyExpenses.delete(id); } catch(err) { monthlyExpenses.push(e); _renderMonthlySections(_lastMonthlyStats, monthlyExpenses, _lastMonthlySavings, _lastMonthlyEntryStats, _lastMlyMemberStats); showApiError('Erreur : ' + err.message); } },
-    () => { monthlyExpenses.push(e); _renderMonthlySections(_lastMonthlyStats, monthlyExpenses, _lastMonthlySavings, _lastMonthlyEntryStats, _lastMlyMemberStats); }
+    async () => { try { await API.monthlyExpenses.delete(id); } catch(err) { monthlyExpenses.push(e); renderDashboard().catch(()=>{}); showApiError('Erreur : ' + err.message); } },
+    () => { monthlyExpenses.push(e); renderDashboard().catch(()=>{}); }
   );
 }
 async function toggleMonthlyExceptional(id) {
@@ -5102,7 +5070,7 @@ async function toggleMonthlyExceptional(id) {
   if (!e) return;
   try {
     await API.monthlyExpenses.update(id, { is_exceptional: e.is_exceptional ? 0 : 1 });
-    await renderMonthly();
+    await renderDashboard();
   } catch(err) { showApiError('Erreur : ' + err.message); }
 }
 document.getElementById('modal-me-cancel').onclick = () => document.getElementById('modal-monthly-expense').classList.remove('open');
@@ -5140,8 +5108,7 @@ document.getElementById('modal-me-save').onclick = async () => {
     document.getElementById('modal-monthly-expense').classList.add('open');
     return;
   } finally { hideLoading(); btn.disabled = false; }
-  renderMonthly().catch(()=>{});
-  if (window._mlyCtxDash) { window._mlyCtxDash = false; renderDashboard().catch(()=>{}); }
+  renderDashboard().catch(()=>{});
 };
 function _dashAddExpense(cat) {
   monthlyYear = dashYear; monthlyMonth = dashMonth;
@@ -5869,7 +5836,7 @@ function deleteSaving(id){
   if(!s||!canEdit(s.member))return;
   savings=savings.filter(x=>x.id!==id);
   renderSavings();
-  if(currentTab==='entries'&&document.getElementById('entries-mensuel').style.display!=='none')renderMonthly();
+  if(currentTab==='dashboard')renderDashboard();
   _showUndoToast(`Épargne ${s.month} ${s.year} supprimée`,
     async()=>{ try{ await API.savings.delete(id); }catch(err){ savings.push(s); renderSavings(); showApiError('Erreur : '+err.message); } },
     ()=>{ savings.push(s); renderSavings(); }
@@ -5901,7 +5868,7 @@ document.getElementById('modal-saving-save').onclick=async ()=>{
       showToast('Épargne enregistrée ✓');addInAppNotif('Épargne enregistrée','Votre épargne du mois a bien été saisie.');
     }
     renderSavings();
-    if (currentTab === 'entries' && document.getElementById('entries-mensuel').style.display !== 'none') renderMonthly();
+    if (currentTab === 'dashboard') renderDashboard();
     _triggerPushAlertCheck();
   }catch(err){
     showApiError('Erreur lors de la sauvegarde : '+err.message);
@@ -7584,7 +7551,7 @@ async function _doLoginWithCredentials(userIdOrEmail,password){
         await loadData();
       }catch(e){console.warn('Auto-join failed:',e.message);}
     }
-    initUserContext();renderMemberTabs();updateNavForDataState();renderDashboard();renderEntries();_updateMonthlyNavNext();_updateMonthlyNavPrev();renderMonthly();document.getElementById('fab-entry').style.display='none';document.getElementById('fab-dashboard').style.display='none';
+    initUserContext();renderMemberTabs();updateNavForDataState();renderDashboard();renderEntries();document.getElementById('fab-entry').style.display='none';document.getElementById('fab-dashboard').style.display='none';
     _updateMemberBadge();_loadNotifs();
     if(window.location.pathname==='/banque'){switchTab('banque');}
     else{try{const _st=localStorage.getItem('zenith_tab');if(_st&&_st!=='dashboard')switchTab(_st);}catch(_){}}
@@ -7612,7 +7579,7 @@ async function doLogin(){
     if(errEl) errEl.classList.remove('show');
     showScreen('app');
     await loadData();
-    initUserContext();renderMemberTabs();updateNavForDataState();renderDashboard();renderEntries();_updateMonthlyNavNext();_updateMonthlyNavPrev();renderMonthly();document.getElementById('fab-entry').style.display='none';document.getElementById('fab-dashboard').style.display='none';
+    initUserContext();renderMemberTabs();updateNavForDataState();renderDashboard();renderEntries();document.getElementById('fab-entry').style.display='none';document.getElementById('fab-dashboard').style.display='none';
     _updateMemberBadge();_loadNotifs();
     if(window.location.pathname==='/banque'){switchTab('banque');}
     else{try{const _st=localStorage.getItem('zenith_tab');if(_st&&_st!=='dashboard')switchTab(_st);}catch(_){}}
@@ -7643,7 +7610,7 @@ async function doRegister(){
     currentUser=result.user;
     showScreen('app');
     await loadData();
-    initUserContext();renderMemberTabs();updateNavForDataState();renderDashboard();renderEntries();_updateMonthlyNavNext();_updateMonthlyNavPrev();renderMonthly();document.getElementById('fab-entry').style.display='none';document.getElementById('fab-dashboard').style.display='none';
+    initUserContext();renderMemberTabs();updateNavForDataState();renderDashboard();renderEntries();document.getElementById('fab-entry').style.display='none';document.getElementById('fab-dashboard').style.display='none';
     _updateMemberBadge();_loadNotifs();
     if(window.location.pathname==='/banque'){switchTab('banque');}
     registerPushSubscription();
