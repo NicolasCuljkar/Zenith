@@ -5537,7 +5537,7 @@ function _renderSimAnalysis(stats, origStats, simF, origF, nChanges, effEp, effL
     </div>`;
   }
 
-  el.innerHTML = impactHtml + alertsHtml + ruleHtml + (ravHtml || '');
+  el.innerHTML = impactHtml + ruleHtml + (ravHtml || '');
 }
 
 function _simDelete(simId) {
