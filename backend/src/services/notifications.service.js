@@ -261,12 +261,13 @@ function startScheduler() {
     for (const user of users) {
       const s = getMonthlyStats(user.id);
       if (s.revenu === 0) continue;
-      const depRate = s.revNet > 0 ? Math.round(s.dep     / s.revNet * 100) : 0;
-      const epRate  = s.revNet > 0 ? Math.round(s.epargne / s.revNet * 100) : 0;
+      const depReelles = s.variable + s.loisir; // seulement les dépenses saisies manuellement
+      const depRate = s.revNet > 0 ? Math.round(depReelles / s.revNet * 100) : 0;
+      const epRate  = s.revNet > 0 ? Math.round(s.epargne  / s.revNet * 100) : 0;
       const suffix  = depRate > 80 ? ' — dépenses élevées ce mois-ci.' : '.';
       await sendToUser(user.id, {
         title: `Bilan de la semaine`,
-        body:  `${mois} — Revenus nets ${eur(s.revNet)}, dépenses ${eur(s.dep)} (${depRate}%), épargne ${eur(s.epargne)} (${epRate}%)${suffix}`,
+        body:  `${mois} — Revenus nets ${eur(s.revNet)} (prév.), dépenses saisies ${eur(depReelles)} (${depRate}%), épargne ${eur(s.epargne)} (${epRate}%)${suffix}`,
         url:   '/',
       });
     }
