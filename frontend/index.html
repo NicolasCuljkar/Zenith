@@ -2392,7 +2392,7 @@ function switchTab(id){
   if(el&&el.classList.contains('tab-panel')) el.classList.add('active');
   document.querySelectorAll(`[data-tab="${id}"]`).forEach(b=>b.classList.add('active'));
   const isS=id==='savings',isE=id==='entries',isD=id==='dashboard';
-  document.getElementById('fab-entry').style.display=isE?'':'none';
+  document.getElementById('fab-entry').style.display=(isE||isS)?'':'none';
   
   document.getElementById('fab-dashboard').style.display=isD&&!hasNoData()?'':'none';
   _updateMemberBadge();
@@ -3985,8 +3985,8 @@ function onEntryCatChange(cat){
 document.getElementById('btn-add-entry').addEventListener('click',openAddEntry);
 document.getElementById('fab-dashboard').addEventListener('click',()=>{ monthlyYear = dashYear; monthlyMonth = dashMonth; window._mlyCtxDash = true; openAddMonthlyExpense(); });
 document.getElementById('fab-entry').addEventListener('click',()=>{
-  const mensuelActive=document.getElementById('entries-mensuel').style.display!=='none';
-  if(mensuelActive)openAddMonthlyExpense();else openAddEntry();
+  if(currentTab==='savings') openAddSaving();
+  else openAddEntry();
 });
 function openEditEntry(id){
   const e=entries.find(x=>x.id===id);if(!e||!canEdit(e.member)){return;}editEntryId=id;
@@ -5536,6 +5536,7 @@ function renderSavings(){
   document.getElementById('savings-nodata').style.display='none';
   document.getElementById('savings-content').style.display='';
   const _canAddS=savingsMember!=='all'&&savingsMember===myRole()&&savingsStabActive!=='year';
+  if(currentTab==='savings') document.getElementById('fab-entry').style.display=_canAddS?'':'none';
   if(!document.getElementById('bar-chart')) document.getElementById('bar-chart-wrap').innerHTML='<canvas id="bar-chart"></canvas>';
   const isYear=savingsStabActive==='year',isMobile=window.innerWidth<=640;
   const [first,second]=orderedMembers();
