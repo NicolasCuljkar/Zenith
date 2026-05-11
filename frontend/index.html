@@ -996,16 +996,23 @@ if(window.location.hostname==='localhost'||window.location.hostname==='127.0.0.1
 
     <!-- ── SIMULATION ── -->
     <div id="entries-simulation" style="display:none">
-      <!-- Bandeau simulation -->
-      <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:color-mix(in srgb,var(--amber) 8%,var(--surface));border:1px solid color-mix(in srgb,var(--amber) 28%,var(--border));border-radius:var(--r);margin-bottom:.75rem">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-        <span style="font-size:var(--fs-xs);color:var(--text);flex:1">Mode simulation — les modifs <strong>n'affectent pas</strong> le prévisionnel</span>
-        <button onclick="_simReset()" class="btn" style="padding:3px 9px;font-size:var(--fs-xs);flex-shrink:0">Réinitialiser</button>
-      </div>
-      <!-- Hero (solde + mini-stats + Ajouter) + Sections -->
+      <!-- Hero toujours visible -->
       <div id="sim-hero"></div>
-      <div id="sim-analysis"></div>
-      <div id="sim-sections"></div>
+      <!-- Sous-onglets Données / Analyse -->
+      <div style="display:flex;align-items:center;gap:0;border-bottom:1px solid var(--border);margin-bottom:.75rem">
+        <button class="stab active" id="sim-stab-data"  onclick="switchSimTab('data')">Données</button>
+        <button class="stab"        id="sim-stab-analyse" onclick="switchSimTab('analyse')">Analyse</button>
+        <div style="flex:1"></div>
+        <button onclick="_simReset()" class="btn" style="padding:3px 9px;font-size:var(--fs-xs);margin-bottom:4px">Réinitialiser</button>
+      </div>
+      <!-- Données -->
+      <div id="sim-tab-data">
+        <div id="sim-sections"></div>
+      </div>
+      <!-- Analyse -->
+      <div id="sim-tab-analyse" style="display:none">
+        <div id="sim-analysis"></div>
+      </div>
     </div>
 
   </div>
@@ -5207,75 +5214,55 @@ function renderSimulation() {
     const changeLine  = nChanges > 0
       ? [nAdded && `+${nAdded} ajouté${nAdded>1?'s':''}`, nModified && `${nModified} modifié${nModified>1?'s':''}`, nDeleted && `−${nDeleted} supprimé${nDeleted>1?'s':''}`].filter(Boolean).join(' · ')
       : null;
-    heroEl.innerHTML = `<div class="card" style="margin-bottom:.75rem;padding:16px 18px">
-      <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:14px">
+    heroEl.innerHTML = `<div class="card" style="margin-bottom:.75rem;padding:14px 16px">
+      <div style="display:flex;align-items:flex-start;gap:10px">
         <div style="flex:1">
-          <div style="font-size:9px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:5px">Solde simulé</div>
+          <div style="font-size:9px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:4px">Solde simulé</div>
           <div style="font-size:2rem;font-weight:900;line-height:1;color:${stats.solde>=0?'var(--green)':'var(--red)'}">${stats.solde>=0?'+':''}${eur(stats.solde)}</div>
-          <div style="font-size:var(--fs-xs);margin-top:6px;font-weight:700;color:${dSoldeColor}">${dSoldeLabel}</div>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:6px">
+            <span style="font-size:var(--fs-xs);font-weight:700;color:${dSoldeColor}">${dSoldeLabel}</span>
+            ${changeLine ? `<span style="font-size:var(--fs-xs);color:var(--hint)">· ${changeLine}</span>` : ''}
+          </div>
         </div>
         <button onclick="_simOpenAdd()" class="btn-add" style="flex-shrink:0;margin-top:2px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Ajouter</button>
       </div>
-      <div style="display:flex;border-top:1px solid var(--border);padding-top:12px">
-        <div style="flex:1;text-align:center">
-          <div style="font-size:9px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:2px">Rev. net</div>
-          <div style="font-size:var(--fs-sm);font-weight:800;color:var(--green)">${eur(stats.revNet)}</div>
-        </div>
-        <div style="width:1px;background:var(--border)"></div>
-        <div style="flex:1;text-align:center">
-          <div style="font-size:9px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:2px">Charges</div>
-          <div style="font-size:var(--fs-sm);font-weight:800;color:var(--red)">${eur(stats.fix+stats.vari)}</div>
-        </div>
-        <div style="width:1px;background:var(--border)"></div>
-        <div style="flex:1;text-align:center">
-          <div style="font-size:9px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:2px">Épargne</div>
-          <div id="sim-hero-ep" style="font-size:var(--fs-sm);font-weight:800;color:var(--blue)">${eur(effEpEarly)}</div>
-        </div>
-      </div>
-      ${changeLine ? `<div style="margin-top:10px;padding:5px 10px;background:color-mix(in srgb,var(--amber) 10%,var(--surface));border-radius:6px;font-size:var(--fs-xs);color:var(--muted)">${changeLine}</div>` : ''}
     </div>`;
   }
 
-  // Bloc RAV
+  // Bloc RAV (intégré dans la section Épargne)
   const _simRavMems = mem === 'Commun' ? [...new Set(_simEntries.map(e => e.member))].filter(Boolean) : [mem];
-  const _simRavHtml = (() => {
-    const blocks = _simRavMems.map(m => {
-      const ms  = calcStats(_simEntries.filter(e => e.member === m));
-      const pct = _simSavingPct[m] ?? (savingPct[m] ?? 60);
-      const ep  = Math.max(0, Math.round(ms.rav * pct / 100));
-      const loi = Math.max(0, Math.round(ms.rav * (100 - pct) / 100));
-      const mc  = getMC(m);
-      const ravGlow = ms.rav >= 0 ? '#0d9e6e' : '#d93535';
-      return `<div style="${_simRavMems.length > 1 ? 'margin-bottom:10px' : ''}">
-        ${_simRavMems.length > 1 ? `<div style="font-size:var(--fs-xs);font-weight:700;color:${mc};text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">${esc(m)}</div>` : ''}
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;gap:8px">
-          <div style="display:flex;align-items:center;gap:8px">
-            <span style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:${ravGlow}">RAV simulé</span>
-            <span style="font-size:var(--fs-sm);font-weight:800;color:${ravGlow}">${ms.rav >= 0 ? '+' : ''}${eur(ms.rav)}</span>
-          </div>
-          <span id="sim-pctv-${m}" style="font-size:var(--fs-xs);font-weight:700;color:${mc}">${pct}%</span>
+  const _simRavInner = _simRavMems.map(m => {
+    const ms  = calcStats(_simEntries.filter(e => e.member === m));
+    const pct = _simSavingPct[m] ?? (savingPct[m] ?? 60);
+    const ep  = Math.max(0, Math.round(ms.rav * pct / 100));
+    const loi = Math.max(0, Math.round(ms.rav * (100 - pct) / 100));
+    const mc  = getMC(m);
+    const ravGlow = ms.rav >= 0 ? '#0d9e6e' : '#d93535';
+    return `<div style="${_simRavMems.length > 1 ? 'margin-bottom:10px' : ''}">
+      ${_simRavMems.length > 1 ? `<div style="font-size:var(--fs-xs);font-weight:700;color:${mc};text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">${esc(m)}</div>` : ''}
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;gap:8px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:${ravGlow}">RAV simulé</span>
+          <span style="font-size:var(--fs-sm);font-weight:800;color:${ravGlow}">${ms.rav >= 0 ? '+' : ''}${eur(ms.rav)}</span>
         </div>
-        <input type="range" min="0" max="100" step="1" value="${pct}"
-          style="width:100%;accent-color:${mc};--accent-c:${mc};--track-right:var(--amber);margin-bottom:5px"
-          oninput="_simSliderLive('${m}',+this.value,${Math.round(ms.rav)})"
-          onchange="_simSliderDone('${m}',+this.value)">
-        <div style="display:flex;justify-content:space-between">
-          <span style="font-size:var(--fs-xs);color:var(--muted)">→ <span style="color:var(--blue);font-weight:700">Épargne</span> <span id="sim-ep-${m}">${eur(ep)}</span></span>
-          <span style="font-size:var(--fs-xs);color:var(--muted)">→ <span style="color:var(--amber);font-weight:700">Loisir</span> <span id="sim-loi-${m}">${eur(loi)}</span></span>
-        </div>
-      </div>`;
-    }).join('<hr style="border:none;border-top:1px solid var(--border);margin:10px 0">');
-    return `<div class="card" style="margin-bottom:.75rem;padding:14px 16px">
-      <div style="font-size:9px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:10px">Répartition du reste à vivre</div>
-      ${blocks}
+        <span id="sim-pctv-${m}" style="font-size:var(--fs-xs);font-weight:700;color:${mc}">${pct}%</span>
+      </div>
+      <input type="range" min="0" max="100" step="1" value="${pct}"
+        style="width:100%;accent-color:${mc};--accent-c:${mc};--track-right:var(--amber);margin-bottom:5px"
+        oninput="_simSliderLive('${m}',+this.value,${Math.round(ms.rav)})"
+        onchange="_simSliderDone('${m}',+this.value)">
+      <div style="display:flex;justify-content:space-between">
+        <span style="font-size:var(--fs-xs);color:var(--muted)">→ <span style="color:var(--blue);font-weight:700">Épargne</span> <span id="sim-ep-${m}">${eur(ep)}</span></span>
+        <span style="font-size:var(--fs-xs);color:var(--muted)">→ <span style="color:var(--amber);font-weight:700">Loisir</span> <span id="sim-loi-${m}">${eur(loi)}</span></span>
+      </div>
     </div>`;
-  })();
+  }).join('<hr style="border:none;border-top:1px solid var(--border);margin:10px 0">');
 
   // Épargne/loisir synthétiques (alias des helpers définis plus tôt)
   const _simCalcEp  = _simCalcEpEarly;
   const _simCalcLoi = _simCalcLoiEarly;
 
-  _renderSimAnalysis(stats, origStats, simF, origF, nChanges, effEpEarly, effLoiEarly, _simRavHtml);
+  _renderSimAnalysis(stats, origStats, simF, origF, nChanges, effEpEarly, effLoiEarly);
 
   const GROUPS = [
     {key:'revenus',   label:'Revenus & Impôts',  cats:['revenu','impot'], color:'#0d9e6e'},
@@ -5355,6 +5342,10 @@ function renderSimulation() {
     const collapsed = !!window.simSectionCollapsed[g.key];
     const chevStyle = collapsed ? 'transform:rotate(-90deg);' : '';
     const bodyId = `sim-section-body-${g.key}`;
+    const ravBlock = g.key === 'epargne' ? `<div style="padding:10px 0 12px;border-bottom:1px solid var(--border);margin-bottom:2px">
+        <div style="font-size:9px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Répartition du reste à vivre</div>
+        ${_simRavInner}
+      </div>` : '';
     const groupCard = `<div class="card" style="margin-bottom:.75rem;padding:0">
       <div onclick="toggleSimSection('${g.key}')" style="cursor:pointer;display:flex;align-items:center;padding:10px 14px 8px;border-bottom:${collapsed?'none':'1px solid var(--border)'}">
         <button onclick="event.stopPropagation();toggleSimSection('${g.key}')" style="background:none;border:none;cursor:pointer;color:var(--muted);padding:0;display:flex;align-items:center;transition:transform .2s;${chevStyle};margin-right:7px;flex-shrink:0">${CHEVRON_SVG}</button>
@@ -5363,7 +5354,7 @@ function renderSimulation() {
         <span style="font-size:var(--fs-xs);color:var(--hint);background:${g.color}18;border-radius:20px;padding:1px 7px;font-weight:700;margin-right:8px">${gSim.length}</span>
         <span id="sim-gtot-${g.key}" style="font-weight:700;font-size:var(--fs-sm);color:${g.color}">${eur(tot)}</span>
       </div>
-      <div id="${bodyId}" style="${collapsed?'display:none':''}padding:0 14px">${rows}${delRows}</div>
+      <div id="${bodyId}" style="${collapsed?'display:none':''}padding:0 14px">${ravBlock}${rows}${delRows}</div>
     </div>`;
     return groupCard;
   }).join('');
@@ -5382,7 +5373,14 @@ function toggleSimSection(key) {
   if (btn) btn.style.transform = collapsed ? 'rotate(-90deg)' : '';
 }
 
-function _renderSimAnalysis(stats, origStats, simF, origF, nChanges, effEp, effLoi, ravHtml) {
+function switchSimTab(tab) {
+  document.getElementById('sim-tab-data').style.display    = tab === 'data'    ? '' : 'none';
+  document.getElementById('sim-tab-analyse').style.display = tab === 'analyse' ? '' : 'none';
+  document.getElementById('sim-stab-data').classList.toggle('active', tab === 'data');
+  document.getElementById('sim-stab-analyse').classList.toggle('active', tab === 'analyse');
+}
+
+function _renderSimAnalysis(stats, origStats, simF, origF, nChanges, effEp, effLoi) {
   const el = document.getElementById('sim-analysis');
   if (!el) return;
 
@@ -5558,7 +5556,7 @@ function _renderSimAnalysis(stats, origStats, simF, origF, nChanges, effEp, effL
     </div>`;
   }
 
-  el.innerHTML = ruleHtml + (ravHtml || '') + impactHtml;
+  el.innerHTML = ruleHtml + impactHtml;
 }
 
 function _simDelete(simId) {
