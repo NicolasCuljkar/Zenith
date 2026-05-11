@@ -1,0 +1,1632 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zénith — Documentation Technique</title>
+<style>
+  /* ── Reset & Base ── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --blue:    #3B8BD4;
+    --blue-dk: #1a5fa0;
+    --blue-lt: #e8f3fc;
+    --green:   #22c55e;
+    --red:     #ef4444;
+    --amber:   #f59e0b;
+    --purple:  #9e7bca;
+    --pink:    #e06fa0;
+    --ink:     #1a1f2e;
+    --ink2:    #4a5568;
+    --ink3:    #718096;
+    --border:  #e2e8f0;
+    --bg:      #f8fafc;
+    --white:   #ffffff;
+    --radius:  12px;
+    --shadow:  0 2px 12px rgba(0,0,0,.08);
+    --shadow-lg: 0 8px 32px rgba(0,0,0,.12);
+  }
+
+  html { font-size: 15px; }
+
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    color: var(--ink);
+    background: var(--bg);
+    line-height: 1.65;
+  }
+
+  /* ── Print ── */
+  @media print {
+    body { background: white; font-size: 11pt; }
+    .cover { min-height: 100vh; }
+    .no-print { display: none !important; }
+    section { page-break-inside: avoid; }
+    h2 { page-break-before: always; }
+    h2.no-break { page-break-before: avoid; }
+    table { page-break-inside: auto; }
+    tr { page-break-inside: avoid; }
+    pre { white-space: pre-wrap; }
+    .card { box-shadow: none; border: 1px solid var(--border); }
+  }
+
+  /* ── Layout ── */
+  .page-wrap {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 0 24px 80px;
+  }
+
+  /* ── Cover ── */
+  .cover {
+    min-height: 100vh;
+    background: linear-gradient(145deg, #0f1b35 0%, #1a3a6e 50%, #0d2b55 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 40px;
+    position: relative;
+    overflow: hidden;
+    text-align: center;
+    page-break-after: always;
+  }
+
+  .cover::before {
+    content: '';
+    position: absolute;
+    width: 700px; height: 700px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(59,139,212,.25) 0%, transparent 70%);
+    top: -200px; right: -200px;
+  }
+  .cover::after {
+    content: '';
+    position: absolute;
+    width: 500px; height: 500px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(158,123,202,.18) 0%, transparent 70%);
+    bottom: -150px; left: -100px;
+  }
+
+  .cover-logo {
+    width: 90px; height: 90px;
+    background: linear-gradient(135deg, var(--blue) 0%, #5ba3e8 100%);
+    border-radius: 24px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 42px;
+    margin-bottom: 32px;
+    box-shadow: 0 16px 40px rgba(59,139,212,.4);
+    position: relative; z-index: 1;
+  }
+
+  .cover h1 {
+    font-size: 3.2rem;
+    font-weight: 800;
+    letter-spacing: -1.5px;
+    color: #fff;
+    position: relative; z-index: 1;
+    margin-bottom: 12px;
+  }
+
+  .cover h1 span { color: var(--blue); }
+
+  .cover-sub {
+    font-size: 1.2rem;
+    color: rgba(255,255,255,.65);
+    position: relative; z-index: 1;
+    margin-bottom: 48px;
+    max-width: 520px;
+  }
+
+  .cover-tags {
+    display: flex; gap: 10px; flex-wrap: wrap;
+    justify-content: center;
+    position: relative; z-index: 1;
+    margin-bottom: 60px;
+  }
+
+  .tag {
+    padding: 6px 16px;
+    border-radius: 999px;
+    font-size: .8rem;
+    font-weight: 600;
+    letter-spacing: .3px;
+    text-transform: uppercase;
+  }
+
+  .tag-blue   { background: rgba(59,139,212,.2); color: #7ec3f7; border: 1px solid rgba(59,139,212,.3); }
+  .tag-green  { background: rgba(34,197,94,.15);  color: #6ee7a0; border: 1px solid rgba(34,197,94,.25); }
+  .tag-purple { background: rgba(158,123,202,.2); color: #c4a8e8; border: 1px solid rgba(158,123,202,.3); }
+  .tag-amber  { background: rgba(245,158,11,.15); color: #fcd34d; border: 1px solid rgba(245,158,11,.25); }
+
+  .cover-meta {
+    display: flex; gap: 32px;
+    position: relative; z-index: 1;
+    color: rgba(255,255,255,.4);
+    font-size: .85rem;
+  }
+
+  .cover-meta span { display: flex; align-items: center; gap: 6px; }
+
+  /* ── TOC ── */
+  .toc-section {
+    background: var(--white);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 40px;
+    margin: 48px 0;
+  }
+
+  .toc-section h2 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--blue-dk);
+    margin-bottom: 28px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid var(--blue-lt);
+  }
+
+  .toc-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px 32px;
+  }
+
+  .toc-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 6px 0;
+    border-bottom: 1px dashed var(--border);
+    text-decoration: none;
+    color: var(--ink2);
+    font-size: .9rem;
+    transition: color .15s;
+  }
+
+  .toc-item:hover { color: var(--blue); }
+
+  .toc-num {
+    width: 24px; height: 24px;
+    border-radius: 6px;
+    background: var(--blue-lt);
+    color: var(--blue-dk);
+    font-size: .72rem;
+    font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+
+  /* ── Section headers ── */
+  h2 {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: var(--ink);
+    margin: 56px 0 24px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .section-icon {
+    width: 44px; height: 44px;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+
+  .si-blue   { background: var(--blue-lt); }
+  .si-green  { background: #dcfce7; }
+  .si-purple { background: #f3eeff; }
+  .si-amber  { background: #fffbeb; }
+  .si-red    { background: #fef2f2; }
+  .si-pink   { background: #fdf2f8; }
+
+  h3 {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--ink);
+    margin: 32px 0 12px;
+    padding-left: 12px;
+    border-left: 3px solid var(--blue);
+  }
+
+  h4 {
+    font-size: .95rem;
+    font-weight: 700;
+    color: var(--ink2);
+    margin: 20px 0 8px;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+  }
+
+  p { margin-bottom: 12px; color: var(--ink2); }
+
+  /* ── Cards ── */
+  .card {
+    background: var(--white);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 28px 32px;
+    margin-bottom: 20px;
+  }
+
+  .card-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+
+  .card-row.three { grid-template-columns: 1fr 1fr 1fr; }
+  .card-row.four  { grid-template-columns: 1fr 1fr 1fr 1fr; }
+
+  .metric-card {
+    background: var(--white);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 20px;
+    border-top: 3px solid var(--blue);
+    text-align: center;
+  }
+
+  .metric-card.green  { border-top-color: var(--green); }
+  .metric-card.purple { border-top-color: var(--purple); }
+  .metric-card.amber  { border-top-color: var(--amber); }
+  .metric-card.red    { border-top-color: var(--red); }
+  .metric-card.pink   { border-top-color: var(--pink); }
+
+  .metric-num {
+    font-size: 1.9rem;
+    font-weight: 800;
+    color: var(--ink);
+    line-height: 1.1;
+  }
+
+  .metric-label {
+    font-size: .78rem;
+    color: var(--ink3);
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    margin-top: 4px;
+    font-weight: 600;
+  }
+
+  /* ── Tables ── */
+  .table-wrap { overflow-x: auto; margin-bottom: 20px; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: .88rem;
+  }
+
+  thead tr {
+    background: linear-gradient(90deg, var(--blue-dk) 0%, var(--blue) 100%);
+    color: #fff;
+  }
+
+  thead th {
+    padding: 11px 14px;
+    text-align: left;
+    font-weight: 600;
+    font-size: .82rem;
+    text-transform: uppercase;
+    letter-spacing: .4px;
+  }
+
+  thead th:first-child { border-radius: 8px 0 0 0; }
+  thead th:last-child  { border-radius: 0 8px 0 0; }
+
+  tbody tr:nth-child(even) { background: var(--bg); }
+  tbody tr:hover { background: var(--blue-lt); }
+
+  tbody td {
+    padding: 9px 14px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: .75rem;
+    font-weight: 700;
+    letter-spacing: .3px;
+  }
+
+  .badge-get    { background: #dcfce7; color: #166534; }
+  .badge-post   { background: #fef3c7; color: #92400e; }
+  .badge-put    { background: #ede9fe; color: #5b21b6; }
+  .badge-patch  { background: #fce7f3; color: #9d174d; }
+  .badge-delete { background: #fee2e2; color: #991b1b; }
+  .badge-jwt    { background: var(--blue-lt); color: var(--blue-dk); }
+  .badge-pub    { background: #f0fdf4; color: #15803d; }
+  .badge-admin  { background: #fef2f2; color: #b91c1c; }
+
+  code {
+    font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    font-size: .85em;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1px 5px;
+    color: #c7254e;
+  }
+
+  pre {
+    background: #1e2a3a;
+    color: #cdd9e5;
+    border-radius: 10px;
+    padding: 20px 24px;
+    font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    font-size: .82rem;
+    line-height: 1.6;
+    overflow-x: auto;
+    margin-bottom: 16px;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.05);
+  }
+
+  pre .c  { color: #6a9955; } /* comment */
+  pre .k  { color: #569cd6; } /* keyword */
+  pre .s  { color: #ce9178; } /* string */
+  pre .n  { color: #9cdcfe; } /* name */
+  pre .m  { color: #b5cea8; } /* number */
+  pre .p  { color: #d4d4d4; } /* punctuation */
+
+  /* ── Info boxes ── */
+  .info-box {
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin-bottom: 16px;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+  }
+
+  .info-box-icon { font-size: 1.2rem; flex-shrink: 0; margin-top: 1px; }
+  .info-box-body { font-size: .88rem; color: var(--ink2); }
+  .info-box-body strong { display: block; margin-bottom: 4px; font-size: .9rem; }
+
+  .info-blue   { background: #eff6ff; border-left: 3px solid var(--blue); }
+  .info-amber  { background: #fffbeb; border-left: 3px solid var(--amber); }
+  .info-green  { background: #f0fdf4; border-left: 3px solid var(--green); }
+  .info-red    { background: #fef2f2; border-left: 3px solid var(--red); }
+
+  /* ── Architecture diagram ── */
+  .arch-diagram {
+    background: var(--white);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 32px;
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .arch-row {
+    display: flex;
+    gap: 0;
+    align-items: center;
+    width: 100%;
+    justify-content: center;
+    position: relative;
+  }
+
+  .arch-box {
+    border-radius: 12px;
+    padding: 16px 24px;
+    text-align: center;
+    min-width: 140px;
+    position: relative;
+  }
+
+  .arch-box-title {
+    font-size: .75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    margin-bottom: 4px;
+  }
+
+  .arch-box-sub {
+    font-size: .72rem;
+    opacity: .7;
+  }
+
+  .arch-arrow {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0 12px;
+    color: var(--ink3);
+    font-size: .7rem;
+    font-weight: 600;
+  }
+
+  .arrow-line {
+    width: 2px;
+    height: 32px;
+    background: linear-gradient(to bottom, var(--border), var(--blue));
+  }
+
+  .arrow-head { color: var(--blue); font-size: 1rem; }
+
+  .ab-client  { background: #eff6ff; border: 2px solid var(--blue); color: var(--blue-dk); }
+  .ab-express { background: #f0fdf4; border: 2px solid var(--green); color: #166534; }
+  .ab-sqlite  { background: #fef3c7; border: 2px solid var(--amber); color: #92400e; }
+  .ab-push    { background: #fdf4ff; border: 2px solid var(--purple); color: #6b21a8; }
+  .ab-plaid   { background: #fff1f2; border: 2px solid #fb7185; color: #9f1239; }
+
+  .arch-h-row {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    align-items: stretch;
+    width: 100%;
+  }
+
+  .arch-h-arrow {
+    display: flex;
+    align-items: center;
+    color: var(--blue);
+    font-size: 1.2rem;
+    padding: 0 4px;
+  }
+
+  /* ── DB Schema diagram ── */
+  .schema-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+
+  .schema-table {
+    background: var(--white);
+    border-radius: 10px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    font-size: .8rem;
+  }
+
+  .schema-table-head {
+    padding: 10px 14px;
+    font-weight: 700;
+    font-size: .82rem;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .schema-table-rows { }
+
+  .schema-row {
+    display: flex;
+    align-items: center;
+    padding: 6px 14px;
+    border-bottom: 1px solid var(--bg);
+    gap: 8px;
+  }
+
+  .schema-row:last-child { border-bottom: none; }
+
+  .schema-col-name {
+    flex: 1;
+    font-weight: 600;
+    color: var(--ink);
+  }
+
+  .schema-col-type {
+    font-size: .72rem;
+    color: var(--ink3);
+    font-family: monospace;
+    background: var(--bg);
+    padding: 1px 5px;
+    border-radius: 3px;
+  }
+
+  .pk  { color: var(--amber); font-size: .65rem; font-weight: 700; }
+  .fk  { color: var(--blue);  font-size: .65rem; font-weight: 700; }
+  .idx { color: var(--green); font-size: .65rem; font-weight: 700; }
+
+  /* ── Formula boxes ── */
+  .formula-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .formula-card {
+    background: #1e2a3a;
+    border-radius: 10px;
+    padding: 16px 20px;
+    color: #cdd9e5;
+    font-family: 'Cascadia Code', 'Fira Code', monospace;
+    font-size: .8rem;
+    line-height: 1.8;
+  }
+
+  .formula-card .fc-title {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    font-size: .7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    color: #6a9955;
+    margin-bottom: 8px;
+  }
+
+  .eq { color: #d4d4d4; }
+  .ev { color: #9cdcfe; }
+  .ec { color: #6a9955; }
+  .en { color: #b5cea8; }
+  .ek { color: #569cd6; }
+
+  /* ── Tab diagram ── */
+  .tab-diagram {
+    display: flex;
+    gap: 0;
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    margin-bottom: 20px;
+  }
+
+  .tab-item {
+    flex: 1;
+    padding: 20px 14px;
+    text-align: center;
+    font-size: .78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .4px;
+  }
+
+  .tab-icon { font-size: 1.6rem; display: block; margin-bottom: 6px; }
+
+  .ti-blue   { background: var(--blue-lt); color: var(--blue-dk); border-top: 3px solid var(--blue); }
+  .ti-green  { background: #dcfce7; color: #166534; border-top: 3px solid var(--green); }
+  .ti-purple { background: #f3eeff; color: #5b21b6; border-top: 3px solid var(--purple); }
+  .ti-amber  { background: #fffbeb; color: #92400e; border-top: 3px solid var(--amber); }
+  .ti-pink   { background: #fdf2f8; color: #9d174d; border-top: 3px solid var(--pink); }
+
+  /* ── Cron timeline ── */
+  .cron-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    position: relative;
+    padding-left: 32px;
+  }
+
+  .cron-list::before {
+    content: '';
+    position: absolute;
+    left: 10px; top: 8px; bottom: 8px;
+    width: 2px;
+    background: linear-gradient(to bottom, var(--blue), var(--purple));
+    border-radius: 1px;
+  }
+
+  .cron-item {
+    position: relative;
+    padding: 12px 0 12px 20px;
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+  }
+
+  .cron-item::before {
+    content: '';
+    position: absolute;
+    left: -26px; top: 17px;
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: var(--blue);
+    border: 2px solid var(--white);
+    box-shadow: 0 0 0 2px var(--blue);
+  }
+
+  .cron-time {
+    background: var(--blue-lt);
+    color: var(--blue-dk);
+    border-radius: 6px;
+    padding: 3px 10px;
+    font-size: .78rem;
+    font-weight: 700;
+    font-family: monospace;
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+
+  .cron-desc strong { font-size: .9rem; }
+  .cron-desc p { font-size: .82rem; margin-bottom: 0; }
+
+  /* ── Alert list ── */
+  .alert-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  .alert-item {
+    background: var(--white);
+    border-radius: 10px;
+    padding: 14px 16px;
+    border-left: 3px solid var(--amber);
+    box-shadow: 0 1px 4px rgba(0,0,0,.06);
+  }
+
+  .alert-item.red    { border-left-color: var(--red); }
+  .alert-item.blue   { border-left-color: var(--blue); }
+  .alert-item.purple { border-left-color: var(--purple); }
+
+  .alert-key  { font-size: .7rem; font-weight: 700; color: var(--ink3); text-transform: uppercase; letter-spacing: .4px; margin-bottom: 2px; }
+  .alert-title { font-size: .9rem; font-weight: 700; color: var(--ink); }
+  .alert-cond  { font-size: .78rem; color: var(--ink3); margin-top: 4px; font-family: monospace; }
+
+  /* ── Stack pills ── */
+  .stack-row {
+    display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px;
+  }
+
+  .stack-pill {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 8px 16px;
+    font-size: .85rem;
+    font-weight: 600;
+    box-shadow: var(--shadow);
+  }
+
+  .pill-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* ── Env table ── */
+  .env-row-req  td:first-child::after { content: ' *'; color: var(--red); font-weight: 700; }
+
+  /* ── Footer ── */
+  .doc-footer {
+    text-align: center;
+    padding: 40px 0 20px;
+    color: var(--ink3);
+    font-size: .8rem;
+    border-top: 1px solid var(--border);
+    margin-top: 60px;
+  }
+
+  /* ── Divider ── */
+  hr {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 32px 0;
+  }
+
+  ul, ol {
+    padding-left: 20px;
+    margin-bottom: 12px;
+    color: var(--ink2);
+    font-size: .92rem;
+  }
+
+  li { margin-bottom: 4px; }
+  li code { font-size: .82em; }
+
+  /* ── Syntax highlight helpers ── */
+  .hl-blue   { color: #60a5fa; }
+  .hl-green  { color: #6ee7b7; }
+  .hl-amber  { color: #fcd34d; }
+  .hl-pink   { color: #f9a8d4; }
+  .hl-purple { color: #c4b5fd; }
+  .hl-red    { color: #fca5a5; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════
+     COVER
+════════════════════════════════════════════════════════════ -->
+<div class="cover">
+  <div class="cover-logo">💰</div>
+  <h1>Zé<span>nith</span></h1>
+  <p class="cover-sub">Documentation technique complète — architecture, API, base de données, frontend et formules de calcul</p>
+  <div class="cover-tags">
+    <span class="tag tag-blue">Node.js · Express</span>
+    <span class="tag tag-amber">SQLite · WAL</span>
+    <span class="tag tag-green">PWA Vanilla JS</span>
+    <span class="tag tag-purple">Web Push · JWT</span>
+  </div>
+  <div class="cover-meta">
+    <span>📅 Mai 2026</span>
+    <span>🗄️ Schéma DB v27</span>
+    <span>🔖 v1.0</span>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     WRAPPER
+════════════════════════════════════════════════════════════ -->
+<div class="page-wrap">
+
+<!-- ── Table des matières ── -->
+<div class="toc-section">
+  <h2 class="no-break" style="margin-top:0;font-size:1.4rem;color:var(--blue-dk);">Table des matières</h2>
+  <div class="toc-grid">
+    <a href="#arch"    class="toc-item"><span class="toc-num">1</span> Architecture générale</a>
+    <a href="#stack"   class="toc-item"><span class="toc-num">2</span> Stack technique</a>
+    <a href="#files"   class="toc-item"><span class="toc-num">3</span> Structure des fichiers</a>
+    <a href="#db"      class="toc-item"><span class="toc-num">4</span> Base de données</a>
+    <a href="#api"     class="toc-item"><span class="toc-num">5</span> API REST — Référence</a>
+    <a href="#auth"    class="toc-item"><span class="toc-num">6</span> Authentification &amp; sécurité</a>
+    <a href="#notif"   class="toc-item"><span class="toc-num">7</span> Notifications push</a>
+    <a href="#front"   class="toc-item"><span class="toc-num">8</span> Frontend — Structure</a>
+    <a href="#tabs"    class="toc-item"><span class="toc-num">9</span> Onglets &amp; vues</a>
+    <a href="#formules"class="toc-item"><span class="toc-num">10</span> Formules de calcul</a>
+    <a href="#env"     class="toc-item"><span class="toc-num">11</span> Variables d'environnement</a>
+    <a href="#deploy"  class="toc-item"><span class="toc-num">12</span> Déploiement</a>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     1. ARCHITECTURE
+════════════════════════════════════════════════════════════ -->
+<h2 id="arch"><span class="section-icon si-blue">🏗️</span> 1. Architecture générale</h2>
+
+<div class="arch-diagram">
+
+  <!-- Client -->
+  <div class="arch-h-row" style="margin-bottom:0;">
+    <div class="arch-box ab-client" style="min-width:180px;">
+      <div class="arch-box-title">🌐 Client (navigateur / PWA)</div>
+      <div class="arch-box-sub">index.html · js/api.js · Service Worker</div>
+    </div>
+    <div class="arch-h-arrow" style="flex-direction:column;gap:0;">
+      <div class="arch-h-arrow" style="color:var(--blue-dk);font-size:.7rem;font-weight:700;flex-direction:column;">
+        <span>fetch + JWT</span>
+        <span style="font-size:1.2rem;">↕</span>
+        <span>JSON { success, data }</span>
+      </div>
+    </div>
+    <div class="arch-box ab-express" style="min-width:200px;">
+      <div class="arch-box-title">⚙️ Express API (Node.js)</div>
+      <div class="arch-box-sub">CORS · Rate limit · JWT middleware<br>Routes → Controllers → Services</div>
+    </div>
+    <div class="arch-h-arrow">
+      <span>→</span>
+    </div>
+    <div class="arch-box ab-sqlite" style="min-width:160px;">
+      <div class="arch-box-title">🗄️ SQLite (WAL)</div>
+      <div class="arch-box-sub">node:sqlite · DatabaseSync<br>27 migrations · FK ON</div>
+    </div>
+  </div>
+
+  <div style="width:100%;display:flex;justify-content:flex-end;padding-right:80px;margin:16px 0 4px;">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+      <div style="font-size:.7rem;color:var(--ink3);font-weight:600;">Services annexes</div>
+      <div style="font-size:1.2rem;color:var(--border);">↕</div>
+    </div>
+  </div>
+
+  <div class="arch-h-row" style="justify-content:flex-end;gap:12px;">
+    <div class="arch-box ab-push" style="min-width:140px;">
+      <div class="arch-box-title">🔔 Web Push</div>
+      <div class="arch-box-sub">web-push · VAPID<br>node-cron (scheduler)</div>
+    </div>
+    <div class="arch-box ab-plaid" style="min-width:140px;">
+      <div class="arch-box-title">🏦 Plaid / Nordigen</div>
+      <div class="arch-box-sub">Open Banking (optionnel)<br>Transactions bancaires</div>
+    </div>
+  </div>
+
+</div>
+
+<div class="info-box info-blue">
+  <span class="info-box-icon">ℹ️</span>
+  <div class="info-box-body">
+    <strong>Architecture monorepo</strong>
+    Le frontend est une PWA mono-fichier servie statiquement par Express en production. Pas de serveur frontend séparé. Le backend écoute sur le port 3001 (configurable). En production (Railway), un seul service Node.js sert à la fois l'API et les assets statiques.
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     2. STACK
+════════════════════════════════════════════════════════════ -->
+<h2 id="stack"><span class="section-icon si-green">🧰</span> 2. Stack technique</h2>
+
+<div class="card">
+  <h4>Backend</h4>
+  <div class="stack-row">
+    <div class="stack-pill"><div class="pill-dot" style="background:#68a063;"></div>Node.js</div>
+    <div class="stack-pill"><div class="pill-dot" style="background:#000;"></div>Express 4</div>
+    <div class="stack-pill"><div class="pill-dot" style="background:#f59e0b;"></div>SQLite (node:sqlite natif)</div>
+    <div class="stack-pill"><div class="pill-dot" style="background:#e53e3e;"></div>bcryptjs</div>
+    <div class="stack-pill"><div class="pill-dot" style="background:#3B8BD4;"></div>jsonwebtoken</div>
+    <div class="stack-pill"><div class="pill-dot" style="background:#9e7bca;"></div>web-push (VAPID)</div>
+    <div class="stack-pill"><div class="pill-dot" style="background:#22c55e;"></div>node-cron</div>
+    <div class="stack-pill"><div class="pill-dot" style="background:#1a56db;"></div>Plaid SDK</div>
+    <div class="stack-pill"><div class="pill-dot" style="background:#00b386;"></div>express-rate-limit</div>
+    <div class="stack-pill"><div class="pill-dot" style="background:#718096;"></div>dotenv</div>
+  </div>
+  <h4>Frontend</h4>
+  <div class="stack-row">
+    <div class="stack-pill"><div class="pill-dot" style="background:#e34c26;"></div>HTML5 (mono-fichier)</div>
+    <div class="stack-pill"><div class="pill-dot" style="background:#f7df1e;"></div>Vanilla JS (ES2022)</div>
+    <div class="stack-pill"><div class="pill-dot" style="background:#3d5afe;"></div>Chart.js</div>
+    <div class="stack-pill"><div class="pill-dot" style="background:#ff6384;"></div>PWA (Service Worker)</div>
+    <div class="stack-pill"><div class="pill-dot" style="background:#9e7bca;"></div>Web Push API</div>
+  </div>
+  <h4>Infrastructure</h4>
+  <div class="stack-row">
+    <div class="stack-pill"><div class="pill-dot" style="background:#8f3e97;"></div>Railway (hébergement)</div>
+    <div class="stack-pill"><div class="pill-dot" style="background:#24292e;"></div>GitHub (déploiement CI)</div>
+    <div class="stack-pill"><div class="pill-dot" style="background:#f59e0b;"></div>SQLite WAL (persistance volume)</div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     3. STRUCTURE DES FICHIERS
+════════════════════════════════════════════════════════════ -->
+<h2 id="files"><span class="section-icon si-amber">📁</span> 3. Structure des fichiers</h2>
+
+<pre>zenith/
+├── backend/
+│   ├── database/
+│   │   ├── zenith.db                  <span class="hl-amber"># Fichier SQLite principal</span>
+│   │   └── zenith.db.v{N}.bak         <span class="hl-green"># Backups automatiques avant migrations</span>
+│   ├── src/
+│   │   ├── app.js                     <span class="hl-blue"># Point d'entrée Express</span>
+│   │   ├── config/
+│   │   │   └── database.js            <span class="hl-blue"># Connexion SQLite + 27 migrations</span>
+│   │   ├── middleware/
+│   │   │   ├── auth.middleware.js     <span class="hl-green"># requireAuth / optionalAuth / requireAdmin</span>
+│   │   │   └── error.middleware.js    <span class="hl-green"># Gestionnaire d'erreurs global</span>
+│   │   ├── routes/                    <span class="hl-amber"># 12 fichiers de routes Express</span>
+│   │   ├── controllers/               <span class="hl-amber"># Validation HTTP → appel service</span>
+│   │   └── services/                  <span class="hl-amber"># Logique métier + accès DB</span>
+│   │       ├── auth.service.js        <span class="hl-blue"># JWT, bcrypt, login/register</span>
+│   │       ├── entries.service.js     <span class="hl-blue"># Lignes budgétaires prévisionnelles</span>
+│   │       ├── savings.service.js     <span class="hl-blue"># Épargne + calcul delta</span>
+│   │       ├── monthly_expenses.service.js  <span class="hl-blue"># Suivi mensuel réel</span>
+│   │       ├── household.service.js   <span class="hl-blue"># Foyer multi-utilisateurs</span>
+│   │       ├── notifications.service.js <span class="hl-purple"># VAPID, scheduler, alertes</span>
+│   │       └── plaid.service.js       <span class="hl-pink"># Intégration bancaire Plaid</span>
+│   └── package.json
+├── frontend/
+│   ├── index.html                     <span class="hl-red"># Application complète (~8700 lignes)</span>
+│   ├── js/
+│   │   └── api.js                     <span class="hl-blue"># Client API fetch centralisé</span>
+│   ├── manifest.json                  <span class="hl-green"># PWA manifest (icônes, thème)</span>
+│   └── sw.js                          <span class="hl-green"># Service Worker (cache + push)</span>
+└── DOCUMENTATION.md</pre>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     4. BASE DE DONNÉES
+════════════════════════════════════════════════════════════ -->
+<h2 id="db"><span class="section-icon si-amber">🗄️</span> 4. Base de données</h2>
+
+<div class="info-box info-amber">
+  <span class="info-box-icon">⚠️</span>
+  <div class="info-box-body">
+    <strong>Règle des migrations</strong>
+    Le tableau <code>migrations[]</code> dans <code>database.js</code> s'exécute via <code>PRAGMA user_version</code>. Chaque entrée est exécutée exactement une fois. Ne jamais modifier une migration existante — toujours en ajouter une nouvelle à la fin du tableau. Une sauvegarde <code>.v{N}.bak</code> est créée automatiquement avant chaque migration.
+  </div>
+</div>
+
+<h3>Schéma final — Tables principales</h3>
+
+<div class="schema-grid">
+
+  <!-- users -->
+  <div class="schema-table">
+    <div class="schema-table-head" style="background:linear-gradient(90deg,#1a5fa0,#3B8BD4);">
+      👤 users
+    </div>
+    <div class="schema-table-rows">
+      <div class="schema-row"><span class="pk">PK</span><span class="schema-col-name">id</span><span class="schema-col-type">INTEGER</span></div>
+      <div class="schema-row"><span style="width:22px;"></span><span class="schema-col-name">name</span><span class="schema-col-type">TEXT</span></div>
+      <div class="schema-row"><span style="width:22px;"></span><span class="schema-col-name">email</span><span class="schema-col-type">TEXT UNIQUE</span></div>
+      <div class="schema-row"><span style="width:22px;"></span><span class="schema-col-name">password_hash</span><span class="schema-col-type">TEXT</span></div>
+      <div class="schema-row"><span style="width:22px;"></span><span class="schema-col-name">role</span><span class="schema-col-type">TEXT</span></div>
+      <div class="schema-row"><span style="width:22px;"></span><span class="schema-col-name">color</span><span class="schema-col-type">TEXT</span></div>
+      <div class="schema-row"><span style="width:22px;"></span><span class="schema-col-name">photo</span><span class="schema-col-type">TEXT?</span></div>
+      <div class="schema-row"><span style="width:22px;"></span><span class="schema-col-name">is_admin</span><span class="schema-col-type">INTEGER</span></div>
+      <div class="schema-row"><span style="width:22px;"></span><span class="schema-col-name">last_login_at</span><span class="schema-col-type">TEXT?</span></div>
+    </div>
+  </div>
+
+  <!-- entries -->
+  <div class="schema-table">
+    <div class="schema-table-head" style="background:linear-gradient(90deg,#166534,#22c55e);">
+      📋 entries
+    </div>
+    <div class="schema-table-rows">
+      <div class="schema-row"><span class="pk">PK</span><span class="schema-col-name">id</span><span class="schema-col-type">INTEGER</span></div>
+      <div class="schema-row"><span class="fk">FK</span><span class="schema-col-name">user_id</span><span class="schema-col-type">INTEGER</span></div>
+      <div class="schema-row"><span style="width:22px;"></span><span class="schema-col-name">name</span><span class="schema-col-type">TEXT</span></div>
+      <div class="schema-row"><span style="width:22px;"></span><span class="schema-col-name">amount</span><span class="schema-col-type">REAL</span></div>
+      <div class="schema-row"><span style="width:22px;"></span><span class="schema-col-name">cat</span><span class="schema-col-type">TEXT</span></div>
+      <div class="schema-row"><span style="width:22px;"></span><span class="schema-col-name">member</span><span class="schema-col-type">TEXT</span></div>
+      <div class="schema-row"><span style="width:22px;"></span><span class="schema-col-name">sort_order</span><span class="schema-col-type">INTEGER</span></div>
+      <div class="schema-row"><span style="width:22px;"></span><span class="schema-col-name">debit_day</span><span class="schema-col-type">INTEGER?</span></div>
+    </div>
+  </div>
+
+  <!-- savings -->
+  <div class="schema-table">
+    <div class="schema-table-head" style="background:linear-gradient(90deg,#92400e,#f59e0b);">
+      💰 savings
+    </div>
+    <div class="schema-table-rows">
+      <div class="schema-row"><span class="pk">PK</span><span class="schema-col-name">id</span><span class="schema-col-type">INTEGER</span></div>
+      <div class="schema-row"><span class="fk">FK</span><span class="schema-col-name">user_id</span><span class="schema-col-type">INTEGER</span></div>
+      <div class="schema-row"><span style="width:22px;"></span><span class="schema-col-name">member</span><span class="schema-col-type">TEXT</span></div>
+      <div class="schema-row"><span style="width:22px;"></span><span class="schema-col-name">year</span><span class="schema-col-type">INTEGER</span></div>
+      <div class="schema-row"><span style="width:22px;"></span><span class="schema-col-name">month</span><span class="schema-col-type">TEXT</span></div>
+      <div class="schema-row"><span style="width:22px;"></span><span class="schema-col-name">amount</span><span class="schema-col-type">REAL</span></div>
+      <div class="schema-row"><span style="width:22px;"></span><span class="schema-col-name">delta</span><span class="schema-col-type">REAL?</span></div>
+      <div class="schema-row" style="background:#fffbeb;"><span style="width:22px;font-size:.6rem;color:var(--amber);font-weight:700;">UQ</span><span class="schema-col-name" style="font-size:.72rem;color:var(--ink3);">(user_id, year, month)</span></div>
+    </div>
+  </div>
+
+  <!-- monthly_expenses -->
+  <div class="schema-table">
+    <div class="schema-table-head" style="background:linear-gradient(90deg,#6b21a8,#9e7bca);">
+      📆 monthly_expenses
+    </div>
+    <div class="schema-table-rows">
+      <div class="schema-row"><span class="pk">PK</span><span class="schema-col-name">id</span><span class="schema-col-type">INTEGER</span></div>
+      <div class="schema-row"><span class="fk">FK</span><span class="schema-col-name">user_id</span><span class="schema-col-type">INTEGER</span></div>
+      <div class="schema-row"><span style="width:22px;"></span><span class="schema-col-name">year</span><span class="schema-col-type">INTEGER</span></div>
+      <div class="schema-row"><span style="width:22px;"></span><span class="schema-col-name">month</span><span class="schema-col-type">INTEGER 1-12</span></div>
+      <div class="schema-row"><span style="width:22px;"></span><span class="schema-col-name">name</span><span class="schema-col-type">TEXT</span></div>
+      <div class="schema-row"><span style="width:22px;"></span><span class="schema-col-name">amount</span><span class="schema-col-type">REAL</span></div>
+      <div class="schema-row"><span style="width:22px;"></span><span class="schema-col-name">cat</span><span class="schema-col-type">TEXT</span></div>
+      <div class="schema-row"><span style="width:22px;"></span><span class="schema-col-name">member</span><span class="schema-col-type">TEXT</span></div>
+      <div class="schema-row"><span style="width:22px;"></span><span class="schema-col-name">note</span><span class="schema-col-type">TEXT?</span></div>
+      <div class="schema-row"><span class="fk">FK?</span><span class="schema-col-name">entry_id</span><span class="schema-col-type">INTEGER?</span></div>
+      <div class="schema-row"><span style="width:22px;"></span><span class="schema-col-name">is_exceptional</span><span class="schema-col-type">INTEGER</span></div>
+    </div>
+  </div>
+
+  <!-- households -->
+  <div class="schema-table">
+    <div class="schema-table-head" style="background:linear-gradient(90deg,#9d174d,#e06fa0);">
+      🏠 households + members
+    </div>
+    <div class="schema-table-rows">
+      <div class="schema-row" style="background:#fdf2f8;"><span style="font-size:.7rem;color:var(--pink);font-weight:700;width:22px;">T</span><span class="schema-col-name" style="font-size:.78rem;">households</span></div>
+      <div class="schema-row"><span class="pk">PK</span><span class="schema-col-name">id</span><span class="schema-col-type">INTEGER</span></div>
+      <div class="schema-row"><span class="fk">FK</span><span class="schema-col-name">creator_id</span><span class="schema-col-type">INTEGER</span></div>
+      <div class="schema-row" style="background:#fdf2f8;margin-top:4px;"><span style="font-size:.7rem;color:var(--pink);font-weight:700;width:22px;">T</span><span class="schema-col-name" style="font-size:.78rem;">household_members</span></div>
+      <div class="schema-row"><span class="fk">FK</span><span class="schema-col-name">household_id</span><span class="schema-col-type">INTEGER</span></div>
+      <div class="schema-row"><span class="fk">FK</span><span class="schema-col-name">user_id</span><span class="schema-col-type">INTEGER</span></div>
+      <div class="schema-row" style="background:#fdf2f8;margin-top:4px;"><span style="font-size:.7rem;color:var(--pink);font-weight:700;width:22px;">T</span><span class="schema-col-name" style="font-size:.78rem;">household_invites</span></div>
+      <div class="schema-row"><span style="width:22px;"></span><span class="schema-col-name">code</span><span class="schema-col-type">TEXT (6 car.)</span></div>
+      <div class="schema-row"><span style="width:22px;"></span><span class="schema-col-name">expires_at</span><span class="schema-col-type">TEXT (+15 min)</span></div>
+    </div>
+  </div>
+
+  <!-- notifications -->
+  <div class="schema-table">
+    <div class="schema-table-head" style="background:linear-gradient(90deg,#1e40af,#3b82f6);">
+      🔔 notifications + push
+    </div>
+    <div class="schema-table-rows">
+      <div class="schema-row" style="background:#eff6ff;"><span style="font-size:.7rem;color:var(--blue);font-weight:700;width:22px;">T</span><span class="schema-col-name" style="font-size:.78rem;">notifications</span></div>
+      <div class="schema-row"><span class="pk">PK</span><span class="schema-col-name">id</span><span class="schema-col-type">INTEGER</span></div>
+      <div class="schema-row"><span class="fk">FK</span><span class="schema-col-name">user_id</span><span class="schema-col-type">INTEGER</span></div>
+      <div class="schema-row"><span style="width:22px;"></span><span class="schema-col-name">title / body</span><span class="schema-col-type">TEXT</span></div>
+      <div class="schema-row"><span style="width:22px;"></span><span class="schema-col-name">is_read</span><span class="schema-col-type">INTEGER</span></div>
+      <div class="schema-row" style="background:#eff6ff;margin-top:4px;"><span style="font-size:.7rem;color:var(--blue);font-weight:700;width:22px;">T</span><span class="schema-col-name" style="font-size:.78rem;">push_subscriptions</span></div>
+      <div class="schema-row"><span style="width:22px;"></span><span class="schema-col-name">endpoint</span><span class="schema-col-type">TEXT UNIQUE</span></div>
+      <div class="schema-row"><span style="width:22px;"></span><span class="schema-col-name">p256dh / auth</span><span class="schema-col-type">TEXT</span></div>
+    </div>
+  </div>
+
+</div>
+
+<h3>Catégories budgétaires</h3>
+<div class="card-row four">
+  <div class="metric-card"><div class="metric-num" style="font-size:1.3rem;color:var(--green);">revenu</div><div class="metric-label">Revenus bruts</div></div>
+  <div class="metric-card red"><div class="metric-num" style="font-size:1.3rem;color:var(--red);">impot</div><div class="metric-label">Impôts / taxes</div></div>
+  <div class="metric-card amber"><div class="metric-num" style="font-size:1.3rem;color:var(--amber);">fixe</div><div class="metric-label">Charges fixes</div></div>
+  <div class="metric-card purple"><div class="metric-num" style="font-size:1.3rem;color:var(--purple);">variable</div><div class="metric-label">Dépenses variables</div></div>
+</div>
+<div class="card-row" style="grid-template-columns:1fr 1fr;">
+  <div class="metric-card pink"><div class="metric-num" style="font-size:1.3rem;color:var(--pink);">loisir</div><div class="metric-label">Loisirs &amp; sorties</div></div>
+  <div class="metric-card green"><div class="metric-num" style="font-size:1.3rem;color:var(--green);">epargne</div><div class="metric-label">Épargne (savings table)</div></div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     5. API REST
+════════════════════════════════════════════════════════════ -->
+<h2 id="api"><span class="section-icon si-blue">🔌</span> 5. API REST — Référence</h2>
+
+<p style="margin-bottom:20px;">Toutes les réponses suivent le format uniforme : <code>{ "success": true, "data": {...} }</code> ou <code>{ "success": false, "error": "..." }</code></p>
+
+<h3>5.1 Authentification — <code>/api/auth</code></h3>
+<div class="table-wrap">
+<table>
+  <thead><tr><th>Méthode</th><th>Route</th><th>Auth</th><th>Description</th></tr></thead>
+  <tbody>
+    <tr><td><span class="badge badge-get">GET</span></td><td><code>/users</code></td><td><span class="badge badge-pub">Public</span></td><td>Liste des utilisateurs pour le sélecteur de profil (sans mdp)</td></tr>
+    <tr><td><span class="badge badge-post">POST</span></td><td><code>/login</code></td><td><span class="badge badge-pub">Public</span></td><td>Connexion email + mot de passe → JWT</td></tr>
+    <tr><td><span class="badge badge-post">POST</span></td><td><code>/login-by-id</code></td><td><span class="badge badge-pub">Public</span></td><td>Connexion par ID + mot de passe (sélecteur de profil)</td></tr>
+    <tr><td><span class="badge badge-post">POST</span></td><td><code>/register</code></td><td><span class="badge badge-pub">Public</span></td><td>Création de compte (mdp ≥ 8 car., email unique)</td></tr>
+    <tr><td><span class="badge badge-post">POST</span></td><td><code>/admin-login</code></td><td><span class="badge badge-pub">Public</span></td><td>Connexion admin (rate limit 5/15min)</td></tr>
+    <tr><td><span class="badge badge-get">GET</span></td><td><code>/me</code></td><td><span class="badge badge-jwt">JWT</span></td><td>Profil de l'utilisateur connecté</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>5.2 Lignes budgétaires — <code>/api/entries</code> <span class="badge badge-jwt" style="font-size:.8rem;">JWT requis</span></h3>
+<div class="table-wrap">
+<table>
+  <thead><tr><th>Méthode</th><th>Route</th><th>Description</th></tr></thead>
+  <tbody>
+    <tr><td><span class="badge badge-get">GET</span></td><td><code>/</code></td><td>Liste filtrée par <code>member</code>, <code>cat</code>, <code>search</code></td></tr>
+    <tr><td><span class="badge badge-get">GET</span></td><td><code>/stats</code></td><td>Statistiques agrégées (rev, tax, revNet, fix, vari, ep, loi, dep, rav, solde)</td></tr>
+    <tr><td><span class="badge badge-put">PUT</span></td><td><code>/order</code></td><td>Réordonner par drag-drop : <code>{ member, groupKey, orderedIds }</code></td></tr>
+    <tr><td><span class="badge badge-post">POST</span></td><td><code>/</code></td><td>Créer une ligne : <code>{ name, amount, cat, member, debit_day? }</code></td></tr>
+    <tr><td><span class="badge badge-get">GET</span></td><td><code>/:id</code></td><td>Détail d'une ligne</td></tr>
+    <tr><td><span class="badge badge-put">PUT</span></td><td><code>/:id</code></td><td>Modifier (propriétaire ou entrée Commun)</td></tr>
+    <tr><td><span class="badge badge-delete">DELETE</span></td><td><code>/:id</code></td><td>Supprimer (propriétaire ou entrée Commun)</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>5.3 Épargne — <code>/api/savings</code> <span class="badge badge-jwt" style="font-size:.8rem;">JWT requis</span></h3>
+<div class="table-wrap">
+<table>
+  <thead><tr><th>Méthode</th><th>Route</th><th>Description</th></tr></thead>
+  <tbody>
+    <tr><td><span class="badge badge-get">GET</span></td><td><code>/</code></td><td>Liste filtrée par <code>member</code>, <code>year</code></td></tr>
+    <tr><td><span class="badge badge-post">POST</span></td><td><code>/</code></td><td>Créer : <code>{ member, year, month, amount }</code> — UNIQUE (user, year, month)</td></tr>
+    <tr><td><span class="badge badge-get">GET</span></td><td><code>/:id</code></td><td>Détail</td></tr>
+    <tr><td><span class="badge badge-put">PUT</span></td><td><code>/:id</code></td><td>Modifier (recalcule automatiquement le delta de l'entrée suivante)</td></tr>
+    <tr><td><span class="badge badge-delete">DELETE</span></td><td><code>/:id</code></td><td>Supprimer (recalcule le delta de l'entrée suivante)</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>5.4 Dépenses mensuelles — <code>/api/monthly-expenses</code> <span class="badge badge-jwt" style="font-size:.8rem;">JWT requis</span></h3>
+<div class="table-wrap">
+<table>
+  <thead><tr><th>Méthode</th><th>Route</th><th>Description</th></tr></thead>
+  <tbody>
+    <tr><td><span class="badge badge-get">GET</span></td><td><code>/</code></td><td>Dépenses saisies (<code>year</code>, <code>month</code>, <code>member</code>)</td></tr>
+    <tr><td><span class="badge badge-get">GET</span></td><td><code>/stats</code></td><td>Budget prévu vs réel par catégorie pour un mois</td></tr>
+    <tr><td><span class="badge badge-get">GET</span></td><td><code>/history</code></td><td>Totaux réels des 24 derniers mois</td></tr>
+    <tr><td><span class="badge badge-get">GET</span></td><td><code>/names</code></td><td>Noms distincts utilisés pour une catégorie (<code>?cat=variable</code>)</td></tr>
+    <tr><td><span class="badge badge-post">POST</span></td><td><code>/</code></td><td>Créer une dépense réelle ou un override mensuel</td></tr>
+    <tr><td><span class="badge badge-put">PUT</span></td><td><code>/:id</code></td><td>Modifier</td></tr>
+    <tr><td><span class="badge badge-delete">DELETE</span></td><td><code>/:id</code></td><td>Supprimer</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>5.5 Foyer — <code>/api/household</code> <span class="badge badge-jwt" style="font-size:.8rem;">JWT requis</span></h3>
+<div class="table-wrap">
+<table>
+  <thead><tr><th>Méthode</th><th>Route</th><th>Description</th></tr></thead>
+  <tbody>
+    <tr><td><span class="badge badge-get">GET</span></td><td><code>/</code></td><td>Infos du foyer + liste des membres</td></tr>
+    <tr><td><span class="badge badge-post">POST</span></td><td><code>/create</code></td><td>Créer un foyer (user ne doit pas déjà en avoir)</td></tr>
+    <tr><td><span class="badge badge-post">POST</span></td><td><code>/invite</code></td><td>Générer un code d'invitation (6 caractères, expire en 15 min)</td></tr>
+    <tr><td><span class="badge badge-post">POST</span></td><td><code>/join</code></td><td>Rejoindre via code : <code>{ code }</code></td></tr>
+    <tr><td><span class="badge badge-delete">DELETE</span></td><td><code>/leave</code></td><td>Quitter (non créateur uniquement)</td></tr>
+    <tr><td><span class="badge badge-delete">DELETE</span></td><td><code>/delete</code></td><td>Supprimer le foyer (créateur uniquement, cascade)</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>5.6 Notifications — <code>/api/notifications</code> <span class="badge badge-jwt" style="font-size:.8rem;">JWT requis</span></h3>
+<div class="table-wrap">
+<table>
+  <thead><tr><th>Méthode</th><th>Route</th><th>Description</th></tr></thead>
+  <tbody>
+    <tr><td><span class="badge badge-get">GET</span></td><td><code>/vapid-key</code></td><td>Clé publique VAPID pour l'enregistrement Service Worker</td></tr>
+    <tr><td><span class="badge badge-post">POST</span></td><td><code>/subscribe</code></td><td>Enregistrer une subscription Web Push</td></tr>
+    <tr><td><span class="badge badge-delete">DELETE</span></td><td><code>/unsubscribe</code></td><td>Se désabonner des notifications</td></tr>
+    <tr><td><span class="badge badge-get">GET</span></td><td><code>/</code></td><td>Historique des 100 dernières notifications</td></tr>
+    <tr><td><span class="badge badge-post">POST</span></td><td><code>/mark-read</code></td><td>Marquer toutes comme lues</td></tr>
+    <tr><td><span class="badge badge-delete">DELETE</span></td><td><code>/:id</code></td><td>Supprimer une notification</td></tr>
+    <tr><td><span class="badge badge-delete">DELETE</span></td><td><code>/clear</code></td><td>Vider tout l'historique</td></tr>
+    <tr><td><span class="badge badge-post">POST</span></td><td><code>/test</code></td><td>Envoyer une notification de test immédiate</td></tr>
+    <tr><td><span class="badge badge-post">POST</span></td><td><code>/check-alerts</code></td><td>Déclencher manuellement les alertes budgétaires</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>5.7 Autres endpoints</h3>
+<div class="table-wrap">
+<table>
+  <thead><tr><th>Module</th><th>Base</th><th>Auth</th><th>Description</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Désignations</strong></td><td><code>/api/expense-labels</code></td><td><span class="badge badge-jwt">JWT</span></td><td>CRUD des libellés prédéfinis par catégorie</td></tr>
+    <tr><td><strong>Banque (Plaid)</strong></td><td><code>/api/bridge</code></td><td><span class="badge badge-jwt">JWT</span></td><td>Link token, exchange, sync, accounts, transactions</td></tr>
+    <tr><td><strong>Import</strong></td><td><code>/api/import/confirm</code></td><td><span class="badge badge-jwt">JWT</span></td><td>Sauvegarde en lot de transactions catégorisées</td></tr>
+    <tr><td><strong>Utilisateurs</strong></td><td><code>/api/users</code></td><td><span class="badge badge-jwt">JWT</span></td><td>Modifier couleur/photo, profil, mot de passe</td></tr>
+    <tr><td><strong>Admin</strong></td><td><code>/api/admin</code></td><td><span class="badge badge-admin">Admin</span></td><td>Gestion utilisateurs, stats globales</td></tr>
+    <tr><td><strong>SSE</strong></td><td><code>/api/events</code></td><td>Optionnel</td><td>Server-Sent Events (temps réel)</td></tr>
+    <tr><td><strong>Health</strong></td><td><code>/api/health</code></td><td>Non</td><td>Statut serveur, version DB, liste des tables</td></tr>
+  </tbody>
+</table>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     6. AUTH & SÉCURITÉ
+════════════════════════════════════════════════════════════ -->
+<h2 id="auth"><span class="section-icon si-red">🔐</span> 6. Authentification &amp; Sécurité</h2>
+
+<div class="card-row three">
+  <div class="card" style="padding:20px;text-align:center;">
+    <div style="font-size:2rem;margin-bottom:8px;">🔑</div>
+    <div style="font-weight:700;margin-bottom:4px;">JWT HS256</div>
+    <div style="font-size:.8rem;color:var(--ink3);">Signé avec JWT_SECRET<br>Durée : 24h (configurable)</div>
+  </div>
+  <div class="card" style="padding:20px;text-align:center;">
+    <div style="font-size:2rem;margin-bottom:8px;">🔒</div>
+    <div style="font-weight:700;margin-bottom:4px;">bcrypt (10 rounds)</div>
+    <div style="font-size:.8rem;color:var(--ink3);">Hashage des mots de passe<br>Mdp minimum 8 caractères</div>
+  </div>
+  <div class="card" style="padding:20px;text-align:center;">
+    <div style="font-size:2rem;margin-bottom:8px;">🛡️</div>
+    <div style="font-weight:700;margin-bottom:4px;">Rate Limiting</div>
+    <div style="font-size:.8rem;color:var(--ink3);">Login : 10 req/min<br>Admin : 5 req/15min</div>
+  </div>
+</div>
+
+<h3>Flux d'authentification</h3>
+<pre>
+1.  Client   → POST /api/auth/login { email, password }
+2.  Server   → bcrypt.compareSync(password, hash)
+3.  Server   → jwt.sign({ id, name, email, role, is_admin }, JWT_SECRET, { expiresIn: '24h' })
+4.  Server   ← { token, user }
+5.  Client   → localStorage.setItem('zenith_token', token)
+6.  Client   → Chaque requête : Authorization: Bearer &lt;token&gt;
+7.  Middleware → jwt.verify(token, JWT_SECRET) → req.user
+8.  Middleware → SELECT id FROM users WHERE id = ? (vérif. compte toujours existant)
+9.  Réponse 401 → window.dispatchEvent(new CustomEvent('zenith:unauthorized'))
+           → Retour automatique à l'écran de connexion
+</pre>
+
+<h3>Middleware</h3>
+<div class="table-wrap">
+<table>
+  <thead><tr><th>Middleware</th><th>Comportement</th><th>Usage</th></tr></thead>
+  <tbody>
+    <tr><td><code>requireAuth</code></td><td>Vérifie JWT, retourne 401 si absent/invalide/expiré. Vérifie que l'user existe en base.</td><td>Toutes les routes protégées</td></tr>
+    <tr><td><code>optionalAuth</code></td><td>Tente de décoder le JWT mais n'échoue pas si absent.</td><td>Routes avec auth optionnelle (SSE)</td></tr>
+    <tr><td><code>requireAdmin</code></td><td>S'utilise après <code>requireAuth</code>. Vérifie <code>req.user.is_admin === 1</code>. Retourne 403 sinon.</td><td>Routes <code>/api/admin/*</code></td></tr>
+    <tr><td><code>errorHandler</code></td><td>Gestionnaire global. Lit <code>err.statusCode</code>. Retourne <code>{ success: false, error }</code></td><td>Fin du pipeline Express</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="info-box info-amber">
+  <span class="info-box-icon">⚠️</span>
+  <div class="info-box-body">
+    <strong>Compte admin par défaut (migration v6)</strong>
+    Un compte admin est créé automatiquement : login <code>admin</code>, mot de passe <code>admin</code>. À changer immédiatement en production via <code>POST /api/admin/users/:id/password</code> ou directement en base.
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     7. NOTIFICATIONS PUSH
+════════════════════════════════════════════════════════════ -->
+<h2 id="notif"><span class="section-icon si-purple">🔔</span> 7. Système de notifications push</h2>
+
+<h3>Initialisation VAPID</h3>
+<div class="card">
+  <div style="display:flex;gap:16px;align-items:stretch;font-size:.88rem;">
+    <div style="flex:1;padding:16px;background:var(--bg);border-radius:8px;">
+      <div style="font-weight:700;margin-bottom:8px;">① Variables d'env.</div>
+      <code>VAPID_PUBLIC_KEY</code><br><code>VAPID_PRIVATE_KEY</code>
+    </div>
+    <div style="display:flex;align-items:center;color:var(--ink3);font-weight:700;">→ sinon →</div>
+    <div style="flex:1;padding:16px;background:var(--bg);border-radius:8px;">
+      <div style="font-weight:700;margin-bottom:8px;">② Table config</div>
+      <code>vapid_public</code><br><code>vapid_private</code>
+    </div>
+    <div style="display:flex;align-items:center;color:var(--ink3);font-weight:700;">→ sinon →</div>
+    <div style="flex:1;padding:16px;background:var(--bg);border-radius:8px;">
+      <div style="font-weight:700;margin-bottom:8px;">③ Auto-génération</div>
+      Nouvelles clés générées et persistées en base (log Railway)
+    </div>
+  </div>
+</div>
+
+<div class="info-box info-blue">
+  <span class="info-box-icon">💡</span>
+  <div class="info-box-body">
+    En production, fixer les clés VAPID dans les variables d'environnement Railway. Si les clés changent (régénération), toutes les subscriptions existantes des navigateurs deviennent invalides et doivent être re-enregistrées.
+  </div>
+</div>
+
+<h3>Scheduler (node-cron)</h3>
+<div class="cron-list">
+  <div class="cron-item">
+    <span class="cron-time">0 8 * * *</span>
+    <div class="cron-desc"><strong>Rappel prélèvements du jour</strong><p>Envoie une notification pour chaque charge fixe dont <code>debit_day</code> correspond au jour courant. Regroupé par utilisateur.</p></div>
+  </div>
+  <div class="cron-item">
+    <span class="cron-time">0 13 1 * *</span>
+    <div class="cron-desc"><strong>Rappel épargne mensuelle</strong><p>1er du mois à 13h — demande à chaque utilisateur de saisir son épargne du mois.</p></div>
+  </div>
+  <div class="cron-item">
+    <span class="cron-time">0 13 * * 1</span>
+    <div class="cron-desc"><strong>Résumé budgétaire hebdomadaire</strong><p>Chaque lundi — revenus nets, dépenses et épargne du mois en cours. Ajoute un avertissement si dépenses > 80% des revenus.</p></div>
+  </div>
+  <div class="cron-item">
+    <span class="cron-time">0 13 * * *</span>
+    <div class="cron-desc"><strong>Vérification des alertes budgétaires</strong><p>Chaque jour — évalue les 7 conditions d'alerte ci-dessous. Anti-spam : une alerte par clé par jour (stocké dans <code>config</code>).</p></div>
+  </div>
+</div>
+
+<h3>Alertes budgétaires automatiques</h3>
+<div class="alert-grid">
+  <div class="alert-item red">
+    <div class="alert-key">rav_negatif</div>
+    <div class="alert-title">Budget en déficit</div>
+    <div class="alert-cond">RAV &lt; 0</div>
+  </div>
+  <div class="alert-item red">
+    <div class="alert-key">dep_critique</div>
+    <div class="alert-title">Dépenses trop élevées</div>
+    <div class="alert-cond">dep / revNet &gt; 70%</div>
+  </div>
+  <div class="alert-item">
+    <div class="alert-key">ep_faible</div>
+    <div class="alert-title">Épargne insuffisante</div>
+    <div class="alert-cond">épargne &gt; 0 ET taux &lt; 5%</div>
+  </div>
+  <div class="alert-item">
+    <div class="alert-key">matelas_faible</div>
+    <div class="alert-title">Matelas de sécurité faible</div>
+    <div class="alert-cond">totalSav / dep × 30 &lt; 30 jours</div>
+  </div>
+  <div class="alert-item purple">
+    <div class="alert-key">score_bas</div>
+    <div class="alert-title">Santé financière dégradée</div>
+    <div class="alert-cond">healthScore &lt; 40 / 100</div>
+  </div>
+  <div class="alert-item blue">
+    <div class="alert-key">fixes_eleves</div>
+    <div class="alert-title">Charges fixes élevées</div>
+    <div class="alert-cond">fixe / revNet &gt; 50%</div>
+  </div>
+  <div class="alert-item blue" style="grid-column:span 2;">
+    <div class="alert-key">contrainte_elev</div>
+    <div class="alert-title">Budget rigide</div>
+    <div class="alert-cond">(impôts + fixe) / revNet &gt; 55%</div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     8. FRONTEND
+════════════════════════════════════════════════════════════ -->
+<h2 id="front"><span class="section-icon si-blue">⚡</span> 8. Frontend — Structure</h2>
+
+<div class="card">
+  <p>Le frontend est une <strong>PWA mono-fichier</strong> : <code>frontend/index.html</code> (~8700 lignes). HTML, CSS et JS sont tous inline. Aucun bundler, aucun framework.</p>
+
+  <h4>Client API (<code>js/api.js</code>)</h4>
+  <p>Wrapper <code>fetch</code> centralisé, exposé via <code>window.API</code>. Gère le JWT automatiquement sur chaque requête.</p>
+
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Module</th><th>Méthodes principales</th></tr></thead>
+    <tbody>
+      <tr><td><code>API.auth</code></td><td>login, loginById, register, getMe, logout, isLoggedIn, getLocalUser</td></tr>
+      <tr><td><code>API.entries</code></td><td>getAll, getStats, create, getById, update, delete, updateOrder</td></tr>
+      <tr><td><code>API.savings</code></td><td>getAll, create, getById, update, delete</td></tr>
+      <tr><td><code>API.monthlyExpenses</code></td><td>getAll, getStats, getHistory, create, getNames, update, delete</td></tr>
+      <tr><td><code>API.expenseLabels</code></td><td>getAll, create, delete</td></tr>
+      <tr><td><code>API.household</code></td><td>get, create, invite, join, leave, delete</td></tr>
+      <tr><td><code>API.notifications</code></td><td>getAll, markRead, delete, clear</td></tr>
+      <tr><td><code>API.bridge</code></td><td>getLinkToken, exchangeToken, syncItem, syncAll, getAccounts, getTransactions, deleteItem</td></tr>
+      <tr><td><code>API.users</code></td><td>updateSettings (couleur/photo), updateProfile, changePassword</td></tr>
+      <tr><td><code>API.import</code></td><td>confirm (import bancaire en lot)</td></tr>
+    </tbody>
+  </table>
+  </div>
+</div>
+
+<h3>Service Worker (<code>sw.js</code>)</h3>
+<ul>
+  <li><strong>Cache offline</strong> : mise en cache des assets statiques pour utilisation hors ligne</li>
+  <li><strong>Réception push</strong> : écoute l'événement <code>push</code>, affiche la notification système</li>
+  <li><strong>Clic notification</strong> : écoute <code>notificationclick</code>, redirige vers l'URL indiquée dans le payload</li>
+</ul>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     9. ONGLETS & VUES
+════════════════════════════════════════════════════════════ -->
+<h2 id="tabs"><span class="section-icon si-purple">🗂️</span> 9. Onglets &amp; vues</h2>
+
+<div class="tab-diagram">
+  <div class="tab-item ti-blue">
+    <span class="tab-icon">🏠</span>
+    Vue d'ensemble
+  </div>
+  <div class="tab-item ti-green">
+    <span class="tab-icon">📋</span>
+    Budget
+  </div>
+  <div class="tab-item ti-amber">
+    <span class="tab-icon">💰</span>
+    Épargne
+  </div>
+  <div class="tab-item ti-purple">
+    <span class="tab-icon">📊</span>
+    Analyse
+  </div>
+  <div class="tab-item ti-pink">
+    <span class="tab-icon">🏦</span>
+    Banque
+  </div>
+</div>
+
+<h3>Vue d'ensemble (<code>renderDashboard</code>)</h3>
+<div class="card">
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;font-size:.88rem;">
+    <div>
+      <strong>Héro (solde mensuel)</strong>
+      <ul style="margin-top:6px;">
+        <li>Sélecteur mois / année</li>
+        <li>Solde = revNet − dépenses − épargne du mois</li>
+        <li>Indicateur taux épargne vs objectif (vert/orange/rouge)</li>
+        <li>RAV (Reste À Vivre)</li>
+        <li>Bannière rouge si dépenses &gt; revenus nets</li>
+      </ul>
+    </div>
+    <div>
+      <strong>Où va l'argent (OVA)</strong>
+      <ul style="margin-top:6px;">
+        <li>Fixes : <code>debit_day ≤ aujourd'hui</code> si mois courant</li>
+        <li>Variables + Loisirs : saisies manuelles</li>
+        <li>Épargne : delta savings du mois</li>
+        <li>Badge "exceptions" si <code>is_exceptional = 1</code></li>
+        <li>Sous-titre dépassement budget si applicable</li>
+      </ul>
+    </div>
+    <div style="grid-column:span 2;">
+      <strong>Comparaison mensuelle</strong>
+      <ul style="margin-top:6px;">
+        <li>Tableau 12 mois : Revenus nets / Dépenses / Épargne avec flèches de tendance</li>
+        <li>Flèches revenus : vert=hausse, rouge=baisse. Flèches dépenses : vert=baisse, rouge=hausse.</li>
+        <li>Graphique Chart.js : courbe Dépenses (sans ombre) + courbe Épargne pointillée</li>
+        <li><code>spanGaps:true</code> sur Épargne pour relier les mois sans données. <code>beginAtZero:false</code> pour les valeurs négatives.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<h3>Budget (<code>renderBudget</code>)</h3>
+<ul>
+  <li>Lignes groupées par <strong>membre</strong> puis <strong>catégorie</strong></li>
+  <li><strong>Drag-drop</strong> pour réordonner → <code>PUT /api/entries/order</code></li>
+  <li>Édition inline au clic sur une ligne</li>
+  <li>Champ <code>debit_day</code> pour les charges fixes (rappels push)</li>
+  <li>Totaux par catégorie + solde global en bas</li>
+</ul>
+
+<h3>Épargne (<code>renderSavings</code>)</h3>
+<ul>
+  <li>Tableau mensuel par membre (une ligne = un mois)</li>
+  <li>Saisie/modification inline du <strong>solde total</strong></li>
+  <li>Delta (variation mensuelle) calculé automatiquement côté backend</li>
+  <li>Graphique d'évolution du patrimoine</li>
+</ul>
+
+<h3>Analyse (<code>renderAnalysis</code>)</h3>
+<ul>
+  <li>Filtre automatique : uniquement les mois avec <code>revNet &gt; 0 AND dep &gt; 0</code></li>
+  <li><strong>4 métriques</strong> : revenu net moyen / dépenses / épargne / solde</li>
+  <li><strong>Insights intégrés</strong> sous les métriques : taux épargne + projection, taux fixes, mois positifs</li>
+  <li><strong>Score santé financière</strong> /100 : épargne (40 pts) + rigidité (30 pts) + niveau dépenses (30 pts)</li>
+</ul>
+
+<h3>Banque (<code>renderBank</code>)</h3>
+<ul>
+  <li>Connexion bancaire via <strong>Plaid</strong> (lien sécurisé)</li>
+  <li>Synchronisation des transactions</li>
+  <li>Catégorisation manuelle + import vers le suivi mensuel</li>
+</ul>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     10. FORMULES
+════════════════════════════════════════════════════════════ -->
+<h2 id="formules"><span class="section-icon si-green">🧮</span> 10. Formules de calcul</h2>
+
+<h3>Budget prévisionnel (entries)</h3>
+<div class="formula-grid">
+  <div class="formula-card">
+    <div class="fc-title">// Revenus</div>
+    <span class="ev">revenu</span>  <span class="eq">=</span> <span class="ek">Σ</span> entries[cat<span class="eq">=</span><span class="hl-amber">'revenu'</span>]
+<span class="ev">impot</span>   <span class="eq">=</span> <span class="ek">Σ</span> entries[cat<span class="eq">=</span><span class="hl-amber">'impot'</span>]
+<span class="ev">revNet</span>  <span class="eq">=</span> <span class="ev">revenu</span> <span class="eq">-</span> <span class="ev">impot</span>
+  </div>
+  <div class="formula-card">
+    <div class="fc-title">// Dépenses</div>
+    <span class="ev">fixe</span>    <span class="eq">=</span> <span class="ek">Σ</span> entries[cat<span class="eq">=</span><span class="hl-amber">'fixe'</span>]
+<span class="ev">variable</span><span class="eq">=</span> <span class="ek">Σ</span> entries[cat<span class="eq">=</span><span class="hl-amber">'variable'</span>]
+<span class="ev">loisir</span>  <span class="eq">=</span> <span class="ek">Σ</span> entries[cat<span class="eq">=</span><span class="hl-amber">'loisir'</span>]
+<span class="ev">dep</span>     <span class="eq">=</span> <span class="ev">fixe</span> <span class="eq">+</span> <span class="ev">variable</span> <span class="eq">+</span> <span class="ev">loisir</span>
+  </div>
+  <div class="formula-card">
+    <div class="fc-title">// Indicateurs clés</div>
+    <span class="ev">epargne</span> <span class="eq">=</span> <span class="ek">Σ</span> entries[cat<span class="eq">=</span><span class="hl-amber">'epargne'</span>]
+<span class="ev">rav</span>     <span class="eq">=</span> <span class="ev">revNet</span> <span class="eq">-</span> <span class="ev">fixe</span> <span class="eq">-</span> <span class="ev">variable</span>
+<span class="ev">solde</span>   <span class="eq">=</span> <span class="ev">revNet</span> <span class="eq">-</span> <span class="ev">dep</span> <span class="eq">-</span> <span class="ev">epargne</span>
+  </div>
+  <div class="formula-card">
+    <div class="fc-title">// Taux</div>
+    <span class="ev">depRate</span> <span class="eq">=</span> <span class="ev">dep</span>     <span class="eq">/</span> <span class="ev">revNet</span> <span class="eq">× 100</span>
+<span class="ev">fixRate</span> <span class="eq">=</span> <span class="ev">fixe</span>    <span class="eq">/</span> <span class="ev">revNet</span> <span class="eq">× 100</span>
+<span class="ev">epRate</span>  <span class="eq">=</span> <span class="ev">epargne</span> <span class="eq">/</span> <span class="ev">revNet</span> <span class="eq">× 100</span>
+<span class="ev">ravRate</span> <span class="eq">=</span> <span class="ev">rav</span>     <span class="eq">/</span> <span class="ev">revNet</span> <span class="eq">× 100</span>
+  </div>
+</div>
+
+<h3>Suivi mensuel réel (monthly_expenses + savings)</h3>
+<div class="formula-grid">
+  <div class="formula-card">
+    <div class="fc-title">// Revenus réels</div>
+    <span class="ev">revA</span>    <span class="eq">=</span> overrides <span class="eq">||</span> budget prévu
+<span class="ev">impA</span>    <span class="eq">=</span> overrides <span class="eq">||</span> budget prévu
+<span class="ev">revNetA</span> <span class="eq">=</span> <span class="ev">revA</span> <span class="eq">-</span> <span class="ev">impA</span>
+  </div>
+  <div class="formula-card">
+    <div class="fc-title">// Dépenses réelles</div>
+    <span class="ev">fixA</span>   <span class="eq">=</span> base prévisionnelle <span class="eq">+</span> overrides
+<span class="ev">varA</span>   <span class="eq">=</span> <span class="ek">Σ</span> monthly_expenses[variable]
+<span class="ev">loiA</span>   <span class="eq">=</span> <span class="ek">Σ</span> monthly_expenses[loisir]
+<span class="ec">// is_exceptional = 1 → exclus</span>
+  </div>
+  <div class="formula-card">
+    <div class="fc-title">// Épargne réelle</div>
+    <span class="ev">epDelta</span> <span class="eq">=</span> savings.delta <span class="ec">// du mois</span>
+<span class="ec">// delta = amount(N) - amount(N-1)</span>
+<span class="ec">// null si premier enregistrement</span>
+<span class="ec">// recalculé après update/delete</span>
+  </div>
+  <div class="formula-card">
+    <div class="fc-title">// Solde mensuel réel</div>
+    <span class="ev">depA</span>   <span class="eq">=</span> <span class="ev">fixA</span> <span class="eq">+</span> <span class="ev">varA</span> <span class="eq">+</span> <span class="ev">loiA</span>
+<span class="ev">soldeA</span> <span class="eq">=</span> <span class="ev">revNetA</span>
+       <span class="eq">-</span> <span class="ev">depA</span>
+       <span class="eq">-</span> max(<span class="en">0</span>, <span class="ev">epDelta</span>)
+  </div>
+</div>
+
+<h3>Score santé financière (0-100)</h3>
+<pre>
+<span class="hl-green">// 30 pts — Rigidité des charges fixes</span>
+scoreRig = fixRate &lt;= 30 ? 30
+         : fixRate &lt;= 50 ? round(30 - (fixRate-30) × 0.75)
+         : 0
+
+<span class="hl-green">// 30 pts — Niveau des dépenses totales</span>
+scoreDep = depRate &lt;= 50 ? 30
+         : depRate &lt;= 70 ? round(30 - (depRate-50) × 1.5)
+         : 0
+
+<span class="hl-green">// 40 pts — Épargne / reste à vivre</span>
+scoreSav = min(40, ravRate × 1.2)
+
+<span class="hl-blue">healthScore = scoreSav + scoreRig + scoreDep   // sur 100</span>
+</pre>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     11. VARIABLES D'ENVIRONNEMENT
+════════════════════════════════════════════════════════════ -->
+<h2 id="env"><span class="section-icon si-amber">⚙️</span> 11. Variables d'environnement</h2>
+
+<div class="table-wrap">
+<table>
+  <thead><tr><th>Variable</th><th>Requis</th><th>Défaut</th><th>Description</th></tr></thead>
+  <tbody>
+    <tr class="env-row-req"><td><code>JWT_SECRET</code></td><td>✅ Oui</td><td>—</td><td>Clé de signature JWT. Minimum 32 caractères aléatoires. Le serveur refuse de démarrer si absente.</td></tr>
+    <tr><td><code>JWT_EXPIRES_IN</code></td><td>Non</td><td><code>24h</code></td><td>Durée de validité des tokens. Formats : <code>1h</code>, <code>7d</code>, <code>30d</code>…</td></tr>
+    <tr><td><code>PORT</code></td><td>Non</td><td><code>3001</code></td><td>Port d'écoute Express. Railway l'injecte automatiquement.</td></tr>
+    <tr><td><code>NODE_ENV</code></td><td>Non</td><td><code>development</code></td><td>En <code>production</code> : CORS restrictif (utilise <code>FRONTEND_URL</code>).</td></tr>
+    <tr><td><code>FRONTEND_URL</code></td><td>Production</td><td>—</td><td>URL du frontend pour la politique CORS en production.</td></tr>
+    <tr><td><code>DB_PATH</code></td><td>Non</td><td><code>./database/zenith.db</code></td><td>Chemin relatif à <code>backend/src/</code> vers le fichier SQLite.</td></tr>
+    <tr><td><code>VAPID_PUBLIC_KEY</code></td><td>Non</td><td>Auto-généré</td><td>Clé publique VAPID pour Web Push. Fixer en prod pour conserver les subscriptions.</td></tr>
+    <tr><td><code>VAPID_PRIVATE_KEY</code></td><td>Non</td><td>Auto-généré</td><td>Clé privée VAPID. À garder secrète.</td></tr>
+    <tr><td><code>PLAID_CLIENT_ID</code></td><td>Non</td><td>—</td><td>Client ID Plaid (open banking).</td></tr>
+    <tr><td><code>PLAID_SECRET</code></td><td>Non</td><td>—</td><td>Secret Plaid.</td></tr>
+    <tr><td><code>PLAID_ENV</code></td><td>Non</td><td><code>sandbox</code></td><td><code>sandbox</code> / <code>development</code> / <code>production</code></td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="info-box info-red">
+  <span class="info-box-icon">🔴</span>
+  <div class="info-box-body">
+    <strong>Ne jamais committer le fichier <code>.env</code></strong>
+    Le fichier <code>.env</code> est listé dans <code>.gitignore</code>. Il contient des secrets (JWT_SECRET, PLAID_SECRET). Sur Railway, les variables se configurent dans le dashboard du service.
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     12. DÉPLOIEMENT
+════════════════════════════════════════════════════════════ -->
+<h2 id="deploy"><span class="section-icon si-green">🚀</span> 12. Déploiement</h2>
+
+<h3>Local (développement)</h3>
+<pre>
+<span class="hl-green"># 1. Cloner et installer</span>
+git clone &lt;repo&gt; && cd zenith/backend
+npm install
+
+<span class="hl-green"># 2. Configurer l'environnement</span>
+cp .env.example .env
+<span class="hl-amber"># Éditer .env : renseigner JWT_SECRET (obligatoire)</span>
+
+<span class="hl-green"># 3. Démarrer le serveur</span>
+npm start
+<span class="hl-blue"># → http://localhost:3001</span>
+<span class="hl-blue"># → Le frontend est servi automatiquement depuis /frontend</span>
+</pre>
+
+<h3>Production (Railway)</h3>
+
+<div class="card">
+  <ol style="font-size:.9rem;line-height:2;">
+    <li>Connecter le dépôt GitHub au service Railway</li>
+    <li>Build command : <em>(aucun — Node.js)</em></li>
+    <li>Start command : <code>cd backend && npm start</code></li>
+    <li>Ajouter un <strong>volume persistant</strong> monté sur <code>/app/backend/database</code> pour conserver <code>zenith.db</code> entre les déploiements</li>
+    <li>Configurer les variables d'environnement (voir §11)</li>
+    <li>Railway assigne automatiquement le domaine et injecte <code>PORT</code></li>
+  </ol>
+</div>
+
+<div class="info-box info-green">
+  <span class="info-box-icon">✅</span>
+  <div class="info-box-body">
+    <strong>Vérification post-déploiement</strong>
+    Accéder à <code>https://votre-domaine.railway.app/api/health</code> — retourne <code>{ status: "ok", db_version: 27, tables: [...] }</code>. Si <code>db_version</code> est inférieur à 27, les migrations en attente s'appliquent automatiquement au prochain démarrage.
+  </div>
+</div>
+
+<h3>Sauvegardes automatiques</h3>
+<p>Avant chaque migration, le système crée une copie <code>zenith.db.v{N}.bak</code> dans le même dossier. Ces fichiers peuvent être supprimés manuellement une fois la migration validée. Les fichiers <code>.v14.bak</code> et <code>.v23.bak</code> visibles dans le dépôt correspondent aux dernières migrations appliquées.</p>
+
+<hr>
+
+<div class="doc-footer">
+  Documentation Zénith — v1.0 · Schéma DB v27 · Mai 2026<br>
+  Pour ouvrir en PDF : Ctrl+P → Enregistrer en PDF (format A4, marges minimales, activer les couleurs d'arrière-plan)
+</div>
+
+</div><!-- /page-wrap -->
+</body>
+</html>
