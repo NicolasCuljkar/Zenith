@@ -5539,7 +5539,7 @@ function _renderSimAnalysis(stats, origStats, simF, origF, nChanges, effEp, effL
     </div>`;
   }
 
-  el.innerHTML = impactHtml + ruleHtml + (ravHtml || '');
+  el.innerHTML = ruleHtml + (ravHtml || '') + impactHtml;
 }
 
 function _simDelete(simId) {
