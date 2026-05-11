@@ -3354,8 +3354,17 @@ async function renderDashboard(){
   <div id="dash-monthly-sections"></div>`;
 
   content.innerHTML=_monthNav+
-    `<div id="dash-alert"></div>
-    ${_deficitWarnHtml}${_savWarnHtml}${_hero}${_cats}${_dashInsHtml}${_ova}${_dashMlyToolbar}
+    `<div style="display:flex;align-items:center;gap:0;border-bottom:1px solid var(--border);margin-bottom:var(--sg)">
+      <button class="stab active" id="dash-stab-data"    onclick="switchDashTab('data')">Données</button>
+      <button class="stab"        id="dash-stab-analyse" onclick="switchDashTab('analyse')">Analyse</button>
+    </div>
+    <div id="dash-tab-data">
+      <div id="dash-alert"></div>
+      ${_deficitWarnHtml}${_savWarnHtml}${_hero}${_cats}${_dashMlyToolbar}
+    </div>
+    <div id="dash-tab-analyse" style="display:none">
+      ${_dashInsHtml}${_ova}
+    </div>
     <div id="dash-charts" style="display:none"></div>`;
 
   // ── Dashboard monthly sections ──
