@@ -7582,11 +7582,10 @@ async function _doLoginWithCredentials(userIdOrEmail,password){
         await loadData();
       }catch(e){console.warn('Auto-join failed:',e.message);}
     }
-    initUserContext();renderMemberTabs();updateNavForDataState();renderDashboard();renderEntries();document.getElementById('fab-entry').style.display='none';document.getElementById('fab-dashboard').style.display='none';
+    initUserContext();renderMemberTabs();updateNavForDataState();renderDashboard().then(()=>{if(currentTab==='dashboard'&&!hasNoData())document.getElementById('fab-dashboard').style.display='';}).catch(()=>{});renderEntries();document.getElementById('fab-entry').style.display='none';document.getElementById('fab-dashboard').style.display='none';
     _updateMemberBadge();_loadNotifs();
     if(window.location.pathname==='/banque'){switchTab('banque');}
     else{try{const _st=localStorage.getItem('zenith_tab');if(_st&&_st!=='dashboard')switchTab(_st);}catch(_){}}
-    if(currentTab==='dashboard'&&!hasNoData())document.getElementById('fab-dashboard').style.display='';
     registerPushSubscription();
     _scheduleTokenExpiry(); connectSSE(); _startPoll();
   }catch(err){
@@ -7611,11 +7610,10 @@ async function doLogin(){
     if(errEl) errEl.classList.remove('show');
     showScreen('app');
     await loadData();
-    initUserContext();renderMemberTabs();updateNavForDataState();renderDashboard();renderEntries();document.getElementById('fab-entry').style.display='none';document.getElementById('fab-dashboard').style.display='none';
+    initUserContext();renderMemberTabs();updateNavForDataState();renderDashboard().then(()=>{if(currentTab==='dashboard'&&!hasNoData())document.getElementById('fab-dashboard').style.display='';}).catch(()=>{});renderEntries();document.getElementById('fab-entry').style.display='none';document.getElementById('fab-dashboard').style.display='none';
     _updateMemberBadge();_loadNotifs();
     if(window.location.pathname==='/banque'){switchTab('banque');}
     else{try{const _st=localStorage.getItem('zenith_tab');if(_st&&_st!=='dashboard')switchTab(_st);}catch(_){}}
-    if(currentTab==='dashboard'&&!hasNoData())document.getElementById('fab-dashboard').style.display='';
     registerPushSubscription();
     _scheduleTokenExpiry(); connectSSE(); _startPoll();
   }catch(err){
