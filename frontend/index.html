@@ -977,33 +977,21 @@ if(window.location.hostname==='localhost'||window.location.hostname==='127.0.0.1
     <!-- ── PRÉVISIONNEL ── -->
     <div id="entries-previsionnel">
       <div id="entries-nodata" style="display:none"></div>
-      <!-- Sous-onglets Données / Analyse -->
-      <div style="display:flex;align-items:center;gap:0;border-bottom:1px solid var(--border);margin-bottom:.75rem">
-        <button class="stab active" id="prev-stab-data"    onclick="switchPrevTab('data')">Données</button>
-        <button class="stab"        id="prev-stab-analyse" onclick="switchPrevTab('analyse')">Analyse</button>
-        <div style="flex:1"></div>
-        <button class="btn-add btn-add-desktop" id="btn-add-entry" style="margin-bottom:4px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Ajouter</button>
-      </div>
-      <!-- Données -->
-      <div id="prev-tab-data">
-        <div id="entries-toolbar" style="display:flex;align-items:baseline;margin-bottom:.75rem;gap:8px">
-          <div id="entries-search" style="flex:1;display:flex;flex-direction:row;gap:6px;min-width:0">
-            <input type="text" id="search-input" class="inp search-inp" placeholder="Rechercher…" style="flex:1;min-width:0">
-            <select id="filter-cat" class="inp" style="flex-shrink:0;width:auto">
-              <option value="">Toutes catégories</option>
-              <option value="revenu">Revenu</option><option value="impot">Impôt</option>
-              <option value="fixe">Fixe</option><option value="variable">Variable</option>
-              <option value="epargne">Épargne</option><option value="loisir">Loisir</option>
-            </select>
-          </div>
+      <div class="kpi-grid" id="entries-summary" style="margin-bottom:.75rem"></div>
+      <div id="entries-toolbar" style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:.75rem;gap:8px">
+        <div id="entries-search" style="flex:1;display:flex;flex-direction:row;gap:6px;min-width:0">
+          <input type="text" id="search-input" class="inp search-inp" placeholder="Rechercher…" style="flex:1;min-width:0">
+          <select id="filter-cat" class="inp" style="flex-shrink:0;width:auto">
+            <option value="">Toutes catégories</option>
+            <option value="revenu">Revenu</option><option value="impot">Impôt</option>
+            <option value="fixe">Fixe</option><option value="variable">Variable</option>
+            <option value="epargne">Épargne</option><option value="loisir">Loisir</option>
+          </select>
         </div>
-        <div id="entries-sections"></div>
+        <button class="btn-add btn-add-desktop" id="btn-add-entry"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Ajouter</button>
       </div>
-      <!-- Analyse -->
-      <div id="prev-tab-analyse" style="display:none">
-        <div class="kpi-grid" id="entries-summary" style="margin-bottom:.75rem"></div>
-        <div id="entries-profile-wrap" style="margin-top:.75rem"></div>
-      </div>
+      <div id="entries-sections"></div>
+      <div id="entries-profile-wrap" style="margin-top:.75rem"></div>
     </div>
 
     <!-- ── SIMULATION ── -->
@@ -3637,7 +3625,6 @@ function renderEntries(){
     document.getElementById('entries-summary').innerHTML='';
     document.getElementById('entries-summary').style.display='none';
     const _pwClear=document.getElementById('entries-profile-wrap');if(_pwClear)_pwClear.innerHTML='';
-    document.getElementById('entries-toolbar').style.display='none';
     document.getElementById('entries-search').style.display='none';
     document.getElementById('btn-add-entry').style.display='none';
     if(currentTab==='entries')document.getElementById('fab-entry').style.display='none';
