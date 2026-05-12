@@ -2059,6 +2059,7 @@ function _budgetKpiCard(lbl, act, bgt, col, isEp=false) {
       <div style="height:4px;background:var(--surface2);border-radius:99px;overflow:hidden">
         <div style="width:${bw}%;height:100%;background:${epCol};border-radius:99px;transition:width .4s"></div>
       </div>
+      ${pct!==null?`<div style="font-size:10px;font-weight:700;color:${epCol};margin-top:4px">${pct}%</div>`:''}
     </div>`;
   } else if (bgt > 0) {
     const rem = bgt - act;
