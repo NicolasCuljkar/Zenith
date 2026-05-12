@@ -3360,13 +3360,13 @@ async function renderDashboard(){
     const _nPct2 = Math.round(_needs/revNetA*100), _wPct2 = Math.round(_wants/revNetA*100), _sPct2 = Math.round(_save/revNetA*100);
     const _other2 = Math.max(0,100-_nPct2-_wPct2-_sPct2);
     const _nOk=_nPct2<=55,_wOk=_wPct2<=35,_sOk=_sPct2>=15;
-    const _barSegs=[{p:_nPct2,c:_nOk?'#0d9e6e':'#d93535'},{p:_wPct2,c:_wOk?'#f59e0b':'#e05a2b'},{p:_sPct2,c:_sOk?'#2979c8':'#d93535'},{p:_other2,c:'var(--border)'}].filter(s=>s.p>0);
+    const _barSegs=[{p:_nPct2,c:'#0d9e6e'},{p:_wPct2,c:'#f59e0b'},{p:_sPct2,c:_sOk?'#2979c8':'#d93535'},{p:_other2,c:'var(--border)'}].filter(s=>s.p>0);
     _dash5030Html=`<div class="card" style="margin-bottom:var(--sg);padding:14px 16px">
       <div style="font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:10px">Répartition 50 / 30 / 20</div>
       <div style="display:flex;height:10px;border-radius:5px;overflow:hidden;gap:2px;margin-bottom:12px">${_barSegs.map(s=>`<div style="flex:${s.p};height:100%;background:${s.c}"></div>`).join('')}</div>
       <div style="display:flex">${[
-        {label:'Besoins',pct:_nPct2,ideal:50,val:_needs,ok:_nOk,col:_nOk?'var(--green)':'var(--red)'},
-        {label:'Envies', pct:_wPct2,ideal:30,val:_wants,ok:_wOk,col:_wOk?'var(--amber)':'var(--red)'},
+        {label:'Besoins',pct:_nPct2,ideal:50,val:_needs,ok:_nOk,col:'var(--green)'},
+        {label:'Envies', pct:_wPct2,ideal:30,val:_wants,ok:_wOk,col:'var(--amber)'},
         {label:'Épargne',pct:_sPct2,ideal:20,val:_save, ok:_sOk,col:_sOk?'var(--blue)':'var(--red)'},
       ].map((it,i)=>`${i>0?'<div style="width:1px;background:var(--border)"></div>':''}
         <div style="flex:1;text-align:center;padding:0 6px">
@@ -5653,9 +5653,9 @@ function _renderSimAnalysis(stats, origStats, simF, origF, nChanges, effEp, effL
     const saveOk  = savePct  >= 15;
 
     const segs = [
-      { pct: needsPct, color: needsOk ? '#0d9e6e' : '#d93535' },
-      { pct: wantsPct, color: wantsOk ? '#f59e0b' : '#e05a2b' },
-      { pct: savePct,  color: saveOk  ? '#2979c8' : '#d93535' },
+      { pct: needsPct, color: '#0d9e6e' },
+      { pct: wantsPct, color: '#f59e0b' },
+      { pct: savePct,  color: saveOk ? '#2979c8' : '#d93535' },
       { pct: other,    color: 'var(--border)' },
     ].filter(s => s.pct > 0);
 
@@ -5664,9 +5664,9 @@ function _renderSimAnalysis(stats, origStats, simF, origF, nChanges, effEp, effL
     ).join('');
 
     const items = [
-      { key: 'needs', label: 'Besoins', pct: needsPct, ideal: 50, val: needs, ok: needsOk, color: needsOk ? 'var(--green)' : 'var(--red)' },
-      { key: 'wants', label: 'Envies',  pct: wantsPct, ideal: 30, val: wants, ok: wantsOk, color: wantsOk ? 'var(--amber)' : 'var(--red)' },
-      { key: 'save',  label: 'Épargne', pct: savePct,  ideal: 20, val: save,  ok: saveOk,  color: saveOk  ? 'var(--blue)'  : 'var(--red)' },
+      { key: 'needs', label: 'Besoins', pct: needsPct, ideal: 50, val: needs, ok: needsOk, color: 'var(--green)' },
+      { key: 'wants', label: 'Envies',  pct: wantsPct, ideal: 30, val: wants, ok: wantsOk, color: 'var(--amber)' },
+      { key: 'save',  label: 'Épargne', pct: savePct,  ideal: 20, val: save,  ok: saveOk,  color: saveOk ? 'var(--blue)' : 'var(--red)' },
     ];
 
     ruleHtml = `<div class="card" style="margin-bottom:.75rem;padding:14px 16px">
