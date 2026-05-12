@@ -2050,7 +2050,7 @@ function _budgetKpiCard(lbl, act, bgt, col, isEp=false) {
   const bw  = pct!==null ? Math.min(pct,100) : 0;
   if (isEp) {
     // Épargne : montrer le montant épargné directement (delta), pas le reste à atteindre
-    const epSub = bgt>0 ? `objectif ${eur(bgt)}${pct!==null?' · '+pct+'%':''}` : 'aucun objectif';
+    const epSub = bgt>0 ? `objectif ${eur(bgt)}` : 'aucun objectif';
     const epCol = pct===null ? col : (pct>=100?'var(--green)':pct>=70?'var(--amber)':'var(--red)');
     return `<div class="card" style="padding:14px 16px;margin-bottom:0">
       <div style="font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:${col};margin-bottom:6px">${lbl}</div>
