@@ -2994,19 +2994,14 @@ async function renderDashboard(){
       <div style="font-size:var(--fs-xs);font-weight:700;letter-spacing:.04em;color:${_ravGlow};margin-bottom:8px;opacity:.85">Reste à vivre · ${frMonth} ${dashYear}</div>
       <div style="font-size:clamp(2rem,4vw,2.8rem);font-weight:800;letter-spacing:-.04em;color:${_ravColor};line-height:1">${mlyRavD>=0?'+':''}${eur(mlyRavD)}</div>
       <div style="font-size:var(--fs-xs);color:var(--muted);margin-top:6px">${_ravRate}% du revenu net</div>
+      ${(()=>{if(revNetA<=0)return'';const _dp=Math.round(totalDepDisplay/revNetA*100);const _dc=_dp<=80?'var(--green)':_dp<=90?'var(--amber)':'var(--red)';return`<div style="margin-top:5px;font-size:var(--fs-xs);color:${_dc};font-weight:700">Dépenses\u00a0: ${_dp}%${_dp<=80?' ✓':' · max.\u00a080%'}</div>`;})()}
       ${(()=>{if(revNetA<=0||epMonthDelta<0)return'';const _ep=Math.round(epMonthDelta/revNetA*100);const _tgt=epBudget>0?Math.round(epBudget/revNetA*100):20;const _ec=_ep>=_tgt?'var(--green)':_ep>=Math.round(_tgt*.7)?'var(--amber)':'var(--red)';return`<div style="margin-top:5px;font-size:var(--fs-xs);color:${_ec};font-weight:700">Épargne\u00a0: ${_ep}%${_ep>=_tgt?' ✓':' · obj.\u00a0'+_tgt+'%'}</div>`;})()}
     </div>
     <div>
-      <div style="margin-bottom:10px">
-        <div style="font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--green);margin-bottom:6px">Revenus</div>
-        <div class="prow"><span class="prow-lbl">Bruts</span><span class="prow-val" style="color:var(--green)">${eur(revA)}</span></div>
-        <div class="prow"><span class="prow-lbl">Impôts</span><span class="prow-val" style="color:var(--amber)">−${eur(taxA)}</span></div>
-        <div class="prow"><span class="prow-lbl" style="font-weight:700">Nets</span><span class="prow-val" style="color:var(--green);font-weight:700">${eur(revNetA)}</span></div>
-      </div>
-      <div>
-        <div style="font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--red);margin-bottom:6px">Dépenses <span style="font-weight:400;text-transform:none;letter-spacing:0;opacity:.7">(hors épargne)</span></div>
-        <div class="prow"><span class="prow-lbl" style="font-weight:700">Total</span><span class="prow-val" style="color:var(--red);font-weight:700">${eur(totalDepDisplay)}</span></div>
-      </div>
+      <div style="font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--green);margin-bottom:6px">Revenus</div>
+      <div class="prow"><span class="prow-lbl">Bruts</span><span class="prow-val" style="color:var(--green)">${eur(revA)}</span></div>
+      <div class="prow"><span class="prow-lbl">Impôts</span><span class="prow-val" style="color:var(--amber)">−${eur(taxA)}</span></div>
+      <div class="prow"><span class="prow-lbl" style="font-weight:700">Nets</span><span class="prow-val" style="color:var(--green);font-weight:700">${eur(revNetA)}</span></div>
     </div>
     ${epMonthDelta<0?`<div style="margin-top:8px;padding-top:8px;border-top:1px dashed color-mix(in srgb,var(--amber) 50%,var(--border));font-size:var(--fs-xs);color:var(--amber);line-height:1.4">💡 RAV bonifié de <b>${eur(Math.abs(epMonthDelta))}</b> par le retrait sur épargne.</div>`:''}
   </div>`;
