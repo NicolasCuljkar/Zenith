@@ -3004,9 +3004,6 @@ async function renderDashboard(){
       </div>
       <div style="flex:1;min-width:110px;padding-left:20px">
         <div style="font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--red);margin-bottom:6px">Dépenses</div>
-        <div class="prow"><span class="prow-lbl">Fixes</span><span class="prow-val" style="color:var(--muted)">${eur(fixA)}</span></div>
-        <div class="prow"><span class="prow-lbl">Variables</span><span class="prow-val" style="color:var(--muted)">${eur(varA + loiA)}</span></div>
-        ${epMonthDelta > 0 ? `<div class="prow"><span class="prow-lbl">Épargne</span><span class="prow-val" style="color:var(--muted)">${eur(epMonthDelta)}</span></div>` : ''}
         <div class="prow"><span class="prow-lbl" style="font-weight:700">Total</span><span class="prow-val" style="color:var(--red);font-weight:700">${eur(totalDep)}</span></div>
       </div>
     </div>
