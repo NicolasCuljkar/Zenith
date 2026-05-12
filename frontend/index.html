@@ -2995,7 +2995,6 @@ async function renderDashboard(){
       <div style="font-size:clamp(2rem,4vw,2.8rem);font-weight:800;letter-spacing:-.04em;color:${_ravColor};line-height:1">${mlyRavD>=0?'+':''}${eur(mlyRavD)}</div>
       <div style="font-size:var(--fs-xs);color:var(--muted);margin-top:6px">${_ravRate}% du revenu net</div>
       ${(()=>{if(revNetA<=0)return'';const _dp=Math.round(totalDepDisplay/revNetA*100);const _dc=_dp<=80?'var(--green)':_dp<=90?'var(--amber)':'var(--red)';return`<div style="margin-top:5px;font-size:var(--fs-xs);color:${_dc};font-weight:700">Dépenses\u00a0: ${eur(totalDepDisplay)}</div>`;})()}
-      ${(()=>{if(revNetA<=0||epMonthDelta<0)return'';const _ep=Math.round(epMonthDelta/revNetA*100);const _tgt=epBudget>0?Math.round(epBudget/revNetA*100):20;const _ec=_ep>=_tgt?'var(--green)':_ep>=Math.round(_tgt*.7)?'var(--amber)':'var(--red)';return`<div style="margin-top:5px;font-size:var(--fs-xs);color:${_ec};font-weight:700">Épargne\u00a0: ${_ep}%${_ep>=_tgt?' ✓':' · obj.\u00a0'+_tgt+'%'}</div>`;})()}
     </div>
     <div>
       <div style="font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--green);margin-bottom:6px">Revenus</div>
