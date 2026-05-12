@@ -8679,11 +8679,12 @@ async function initApp(){
       updateNavForDataState();
       document.getElementById('fab-entry').style.display='none';
       document.getElementById('fab-dashboard').style.display='none';
+      // Restaurer l'onglet AVANT le rendu pour éviter le flash dashboard
+      if(window.location.pathname==='/banque'){switchTab('banque');}
+      else{try{const _st=localStorage.getItem('zenith_tab');if(_st&&_st!=='dashboard')switchTab(_st);}catch(_){}}
       renderDashboard().then(()=>{if(currentTab==='dashboard'&&!hasNoData())document.getElementById('fab-dashboard').style.display='';}).catch(()=>{});
       renderEntries();
       _loadNotifs();
-      if(window.location.pathname==='/banque'){switchTab('banque');}
-      else{try{const _st=localStorage.getItem('zenith_tab');if(_st&&_st!=='dashboard')switchTab(_st);}catch(_){}}
       registerPushSubscription(); // non-bloquant
       connectSSE(); _startPoll();
     } else {
@@ -8936,10 +8937,19 @@ if ('serviceWorker' in navigator) {
     });
   }).catch(() => {});
 
-  // Quand le nouveau SW prend le contrôle, on recharge silencieusement
+  // Quand le nouveau SW prend le contrôle : toast discret, pas de reload automatique
   let refreshing = false;
   navigator.serviceWorker.addEventListener('controllerchange', () => {
-    if (!refreshing) { refreshing = true; location.reload(); }
+    if (!refreshing) {
+      refreshing = true;
+      const t = document.createElement('div');
+      t.innerHTML = `<div style="position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:10px 16px;display:flex;align-items:center;gap:10px;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,.4);white-space:nowrap">
+        <span style="font-size:var(--fs-xs);color:var(--text)">Mise à jour disponible</span>
+        <button onclick="location.reload()" style="background:var(--blue);color:#fff;border:none;border-radius:6px;padding:5px 12px;font-size:var(--fs-xs);font-weight:600;cursor:pointer;font-family:inherit">Actualiser</button>
+        <button onclick="this.closest('div').parentElement.remove()" style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:14px;padding:0 2px">✕</button>
+      </div>`;
+      document.body.appendChild(t);
+    }
   });
 }
 
