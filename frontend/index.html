@@ -111,7 +111,7 @@ document.addEventListener('keydown', e => {
   --blue:#6eb8ff;--blue-bg:#102040;
   --amber:#ffc46a;--amber-bg:#302010;
   --purple:#c0a8ff;--purple-bg:#1e1640;
-  --r:10px;--rl:16px;--nav:58px;--sg:.75rem;
+  --r:10px;--rl:16px;--nav:58px;--sg:.875rem;
   --card-shadow:0 2px 16px rgba(0,0,0,.32);
   --card-shadow-hover:0 8px 32px rgba(0,0,0,.48);
 }
@@ -2053,8 +2053,8 @@ function _budgetKpiCard(lbl, act, bgt, col, isEp=false) {
     const epSub = bgt>0 ? `objectif ${eur(bgt)}${pct!==null?' · '+pct+'%':''}` : 'aucun objectif';
     const epCol = pct===null ? col : (pct>=100?'var(--green)':pct>=70?'var(--amber)':'var(--red)');
     return `<div class="card" style="padding:14px 16px;margin-bottom:0">
-      <div style="font-size:10px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:${col};margin-bottom:6px">${lbl}</div>
-      <div style="font-size:1.5rem;font-weight:900;letter-spacing:-.03em;color:${epCol};line-height:1">${eur(act)}</div>
+      <div style="font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:${col};margin-bottom:6px">${lbl}</div>
+      <div style="font-size:1.5rem;font-weight:800;letter-spacing:-.03em;color:${epCol};line-height:1">${eur(act)}</div>
       <div style="font-size:var(--fs-xs);color:var(--muted);margin:4px 0 6px">épargné ce mois · ${epSub}</div>
       <div style="height:4px;background:var(--surface2);border-radius:99px;overflow:hidden">
         <div style="width:${bw}%;height:100%;background:${epCol};border-radius:99px;transition:width .4s"></div>
@@ -2065,8 +2065,8 @@ function _budgetKpiCard(lbl, act, bgt, col, isEp=false) {
     const remCol = rem>=0 ? 'var(--green)' : 'var(--red)';
     const remStr = rem>=0 ? `${eur(rem)} <span style="font-size:.85rem;font-weight:600;opacity:.7">restant</span>` : `−${eur(Math.abs(rem))}`;
     return `<div class="card" style="padding:14px 16px;margin-bottom:0">
-      <div style="font-size:10px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:${col};margin-bottom:6px">${lbl}</div>
-      <div style="font-size:1.5rem;font-weight:900;letter-spacing:-.03em;color:${remCol};line-height:1">${remStr}</div>
+      <div style="font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:${col};margin-bottom:6px">${lbl}</div>
+      <div style="font-size:1.5rem;font-weight:800;letter-spacing:-.03em;color:${remCol};line-height:1">${remStr}</div>
       <div style="font-size:var(--fs-xs);color:var(--muted);margin:4px 0 6px">${eur(act)} dépensé · budget ${eur(bgt)}</div>
       <div style="height:4px;background:var(--surface2);border-radius:99px;overflow:hidden">
         <div style="width:${bw}%;height:100%;background:${pc};border-radius:99px;transition:width .4s"></div>
@@ -2075,8 +2075,8 @@ function _budgetKpiCard(lbl, act, bgt, col, isEp=false) {
     </div>`;
   } else {
     return `<div class="card" style="padding:14px 16px;margin-bottom:0">
-      <div style="font-size:10px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:${col};margin-bottom:6px">${lbl}</div>
-      <div style="font-size:1.5rem;font-weight:900;letter-spacing:-.03em;color:var(--fg);line-height:1">${eur(act)}</div>
+      <div style="font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:${col};margin-bottom:6px">${lbl}</div>
+      <div style="font-size:1.5rem;font-weight:800;letter-spacing:-.03em;color:var(--fg);line-height:1">${eur(act)}</div>
       <div style="font-size:var(--fs-xs);color:var(--hint);margin:4px 0 6px">aucun budget</div>
       <div style="height:4px;background:var(--surface2);border-radius:99px;overflow:hidden"></div>
     </div>`;
@@ -2088,8 +2088,8 @@ function _retraitKpiCard(amount, balBefore, balAfter) {
     ? `<div style="font-size:var(--fs-xs);color:var(--muted);margin:4px 0 8px">${eur(balBefore)} → <b style="color:var(--red)">${eur(balAfter)}</b></div>`
     : `<div style="font-size:var(--fs-xs);color:var(--hint);margin:4px 0 8px">solde épargne réduit</div>`;
   return `<div class="card" style="padding:14px 16px;margin-bottom:0;border-color:color-mix(in srgb,var(--red) 40%,var(--border))">
-    <div style="font-size:10px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--red);margin-bottom:8px">Retrait épargne</div>
-    <div style="font-size:1.5rem;font-weight:900;letter-spacing:-.03em;color:var(--red);line-height:1">−${eur(absAmt)}</div>
+    <div style="font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--red);margin-bottom:8px">Retrait épargne</div>
+    <div style="font-size:1.5rem;font-weight:800;letter-spacing:-.03em;color:var(--red);line-height:1">−${eur(absAmt)}</div>
     ${balHtml}
     <div style="height:5px;background:var(--surface2);border-radius:99px;overflow:hidden">
       <div style="width:100%;height:100%;background:var(--red);border-radius:99px"></div>
@@ -2991,13 +2991,13 @@ async function renderDashboard(){
     <div style="position:absolute;top:0;left:0;width:5px;height:100%;background:linear-gradient(180deg,${_ravGlow},${_ravGlow}88);border-radius:18px 0 0 18px"></div>
     <div style="margin-bottom:18px;padding-bottom:16px;border-bottom:1px solid var(--border)">
       <div style="font-size:var(--fs-xs);font-weight:700;letter-spacing:.04em;color:${_ravGlow};margin-bottom:8px;opacity:.85">Reste à vivre · ${frMonth} ${dashYear}</div>
-      <div style="font-size:clamp(2rem,4vw,2.8rem);font-weight:900;letter-spacing:-.04em;color:${_ravColor};line-height:1">${mlyRavD>=0?'+':''}${eur(mlyRavD)}</div>
+      <div style="font-size:clamp(2rem,4vw,2.8rem);font-weight:800;letter-spacing:-.04em;color:${_ravColor};line-height:1">${mlyRavD>=0?'+':''}${eur(mlyRavD)}</div>
       <div style="font-size:var(--fs-xs);color:var(--muted);margin-top:6px">${_ravRate}% du revenu net</div>
       ${(()=>{if(revNetA<=0||epMonthDelta<0)return'';const _ep=Math.round(epMonthDelta/revNetA*100);const _tgt=epBudget>0?Math.round(epBudget/revNetA*100):20;const _ec=_ep>=_tgt?'var(--green)':_ep>=Math.round(_tgt*.7)?'var(--amber)':'var(--red)';return`<div style="margin-top:5px;font-size:var(--fs-xs);color:${_ec};font-weight:700">Épargne\u00a0: ${_ep}%${_ep>=_tgt?' ✓':' · obj.\u00a0'+_tgt+'%'}</div>`;})()}
     </div>
     <div style="display:flex;gap:0;flex-wrap:wrap">
       <div style="flex:1;min-width:110px;padding-right:14px">
-        <div style="font-size:9px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--green);margin-bottom:6px">Revenus</div>
+        <div style="font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--green);margin-bottom:6px">Revenus</div>
         <div class="prow"><span class="prow-lbl">Bruts</span><span class="prow-val" style="color:var(--green)">${eur(revA)}</span></div>
         <div class="prow"><span class="prow-lbl">Impôts</span><span class="prow-val" style="color:var(--amber)">−${eur(taxA)}</span></div>
         <div class="prow"><span class="prow-lbl" style="font-weight:700">Nets</span><span class="prow-val" style="color:var(--green);font-weight:700">${eur(revNetA)}</span></div>
@@ -3170,8 +3170,8 @@ async function renderDashboard(){
     const pvVal=_pvMap.get(r.name);
     const diff=!isNeg&&pvVal!==undefined?Math.round(r.total-pvVal):null;
     const diffHtml=diff===null?''
-      :diff>0?`<span style="display:inline-flex;align-items:center;gap:2px;font-size:9px;color:var(--red);font-weight:700;background:color-mix(in srgb,var(--red) 12%,var(--surface));border-radius:4px;padding:1px 5px;white-space:nowrap">↑ ${eur(Math.abs(diff))}</span>`
-      :diff<0?`<span style="display:inline-flex;align-items:center;gap:2px;font-size:9px;color:var(--green);font-weight:700;background:color-mix(in srgb,var(--green) 12%,var(--surface));border-radius:4px;padding:1px 5px;white-space:nowrap">↓ ${eur(Math.abs(diff))}</span>`
+      :diff>0?`<span style="display:inline-flex;align-items:center;gap:2px;font-size:11px;color:var(--red);font-weight:700;background:color-mix(in srgb,var(--red) 12%,var(--surface));border-radius:4px;padding:1px 5px;white-space:nowrap">↑ ${eur(Math.abs(diff))}</span>`
+      :diff<0?`<span style="display:inline-flex;align-items:center;gap:2px;font-size:11px;color:var(--green);font-weight:700;background:color-mix(in srgb,var(--green) 12%,var(--surface));border-radius:4px;padding:1px 5px;white-space:nowrap">↓ ${eur(Math.abs(diff))}</span>`
       :'';
     const amtStr=isNeg?`−${eur(Math.abs(r.total))}`:eur(r.total);
     const spkVals=_itemSpkData.get(r.name)||Array(6).fill(0);
@@ -3181,7 +3181,7 @@ async function renderDashboard(){
         <div style="display:flex;align-items:center;gap:6px;min-width:0;flex:1">
           <span style="width:5px;height:5px;border-radius:50%;background:${col};flex-shrink:0;opacity:.7"></span>
           <span style="font-size:var(--fs-xs);color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.name}</span>
-          ${r.count>1?`<span style="font-size:9px;color:var(--hint)">×${r.count}</span>`:''}
+          ${r.count>1?`<span style="font-size:11px;color:var(--hint)">×${r.count}</span>`:''}
         </div>
         <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
           ${diffHtml}
@@ -3209,7 +3209,7 @@ async function renderDashboard(){
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
             <div style="display:flex;align-items:center;gap:6px">
               <span style="width:7px;height:7px;border-radius:50%;background:${col};flex-shrink:0"></span>
-              <span style="font-size:10px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:${col}">${_catLbl[c]}</span>
+              <span style="font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:${col}">${_catLbl[c]}</span>
             </div>
             <div style="display:flex;align-items:center;gap:8px">
               <span style="font-size:10px;font-weight:700;color:${pctCol};background:color-mix(in srgb,${pctCol} 12%,var(--surface));border-radius:4px;padding:1px 6px">${pctLabel}</span>
@@ -3217,7 +3217,7 @@ async function renderDashboard(){
             </div>
           </div>
           <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:8px;margin-bottom:2px">
-            <div style="font-size:1.25rem;font-weight:900;letter-spacing:-.03em;color:${col};line-height:1">${eur(g.total)}</div>
+            <div style="font-size:1.25rem;font-weight:800;letter-spacing:-.03em;color:${col};line-height:1">${eur(g.total)}</div>
             <div style="flex-shrink:0;opacity:.85">${_svgSpk(_spkTotals[c]||[],col,bgt)}</div>
           </div>
           <div style="font-size:var(--fs-xs);color:var(--muted);margin-top:3px">${subtext}</div>
@@ -3234,10 +3234,10 @@ async function renderDashboard(){
   const _ovaRetraitBlock=epMonthDelta<0&&_hasSavRec?`<div style="border-top:1px solid var(--border);border-left:3px solid var(--red);padding:11px 18px 10px 15px">
     <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
       <span style="width:7px;height:7px;border-radius:50%;background:var(--red);flex-shrink:0"></span>
-      <span style="font-size:10px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--red)">Retrait épargne</span>
+      <span style="font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--red)">Retrait épargne</span>
     </div>
     <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:8px;margin-bottom:2px">
-      <div style="font-size:1.25rem;font-weight:900;letter-spacing:-.03em;color:var(--red);line-height:1">−${eur(Math.abs(epMonthDelta))}</div>
+      <div style="font-size:1.25rem;font-weight:800;letter-spacing:-.03em;color:var(--red);line-height:1">−${eur(Math.abs(epMonthDelta))}</div>
       <div style="flex-shrink:0;opacity:.85">${_svgSpk(_spkTotals['epargne']||[],'var(--red)',0)}</div>
     </div>
     ${_balBefore!==null?`<div style="font-size:var(--fs-xs);color:var(--muted);margin-top:3px">${eur(_balBefore)} → <b style="color:var(--red)">${eur(_balAfter)}</b></div>`:''}
@@ -3246,8 +3246,8 @@ async function renderDashboard(){
   const _ova=`<div class="card" style="padding:0;overflow:hidden">
     <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid var(--border)">
       <div style="display:flex;align-items:center;gap:8px">
-        <span style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)">Où va l'argent ?</span>
-        ${_excCount>0?`<span style="font-size:9px;font-weight:700;color:var(--muted);background:var(--surface2);border-radius:4px;padding:1px 6px;border:1px solid var(--border)">${_excCount} except.</span>`:''}
+        <span style="font-size:var(--fs-xs);font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)">Où va l'argent ?</span>
+        ${_excCount>0?`<span style="font-size:11px;font-weight:700;color:var(--muted);background:var(--surface2);border-radius:4px;padding:1px 6px;border:1px solid var(--border)">${_excCount} except.</span>`:''}
       </div>
       ${_postesTotal>0?`<span style="font-size:var(--fs-sm);font-weight:800;color:var(--text)">${eur(_postesTotal)}</span>`:''}
     </div>
@@ -3337,7 +3337,7 @@ async function renderDashboard(){
     }
   } catch(_diErr){console.warn('dash insights error',_diErr);}
 
-  const _dashInsHtml=_dIns.length===0?'':'<div class="card" style="padding:0;overflow:hidden;margin-bottom:var(--sg)"><div style="padding:10px 14px;border-bottom:1px solid var(--border)"><span style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)">Insights du mois</span></div><div>'+_dIns.map(function(ins,ii){return '<div style="display:flex;align-items:center;gap:10px;padding:9px 14px;'+(ii<_dIns.length-1?'border-bottom:1px solid var(--border)':'')+'"><span style="width:7px;height:7px;border-radius:50%;background:'+ins.col+';flex-shrink:0"></span><span style="flex:1;min-width:0;font-size:var(--fs-xs);font-weight:600;color:var(--text)">'+ins.text+(ins.sub?'<span style="font-weight:400;color:var(--muted)"> · '+ins.sub+'</span>':'')+'</span></div>';}).join('')+'</div></div>';
+  const _dashInsHtml=_dIns.length===0?'':'<div class="card" style="padding:0;overflow:hidden;margin-bottom:var(--sg)"><div style="padding:10px 14px;border-bottom:1px solid var(--border)"><span style="font-size:var(--fs-xs);font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)">Insights du mois</span></div><div>'+_dIns.map(function(ins,ii){return '<div style="display:flex;align-items:center;gap:10px;padding:9px 14px;'+(ii<_dIns.length-1?'border-bottom:1px solid var(--border)':'')+'"><span style="width:7px;height:7px;border-radius:50%;background:'+ins.col+';flex-shrink:0"></span><span style="flex:1;min-width:0;font-size:var(--fs-xs);font-weight:600;color:var(--text)">'+ins.text+(ins.sub?'<span style="font-weight:400;color:var(--muted)"> · '+ins.sub+'</span>':'')+'</span></div>';}).join('')+'</div></div>';
 
   const _dashMlyToolbar=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:var(--sg)">
     <input id="dash-mly-search" type="search" placeholder="Rechercher…" class="inp search-inp" style="flex:1;min-width:0">
@@ -3362,7 +3362,7 @@ async function renderDashboard(){
     const _nOk=_nPct2<=55,_wOk=_wPct2<=35,_sOk=_sPct2>=15;
     const _barSegs=[{p:_nPct2,c:_nOk?'#0d9e6e':'#d93535'},{p:_wPct2,c:_wOk?'#f59e0b':'#e05a2b'},{p:_sPct2,c:_sOk?'#2979c8':'#d93535'},{p:_other2,c:'var(--border)'}].filter(s=>s.p>0);
     _dash5030Html=`<div class="card" style="margin-bottom:var(--sg);padding:14px 16px">
-      <div style="font-size:9px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:10px">Répartition 50 / 30 / 20</div>
+      <div style="font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:10px">Répartition 50 / 30 / 20</div>
       <div style="display:flex;height:10px;border-radius:5px;overflow:hidden;gap:2px;margin-bottom:12px">${_barSegs.map(s=>`<div style="flex:${s.p};height:100%;background:${s.c}"></div>`).join('')}</div>
       <div style="display:flex">${[
         {label:'Besoins',pct:_nPct2,ideal:50,val:_needs,ok:_nOk,col:_nOk?'var(--green)':'var(--red)'},
@@ -3370,7 +3370,7 @@ async function renderDashboard(){
         {label:'Épargne',pct:_sPct2,ideal:20,val:_save, ok:_sOk,col:_sOk?'var(--blue)':'var(--red)'},
       ].map((it,i)=>`${i>0?'<div style="width:1px;background:var(--border)"></div>':''}
         <div style="flex:1;text-align:center;padding:0 6px">
-          <div style="font-size:1.05rem;font-weight:900;color:${it.col}">${it.pct}%</div>
+          <div style="font-size:1.05rem;font-weight:800;color:${it.col}">${it.pct}%</div>
           <div style="font-size:var(--fs-xs);font-weight:600;color:var(--text);margin-bottom:1px">${it.label}</div>
           <div style="font-size:10px;color:var(--hint)">${eur(it.val)}</div>
           <div style="font-size:10px;margin-top:1px;color:${it.ok?'var(--green)':'var(--hint)'}">idéal ${it.ideal}%</div>
@@ -3382,7 +3382,7 @@ async function renderDashboard(){
   // ── Onglet Analyse : Bilan & projections ──
   const _proj12 = mlyRavD * 12, _epProj12 = Math.max(0, epMonthDelta) * 12;
   const _bilanHtml = revNetA > 0 ? `<div class="card" style="margin-bottom:var(--sg);padding:0;overflow:hidden">
-    <div style="padding:10px 14px;border-bottom:1px solid var(--border)"><span style="font-size:9px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)">Bilan & projections</span></div>
+    <div style="padding:10px 14px;border-bottom:1px solid var(--border)"><span style="font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)">Bilan & projections</span></div>
     ${[
       {label:'Solde du mois',         val:mlyRavD,     col:mlyRavD>=0?'var(--green)':'var(--red)',   sign:true},
       {label:'Projection 12 mois',    val:_proj12,     col:_proj12>=0?'var(--green)':'var(--red)',   sign:true},
@@ -3403,7 +3403,7 @@ async function renderDashboard(){
     {label:'Épargne',  actual:Math.max(0,epMonthDelta), budget:epBudget,  color:'#2979c8'},
   ].filter(c=>c.budget>0||c.actual>0);
   const _bvrHtml = _bvrRows.length > 0 ? `<div class="card" style="margin-bottom:var(--sg);padding:0;overflow:hidden">
-    <div style="padding:10px 14px;border-bottom:1px solid var(--border)"><span style="font-size:9px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)">Budget vs Réel</span></div>
+    <div style="padding:10px 14px;border-bottom:1px solid var(--border)"><span style="font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)">Budget vs Réel</span></div>
     ${_bvrRows.map((c,i,a)=>{
       const pct=c.budget>0?Math.min(200,Math.round(c.actual/c.budget*100)):null;
       const over=c.budget>0&&c.actual>c.budget;
@@ -3413,7 +3413,7 @@ async function renderDashboard(){
           <div style="display:flex;align-items:center;gap:6px">
             <span style="font-size:10px;color:var(--hint)">${eur(c.budget)}</span>
             <span style="font-size:var(--fs-xs);font-weight:800;color:${over?'var(--red)':c.color}">${eur(c.actual)}</span>
-            ${pct!==null?`<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px;background:${over?'color-mix(in srgb,var(--red) 12%,var(--surface))':'var(--surface2)'};color:${over?'var(--red)':'var(--muted)'}">${pct}%</span>`:''}
+            ${pct!==null?`<span style="font-size:11px;font-weight:700;padding:1px 5px;border-radius:4px;background:${over?'color-mix(in srgb,var(--red) 12%,var(--surface))':'var(--surface2)'};color:${over?'var(--red)':'var(--muted)'}">${pct}%</span>`:''}
           </div>
         </div>
         ${c.budget>0?`<div style="height:5px;border-radius:3px;background:var(--surface2);overflow:hidden"><div style="height:100%;width:${Math.min(100,pct??0)}%;background:${over?'var(--red)':c.color};border-radius:3px"></div></div>`:''}
@@ -3424,14 +3424,20 @@ async function renderDashboard(){
   content.innerHTML=_monthNav+
     `<div id="dash-alert"></div>
     ${_deficitWarnHtml}${_savWarnHtml}${_hero}${_cats}
-    <div style="display:flex;align-items:center;gap:0;border-bottom:1px solid var(--border);margin-bottom:var(--sg)">
-      <button class="stab active" id="dash-stab-data"    onclick="switchDashTab('data')">Données</button>
-      <button class="stab"        id="dash-stab-analyse" onclick="switchDashTab('analyse')">Analyse</button>
-    </div>
     <div id="dash-tab-data">
       ${_dashMlyToolbar}
+      <div style="display:flex;justify-content:flex-end;margin-top:var(--sg)">
+        <button id="dash-stab-data" onclick="switchDashTab('analyse')" style="display:flex;align-items:center;gap:6px;background:none;border:1px solid var(--border);border-radius:var(--r);padding:7px 14px;cursor:pointer;color:var(--muted);font-size:var(--fs-sm);font-family:inherit;transition:color .15s,border-color .15s" onmouseenter="this.style.color='var(--text)';this.style.borderColor='var(--blue)'" onmouseleave="this.style.color='var(--muted)';this.style.borderColor='var(--border)'">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          Voir l'analyse
+        </button>
+      </div>
     </div>
     <div id="dash-tab-analyse" style="display:none">
+      <button id="dash-stab-analyse" onclick="switchDashTab('data')" style="display:flex;align-items:center;gap:6px;background:none;border:none;padding:0 0 var(--sg);cursor:pointer;color:var(--muted);font-size:var(--fs-sm);font-family:inherit" onmouseenter="this.style.color='var(--text)'" onmouseleave="this.style.color='var(--muted)'">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        Retour aux données
+      </button>
       ${_dashInsHtml}${_dash5030Html}${_ova}${_bvrHtml}
     </div>
     <div id="dash-charts" style="display:none"></div>`;
@@ -3540,12 +3546,12 @@ function _dashShowPendingFixes(){
   let html='';
   if(pending.length>0){
     const tot=pending.reduce((s,e)=>s+Math.abs(e.amount),0);
-    html+=`<div style="font-size:9px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--amber);margin-bottom:4px;margin-top:4px">À venir · ${eur(tot)}</div>`;
+    html+=`<div style="font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--amber);margin-bottom:4px;margin-top:4px">À venir · ${eur(tot)}</div>`;
     html+=pending.sort((a,b)=>(a.debit_day||99)-(b.debit_day||99)).map(e=>row(e,true)).join('');
   }
   if(done.length>0){
     const tot=done.reduce((s,e)=>s+Math.abs(e.amount),0);
-    html+=`<div style="font-size:9px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--green);margin-bottom:4px;margin-top:${pending.length?'14px':'4px'}">Passées · ${eur(tot)}</div>`;
+    html+=`<div style="font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--green);margin-bottom:4px;margin-top:${pending.length?'14px':'4px'}">Passées · ${eur(tot)}</div>`;
     html+=done.sort((a,b)=>(a.debit_day||99)-(b.debit_day||99)).map(e=>row(e,false)).join('');
   }
   if(!fixes.length)html=`<div style="text-align:center;color:var(--muted);padding:24px 0;font-size:var(--fs-sm)">Aucune charge fixe définie</div>`;
@@ -3650,7 +3656,7 @@ function memberTableHtml(rows,isMobile,memberName){
     const hdr=`<div onclick="toggleEntriesSection('${memberName}','${g.key}')" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;padding:0 2px 6px;margin-bottom:5px;border-bottom:2px solid ${g.color}30">
       <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">
         <button onclick="event.stopPropagation();toggleEntriesSection('${memberName}','${g.key}')" data-entries-collapse="${ck}" style="background:none;border:none;cursor:pointer;color:var(--muted);padding:0;display:flex;align-items:center;transition:transform .2s;${chevronStyle}">${CHEVRON_SVG}</button>
-        <span style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:${g.color}">${g.label}</span>
+        <span style="font-size:var(--fs-xs);font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:${g.color}">${g.label}</span>
         <span style="font-size:var(--fs-xs);color:var(--hint);background:${g.color}18;border-radius:20px;padding:1px 7px;font-weight:700">${rowCount}</span>
         ${subInfo}
       </div>
@@ -3777,7 +3783,7 @@ function renderEntries(){
       const hdr=`<div onclick="toggleEntriesSection('commun','${g.key}')" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;padding:0 2px 6px;margin-bottom:5px;border-bottom:2px solid ${g.color}30">
         <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">
           <button onclick="event.stopPropagation();toggleEntriesSection('commun','${g.key}')" data-entries-collapse="${_ck}" style="background:none;border:none;cursor:pointer;color:var(--muted);padding:0;display:flex;align-items:center;transition:transform .2s;${_isC?'transform:rotate(-90deg);':''}">${CHEVRON_SVG}</button>
-          <span style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:${g.color}">${g.label}</span>
+          <span style="font-size:var(--fs-xs);font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:${g.color}">${g.label}</span>
           <span style="font-size:var(--fs-xs);color:var(--hint);background:${g.color}18;border-radius:20px;padding:1px 7px;font-weight:700">${allNames.length}</span>
           ${allNames.length?`<span style="font-size:var(--fs-xs);font-weight:700;color:${g.totColor}">${eur(Math.abs(tot))}</span>${[...e1,...e2].some(e=>e._synthetic)?`<span style="font-size:var(--fs-xs);color:var(--muted);font-style:italic">calculé</span>`:''}`:`<span style="font-size:var(--fs-xs);color:var(--muted)">Aucune donnée</span>`}
         </div>
@@ -3882,13 +3888,13 @@ function renderEntries(){
     _memberCards = `<div style="flex:1;min-width:260px">
       <div style="display:flex;gap:0;flex-wrap:wrap;margin-bottom:14px">
         <div style="flex:1;min-width:110px;padding-right:14px;border-right:1px solid var(--border)">
-          <div style="font-size:9px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--green);margin-bottom:6px">Revenus</div>
+          <div style="font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--green);margin-bottom:6px">Revenus</div>
           <div class="prow"><span class="prow-lbl">Bruts</span><span class="prow-val" style="color:var(--green)">${eur(_foyerPs.rev)}</span></div>
           <div class="prow"><span class="prow-lbl">Impôts</span><span class="prow-val" style="color:var(--amber)">−${eur(_foyerPs.tax)}</span></div>
           <div class="prow"><span class="prow-lbl" style="font-weight:700">Nets</span><span class="prow-val" style="color:var(--green);font-weight:700">${eur(_foyerPs.revNet)}</span></div>
         </div>
         <div style="flex:1;min-width:110px;padding-left:14px">
-          <div style="font-size:9px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--red);margin-bottom:6px">Dépenses</div>
+          <div style="font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--red);margin-bottom:6px">Dépenses</div>
           <div class="prow"><span class="prow-lbl">Fixes</span><span class="prow-val" style="color:var(--red)">−${eur(_foyerPs.fix)}</span></div>
           <div class="prow"><span class="prow-lbl">Variables</span><span class="prow-val" style="color:var(--red)">−${eur(_foyerPs.vari)}</span></div>
           <div class="prow"><span class="prow-lbl" style="font-weight:700">Total</span><span class="prow-val" style="color:var(--red);font-weight:700">−${eur(_foyerPs.fix+_foyerPs.vari)}</span></div>
@@ -3896,7 +3902,7 @@ function renderEntries(){
       </div>
       <div style="border-top:1px solid var(--border);padding-top:12px">
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px">
-          <span style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:${_foyerRavGlow}">Répartition RAV</span>
+          <span style="font-size:var(--fs-xs);font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:${_foyerRavGlow}">Répartition RAV</span>
           <span style="font-size:var(--fs-xs);font-weight:700;color:var(--muted)">${_foyerRavRate}% du revenu net</span>
           <span style="font-size:var(--fs-sm);font-weight:800;color:${_foyerRavGlow};letter-spacing:-.02em">${_foyerPs.rav>=0?'+':''}${eur(_foyerPs.rav)}</span>
         </div>
@@ -3907,7 +3913,7 @@ function renderEntries(){
           <span style="font-size:var(--fs-xs);font-weight:700;color:var(--amber)">Loisir ${_loiGlobalPct}%</span>
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-          <span style="font-size:9px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)">Par membre</span>
+          <span style="font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)">Par membre</span>
           <div style="display:flex;gap:6px">
             <span style="font-size:var(--fs-xs);font-weight:700;color:var(--blue);min-width:52px;text-align:right">Épargne</span>
             <span style="font-size:var(--fs-xs);font-weight:700;color:var(--amber);min-width:52px;text-align:right">Loisir</span>
@@ -3937,13 +3943,13 @@ function renderEntries(){
       ${_showNames.length > 1 ? `<div style="margin-bottom:14px"><span style="font-size:var(--fs-sm);font-weight:800;color:${mc};letter-spacing:.05em;text-transform:uppercase">${name}</span></div>` : ''}
       <div style="display:flex;gap:0;flex-wrap:wrap;margin-bottom:14px">
         <div style="flex:1;min-width:110px;padding-right:14px;border-right:1px solid var(--border)">
-          <div style="font-size:9px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--green);margin-bottom:6px">Revenus</div>
+          <div style="font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--green);margin-bottom:6px">Revenus</div>
           <div class="prow"><span class="prow-lbl">Bruts</span><span class="prow-val" style="color:var(--green)">${eur(ps.rev)}</span></div>
           <div class="prow"><span class="prow-lbl">Impôts</span><span class="prow-val" style="color:var(--amber)">−${eur(ps.tax)}</span></div>
           <div class="prow"><span class="prow-lbl" style="font-weight:700">Nets</span><span class="prow-val" style="color:var(--green);font-weight:700">${eur(ps.revNet)}</span></div>
         </div>
         <div style="flex:1;min-width:110px;padding-left:14px">
-          <div style="font-size:9px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--red);margin-bottom:6px">Dépenses</div>
+          <div style="font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--red);margin-bottom:6px">Dépenses</div>
           <div class="prow"><span class="prow-lbl">Fixes</span><span class="prow-val" style="color:var(--red)">−${eur(ps.fix)}</span></div>
           <div class="prow"><span class="prow-lbl">Variables</span><span class="prow-val" style="color:var(--red)">−${eur(ps.vari)}</span></div>
           <div class="prow"><span class="prow-lbl" style="font-weight:700">Total</span><span class="prow-val" style="color:var(--red);font-weight:700">−${eur(ps.fix + ps.vari)}</span></div>
@@ -3952,7 +3958,7 @@ function renderEntries(){
       <div style="border-top:1px solid var(--border);padding-top:12px">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;gap:8px">
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-            <span style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:${ravGlow}">Répartition RAV</span>
+            <span style="font-size:var(--fs-xs);font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:${ravGlow}">Répartition RAV</span>
             <span style="font-size:var(--fs-xs);font-weight:700;color:var(--muted)">${ravRate}% du revenu net</span>
             <span style="font-size:var(--fs-sm);font-weight:800;color:${ravGlow};letter-spacing:-.02em">${ps.rav >= 0 ? '+' : ''}${eur(ps.rav)}</span>
           </div>
@@ -4332,12 +4338,12 @@ function _renderMonthlySections(stats, expenses, savingsData = [], entryStats = 
     heroHtml = `<div style="background:linear-gradient(135deg,color-mix(in srgb,${_foyerRavGlow2} 12%,var(--surface)) 0%,var(--surface) 50%);border:1.5px solid color-mix(in srgb,${_foyerRavGlow2} 25%,var(--border));border-radius:18px;padding:20px 24px;position:relative;overflow:hidden;box-shadow:0 4px 24px color-mix(in srgb,${_foyerRavGlow2} 10%,transparent)">
       <div style="position:absolute;top:0;left:0;width:5px;height:100%;background:linear-gradient(180deg,${_foyerRavGlow2},${_foyerRavGlow2}88);border-radius:18px 0 0 18px"></div>
       <div style="margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border)">
-        <div style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:${_foyerRavGlow2};margin-bottom:4px">Reste à vivre</div>
-        <div style="font-size:clamp(1.8rem,4vw,2.5rem);font-weight:900;letter-spacing:-.04em;color:${_foyerRavColor2};line-height:1.1">${mlyRav>=0?'+':''}${eur(mlyRav)}</div>
+        <div style="font-size:var(--fs-xs);font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:${_foyerRavGlow2};margin-bottom:4px">Reste à vivre</div>
+        <div style="font-size:clamp(1.8rem,4vw,2.5rem);font-weight:800;letter-spacing:-.04em;color:${_foyerRavColor2};line-height:1.1">${mlyRav>=0?'+':''}${eur(mlyRav)}</div>
         <div style="font-size:var(--fs-xs);color:var(--muted);margin-top:4px">${mlyRavRate}% du revenu net</div>
       </div>
       <div>
-        <div style="font-size:9px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--green);margin-bottom:6px">Revenus</div>
+        <div style="font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--green);margin-bottom:6px">Revenus</div>
           <div class="prow"><span class="prow-lbl">Bruts</span><span class="prow-val" style="color:var(--green)">${eur(revenu.actual)}</span></div>
           <div class="prow"><span class="prow-lbl">Impôts</span><span class="prow-val" style="color:var(--amber)">−${eur(impot.actual)}</span></div>
           <div class="prow"><span class="prow-lbl" style="font-weight:700">Nets</span><span class="prow-val" style="color:var(--green);font-weight:700">${eur(revNet)}</span></div>
@@ -4350,12 +4356,12 @@ function _renderMonthlySections(stats, expenses, savingsData = [], entryStats = 
     heroHtml = `<div style="background:linear-gradient(135deg,color-mix(in srgb,${mlyRavGlow} 12%,var(--surface)) 0%,var(--surface) 50%);border:1.5px solid color-mix(in srgb,${mlyRavGlow} 25%,var(--border));border-radius:18px;padding:20px 24px;position:relative;overflow:hidden;box-shadow:0 4px 24px color-mix(in srgb,${mlyRavGlow} 10%,transparent)">
       <div style="position:absolute;top:0;left:0;width:5px;height:100%;background:linear-gradient(180deg,${mlyRavGlow},${mlyRavGlow}88);border-radius:18px 0 0 18px"></div>
       <div style="margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border)">
-        <div style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:${mlyRavGlow};margin-bottom:4px">Reste à vivre</div>
-        <div style="font-size:clamp(1.8rem,4vw,2.5rem);font-weight:900;letter-spacing:-.04em;color:${mlyRavColor};line-height:1.1">${mlyRav>=0?'+':''}${eur(mlyRav)}</div>
+        <div style="font-size:var(--fs-xs);font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:${mlyRavGlow};margin-bottom:4px">Reste à vivre</div>
+        <div style="font-size:clamp(1.8rem,4vw,2.5rem);font-weight:800;letter-spacing:-.04em;color:${mlyRavColor};line-height:1.1">${mlyRav>=0?'+':''}${eur(mlyRav)}</div>
         <div style="font-size:var(--fs-xs);color:var(--muted);margin-top:4px">${mlyRavRate}% du revenu net</div>
       </div>
       <div>
-        <div style="font-size:9px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--green);margin-bottom:6px">Revenus</div>
+        <div style="font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--green);margin-bottom:6px">Revenus</div>
           <div class="prow"><span class="prow-lbl">Bruts</span><span class="prow-val" style="color:var(--green)">${eur(revenu.actual)}</span></div>
           <div class="prow"><span class="prow-lbl">Impôts</span><span class="prow-val" style="color:var(--amber)">−${eur(impot.actual)}</span></div>
           <div class="prow"><span class="prow-lbl" style="font-weight:700">Nets</span><span class="prow-val" style="color:var(--green);font-weight:700">${eur(revNet)}</span></div>
@@ -4505,7 +4511,7 @@ function _monthlyAutoGroup(rows, overrides, extras, g, isMobile) {
   const hdr = `<div onclick="toggleMonthlySection('${g.key}')" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;padding:0 2px 6px;margin-bottom:5px;border-bottom:2px solid ${g.color}30">
     <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">
       <button onclick="event.stopPropagation();toggleMonthlySection('${g.key}')" data-collapse-key="${g.key}" style="background:none;border:none;cursor:pointer;color:var(--muted);padding:0;display:flex;align-items:center;transition:transform .2s;${chevronStyle}">${CHEVRON_SVG}</button>
-      <span style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:${g.color}">${g.label}</span>
+      <span style="font-size:var(--fs-xs);font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:${g.color}">${g.label}</span>
       <span style="font-size:var(--fs-xs);color:var(--hint);background:${g.color}18;border-radius:20px;padding:1px 7px;font-weight:700">${rows.length + extras.length}</span>
       ${subInfo}
     </div>
@@ -4528,9 +4534,9 @@ function _monthlyAutoGroup(rows, overrides, extras, g, isMobile) {
       const c = CATS[e.cat];
       const amtCol = isSuppressed ? 'var(--muted)' : e.cat === 'revenu' ? 'var(--green)' : e.cat === 'impot' ? 'var(--amber)' : 'var(--red)';
       const mStatusBadge = isSuppressed
-        ? `<span style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:1px 6px;border-radius:4px;background:var(--red-bg);color:var(--red);border:1px solid #d9353533;margin-left:6px;vertical-align:middle">Supprimé</span>`
+        ? `<span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:1px 6px;border-radius:4px;background:var(--red-bg);color:var(--red);border:1px solid #d9353533;margin-left:6px;vertical-align:middle">Supprimé</span>`
         : isOverridden
-        ? `<span style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:1px 6px;border-radius:4px;background:#c49a0022;color:#c49a00;border:1px solid #c49a0033;margin-left:6px;vertical-align:middle">Corrigé</span>`
+        ? `<span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:1px 6px;border-radius:4px;background:#c49a0022;color:#c49a00;border:1px solid #c49a0033;margin-left:6px;vertical-align:middle">Corrigé</span>`
         : '';
       return `<div class="swipe-row"><div class="swipe-del-zone"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg></div>
       <div class="entry-card swipeable" data-swipe-fn="_mlySwipeSuppress(${e.id},${ov?ov.id:'null'})" style="border-left-color:${isSuppressed?'#d93535':isOverridden?'#c49a00':c.hex};background:${isSuppressed?'color-mix(in srgb,#d93535 6%,var(--surface))':isOverridden?'color-mix(in srgb,#c49a00 8%,var(--surface))':c.bg};padding:9px 12px${isSuppressed?';opacity:.7':''}" onclick="${!isSuppressed?`openMonthlyAutoOverride(${e.id},${ov?ov.id:'null'})`:''}">
@@ -4578,9 +4584,9 @@ ${bar}    <div class="tbl-wrap"><table style="width:100%;table-layout:fixed">
             ? `border-left:3px solid #c49a00;background:color-mix(in srgb,#c49a00 10%,var(--surface));`
             : `border-left:3px solid ${c.hex};background:${c.bg};`;
           const statusBadge = isSuppressed
-            ? `<span style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:1px 6px;border-radius:4px;background:var(--red-bg);color:var(--red);border:1px solid #d9353533;margin-left:6px;vertical-align:middle">Supprimé</span>`
+            ? `<span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:1px 6px;border-radius:4px;background:var(--red-bg);color:var(--red);border:1px solid #d9353533;margin-left:6px;vertical-align:middle">Supprimé</span>`
             : isOverridden
-            ? `<span style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:1px 6px;border-radius:4px;background:#c49a0022;color:#c49a00;border:1px solid #c49a0033;margin-left:6px;vertical-align:middle">Corrigé</span>`
+            ? `<span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:1px 6px;border-radius:4px;background:#c49a0022;color:#c49a00;border:1px solid #c49a0033;margin-left:6px;vertical-align:middle">Corrigé</span>`
             : '';
           const amtCell = isSuppressed
             ? `<td style="text-align:right;color:var(--muted)">—</td>`
@@ -4600,7 +4606,7 @@ ${bar}    <div class="tbl-wrap"><table style="width:100%;table-layout:fixed">
         }).join('')}
         ${extras.map(e => { const c=CATS[e.cat]; const exAc=e.cat==='revenu'?'var(--green)':e.cat==='impot'?'var(--amber)':'var(--red)'; return `<tr style="border-left:3px solid ${c.hex};background:${c.bg}">
           <td><input type="checkbox" class="monthly-cb" data-id="${e.id}" data-group="${g.key}" ${monthlySelected.has(e.id)?'checked':''} onchange="toggleMonthlySelect(${e.id},this)"></td>
-          <td><div style="font-weight:500">${e.name}<span style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:1px 6px;border-radius:4px;background:var(--surface2);color:var(--muted);border:1px solid var(--border);margin-left:6px;vertical-align:middle">+ ajouté</span></div>${e.note?`<div style="font-size:var(--fs-xs);color:var(--muted);margin-top:2px">${e.note}</div>`:''}</td>
+          <td><div style="font-weight:500">${e.name}<span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:1px 6px;border-radius:4px;background:var(--surface2);color:var(--muted);border:1px solid var(--border);margin-left:6px;vertical-align:middle">+ ajouté</span></div>${e.note?`<div style="font-size:var(--fs-xs);color:var(--muted);margin-top:2px">${e.note}</div>`:''}</td>
           <td style="text-align:right;font-weight:600;color:${exAc}">${eur(Math.abs(e.amount))}</td>
           <td><div style="display:flex;gap:3px;justify-content:flex-end">
             <button class="btn-act ${e.is_exceptional?'btn-act-active':''}" onclick="toggleMonthlyExceptional(${e.id})" title="Exceptionnel">${EXCL_ICON}</button>
@@ -4635,7 +4641,7 @@ function _monthlyManualGroup(rows, g, budgetTotal, isMobile, revNet = 0) {
   const hdr = `<div onclick="toggleMonthlySection('${g.key}')" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;padding:0 2px 6px;margin-bottom:5px;border-bottom:2px solid ${g.color}30">
     <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">
       <button onclick="event.stopPropagation();toggleMonthlySection('${g.key}')" data-collapse-key="${g.key}" style="background:none;border:none;cursor:pointer;color:var(--muted);padding:0;display:flex;align-items:center;transition:transform .2s;${chevronStyle2}">${CHEVRON_SVG}</button>
-      <span style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:${g.color}">${g.label}</span>
+      <span style="font-size:var(--fs-xs);font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:${g.color}">${g.label}</span>
       <span style="font-size:var(--fs-xs);color:var(--hint);background:${g.color}18;border-radius:20px;padding:1px 7px;font-weight:700">${rows.length}</span>
       ${subInfo}
     </div>
@@ -4722,7 +4728,7 @@ function _monthlyEpargneGroup(savingRecord, g, budgetTotal, actualTotal, revNet,
   const hdr = `<div onclick="toggleMonthlySection('${g.key}')" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;padding:0 2px 6px;margin-bottom:5px;border-bottom:2px solid ${g.color}30">
     <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">
       <button onclick="event.stopPropagation();toggleMonthlySection('${g.key}')" data-collapse-key="${g.key}" style="background:none;border:none;cursor:pointer;color:var(--muted);padding:0;display:flex;align-items:center;transition:transform .2s;${chevronStyle3}">${CHEVRON_SVG}</button>
-      <span style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:${g.color}">${g.label}</span>
+      <span style="font-size:var(--fs-xs);font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:${g.color}">${g.label}</span>
       ${subInfo}
     </div>
     <div style="display:flex;align-items:center;gap:8px">
@@ -4773,7 +4779,7 @@ ${bar}    <div class="tbl-wrap"><table style="width:100%;table-layout:fixed">
 function _monthlyHistorySection(history, g, isMobile) {
   const hdr = `<div style="display:flex;justify-content:space-between;align-items:center;padding:0 2px 6px;margin-bottom:5px;border-bottom:2px solid ${g.color}30">
     <div style="display:flex;align-items:center;gap:7px">
-      <span style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:${g.color}">${g.label}</span>
+      <span style="font-size:var(--fs-xs);font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:${g.color}">${g.label}</span>
       <span style="font-size:var(--fs-xs);color:var(--hint);background:${g.color}18;border-radius:20px;padding:1px 7px;font-weight:700">${history.length}</span>
     </div>
   </div>`;
@@ -5293,8 +5299,8 @@ function renderSimulation() {
     heroEl.innerHTML = `<div class="card" style="margin-bottom:.75rem;padding:14px 16px">
       <div style="display:flex;align-items:flex-start;gap:10px">
         <div style="flex:1">
-          <div style="font-size:9px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:4px">Solde simulé</div>
-          <div style="font-size:2rem;font-weight:900;line-height:1;color:${stats.solde>=0?'var(--green)':'var(--red)'}">${stats.solde>=0?'+':''}${eur(stats.solde)}</div>
+          <div style="font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:4px">Solde simulé</div>
+          <div style="font-size:2rem;font-weight:800;line-height:1;color:${stats.solde>=0?'var(--green)':'var(--red)'}">${stats.solde>=0?'+':''}${eur(stats.solde)}</div>
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:6px">
             <span style="font-size:var(--fs-xs);font-weight:700;color:${dSoldeColor}">${dSoldeLabel}</span>
             ${changeLine ? `<span style="font-size:var(--fs-xs);color:var(--hint)">· ${changeLine}</span>` : ''}
@@ -5321,15 +5327,15 @@ function renderSimulation() {
       return `${_simSuggMems.length > 1 ? `<div style="font-size:var(--fs-xs);font-weight:700;color:${mc};text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">${esc(m)}</div>` : ''}
         ${!_hasRealEp ? `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
           <span style="font-size:var(--fs-xs);color:var(--muted)">Épargne <span style="color:var(--hint)">(obj. 20%)</span></span>
-          <span style="font-size:var(--fs-xs);font-weight:700;color:var(--blue)">${eur(ep)} · ${epPct}%</span>
+          <span style="font-size:var(--fs-xs);font-weight:700;color:var(--blue)">${eur(ep)}</span>
         </div>` : ''}
         ${!_hasRealLoi ? `<div style="display:flex;justify-content:space-between;align-items:center">
           <span style="font-size:var(--fs-xs);color:var(--muted)">Loisir <span style="color:var(--hint)">(obj. 30%)</span></span>
-          <span style="font-size:var(--fs-xs);font-weight:700;color:var(--amber)">${eur(loi)} · ${loiPct}%</span>
+          <span style="font-size:var(--fs-xs);font-weight:700;color:var(--amber)">${eur(loi)}</span>
         </div>` : ''}`;
     }).join('<hr style="border:none;border-top:1px solid var(--border);margin:8px 0">');
     return `<div style="padding:8px 0 10px;border-bottom:1px solid var(--border);margin-bottom:4px">
-      <div style="font-size:9px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Suggestion 50/30/20</div>
+      <div style="font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Suggestion 50/30/20</div>
       ${inner}
     </div>`;
   })();
@@ -5458,12 +5464,12 @@ function renderSimulation() {
     const collapsed = !!window.simSectionCollapsed[g.key];
     const chevStyle = collapsed ? 'transform:rotate(-90deg);' : '';
     const bodyId = `sim-section-body-${g.key}`;
-    const ravBlock = g.key === 'epargne' ? _simSuggBlock : '';
+    const ravBlock = '';
     return `<div style="margin-bottom:var(--sg)">
       <div onclick="toggleSimSection('${g.key}')" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;padding:0 2px 6px;margin-bottom:5px;border-bottom:2px solid ${g.color}30">
         <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">
           <button onclick="event.stopPropagation();toggleSimSection('${g.key}')" style="background:none;border:none;cursor:pointer;color:var(--muted);padding:0;display:flex;align-items:center;transition:transform .2s;${chevStyle}">${CHEVRON_SVG}</button>
-          <span style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:${g.color}">${g.label}</span>
+          <span style="font-size:var(--fs-xs);font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:${g.color}">${g.label}</span>
           <span style="font-size:var(--fs-xs);color:var(--hint);background:${g.color}18;border-radius:20px;padding:1px 7px;font-weight:700">${gSim.length}</span>
           <span style="font-size:var(--fs-xs);font-weight:700;color:${_pctCol}">${eur(tot)}</span>
           ${origTot > 0 ? `<span style="font-size:var(--fs-xs);color:var(--muted)">/ ${eur(origTot)}</span>` : ''}
@@ -5505,8 +5511,6 @@ function switchPrevTab(tab) {
 function switchDashTab(tab) {
   document.getElementById('dash-tab-data').style.display    = tab === 'data'    ? '' : 'none';
   document.getElementById('dash-tab-analyse').style.display = tab === 'analyse' ? '' : 'none';
-  document.getElementById('dash-stab-data').classList.toggle('active', tab === 'data');
-  document.getElementById('dash-stab-analyse').classList.toggle('active', tab === 'analyse');
 }
 
 function _renderSimAnalysis(stats, origStats, simF, origF, nChanges, effEp, effLoi) {
@@ -5546,7 +5550,7 @@ function _renderSimAnalysis(stats, origStats, simF, origF, nChanges, effEp, effL
       const netColor = dSolde >= 0 ? 'var(--green)' : 'var(--red)';
       impactHtml = `<div class="card" style="margin-bottom:.75rem;padding:0;overflow:hidden">
         <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px 8px;border-bottom:1px solid var(--border)">
-          <span style="font-size:9px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)">Impact des modifications</span>
+          <span style="font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)">Impact des modifications</span>
           <span style="font-size:var(--fs-xs);font-weight:800;color:${netColor}">${dSolde >= 0 ? 'Gain' : 'Perte'} ${dSolde >= 0 ? '+' : ''}${eur(dSolde)}/mois</span>
         </div>
         <div style="padding:0 14px">${rows}</div>
@@ -5670,13 +5674,13 @@ function _renderSimAnalysis(stats, origStats, simF, origF, nChanges, effEp, effL
     ];
 
     ruleHtml = `<div class="card" style="margin-bottom:.75rem;padding:14px 16px">
-      <div style="font-size:9px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:10px">Répartition 50 / 30 / 20</div>
+      <div style="font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:10px">Répartition 50 / 30 / 20</div>
       <div id="sim-rule-bar" style="display:flex;height:10px;border-radius:5px;overflow:hidden;gap:2px;margin-bottom:12px">${barHtml}</div>
       <div style="display:flex">
         ${items.map((item, i) => `
           ${i > 0 ? '<div style="width:1px;background:var(--border)"></div>' : ''}
           <div style="flex:1;text-align:center;padding:0 6px">
-            <div id="sim-rule-pct-${item.key}" style="font-size:1.05rem;font-weight:900;color:${item.color}">${item.pct}%</div>
+            <div id="sim-rule-pct-${item.key}" style="font-size:1.05rem;font-weight:800;color:${item.color}">${item.pct}%</div>
             <div style="font-size:var(--fs-xs);font-weight:600;color:var(--text);margin-bottom:1px">${item.label}</div>
             <div id="sim-rule-val-${item.key}" style="font-size:10px;color:var(--hint)">${eur(item.val)}</div>
             <div style="font-size:10px;margin-top:1px;color:${item.ok ? 'var(--green)' : 'var(--hint)'}">idéal ${item.ideal}%</div>
@@ -6568,11 +6572,11 @@ async function renderMonthlyComparison(member, nMonths) {
     const isCurrent = r.year === nowY && r.month === nowM;
     const borderStyle = isCurrent ? 'border-left:2px solid var(--blue);' : '';
     const bg = isCurrent ? 'background:color-mix(in srgb,var(--blue) 5%,transparent);' : '';
-    const previBadge = r.hasData && !r.isReal ? `<span style="font-size:9px;font-weight:700;color:var(--amber);margin-left:3px;vertical-align:middle;border:1px solid var(--amber);border-radius:3px;padding:0 3px;opacity:.8">prévi</span>` : '';
-    const curBadge = isCurrent ? `<span style="font-size:9px;font-weight:700;color:var(--blue);margin-left:3px;vertical-align:middle;border:1px solid var(--blue);border-radius:3px;padding:0 3px">•</span>` : '';
+    const previBadge = r.hasData && !r.isReal ? `<span style="font-size:11px;font-weight:700;color:var(--amber);margin-left:3px;vertical-align:middle;border:1px solid var(--amber);border-radius:3px;padding:0 3px;opacity:.8">prévi</span>` : '';
+    const curBadge = isCurrent ? `<span style="font-size:11px;font-weight:700;color:var(--blue);margin-left:3px;vertical-align:middle;border:1px solid var(--blue);border-radius:3px;padding:0 3px">•</span>` : '';
     const monthLbl = `${mLabel(r.year, r.month)}${curBadge}${previBadge}`;
     const prevReal = rows.slice(0, i).reverse().find(x => x.isReal);
-    const _trend=(cur,prev,inv)=>{if(!r.isReal||!prev||cur===prev)return'';const up=cur>prev;const _ic=inv?(up?'var(--green)':'var(--red)'):(up?'var(--red)':'var(--green)');const _ia=up?'↑':'↓';return '<span style="display:inline-block;width:10px;font-size:9px;font-weight:700;color:'+_ic+';text-align:center;flex-shrink:0">'+_ia+'</span>';};
+    const _trend=(cur,prev,inv)=>{if(!r.isReal||!prev||cur===prev)return'';const up=cur>prev;const _ic=inv?(up?'var(--green)':'var(--red)'):(up?'var(--red)':'var(--green)');const _ia=up?'↑':'↓';return '<span style="display:inline-block;width:10px;font-size:11px;font-weight:700;color:'+_ic+';text-align:center;flex-shrink:0">'+_ia+'</span>';};
     const _cell=(val,col,fw,trend)=>`<td style="text-align:right;font-size:var(--fs-xs);font-weight:${fw};color:${col}"><span style="display:inline-flex;align-items:center;justify-content:flex-end;gap:2px">${trend}${val}</span></td>`;
     if (!r.hasData) return `<tr style="${bg}${borderStyle}opacity:.4">
       <td style="font-weight:500;font-size:var(--fs-xs);${isCurrent?'color:var(--blue);font-weight:700':''}">${monthLbl}</td>
@@ -6846,7 +6850,7 @@ async function renderAnalysis(){
         ${sub?`<div style="font-size:var(--fs-xs);color:var(--muted);margin-top:2px">${sub}</div>`:''}
       </div>`;
       _hEl.innerHTML=`<div class="card" style="padding:14px 16px;margin-bottom:0">
-        <div style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:10px">Santé financière · ${_hN} mois</div>
+        <div style="font-size:var(--fs-xs);font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:10px">Santé financière · ${_hN} mois</div>
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
           ${_hKpi('Taux épargne moy.',_hEpRate!==null?_hEpRate+'%':'—',_hEpRateCol,'objectif ≥ 20%')}
           ${_hKpi('Solde moy.',(_hSolde>=0?'+':'')+eur(_hSolde),_hSoldeCol,'rev. − dép. − ép.')}
@@ -6898,24 +6902,24 @@ async function renderAnalysis(){
         const _avgSoldeCol=_avgSolde>=0?'#0d9e6e':'#d93535';
         const _qualLabel=_realCount===6?`${_realCount}/6 mois réels`:_realCount===0?'Prévisionnel':`${_realCount}/6 mois réels`;
         const _metricBox=(lbl,val,col,sign)=>`<div style="background:var(--surface2);border-radius:12px;padding:14px 16px;border-top:3px solid ${col}">
-          <div style="font-size:10px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:6px">${lbl}</div>
-          <div style="font-size:1.35rem;font-weight:900;letter-spacing:-.03em;color:${col};line-height:1">${sign?(_avgEp>=0?'+':'-'):''}${val}</div>
+          <div style="font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:6px">${lbl}</div>
+          <div style="font-size:1.35rem;font-weight:800;letter-spacing:-.03em;color:${col};line-height:1">${sign?(_avgEp>=0?'+':'-'):''}${val}</div>
         </div>`;
         _heroEl.innerHTML=`<div class="card" style="padding:16px 18px">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-            <span style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)">Synthèse mensuelle moy.</span>
+            <span style="font-size:var(--fs-xs);font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)">Synthèse mensuelle moy.</span>
             <span style="font-size:var(--fs-xs);color:var(--muted)">${_qualLabel}</span>
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
             ${_metricBox('Revenus nets moy.',eur(_avgRev),'#0d9e6e',false)}
             ${_metricBox('Dépenses moy.',eur(_avgDep),'#d93535',false)}
             <div style="background:var(--surface2);border-radius:12px;padding:14px 16px;border-top:3px solid #2979c8">
-              <div style="font-size:10px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:6px">Épargne moy.</div>
-              <div style="font-size:1.35rem;font-weight:900;letter-spacing:-.03em;color:#2979c8;line-height:1">${_avgEp>=0?'+':'-'}${eur(Math.abs(_avgEp))}</div>
+              <div style="font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:6px">Épargne moy.</div>
+              <div style="font-size:1.35rem;font-weight:800;letter-spacing:-.03em;color:#2979c8;line-height:1">${_avgEp>=0?'+':'-'}${eur(Math.abs(_avgEp))}</div>
             </div>
             <div style="background:var(--surface2);border-radius:12px;padding:14px 16px;border-top:3px solid ${_avgSoldeCol}">
-              <div style="font-size:10px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:6px">Solde moy.</div>
-              <div style="font-size:1.35rem;font-weight:900;letter-spacing:-.03em;color:${_avgSoldeCol};line-height:1">${_avgSolde>=0?'+':''}${eur(_avgSolde)}</div>
+              <div style="font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:6px">Solde moy.</div>
+              <div style="font-size:1.35rem;font-weight:800;letter-spacing:-.03em;color:${_avgSoldeCol};line-height:1">${_avgSolde>=0?'+':''}${eur(_avgSolde)}</div>
             </div>
           </div>
           ${(()=>{
@@ -7023,7 +7027,7 @@ async function renderAnalysis(){
                 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
                   <div style="display:flex;align-items:center;gap:6px">
                     <span style="width:7px;height:7px;border-radius:50%;background:${c.col};flex-shrink:0"></span>
-                    <span style="font-size:10px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:${c.col}">${c.lbl}</span>
+                    <span style="font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:${c.col}">${c.lbl}</span>
                   </div>
                   <div style="display:flex;align-items:center;gap:8px">
                     <span style="font-size:10px;font-weight:700;color:${c.col};background:color-mix(in srgb,${c.col} 12%,var(--surface));border-radius:4px;padding:1px 6px">${pct}%</span>
@@ -7031,7 +7035,7 @@ async function renderAnalysis(){
                   </div>
                 </div>
                 <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:8px;margin-bottom:2px">
-                  <div style="font-size:1.25rem;font-weight:900;letter-spacing:-.03em;color:${c.col};line-height:1">${eur(c.amt)}<span style="font-size:var(--fs-xs);font-weight:500;color:var(--muted);letter-spacing:0"> /mois</span></div>
+                  <div style="font-size:1.25rem;font-weight:800;letter-spacing:-.03em;color:${c.col};line-height:1">${eur(c.amt)}<span style="font-size:var(--fs-xs);font-weight:500;color:var(--muted);letter-spacing:0"> /mois</span></div>
                   <div style="flex-shrink:0;opacity:.85">${_sparklineSvg(_last6.map(mk=>c.key==='ep'?Math.max(0,_epByMk.get(mk)||0):(_byMkExp.get(mk)?.[c.key==='var'?'variable':c.key==='loi'?'loisir':c.key]||0)),c.col,88,22)}</div>
                 </div>
                 <div style="font-size:var(--fs-xs);color:var(--muted);margin-top:3px">${pct}% des revenus nets</div>
@@ -7044,9 +7048,9 @@ async function renderAnalysis(){
             ?`<div style="border-top:1px solid var(--border);border-left:3px solid ${_surplusCol}22;padding:11px 18px 10px 15px">
                 <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
                   <span style="width:7px;height:7px;border-radius:50%;background:${_surplusCol};flex-shrink:0"></span>
-                  <span style="font-size:10px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:${_surplusCol}">${_surplus>0?'Non alloué':'Déficit'}</span>
+                  <span style="font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:${_surplusCol}">${_surplus>0?'Non alloué':'Déficit'}</span>
                 </div>
-                <div style="font-size:1.25rem;font-weight:900;letter-spacing:-.03em;color:${_surplusCol};line-height:1">${_surplus>0?'+':''}${eur(_surplus)}<span style="font-size:var(--fs-xs);font-weight:500;color:var(--muted);letter-spacing:0"> /mois</span></div>
+                <div style="font-size:1.25rem;font-weight:800;letter-spacing:-.03em;color:${_surplusCol};line-height:1">${_surplus>0?'+':''}${eur(_surplus)}<span style="font-size:var(--fs-xs);font-weight:500;color:var(--muted);letter-spacing:0"> /mois</span></div>
               </div>`:'';
           _repContent.innerHTML=`<div>${_repBarsHtml}${_surplusHtml}</div>`;
           _repCard.style.display='';
@@ -7064,7 +7068,7 @@ async function renderAnalysis(){
           :`Moyenne sur 6 mois · <span style="color:var(--amber)">${6-_realCount} mois complétés par prévisionnel</span>`;
       const _epNeg=_avg6Ep<0;
       const _epCard4=_epNeg
-        ? `<div class="card" style="padding:14px 16px;margin-bottom:0;border-color:color-mix(in srgb,var(--red) 40%,var(--border))"><div style="font-size:10px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--red);margin-bottom:6px">Retrait épargne moy.</div><div style="font-size:1.5rem;font-weight:900;letter-spacing:-.03em;color:var(--red);line-height:1">−${eur(Math.abs(_avg6Ep))}</div><div style="font-size:var(--fs-xs);color:var(--muted);margin:4px 0 6px">par mois en moy.</div><div style="height:4px;background:var(--surface2);border-radius:99px;overflow:hidden"><div style="width:100%;height:100%;background:var(--red);border-radius:99px"></div></div></div>`
+        ? `<div class="card" style="padding:14px 16px;margin-bottom:0;border-color:color-mix(in srgb,var(--red) 40%,var(--border))"><div style="font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--red);margin-bottom:6px">Retrait épargne moy.</div><div style="font-size:1.5rem;font-weight:800;letter-spacing:-.03em;color:var(--red);line-height:1">−${eur(Math.abs(_avg6Ep))}</div><div style="font-size:var(--fs-xs);color:var(--muted);margin:4px 0 6px">par mois en moy.</div><div style="height:4px;background:var(--surface2);border-radius:99px;overflow:hidden"><div style="width:100%;height:100%;background:var(--red);border-radius:99px"></div></div></div>`
         : _budgetKpiCard('Épargne moy.',_avg6Ep,epScoped,'#2979c8',true);
       _avgKpiEl.innerHTML=
         `<div style="font-size:var(--fs-xs);color:var(--muted);margin-bottom:.375rem">${_subLabel}</div>`+
@@ -7138,7 +7142,7 @@ async function renderAnalysis(){
       }).join('');
       _ovaAnaEl.innerHTML=`<div class="card" style="padding:16px 18px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-          <span style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)">Où va l'argent ?</span>
+          <span style="font-size:var(--fs-xs);font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)">Où va l'argent ?</span>
           ${_ovaAnaTotal>0?`<span style="font-size:var(--fs-sm);font-weight:700;color:var(--fg)">${eur(_ovaAnaTotal)}/mois moy.</span>`:''}
         </div>
         ${_catOrderA.length>0?`<div style="display:flex;gap:1px;height:8px;border-radius:4px;overflow:hidden;margin-bottom:8px">${_barSegs}</div><div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:4px">${_catOrderA.map(c=>`<div style="display:flex;align-items:center;gap:4px"><span style="width:7px;height:7px;border-radius:50%;background:${_catColA[c]}"></span><span style="font-size:var(--fs-xs);color:var(--muted)">${_catLblA[c]} <strong style="color:var(--text)">${_ovaAnaTotal>0?Math.round(_catTotA[c]/_ovaAnaTotal*100):0}%</strong></span></div>`).join('')}</div>`:''}
@@ -7246,7 +7250,7 @@ async function renderAnalysis(){
         }).join('');
         _insEl.innerHTML='<div class="card" style="padding:0;overflow:hidden">'
           +'<div style="padding:10px 14px;border-bottom:1px solid var(--border)">'
-          +'<span style="font-size:var(--fs-xs);font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)">Insights · moyennes cumulées</span>'
+          +'<span style="font-size:var(--fs-xs);font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)">Insights · moyennes cumulées</span>'
           +'</div><div>'+_insRows+'</div></div>';
         _insEl.style.display='block';
       } else if(_insEl){_insEl.style.display='none';}
@@ -7567,7 +7571,7 @@ function _closeOvaTip(){
     const rowsHtml=items.map(x=>{
       const amt=Math.abs(x.amount);
       const note=x.note?`<div style="font-size:var(--fs-xs);color:var(--muted);margin-top:2px">${x.note}</div>`:'';
-      const badge=x._fromEntry?`<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px;background:var(--surface2);color:var(--muted);border:1px solid var(--border)">prévisionnel</span>`:'';
+      const badge=x._fromEntry?`<span style="font-size:11px;font-weight:700;padding:1px 5px;border-radius:4px;background:var(--surface2);color:var(--muted);border:1px solid var(--border)">prévisionnel</span>`:'';
       const hasContent=note||badge||(isFoyer&&x.member);
       return`<div style="display:flex;align-items:${hasContent?'flex-start':'center'};justify-content:space-between;gap:12px;padding:8px 0;border-top:1px solid var(--border)">
         <div style="min-width:0;flex:1">
@@ -7623,8 +7627,8 @@ function _closeRepTip(){
     const rowsHtml=last12.slice().reverse().map((h,i)=>{
       const diff=h.amount-avg;
       const isMin=h.amount===mn,isMax=h.amount===mx;
-      const tagHtml=isMin?`<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px;background:color-mix(in srgb,var(--green) 15%,var(--surface));color:var(--green);border:1px solid color-mix(in srgb,var(--green) 30%,transparent)">MIN</span>`
-        :isMax?`<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px;background:color-mix(in srgb,var(--red) 15%,var(--surface));color:var(--red);border:1px solid color-mix(in srgb,var(--red) 30%,transparent)">MAX</span>`:'';
+      const tagHtml=isMin?`<span style="font-size:11px;font-weight:700;padding:1px 5px;border-radius:4px;background:color-mix(in srgb,var(--green) 15%,var(--surface));color:var(--green);border:1px solid color-mix(in srgb,var(--green) 30%,transparent)">MIN</span>`
+        :isMax?`<span style="font-size:11px;font-weight:700;padding:1px 5px;border-radius:4px;background:color-mix(in srgb,var(--red) 15%,var(--surface));color:var(--red);border:1px solid color-mix(in srgb,var(--red) 30%,transparent)">MAX</span>`:'';
       const diffStr=diff===0?''
         :diff>0?`<span style="font-size:10px;color:var(--red);font-weight:600">+${eur(diff)}</span>`
                :`<span style="font-size:10px;color:var(--green);font-weight:600">-${eur(Math.abs(diff))}</span>`;
