@@ -2946,6 +2946,7 @@ async function renderDashboard(){
     .filter(s=>s.year===dashYear&&s.month===frMonth)
     .reduce((sum,s)=>sum+(s.delta!=null?s.delta:s.amount),0);
   const totalDep = fixA + varA + loiA + Math.max(0, epMonthDelta);
+  const totalDepDisplay = fixA + varA + loiA;
   const mlyRavD  = revNetA - totalDep;
   // Données pour banner retrait + KPI
   const _savRec0  = savingsDash.filter(s=>s.year===dashYear&&s.month===frMonth)[0] || null;
@@ -3004,7 +3005,7 @@ async function renderDashboard(){
       </div>
       <div>
         <div style="font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--red);margin-bottom:6px">Dépenses</div>
-        <div class="prow"><span class="prow-lbl" style="font-weight:700">Total</span><span class="prow-val" style="color:var(--red);font-weight:700">${eur(totalDep)}</span></div>
+        <div class="prow"><span class="prow-lbl" style="font-weight:700">Total</span><span class="prow-val" style="color:var(--red);font-weight:700">${eur(totalDepDisplay)}</span></div>
       </div>
     </div>
     ${epMonthDelta<0?`<div style="margin-top:8px;padding-top:8px;border-top:1px dashed color-mix(in srgb,var(--amber) 50%,var(--border));font-size:var(--fs-xs);color:var(--amber);line-height:1.4">💡 RAV bonifié de <b>${eur(Math.abs(epMonthDelta))}</b> par le retrait sur épargne.</div>`:''}
