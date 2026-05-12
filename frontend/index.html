@@ -3431,20 +3431,14 @@ async function renderDashboard(){
   content.innerHTML=_monthNav+
     `<div id="dash-alert"></div>
     ${_deficitWarnHtml}${_savWarnHtml}${_hero}${_cats}
+    <div style="display:flex;align-items:center;gap:0;border-bottom:1px solid var(--border);margin-bottom:var(--sg)">
+      <button class="stab active" id="dash-stab-data"    onclick="switchDashTab('data')">Données</button>
+      <button class="stab"        id="dash-stab-analyse" onclick="switchDashTab('analyse')">Analyse</button>
+    </div>
     <div id="dash-tab-data">
       ${_dashMlyToolbar}
-      <div style="display:flex;justify-content:flex-end;margin-top:var(--sg)">
-        <button id="dash-stab-data" onclick="switchDashTab('analyse')" style="display:flex;align-items:center;gap:6px;background:none;border:1px solid var(--border);border-radius:var(--r);padding:7px 14px;cursor:pointer;color:var(--muted);font-size:var(--fs-sm);font-family:inherit;transition:color .15s,border-color .15s" onmouseenter="this.style.color='var(--text)';this.style.borderColor='var(--blue)'" onmouseleave="this.style.color='var(--muted)';this.style.borderColor='var(--border)'">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-          Voir l'analyse
-        </button>
-      </div>
     </div>
     <div id="dash-tab-analyse" style="display:none">
-      <button id="dash-stab-analyse" onclick="switchDashTab('data')" style="display:flex;align-items:center;gap:6px;background:none;border:none;padding:0 0 var(--sg);cursor:pointer;color:var(--muted);font-size:var(--fs-sm);font-family:inherit" onmouseenter="this.style.color='var(--text)'" onmouseleave="this.style.color='var(--muted)'">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-        Retour aux données
-      </button>
       ${_dashInsHtml}${_dash5030Html}${_ova}${_bvrHtml}
     </div>
     <div id="dash-charts" style="display:none"></div>`;
@@ -5518,6 +5512,8 @@ function switchPrevTab(tab) {
 function switchDashTab(tab) {
   document.getElementById('dash-tab-data').style.display    = tab === 'data'    ? '' : 'none';
   document.getElementById('dash-tab-analyse').style.display = tab === 'analyse' ? '' : 'none';
+  document.getElementById('dash-stab-data').classList.toggle('active', tab === 'data');
+  document.getElementById('dash-stab-analyse').classList.toggle('active', tab === 'analyse');
 }
 
 function _renderSimAnalysis(stats, origStats, simF, origF, nChanges, effEp, effLoi) {
