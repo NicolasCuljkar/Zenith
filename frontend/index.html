@@ -2985,6 +2985,14 @@ async function renderDashboard(){
     <button onclick="dashNavNext()" ${isCurrentMonth?'disabled':''} aria-label="Mois suivant" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 20px;cursor:${isCurrentMonth?'not-allowed':'pointer'};color:var(--fg);font-size:1.2rem;line-height:1;flex-shrink:0;min-height:44px;opacity:${isCurrentMonth?'.3':'1'}">›</button>
   </div>`;
 
+  // ── 4 cartes budget ──
+  const _cats=_budgetKpiGrid(
+    `<div onclick="_dashShowPendingFixes()" style="cursor:pointer">${_budgetKpiCard('Fixes',    fixA,        fixBudget, '#d93535')}</div>`,
+    `${_budgetKpiCard('Variables',varA,        varBudget, '#e05a2b')}`,
+    `${_budgetKpiCard('Loisir',   loiA,        loiBudget, '#f59e0b')}`,
+    epMonthDelta<0?_retraitKpiCard(epMonthDelta,_balBefore,_balAfter):`${_budgetKpiCard('Épargne',epMonthDelta,epBudget,'#2979c8',true)}`,
+  );
+
   // ── Hero RAV (identique suivi mensuel) ──
   const _ravGlow  = mlyRavD>=0?'#0d9e6e':'#d93535';
   const _ravColor = mlyRavD>=0?'var(--green)':'var(--red)';
@@ -3000,14 +3008,6 @@ async function renderDashboard(){
     <div style="margin-top:16px">${_cats}</div>
     ${epMonthDelta<0?`<div style="margin-top:8px;padding-top:8px;border-top:1px dashed color-mix(in srgb,var(--amber) 50%,var(--border));font-size:var(--fs-xs);color:var(--amber);line-height:1.4">💡 RAV bonifié de <b>${eur(Math.abs(epMonthDelta))}</b> par le retrait sur épargne.</div>`:''}
   </div>`;
-
-  // ── 4 cartes budget ──
-  const _cats=_budgetKpiGrid(
-    `<div onclick="_dashShowPendingFixes()" style="cursor:pointer">${_budgetKpiCard('Fixes',    fixA,        fixBudget, '#d93535')}</div>`,
-    `${_budgetKpiCard('Variables',varA,        varBudget, '#e05a2b')}`,
-    `${_budgetKpiCard('Loisir',   loiA,        loiBudget, '#f59e0b')}`,
-    epMonthDelta<0?_retraitKpiCard(epMonthDelta,_balBefore,_balAfter):`${_budgetKpiCard('Épargne',epMonthDelta,epBudget,'#2979c8',true)}`,
-  );
 
   // ── Où va l'argent ? ──
   const _catColP={fixe:'#d93535',variable:'#e05a2b',loisir:'#f59e0b',epargne:'#2979c8'};
