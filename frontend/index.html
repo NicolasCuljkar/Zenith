@@ -2997,6 +2997,7 @@ async function renderDashboard(){
 
       ${revNetA>0?`<div style="margin-top:5px;font-size:var(--fs-xs);color:var(--red);font-weight:700">Dépenses\u00a0: ${eur(totalDepDisplay)}</div>`:''}
     </div>
+    <div style="margin-top:16px">${_cats}</div>
     ${epMonthDelta<0?`<div style="margin-top:8px;padding-top:8px;border-top:1px dashed color-mix(in srgb,var(--amber) 50%,var(--border));font-size:var(--fs-xs);color:var(--amber);line-height:1.4">💡 RAV bonifié de <b>${eur(Math.abs(epMonthDelta))}</b> par le retrait sur épargne.</div>`:''}
   </div>`;
 
@@ -3417,7 +3418,7 @@ async function renderDashboard(){
 
   content.innerHTML=_monthNav+
     `<div id="dash-alert"></div>
-    ${_deficitWarnHtml}${_savWarnHtml}${_hero}${_cats}
+    ${_deficitWarnHtml}${_savWarnHtml}${_hero}
     <div style="display:flex;align-items:center;gap:0;border-bottom:1px solid var(--border);margin-bottom:var(--sg)">
       <button class="stab active" id="dash-stab-data"    onclick="switchDashTab('data')">Données</button>
       <button class="stab"        id="dash-stab-analyse" onclick="switchDashTab('analyse')">Analyse</button>
