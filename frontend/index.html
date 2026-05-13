@@ -2002,8 +2002,8 @@ function saveData(){
 
 // ── Utils ──
 const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-const eur=n=>n==null?'—':Math.round(n).toLocaleString('fr-FR')+' €';
-const dlt=n=>n==null?'—':(n>=0?'+':'')+Math.round(n).toLocaleString('fr-FR')+' €';
+const eur=n=>n==null?'—':Number.isInteger(n)?n.toLocaleString('fr-FR')+' €':n.toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2})+' €';
+const dlt=n=>n==null?'—':(n>=0?'+':'')+(Number.isInteger(n)?n.toLocaleString('fr-FR'):n.toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2}))+' €';
 const fmtPct=p=>p==null?'—':(p>=0?'+':'')+p.toFixed(1)+'%';
 const absSumCat=(arr,cat)=>arr.filter(e=>e.cat===cat).reduce((s,e)=>s+Math.abs(e.amount),0);
 const getMC=m=>memberColors[m]||'var(--hint)';
@@ -3554,8 +3554,11 @@ function _dashShowPendingFixes(){
 function getFiltered(){
   const search=document.getElementById('search-input').value.toLowerCase();
   const cat=document.getElementById('filter-cat').value;
+  const _norm=s=>s.normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  const _catNames={revenu:'revenu',impot:'impot',fixe:'fixe',variable:'variable',epargne:'épargne',loisir:'loisir'};
+  const _sn=_norm(search);
   return entries.filter(e=>
-    (!search||e.name.toLowerCase().includes(search))&&
+    (!_sn||_norm(e.name.toLowerCase()).includes(_sn)||_norm(_catNames[e.cat]||e.cat).includes(_sn))&&
     (entriesMember==='Commun'?true:e.member===entriesMember)&&
     (!cat||e.cat===cat)
   );
@@ -4407,7 +4410,10 @@ function _renderMonthlySections(stats, expenses, savingsData = [], entryStats = 
   // Recherche / filtre catégorie
   const _mlySearch = (document.getElementById(_secSearchId)?.value || '').toLowerCase().trim();
   const _mlyCat    = document.getElementById(_secCatId)?.value || '';
-  const _filterRow = r => (!_mlySearch || (r.name||'').toLowerCase().includes(_mlySearch)) && (!_mlyCat || r.cat === _mlyCat);
+  const _mlyNorm=s=>s.normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  const _mlyCatNames={revenu:'revenu',impot:'impot',fixe:'fixe',variable:'variable',epargne:'épargne',loisir:'loisir'};
+  const _mlySearchN=_mlyNorm(_mlySearch);
+  const _filterRow = r => (!_mlySearchN || _mlyNorm((r.name||'').toLowerCase()).includes(_mlySearchN) || _mlyNorm(_mlyCatNames[r.cat]||r.cat).includes(_mlySearchN)) && (!_mlyCat || r.cat === _mlyCat);
   const filteredAutoEntries  = _mlySearch || _mlyCat ? autoEntries.filter(_filterRow)    : autoEntries;
   const filteredManualExpenses = _mlySearch || _mlyCat ? manualExpenses.filter(_filterRow) : manualExpenses;
 
@@ -4422,8 +4428,8 @@ function _renderMonthlySections(stats, expenses, savingsData = [], entryStats = 
   const groupHtmls = GROUPS.map(g => {
     if (g.savings) {
       const _isFilteringSav = !!(_mlySearch || _mlyCat);
-      if (_isFilteringSav && _mlyCat !== 'epargne') return '';
-      if (_isFilteringSav && _mlySearch) return '';
+      if (_isFilteringSav && _mlyCat && _mlyCat !== 'epargne') return '';
+      if (_isFilteringSav && _mlySearchN && !_mlyNorm('épargne').includes(_mlySearchN)) return '';
       const frMonth = MONTH_NAMES[_secMonth - 1];
       const savingRecord = savingsData.find(s => s.year === _secYear && s.month === frMonth);
       const epMember = _secMember === 'Commun' ? myRole() : _secMember;
