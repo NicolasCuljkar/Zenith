@@ -3626,10 +3626,13 @@ function memberTableHtml(rows,isMobile,memberName){
   const _pct=savingPct[memberName]??60;
   const _calcEp=Math.max(0,Math.round(_ps.rav*_pct/100));
   const _calcLoi=Math.max(0,Math.round(_ps.rav*(100-_pct)/100));
+  const _budSearch=document.getElementById('search-input')?.value||'';
+  const _budCat=document.getElementById('filter-cat')?.value||'';
+  const _budFiltering=!!(_budSearch||_budCat);
   return GROUPS.map(g=>{
     let gRows=getSortedGroupRows(rows.filter(e=>g.cats.includes(e.cat)));
-    if(!gRows.length&&g.key==='epargne'&&_calcEp>0) gRows=[{name:'Épargne calculée',amount:_calcEp,cat:'epargne',_synthetic:true}];
-    if(!gRows.length&&g.key==='loisir' &&_calcLoi>0) gRows=[{name:'Budget loisir',  amount:_calcLoi,cat:'loisir', _synthetic:true}];
+    if(!gRows.length&&g.key==='epargne'&&_calcEp>0&&!_budFiltering) gRows=[{name:'Épargne calculée',amount:_calcEp,cat:'epargne',_synthetic:true}];
+    if(!gRows.length&&g.key==='loisir' &&_calcLoi>0&&!_budFiltering) gRows=[{name:'Budget loisir',  amount:_calcLoi,cat:'loisir', _synthetic:true}];
     const tot=g.key==='revenus'
       ?absSumCat(gRows,'revenu')-absSumCat(gRows,'impot')
       :gRows.reduce((s,e)=>s+Math.abs(e.amount),0);
@@ -3654,7 +3657,7 @@ function memberTableHtml(rows,isMobile,memberName){
         ${addBtn}
       </div>
     </div>`;
-    if(!gRows.length)return`<div style="margin-bottom:var(--sg)">${hdr}</div>`;
+    if(!gRows.length)return _budFiltering?'':(`<div style="margin-bottom:var(--sg)">${hdr}</div>`);
     const tableRows=gRows.map(e=>{const c=CATS[e.cat];const ac=e.cat==='revenu'?'var(--green)':e.cat==='impot'?'var(--amber)':e.cat==='epargne'?'var(--blue)':'var(--red)';const debitCell=g.key==='fixes'?`<td style="color:var(--muted);font-size:var(--fs-xs)">${e.debit_day?`le ${e.debit_day}`:'—'}</td>`:'';return`<tr data-id="${e.id||''}" style="background:${c.bg}">
       <td style="font-weight:500;border-left:3px solid ${c.hex}">${e.name}</td>
       ${debitCell}
@@ -3720,6 +3723,7 @@ function renderEntries(){
   document.getElementById('btn-add-entry').style.display=_canAddE?'':'none';
   if(currentTab==='entries')document.getElementById('fab-entry').style.display=_canAddE?'':'none';
   const filtered=getFiltered();const isMobile=window.innerWidth<=640;
+  const _communFiltering=!!(document.getElementById('search-input')?.value||document.getElementById('filter-cat')?.value);
   const container=document.getElementById('entries-sections');
   if(entriesMember==='Commun'){
     const [m1,m2]=orderedMembers();
@@ -3736,14 +3740,14 @@ function renderEntries(){
       let e1=filtered.filter(e=>e.member===m1&&g.cats.includes(e.cat));
       let e2=filtered.filter(e=>e.member===m2&&g.cats.includes(e.cat));
       if(!e1.length&&!e2.length){
-        if(g.key==='epargne'){
+        if(!_communFiltering&&g.key==='epargne'){
           const ps1=calcStats(entries.filter(e=>e.member===m1)),pct1=savingPct[m1]??60;
           const ps2=calcStats(entries.filter(e=>e.member===m2)),pct2=savingPct[m2]??60;
           const ep1=Math.max(0,Math.round(ps1.rav*pct1/100)),ep2=Math.max(0,Math.round(ps2.rav*pct2/100));
           if(ep1>0)e1=[{name:'Épargne calculée',amount:ep1,cat:'epargne',_synthetic:true}];
           if(ep2>0)e2=[{name:'Épargne calculée',amount:ep2,cat:'epargne',_synthetic:true}];
           if(!e1.length&&!e2.length)return'';
-        } else if(g.key==='loisir'){
+        } else if(!_communFiltering&&g.key==='loisir'){
           const ps1=calcStats(entries.filter(e=>e.member===m1)),pct1=savingPct[m1]??60;
           const ps2=calcStats(entries.filter(e=>e.member===m2)),pct2=savingPct[m2]??60;
           const loi1=Math.max(0,Math.round(ps1.rav*(100-pct1)/100)),loi2=Math.max(0,Math.round(ps2.rav*(100-pct2)/100));
@@ -4417,6 +4421,9 @@ function _renderMonthlySections(stats, expenses, savingsData = [], entryStats = 
 
   const groupHtmls = GROUPS.map(g => {
     if (g.savings) {
+      const _isFilteringSav = !!(_mlySearch || _mlyCat);
+      if (_isFilteringSav && _mlyCat !== 'epargne') return '';
+      if (_isFilteringSav && _mlySearch) return '';
       const frMonth = MONTH_NAMES[_secMonth - 1];
       const savingRecord = savingsData.find(s => s.year === _secYear && s.month === frMonth);
       const epMember = _secMember === 'Commun' ? myRole() : _secMember;
