@@ -4528,7 +4528,7 @@ function _monthlyAutoGroup(rows, overrides, extras, g, isMobile) {
         ? `<span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:1px 6px;border-radius:4px;background:#c49a0022;color:#c49a00;border:1px solid #c49a0033;margin-left:6px;vertical-align:middle">Corrigé</span>`
         : '';
       return `<div class="swipe-row"><div class="swipe-del-zone"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg></div>
-      <div class="entry-card swipeable" data-swipe-fn="_mlySwipeSuppress(${e.id},${ov?ov.id:'null'})" style="border-left-color:${isSuppressed?'#d93535':isOverridden?'#c49a00':c.hex};background:${isSuppressed?'color-mix(in srgb,#d93535 6%,var(--surface))':isOverridden?'color-mix(in srgb,#c49a00 8%,var(--surface))':c.bg};padding:9px 12px${isSuppressed?';opacity:.7':''}" onclick="${!isSuppressed?`openMonthlyAutoOverride(${e.id},${ov?ov.id:'null'})`:''}">
+      <div class="entry-card swipeable" data-swipe-fn="_mlySwipeSuppress(${e.id},${ov?ov.id:'null'})" style="border-left-color:${isSuppressed?'#d93535':isOverridden?'#c49a00':c.hex};background:${isSuppressed?'color-mix(in srgb,#d93535 6%,var(--surface))':isOverridden?'color-mix(in srgb,#c49a00 8%,var(--surface))':c.bg};padding:9px 12px${isSuppressed?';opacity:.7':''}" onclick="${!isSuppressed?`_mlyAutoClick(${e.id},${ov?ov.id:'null'})`:''}">
         <div style="display:flex;align-items:center;gap:8px">
           ${!isSuppressed?`<input type="checkbox" class="monthly-cb monthly-cb-suppress" data-entry-id="${e.id}" ${monthlySelectedSuppress.has(e.id)?'checked':''} onclick="event.stopPropagation()" onchange="event.stopPropagation();toggleMonthlySelectSuppress(${e.id},${ov?ov.id:'null'},this)" style="flex-shrink:0">`:''}
           <span style="font-weight:600;font-size:var(--fs-sm);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;${isSuppressed?'text-decoration:line-through;color:var(--muted)':''}">${e.name}${mStatusBadge}</span>
@@ -4541,7 +4541,7 @@ function _monthlyAutoGroup(rows, overrides, extras, g, isMobile) {
       const c = CATS[e.cat];
       const exAc = e.cat==='revenu'?'var(--green)':e.cat==='impot'?'var(--amber)':'var(--red)';
       return `<div class="swipe-row"><div class="swipe-del-zone"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg></div>
-      <div class="entry-card swipeable" data-swipe-fn="deleteMonthlyExpense(${e.id})" style="border-left-color:${c.hex};border-left-style:dashed;background:${c.bg};padding:9px 12px;${e.is_exceptional?'opacity:.55;':''}" onclick="openEditMonthlyExpense(${e.id})">
+      <div class="entry-card swipeable" data-swipe-fn="deleteMonthlyExpense(${e.id})" style="border-left-color:${c.hex};border-left-style:dashed;background:${c.bg};padding:9px 12px;${e.is_exceptional?'opacity:.55;':''}" onclick="_mlyExtraClick(${e.id})">
         <div style="display:flex;align-items:center;gap:8px">
           <input type="checkbox" class="monthly-cb" data-id="${e.id}" ${monthlySelected.has(e.id)?'checked':''} onclick="event.stopPropagation()" onchange="event.stopPropagation();toggleMonthlySelect(${e.id},this)" style="flex-shrink:0">
           <span style="font-weight:600;font-size:var(--fs-sm);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;${e.is_exceptional?'text-decoration:line-through;':''}">${e.name}</span>
@@ -5078,6 +5078,24 @@ async function _mlySwipeSuppress(entryId, ovId) {
     );
   } catch(err) { showApiError('Erreur : ' + err.message); }
   finally { hideLoading(); }
+}
+// Tap sur une ligne auto : si sélection en cours → bascule sélection, sinon → édition
+function _mlyAutoClick(entryId, ovId) {
+  if (monthlySelectedSuppress.size > 0) {
+    const cb = document.querySelector(`.monthly-cb-suppress[data-entry-id="${entryId}"]`);
+    if (cb) { cb.checked = !cb.checked; toggleMonthlySelectSuppress(entryId, ovId, cb); }
+  } else {
+    openMonthlyAutoOverride(entryId, ovId);
+  }
+}
+// Tap sur une ligne manuelle : si sélection en cours → bascule sélection, sinon → édition
+function _mlyExtraClick(id) {
+  if (monthlySelected.size > 0) {
+    const cb = document.querySelector(`.monthly-cb[data-id="${id}"]`);
+    if (cb) { cb.checked = !cb.checked; toggleMonthlySelect(id, cb); }
+  } else {
+    openEditMonthlyExpense(id);
+  }
 }
 function toggleMonthlySelectSuppress(entryId, ovId, cb) {
   const entry = _monthlyAutoMap[entryId];
