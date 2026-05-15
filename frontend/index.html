@@ -991,6 +991,7 @@ if(window.location.hostname==='localhost'||window.location.hostname==='127.0.0.1
             <option value="epargne">Épargne</option><option value="loisir">Loisir</option>
           </select>
         </div>
+        <button id="entries-sort-btn" onclick="_cycleEntriesSort()" class="btn btn-add-desktop" style="flex-shrink:0;padding:7px 10px;font-size:var(--fs-xs)">Montant ↓</button>
         <button class="btn-add btn-add-desktop" id="btn-add-entry"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Ajouter</button>
       </div>
       <div id="entries-sections"></div>
@@ -1033,6 +1034,7 @@ if(window.location.hostname==='localhost'||window.location.hostname==='127.0.0.1
       <button class="stab" data-stab="year">Année</button>
     </div>
     <div id="savings-year-filter" style="display:none;margin-bottom:.75rem"></div>
+    <div id="savings-goal-section" style="margin-bottom:.75rem"></div>
     <div class="card" id="savings-chart-card">
       <div class="card-head" id="savings-chart-title">Évolution mensuelle</div>
       <div id="bar-chart-wrap" style="position:relative;height:210px"><canvas id="bar-chart"></canvas></div>
@@ -1375,6 +1377,7 @@ if(window.location.hostname==='localhost'||window.location.hostname==='127.0.0.1
     </div>
     <div class="modal-footer">
       <button class="btn" id="modal-entry-cancel">Annuler</button>
+      <button class="btn" id="modal-entry-dup" style="display:none" title="Dupliquer cette ligne">Dupliquer</button>
       <button class="btn-add" id="modal-entry-save">Enregistrer</button>
     </div>
   </div>
@@ -1506,6 +1509,20 @@ if(window.location.hostname==='localhost'||window.location.hostname==='127.0.0.1
   </div>
 </div>
 
+
+<!-- RECHERCHE GLOBALE -->
+<div id="global-search-overlay" style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.55);backdrop-filter:blur(4px)" onclick="if(event.target===this)_closeGlobalSearch()">
+  <div style="max-width:520px;margin:60px auto 0;background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,.35)">
+    <div style="display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--border)">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input id="global-search-input" type="text" placeholder="Rechercher partout…" autocomplete="off"
+        style="flex:1;border:none;background:none;color:var(--text);font-size:var(--fs-md);outline:none;font-family:inherit"
+        oninput="_runGlobalSearch(this.value)">
+      <kbd onclick="_closeGlobalSearch()" style="font-size:11px;padding:2px 6px;border:1px solid var(--border);border-radius:4px;color:var(--muted);cursor:pointer">Esc</kbd>
+    </div>
+    <div id="global-search-results" style="max-height:60vh;overflow-y:auto;padding:8px 0"></div>
+  </div>
+</div>
 
 <!-- PENDING FIXES MODAL -->
 <div class="overlay" id="modal-pending-fixes">
@@ -3576,7 +3593,16 @@ function getFiltered(){
   );
 }
 
+let _entriesSort='amount_desc'; // 'amount_desc' | 'amount_asc' | 'name_asc'
+function _cycleEntriesSort(){
+  _entriesSort=_entriesSort==='amount_desc'?'name_asc':_entriesSort==='name_asc'?'amount_asc':'amount_desc';
+  const lbl={amount_desc:'Montant ↓',name_asc:'Nom A→Z',amount_asc:'Montant ↑'}[_entriesSort];
+  const btn=document.getElementById('entries-sort-btn');if(btn)btn.textContent=lbl;
+  renderEntries();
+}
 function getSortedGroupRows(gRows){
+  if(_entriesSort==='name_asc')return [...gRows].sort((a,b)=>a.name.localeCompare(b.name,'fr'));
+  if(_entriesSort==='amount_asc')return [...gRows].sort((a,b)=>Math.abs(a.amount)-Math.abs(b.amount));
   return [...gRows].sort((a,b)=>Math.abs(b.amount)-Math.abs(a.amount));
 }
 
@@ -4024,7 +4050,24 @@ function openAddEntry(){
   document.getElementById('f-sign').value='neg';
   document.getElementById('f-member').value=myRole();
   onEntrySignChange('neg');
+  document.getElementById('modal-entry-dup').style.display='none';
   document.getElementById('modal-entry').classList.add('open');
+}
+function duplicateEntry(id){
+  const e=entries.find(x=>x.id===id);if(!e)return;
+  openAddEntry();
+  setTimeout(()=>{
+    document.getElementById('f-name').value=e.name+' (copie)';
+    document.getElementById('f-amount').value=Math.abs(e.amount);
+    const sign=e.amount>=0?'pos':'neg';
+    document.getElementById('f-sign').value=sign;
+    document.getElementById('f-member').value=e.member;
+    onEntrySignChange(sign);
+    document.getElementById('f-cat').value=e.cat;
+    onEntryCatChange(e.cat);
+    if(e.debit_day)document.getElementById('f-debit-day').value=e.debit_day;
+    document.getElementById('modal-entry-title').textContent='Dupliquer la ligne';
+  },0);
 }
 let impotMode='montant';
 const impotBrutCache={}; // mémorise le revenu brut saisi par entry id
@@ -4106,8 +4149,10 @@ document.getElementById('fab-entry').addEventListener('click',()=>{
   if(currentTab==='savings') openAddSaving();
   else openAddEntry();
 });
+document.getElementById('modal-entry-dup').onclick=()=>{const id=editEntryId;document.getElementById('modal-entry').classList.remove('open');setTimeout(()=>duplicateEntry(id),100);};
 function openEditEntry(id){
   const e=entries.find(x=>x.id===id);if(!e||!canEdit(e.member)){return;}editEntryId=id;
+  document.getElementById('modal-entry-dup').style.display='';
   document.getElementById('modal-entry-title').textContent='Modifier';
   document.getElementById('f-name').value=e.name;document.getElementById('f-amount').value=Math.abs(e.amount);
   const sign=e.amount>=0?'pos':'neg';
@@ -4180,7 +4225,7 @@ document.getElementById('modal-entry-save').onclick=async ()=>{
 let monthlyYear     = new Date().getFullYear();
 let monthlyMonth    = new Date().getMonth() + 1; // 1-12
 let monthlyExpenses = [];
-let _lastMonthlyStats = null, _lastMonthlySavings = [], _lastMonthlyEntryStats = null, _lastMlyMemberStats = null;
+let _lastMonthlyStats = null, _lastMonthlySavings = [], _lastMonthlyEntryStats = null, _lastMlyMemberStats = null, _lastMonthlyStatsPrev = null;
 let monthlySelected = new Set();
 let monthlySelectedSuppress = new Map(); // entryId → entry (lignes auto à supprimer ce mois)
 let editMonthlyId      = null;
@@ -4248,11 +4293,14 @@ async function renderMonthly() {
   showLoading();
   try {
     const member = entriesMember;
-    const [stats, expenses, savingsData, entryStats] = await Promise.all([
+    const _prevMM = monthlyMonth === 1 ? 12 : monthlyMonth - 1;
+    const _prevYY = monthlyMonth === 1 ? monthlyYear - 1 : monthlyYear;
+    const [stats, expenses, savingsData, entryStats, prevStats] = await Promise.all([
       API.monthlyExpenses.getStats({ year: monthlyYear, month: monthlyMonth, member }),
       API.monthlyExpenses.getAll({ year: monthlyYear, month: monthlyMonth, member }),
       API.savings.getAll({ year: monthlyYear, member }),
       API.entries.getStats({ member }),
+      API.monthlyExpenses.getStats({ year: _prevYY, month: _prevMM, member }).catch(() => null),
     ]);
     let mlyMemberStats = null;
     if (entriesMember === 'Commun') {
@@ -4263,7 +4311,7 @@ async function renderMonthly() {
       }
     }
     monthlyExpenses = expenses;
-    _lastMonthlyStats = stats; _lastMonthlySavings = savingsData; _lastMonthlyEntryStats = entryStats; _lastMlyMemberStats = mlyMemberStats;
+    _lastMonthlyStats = stats; _lastMonthlySavings = savingsData; _lastMonthlyEntryStats = entryStats; _lastMlyMemberStats = mlyMemberStats; _lastMonthlyStatsPrev = prevStats;
     // Synchronise le tableau global savings pour que openEditSaving/deleteSaving fonctionnent depuis suivi mensuel
     savingsData.forEach(s => {
       const idx = savings.findIndex(x => x.id === s.id);
@@ -4531,6 +4579,24 @@ function _updateMlySlider(member, rav) {
   fillAllTracks();
 }
 
+function _mlyTrendBadge(catKey) {
+  const prev = _lastMonthlyStatsPrev;
+  if (!prev) return '';
+  const cur = _lastMonthlyStats;
+  if (!cur) return '';
+  const cats = { revenus:['revenu','impot'], fixe:['fixe'], variable:['variable'], loisir:['loisir'] };
+  const cs = (cats[catKey] || [catKey]);
+  const curAct  = cs.reduce((s,c) => s + (cur[c]?.actual  || 0), 0);
+  const prevAct = cs.reduce((s,c) => s + (prev[c]?.actual || 0), 0);
+  if (prevAct === 0) return '';
+  const pct = Math.round((curAct - prevAct) / prevAct * 100);
+  if (Math.abs(pct) < 1) return '';
+  const up = pct > 0;
+  const isRevenu = catKey === 'revenus';
+  const col = isRevenu ? (up ? 'var(--green)' : 'var(--red)') : (up ? 'var(--red)' : 'var(--green)');
+  return `<span style="font-size:9px;font-weight:700;color:${col};background:${col}18;border-radius:4px;padding:1px 5px;flex-shrink:0">${up?'▲':'▼'} ${Math.abs(pct)}%</span>`;
+}
+
 // Groupe auto-renseigné — avec correction mensuelle + dépenses exceptionnelles
 function _monthlyAutoGroup(rows, overrides, extras, g, isMobile) {
   rows.forEach(e => { _monthlyAutoMap[e.id] = e; }); // populate lookup
@@ -4552,6 +4618,8 @@ function _monthlyAutoGroup(rows, overrides, extras, g, isMobile) {
     ? `<span style="font-size:var(--fs-xs);color:${pctCol};font-weight:700">${eur(tot)}</span><span style="font-size:var(--fs-xs);color:var(--muted)">/ ${eur(budgetTot)}</span>`
     : `<span style="font-size:var(--fs-xs);color:var(--muted)">Auto</span>`;
   const addBtn = '';
+  const _overBadgeA = !isRevenu && budgetTot > 0 && pct !== null && pct > 100
+    ? `<span style="font-size:9px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;background:var(--red);color:#fff;border-radius:4px;padding:1px 5px;flex-shrink:0">DÉPASSÉ</span>` : '';
   const collapsed = !!monthlySectionCollapsed[g.key];
   const chevronStyle = collapsed ? 'transform:rotate(-90deg);' : '';
   const hdr = `<div onclick="toggleMonthlySection('${g.key}')" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;padding:0 2px 6px;margin-bottom:5px;border-bottom:2px solid ${g.color}30">
@@ -4559,7 +4627,7 @@ function _monthlyAutoGroup(rows, overrides, extras, g, isMobile) {
       <button onclick="event.stopPropagation();toggleMonthlySection('${g.key}')" data-collapse-key="${g.key}" style="background:none;border:none;cursor:pointer;color:var(--muted);padding:0;display:flex;align-items:center;transition:transform .2s;${chevronStyle}">${CHEVRON_SVG}</button>
       <span style="font-size:var(--fs-xs);font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:${g.color}">${g.label}</span>
       <span style="font-size:var(--fs-xs);color:var(--hint);background:${g.color}18;border-radius:20px;padding:1px 7px;font-weight:700">${rows.length + extras.length}</span>
-      ${subInfo}
+      ${subInfo}${_overBadgeA}${_mlyTrendBadge(g.key)}
     </div>
     <div style="display:flex;align-items:center;gap:8px">
       <span style="font-size:var(--fs-sm);font-weight:800;color:${g.totColor};letter-spacing:-.02em">${eur(tot)}</span>
@@ -4567,12 +4635,35 @@ function _monthlyAutoGroup(rows, overrides, extras, g, isMobile) {
     </div>
   </div>`;
 
+  // ── Calendrier des prélèvements (groupe fixe uniquement)
+  let _fixCalendar = '';
+  if (g.cats.includes('fixe')) {
+    const _isNowMonth = (_lastMonthlyStats && monthlyYear === new Date().getFullYear() && monthlyMonth === new Date().getMonth()+1);
+    const _todayD = new Date().getDate();
+    const fixWithDay = rows.filter(e => e.debit_day).sort((a,b) => a.debit_day - b.debit_day);
+    if (fixWithDay.length > 0) {
+      const dots = fixWithDay.map(e => {
+        const getOv2 = (id) => overrides.find(o => Number(o.entry_id) === id);
+        const ov2 = getOv2(e.id);
+        const isSup = ov2 && ov2.amount === 0;
+        const isPast = _isNowMonth && e.debit_day <= _todayD;
+        const col = isSup ? 'var(--muted)' : isPast ? 'var(--green)' : 'var(--amber)';
+        const amt = ov2 ? Math.abs(ov2.amount) : Math.abs(e.amount);
+        return `<div title="${e.name}\n${eur(amt)}" style="display:flex;flex-direction:column;align-items:center;gap:2px;min-width:32px">
+          <div style="width:30px;height:30px;border-radius:50%;background:${col}18;border:1.5px solid ${col};display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:${col}${isSup?';opacity:.5':''}">${e.debit_day}</div>
+          <span style="font-size:8px;color:var(--muted);max-width:36px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center">${e.name.split(' ')[0]}</span>
+        </div>`;
+      }).join('');
+      _fixCalendar = `<div style="display:flex;gap:8px;flex-wrap:wrap;padding:8px 0 4px;border-bottom:1px solid var(--border)30;margin-bottom:6px">${dots}</div>`;
+    }
+  }
+
   if (!rows.length && !extras.length) {
     return `<div style="margin-bottom:var(--sg)">${hdr}<div id="monthly-body-${g.key}" style="${collapsed?'display:none':''}">${bar}<div class="tbl-empty">Aucune ligne pour ce mois</div></div></div>`;
   }
 
   if (isMobile) {
-    return `<div style="margin-bottom:1rem">${hdr}<div id="monthly-body-${g.key}" style="${collapsed?'display:none':''}">${bar}${rows.map(e => {
+    return `<div style="margin-bottom:1rem">${hdr}<div id="monthly-body-${g.key}" style="${collapsed?'display:none':''}">${bar}${_fixCalendar}${rows.map(e => {
       const ov = getOv(e.id);
       const displayAmt = ov ? Math.abs(ov.amount) : Math.abs(e.amount);
       const isOverridden = !!ov;
@@ -4609,7 +4700,7 @@ function _monthlyAutoGroup(rows, overrides, extras, g, isMobile) {
     }).join('')}</div></div>`;
   }
   return `<div style="margin-bottom:var(--sg)">${hdr}<div id="monthly-body-${g.key}" style="${collapsed?'display:none':''}">
-${bar}    <div class="tbl-wrap"><table style="width:100%;table-layout:fixed">
+${bar}${_fixCalendar}    <div class="tbl-wrap"><table style="width:100%;table-layout:fixed">
       <colgroup><col style="width:3%"><col style="width:58%"><col style="width:27%"><col style="width:12%"></colgroup>
       <thead><tr>
         <th><input type="checkbox" data-group="${g.key}" onchange="toggleMonthlySelectAll(this,'${g.key}')"></th>
@@ -4682,6 +4773,8 @@ function _monthlyManualGroup(rows, g, budgetTotal, isMobile, revNet = 0) {
       ? `<span style="font-size:var(--fs-xs);color:${pctCol};font-weight:700">${eur(actualTotal)}</span><span style="font-size:var(--fs-xs);color:var(--muted)">/ ${eur(budgetTotal)}</span>`
       : `<span style="font-size:var(--fs-xs);font-weight:700;color:var(--fg)">${eur(actualTotal)}</span>`;
 
+  const _overBadgeM = budgetTotal > 0 && pct !== null && pct > 100
+    ? `<span style="font-size:9px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;background:var(--red);color:#fff;border-radius:4px;padding:1px 5px;flex-shrink:0">DÉPASSÉ</span>` : '';
   const collapsed2 = !!monthlySectionCollapsed[g.key];
   const chevronStyle2 = collapsed2 ? 'transform:rotate(-90deg);' : '';
   const hdr = `<div onclick="toggleMonthlySection('${g.key}')" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;padding:0 2px 6px;margin-bottom:5px;border-bottom:2px solid ${g.color}30">
@@ -4689,7 +4782,7 @@ function _monthlyManualGroup(rows, g, budgetTotal, isMobile, revNet = 0) {
       <button onclick="event.stopPropagation();toggleMonthlySection('${g.key}')" data-collapse-key="${g.key}" style="background:none;border:none;cursor:pointer;color:var(--muted);padding:0;display:flex;align-items:center;transition:transform .2s;${chevronStyle2}">${CHEVRON_SVG}</button>
       <span style="font-size:var(--fs-xs);font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:${g.color}">${g.label}</span>
       <span style="font-size:var(--fs-xs);color:var(--hint);background:${g.color}18;border-radius:20px;padding:1px 7px;font-weight:700">${rows.length}</span>
-      ${subInfo}
+      ${subInfo}${_overBadgeM}${_mlyTrendBadge(g.key)}
     </div>
     <div style="display:flex;align-items:center;gap:8px">
       <span style="font-size:var(--fs-sm);font-weight:800;color:${g.totColor};letter-spacing:-.02em">${eur(actualTotal)}</span>
@@ -5981,6 +6074,31 @@ function renderSavings(){
   const latestFirst=savings.filter(s=>s.member===first).slice(-1)[0];
   const latestSecond=savings.filter(s=>s.member===second).slice(-1)[0];
   const totalSav=(latestFirst?.amount||0)+(latestSecond?.amount||0);
+  // ── Objectif annuel ──
+  const _goalYear=new Date().getFullYear();
+  const _goalKey=`zenith_goal_${_goalYear}`;
+  const _goal=parseInt(localStorage.getItem(_goalKey))||0;
+  const _goalPct=_goal>0&&totalSav>0?Math.min(100,Math.round(totalSav/_goal*100)):0;
+  const _goalCol=_goalPct>=100?'var(--green)':_goalPct>=70?'var(--amber)':'var(--blue)';
+  const _goalEl=document.getElementById('savings-goal-section');
+  if(_goalEl)_goalEl.innerHTML=`<div class="card" style="padding:14px 16px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <span style="font-size:var(--fs-xs);font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)">Objectif d'épargne ${_goalYear}</span>
+      <div style="display:flex;align-items:center;gap:6px">
+        <input type="number" min="0" step="100" placeholder="Montant cible €" value="${_goal||''}"
+          onchange="localStorage.setItem('${_goalKey}',this.value||'0');renderSavings()"
+          style="width:130px;padding:5px 8px;border:1px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text);font-size:var(--fs-sm);font-family:inherit">
+      </div>
+    </div>
+    ${_goal>0?`<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px">
+      <span style="font-size:var(--fs-sm);font-weight:700;color:${_goalCol}">${eur(totalSav)} / ${eur(_goal)}</span>
+      <span style="font-size:var(--fs-xs);color:${_goalCol};font-weight:700">${_goalPct}% atteint</span>
+    </div>
+    <div style="height:6px;background:var(--surface2);border-radius:99px;overflow:hidden">
+      <div style="width:${_goalPct}%;height:100%;background:${_goalCol};border-radius:99px;transition:width .4s"></div>
+    </div>`:
+    `<div style="font-size:var(--fs-xs);color:var(--muted)">Saisissez un objectif pour suivre votre progression.</div>`}
+  </div>`;
   if(isYear){
     const lastFirst=getYearRows(first).slice(-1)[0],lastSecond=getYearRows(second).slice(-1)[0];
     const prevFirst=getYearRows(first).slice(-2)[0],prevSecond=getYearRows(second).slice(-2)[0];
@@ -7216,6 +7334,34 @@ async function renderAnalysis(){
       </div>`;
       _ovaAnaEl.style.display='block';
     }
+
+    // ── Records : mois le plus chargé / le plus léger ──
+    try {
+      const _recEl=document.getElementById('analysis-insights');
+      if(_recEl){
+        const _mhData=(_anaHistory||[]).filter(h=>h.total>0);
+        if(_mhData.length>=2){
+          const _heavy=_mhData.reduce((mx,h)=>h.total>mx.total?h:mx,_mhData[0]);
+          const _light=_mhData.reduce((mn,h)=>h.total<mn.total?h:mn,_mhData[0]);
+          const _mnaMap={'Janvier':'Jan','Février':'Fév','Mars':'Mar','Avril':'Avr','Mai':'Mai','Juin':'Jun','Juillet':'Jul','Août':'Aoû','Septembre':'Sep','Octobre':'Oct','Novembre':'Nov','Décembre':'Déc'};
+          const _fmtMh=h=>`${_mnaMap[h.month]||h.month} ${h.year}`;
+          _recEl.innerHTML=`<div class="card" style="padding:14px 16px;display:flex;gap:12px;flex-wrap:wrap">
+            <div style="flex:1;min-width:120px">
+              <div style="font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--red);margin-bottom:4px">📈 Mois le plus chargé</div>
+              <div style="font-size:var(--fs-sm);font-weight:800;color:var(--text)">${_fmtMh(_heavy)}</div>
+              <div style="font-size:var(--fs-xs);color:var(--muted)">${eur(_heavy.total)} de dépenses</div>
+            </div>
+            <div style="width:1px;background:var(--border);flex-shrink:0"></div>
+            <div style="flex:1;min-width:120px">
+              <div style="font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--green);margin-bottom:4px">📉 Mois le plus léger</div>
+              <div style="font-size:var(--fs-sm);font-weight:800;color:var(--text)">${_fmtMh(_light)}</div>
+              <div style="font-size:var(--fs-xs);color:var(--muted)">${eur(_light.total)} de dépenses</div>
+            </div>
+          </div>`;
+          _recEl.style.display='block';
+        }
+      }
+    } catch(_){}
 
     // ── Insights (intégrés dans la synthèse — bloc masqué) ──
     try {
@@ -9247,10 +9393,60 @@ function _maybeShowSwipeHint(){
   },{passive:true});
 })();
 
+// ── Recherche globale ──
+function _openGlobalSearch(){
+  const ov=document.getElementById('global-search-overlay');
+  ov.style.display='flex';
+  const inp=document.getElementById('global-search-input');
+  inp.value='';
+  document.getElementById('global-search-results').innerHTML='<div style="padding:24px;text-align:center;color:var(--muted);font-size:var(--fs-sm)">Commencez à taper…</div>';
+  setTimeout(()=>inp.focus(),50);
+}
+function _closeGlobalSearch(){
+  document.getElementById('global-search-overlay').style.display='none';
+}
+function _runGlobalSearch(q){
+  const norm=s=>s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+  const qn=norm(q.trim());
+  const res=document.getElementById('global-search-results');
+  if(!qn){res.innerHTML='<div style="padding:24px;text-align:center;color:var(--muted);font-size:var(--fs-sm)">Commencez à taper…</div>';return;}
+  const _catNames={revenu:'Revenu',impot:'Impôt',fixe:'Fixe',variable:'Variable',epargne:'Épargne',loisir:'Loisir'};
+  const _catCol={revenu:'var(--green)',impot:'var(--amber)',fixe:'var(--red)',variable:'var(--red)',epargne:'var(--blue)',loisir:'var(--amber)'};
+  const matchE=entries.filter(e=>norm(e.name).includes(qn)||norm(_catNames[e.cat]||e.cat).includes(qn));
+  const matchM=monthlyExpenses.filter(e=>norm(e.name||'').includes(qn)||norm(_catNames[e.cat]||e.cat).includes(qn));
+  let html='';
+  if(matchE.length){
+    html+=`<div style="padding:6px 16px;font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)">Prévisionnel (${matchE.length})</div>`;
+    html+=matchE.slice(0,8).map(e=>`<div onclick="_closeGlobalSearch();setEntriesMember('${e.member}');switchTab('entries')" style="display:flex;align-items:center;gap:12px;padding:10px 16px;cursor:pointer;border-radius:0" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">
+      <span style="font-size:10px;font-weight:700;color:${_catCol[e.cat]||'var(--muted)'};background:${_catCol[e.cat]||'var(--muted)'}18;padding:2px 6px;border-radius:4px;flex-shrink:0">${_catNames[e.cat]||e.cat}</span>
+      <span style="flex:1;font-size:var(--fs-sm);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${e.name}</span>
+      <span style="font-size:var(--fs-sm);font-weight:700;color:${e.amount>=0?'var(--green)':'var(--red)'};flex-shrink:0">${eur(Math.abs(e.amount))}</span>
+    </div>`).join('');
+  }
+  if(matchM.length){
+    html+=`<div style="padding:6px 16px;font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)${matchE.length?';margin-top:4px':''}">Suivi mensuel (${matchM.length})</div>`;
+    html+=matchM.slice(0,8).map(e=>`<div onclick="_closeGlobalSearch();switchTab('dashboard')" style="display:flex;align-items:center;gap:12px;padding:10px 16px;cursor:pointer" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">
+      <span style="font-size:10px;font-weight:700;color:${_catCol[e.cat]||'var(--muted)'};background:${_catCol[e.cat]||'var(--muted)'}18;padding:2px 6px;border-radius:4px;flex-shrink:0">${_catNames[e.cat]||e.cat}</span>
+      <span style="flex:1;font-size:var(--fs-sm);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${e.name||'—'}</span>
+      <span style="font-size:var(--fs-sm);font-weight:700;color:var(--red);flex-shrink:0">${eur(Math.abs(e.amount))}</span>
+    </div>`).join('');
+  }
+  if(!matchE.length&&!matchM.length){
+    html='<div style="padding:24px;text-align:center;color:var(--muted);font-size:var(--fs-sm)">Aucun résultat pour « '+q+' »</div>';
+  }
+  res.innerHTML=html;
+}
+
 // ── Raccourcis clavier globaux ──
 document.addEventListener('keydown', e => {
+  // Ctrl+K ou / — ouvre la recherche globale
+  if ((e.key==='k'&&(e.ctrlKey||e.metaKey))||
+      (e.key==='/'&&!e.target.matches('input,textarea,select')&&document.getElementById('global-search-overlay').style.display==='none')){
+    e.preventDefault();_openGlobalSearch();return;
+  }
   // Escape — ferme toute modale/overlay ouverte ou les tooltips
   if (e.key === 'Escape') {
+    if(document.getElementById('global-search-overlay').style.display!=='none'){_closeGlobalSearch();return;}
     const openOverlay = document.querySelector('.overlay.open');
     if (openOverlay) { openOverlay.classList.remove('open'); return; }
     if (document.getElementById('ova-exp-tooltip')?.style.display !== 'none') { _closeOvaTip(); return; }
