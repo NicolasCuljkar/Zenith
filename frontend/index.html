@@ -980,7 +980,10 @@ if(window.location.hostname==='localhost'||window.location.hostname==='127.0.0.1
       <div class="kpi-grid" id="entries-summary" style="margin-bottom:.75rem"></div>
       <div id="entries-toolbar" style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:.75rem;gap:8px">
         <div id="entries-search" style="flex:1;display:flex;flex-direction:row;gap:6px;min-width:0">
-          <input type="text" id="search-input" class="inp search-inp" placeholder="Rechercher…" style="flex:1;min-width:0">
+          <div style="position:relative;flex:1;min-width:0;display:flex;align-items:center">
+            <input type="text" id="search-input" class="inp search-inp" placeholder="Rechercher…" style="width:100%;box-sizing:border-box;padding-right:26px">
+            <button id="search-clear" onclick="document.getElementById('search-input').value='';renderEntries();this.style.display='none'" style="display:none;position:absolute;right:7px;background:none;border:none;cursor:pointer;color:var(--muted);padding:0;font-size:13px;line-height:1">✕</button>
+          </div>
           <select id="filter-cat" class="inp" style="flex-shrink:0;width:auto">
             <option value="">Toutes catégories</option>
             <option value="revenu">Revenu</option><option value="impot">Impôt</option>
@@ -3335,7 +3338,10 @@ async function renderDashboard(){
   const _dashInsHtml=_dIns.length===0?'':'<div class="card" style="padding:0;overflow:hidden;margin-bottom:var(--sg)"><div style="padding:10px 14px;border-bottom:1px solid var(--border)"><span style="font-size:var(--fs-xs);font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)">Insights du mois</span></div><div>'+_dIns.map(function(ins,ii){return '<div style="display:flex;align-items:center;gap:10px;padding:9px 14px;'+(ii<_dIns.length-1?'border-bottom:1px solid var(--border)':'')+'"><span style="width:7px;height:7px;border-radius:50%;background:'+ins.col+';flex-shrink:0"></span><span style="flex:1;min-width:0;font-size:var(--fs-xs);font-weight:600;color:var(--text)">'+ins.text+(ins.sub?'<span style="font-weight:400;color:var(--muted)"> · '+ins.sub+'</span>':'')+'</span></div>';}).join('')+'</div></div>';
 
   const _dashMlyToolbar=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:var(--sg)">
-    <input id="dash-mly-search" type="search" placeholder="Rechercher…" class="inp search-inp" style="flex:1;min-width:0">
+    <div style="position:relative;flex:1;min-width:0;display:flex;align-items:center">
+      <input id="dash-mly-search" type="search" placeholder="Rechercher…" class="inp search-inp" style="width:100%;box-sizing:border-box;padding-right:26px">
+      <button id="dash-mly-search-clear" onclick="document.getElementById('dash-mly-search').value='';document.getElementById('dash-mly-search').dispatchEvent(new Event('input'));this.style.display='none'" style="display:none;position:absolute;right:7px;background:none;border:none;cursor:pointer;color:var(--muted);padding:0;font-size:13px;line-height:1">✕</button>
+    </div>
     <select id="dash-mly-cat" class="inp" style="flex-shrink:0">
       <option value="">Toutes catégories</option>
       <option value="fixe">Charges fixes</option>
@@ -3436,10 +3442,16 @@ async function renderDashboard(){
   const _dashEntryStats = { rav: bStats.rav };
   const _dashSecOpts = { skipHero:true, containerId:'dash-monthly-sections', searchId:'dash-mly-search', catId:'dash-mly-cat', member:_dashSecMember, year:dashYear, month:dashMonth };
   if (mStats) _renderMonthlySections(mStats, mExpenses, savingsDash, _dashEntryStats, null, _dashSecOpts);
+  let _mlySearchTimer=null;
   ['dash-mly-search','dash-mly-cat'].forEach(id => {
     const el = document.getElementById(id);
     if (el) {
-      el.addEventListener('input',  () => { if(mStats) _renderMonthlySections(mStats, mExpenses, savingsDash, _dashEntryStats, null, _dashSecOpts); });
+      el.addEventListener('input', () => {
+        clearTimeout(_mlySearchTimer);
+        _mlySearchTimer=setTimeout(()=>{ if(mStats) _renderMonthlySections(mStats, mExpenses, savingsDash, _dashEntryStats, null, _dashSecOpts); },300);
+        const clr=document.getElementById('dash-mly-search-clear');
+        if(clr&&id==='dash-mly-search')clr.style.display=el.value?'flex':'none';
+      });
       el.addEventListener('change', () => { if(mStats) _renderMonthlySections(mStats, mExpenses, savingsDash, _dashEntryStats, null, _dashSecOpts); });
     }
   });
@@ -3992,7 +4004,17 @@ function renderEntries(){
   </div>`;
   setTimeout(fillAllTracks, 0);
 }
-['search-input','filter-cat'].forEach(id=>{const el=document.getElementById(id);el.addEventListener('input',renderEntries);el.addEventListener('change',renderEntries);});
+let _searchDebTimer=null;
+function _debouncedRenderEntries(){clearTimeout(_searchDebTimer);_searchDebTimer=setTimeout(renderEntries,300);}
+['search-input','filter-cat'].forEach(id=>{
+  const el=document.getElementById(id);
+  el.addEventListener('input',()=>{
+    _debouncedRenderEntries();
+    const clr=document.getElementById('search-clear');
+    if(clr&&id==='search-input')clr.style.display=el.value?'flex':'none';
+  });
+  el.addEventListener('change',renderEntries);
+});
 function openAddEntry(){
   editEntryId=null;
   impotMode='montant';
@@ -4071,6 +4093,13 @@ function onEntryCatChange(cat){
     amtRow.style.display='';
   }
 }
+document.getElementById('f-name').addEventListener('input',function(){
+  if(document.getElementById('f-cat').value==='fixe'&&!document.getElementById('f-debit-day').value){
+    const n=this.value.trim().toLowerCase();
+    const match=entries.find(e=>e.cat==='fixe'&&e.name.toLowerCase()===n&&e.debit_day!=null&&(!editEntryId||e.id!==editEntryId));
+    if(match)document.getElementById('f-debit-day').value=match.debit_day;
+  }
+});
 document.getElementById('btn-add-entry').addEventListener('click',openAddEntry);
 document.getElementById('fab-dashboard').addEventListener('click',()=>{ monthlyYear = dashYear; monthlyMonth = dashMonth; window._mlyCtxDash = true; openAddMonthlyExpense(); });
 document.getElementById('fab-entry').addEventListener('click',()=>{
@@ -4102,6 +4131,14 @@ function deleteEntry(id){
     );
   });
 }
+document.getElementById('f-amount').addEventListener('input',function(){
+  const v=this.value;
+  if(v.startsWith('-')||parseFloat(v)<0){
+    const sign=document.getElementById('f-sign');
+    if(sign.value==='pos'){sign.value='neg';onEntrySignChange('neg');}
+    this.value=Math.abs(parseFloat(v)||0)||v.replace('-','');
+  }
+});
 document.getElementById('modal-entry-cancel').onclick=()=>document.getElementById('modal-entry').classList.remove('open');
 document.getElementById('modal-entry').addEventListener('click',e=>{if(e.target.id==='modal-entry')document.getElementById('modal-entry').classList.remove('open');});
 document.getElementById('modal-entry-save').onclick=async ()=>{
@@ -4113,8 +4150,12 @@ document.getElementById('modal-entry-save').onclick=async ()=>{
   const amount=sign*Math.abs(amt);
   const _dd=document.getElementById('f-debit-day').value;
   const debit_day=cat==='fixe'&&_dd!==''?parseInt(_dd):null;
+  btn.disabled=true;
+  const _origTxt=btn.textContent;btn.textContent='✓';btn.style.background='var(--green)';btn.style.color='#fff';
+  await new Promise(r=>setTimeout(r,320));
+  btn.textContent=_origTxt;btn.style.background='';btn.style.color='';
   document.getElementById('modal-entry').classList.remove('open');
-  btn.disabled=true;showLoading();
+  showLoading();
   try{
     if(editEntryId){
       const updated=await API.entries.update(editEntryId,{name,amount,cat,member,debit_day});
@@ -4125,7 +4166,7 @@ document.getElementById('modal-entry-save').onclick=async ()=>{
       entries.push(created);
       showToast('Ligne ajoutée ✓');addInAppNotif('Ligne ajoutée','Votre budget prévisionnel a été mis à jour.');
     }
-    renderEntries();renderDashboard();
+    renderEntries();renderDashboard();_maybeShowSwipeHint();
     _triggerPushAlertCheck();
   }catch(err){
     showApiError('Erreur lors de la sauvegarde : '+err.message);
@@ -4336,7 +4377,7 @@ function _renderMonthlySections(stats, expenses, savingsData = [], entryStats = 
       <div style="margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border)">
         <div style="font-size:var(--fs-xs);font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:${_foyerRavGlow2};margin-bottom:4px">Reste à vivre</div>
         <div style="font-size:clamp(1.8rem,4vw,2.5rem);font-weight:800;letter-spacing:-.04em;color:${_foyerRavColor2};line-height:1.1">${mlyRav>=0?'+':''}${eur(mlyRav)}</div>
-        <div style="font-size:var(--fs-xs);color:var(--muted);margin-top:4px">${mlyRavRate}% du revenu net</div>
+        <div style="font-size:var(--fs-xs);color:var(--muted);margin-top:4px">${mlyRavRate}% du revenu net${_mlyPendingFix>0?` · <span style="color:var(--amber)">⏳ ${eur(_mlyPendingFix)} de fixes à prélever</span>`:''}</div>
       </div>
       <div>
         <div style="font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--green);margin-bottom:6px">Revenus</div>
@@ -4354,7 +4395,7 @@ function _renderMonthlySections(stats, expenses, savingsData = [], entryStats = 
       <div style="margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border)">
         <div style="font-size:var(--fs-xs);font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:${mlyRavGlow};margin-bottom:4px">Reste à vivre</div>
         <div style="font-size:clamp(1.8rem,4vw,2.5rem);font-weight:800;letter-spacing:-.04em;color:${mlyRavColor};line-height:1.1">${mlyRav>=0?'+':''}${eur(mlyRav)}</div>
-        <div style="font-size:var(--fs-xs);color:var(--muted);margin-top:4px">${mlyRavRate}% du revenu net</div>
+        <div style="font-size:var(--fs-xs);color:var(--muted);margin-top:4px">${mlyRavRate}% du revenu net${_mlyPendingFix>0?` · <span style="color:var(--amber)">⏳ ${eur(_mlyPendingFix)} de fixes à prélever</span>`:''}</div>
       </div>
       <div>
         <div style="font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--green);margin-bottom:6px">Revenus</div>
@@ -9141,6 +9182,26 @@ async function connectBank(){
       onExit:(err)=>{if(err)console.warn('[Plaid]',err);},
     }).open();
   }catch(e){alert('Erreur : '+e.message);}
+}
+
+// ── Hint swipe au premier usage ──
+function _maybeShowSwipeHint(){
+  if(window.innerWidth>640)return;
+  if(localStorage.getItem('_zenithSwipeHinted'))return;
+  const card=document.querySelector('.entry-cards .swipeable');
+  if(!card||!card.dataset.swipeFn)return;
+  localStorage.setItem('_zenithSwipeHinted','1');
+  setTimeout(()=>{
+    card.style.transition='transform .35s ease';
+    card.style.transform='translateX(-40px)';
+    const zone=card.parentElement?.querySelector('.swipe-del-zone');
+    if(zone)zone.style.opacity='0.5';
+    setTimeout(()=>{
+      card.style.transform='';
+      if(zone)zone.style.opacity='0';
+      setTimeout(()=>{card.style.transition='';},350);
+    },500);
+  },800);
 }
 
 // ── Swipe-to-delete sur les cartes mobiles ──
