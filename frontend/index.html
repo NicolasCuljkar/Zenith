@@ -6096,7 +6096,7 @@ function renderSavings(){
   const _savSort=arr=>[...arr].sort((a,b)=>b.year-a.year||MONTH_NAMES.indexOf(b.month)-MONTH_NAMES.indexOf(a.month));
   const latestFirst=_savSort(savings.filter(s=>s.member===first))[0];
   const latestSecond=_savSort(savings.filter(s=>s.member===second))[0];
-  const totalSav=(latestFirst?.amount||0)+(latestSecond?.amount||0);
+  const totalSav=showMembers.reduce((sum,m)=>sum+(_savSort(savings.filter(s=>s.member===m))[0]?.amount||0),0);
   // ── Objectif annuel ──
   const _goalYear=new Date().getFullYear();
   const _goalKey=`zenith_goal_${_goalYear}`;
