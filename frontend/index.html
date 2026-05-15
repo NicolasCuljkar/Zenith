@@ -3467,7 +3467,7 @@ async function renderDashboard(){
   const _dashSecMember = dashboardMember === 'all' ? 'Commun' : dashboardMember;
   const _dashEntryStats = { rav: bStats.rav };
   const _dashSecOpts = { skipHero:true, containerId:'dash-monthly-sections', searchId:'dash-mly-search', catId:'dash-mly-cat', member:_dashSecMember, year:dashYear, month:dashMonth };
-  if (mStats) _renderMonthlySections(mStats, mExpenses, savingsDash, _dashEntryStats, null, _dashSecOpts);
+  if (mStats) { _lastMlyOpts = _dashSecOpts; _renderMonthlySections(mStats, mExpenses, savingsDash, _dashEntryStats, null, _dashSecOpts); }
   let _mlySearchTimer=null;
   ['dash-mly-search','dash-mly-cat'].forEach(id => {
     const el = document.getElementById(id);
@@ -3620,7 +3620,7 @@ function _cycleMlySort(){
   _mlySort=cycle[(cycle.indexOf(_mlySort)+1)%cycle.length];
   const lbl={amount_desc:'Montant ↓',name_asc:'Nom A→Z',amount_asc:'Montant ↑',date_asc:'Date ↑'}[_mlySort];
   document.querySelectorAll('.mly-sort-btn').forEach(b=>b.textContent=lbl);
-  if(_lastMonthlyStats)_renderMonthlySections(_lastMonthlyStats,monthlyExpenses,_lastMonthlySavings,_lastMonthlyEntryStats,_lastMlyMemberStats);
+  if(_lastMonthlyStats)_renderMonthlySections(_lastMonthlyStats,monthlyExpenses,_lastMonthlySavings,_lastMonthlyEntryStats,_lastMlyMemberStats,_lastMlyOpts);
 }
 function _mlySorted(arr){
   if(_mlySort==='name_asc')return [...arr].sort((a,b)=>a.name.localeCompare(b.name,'fr'));
@@ -4253,7 +4253,7 @@ document.getElementById('modal-entry-save').onclick=async ()=>{
 let monthlyYear     = new Date().getFullYear();
 let monthlyMonth    = new Date().getMonth() + 1; // 1-12
 let monthlyExpenses = [];
-let _lastMonthlyStats = null, _lastMonthlySavings = [], _lastMonthlyEntryStats = null, _lastMlyMemberStats = null, _lastMonthlyStatsPrev = null;
+let _lastMonthlyStats = null, _lastMonthlySavings = [], _lastMonthlyEntryStats = null, _lastMlyMemberStats = null, _lastMonthlyStatsPrev = null, _lastMlyOpts = null;
 let monthlySelected = new Set();
 let monthlySelectedSuppress = new Map(); // entryId → entry (lignes auto à supprimer ce mois)
 let editMonthlyId      = null;
@@ -4339,7 +4339,7 @@ async function renderMonthly() {
       }
     }
     monthlyExpenses = expenses;
-    _lastMonthlyStats = stats; _lastMonthlySavings = savingsData; _lastMonthlyEntryStats = entryStats; _lastMlyMemberStats = mlyMemberStats; _lastMonthlyStatsPrev = prevStats;
+    _lastMonthlyStats = stats; _lastMonthlySavings = savingsData; _lastMonthlyEntryStats = entryStats; _lastMlyMemberStats = mlyMemberStats; _lastMonthlyStatsPrev = prevStats; _lastMlyOpts = null;
     // Synchronise le tableau global savings pour que openEditSaving/deleteSaving fonctionnent depuis suivi mensuel
     savingsData.forEach(s => {
       const idx = savings.findIndex(x => x.id === s.id);
