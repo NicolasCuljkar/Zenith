@@ -5,838 +5,1000 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Zénith — Documentation</title>
 <style>
-  :root {
-    --bg:#13121f;--surface:#1e1c2e;--surface2:#252338;--border:#2e2b44;
-    --text:#e8e6f0;--muted:#a8a6c8;--hint:#6e6c8a;
-    --green:#3ddba0;--green-bg:#0f3326;
-    --red:#ff7f7f;--red-bg:#341818;
-    --blue:#6eb8ff;--blue-bg:#102040;
-    --amber:#f59e0b;--amber-bg:#2a1f00;
-    --purple:#c084fc;
-    --r:8px;--rl:12px;
-    --fs-xs:13px;--fs-sm:14px;--fs-base:16px;--fs-md:16px;--fs-lg:18px;--fs-title:22px;
-  }
-  *{box-sizing:border-box;margin:0;padding:0}
-  body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:var(--fs-base);line-height:1.6;display:flex;min-height:100vh}
+:root{
+  --bg:#0e0d1a;--surface:#181629;--surface2:#1f1d30;--surface3:#252340;
+  --border:#2a2742;--border2:#332f50;
+  --text:#eceaf8;--muted:#9896b8;--hint:#5e5c7a;
+  --green:#3ddba0;--green-bg:#0a2b20;
+  --red:#ff7f7f;--red-bg:#2e1414;
+  --blue:#6eb8ff;--blue-bg:#0d1e36;
+  --amber:#f5a623;--amber-bg:#271a00;
+  --purple:#c084fc;--purple-bg:#1e1030;
+  --grad:linear-gradient(135deg,#6eb8ff,#c084fc);
+  --r:8px;--rl:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;font-size:16px;line-height:1.65;display:flex;justify-content:center;min-height:100vh}
+.app-wrap{display:flex;width:100%;max-width:1320px;min-height:100vh;box-shadow:0 0 80px #0008}
 
-  /* ── Sidebar ── */
-  .sidebar{width:260px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);position:sticky;top:0;height:100vh;overflow-y:auto;padding:24px 0;scrollbar-width:thin}
-  .sidebar-logo{padding:0 20px 20px;border-bottom:1px solid var(--border);margin-bottom:16px}
-  .sidebar-logo .logo-title{font-size:22px;font-weight:800;letter-spacing:-.04em;background:linear-gradient(135deg,#6eb8ff,#c084fc);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-  .sidebar-logo .logo-sub{font-size:var(--fs-xs);color:var(--muted);margin-top:2px}
-  .sidebar-section{padding:4px 12px;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--hint);margin:12px 0 4px}
-  .sidebar a{display:block;padding:7px 20px;font-size:var(--fs-sm);color:var(--muted);text-decoration:none;border-left:2px solid transparent;transition:all .15s}
-  .sidebar a:hover,.sidebar a.active{color:var(--text);background:var(--surface2);border-left-color:var(--blue)}
+/* ══ SIDEBAR ══ */
+.sidebar{width:272px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);position:sticky;top:0;height:100vh;overflow-y:auto;padding:0 0 32px;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+.sb-header{padding:24px 22px 20px;border-bottom:1px solid var(--border);margin-bottom:8px}
+.sb-logo{font-size:24px;font-weight:900;letter-spacing:-.05em;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:2px}
+.sb-tagline{font-size:12px;color:var(--hint);font-weight:500}
+.sb-group{padding:14px 22px 4px;font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--hint)}
+.sb-link{display:flex;align-items:center;gap:8px;padding:8px 22px;font-size:14px;color:var(--muted);text-decoration:none;border-left:3px solid transparent;transition:all .15s;line-height:1.2}
+.sb-link svg{flex-shrink:0;opacity:.6}
+.sb-link:hover{color:var(--text);background:var(--surface2);border-left-color:var(--border2)}
+.sb-link.active{color:var(--blue);background:color-mix(in srgb,var(--blue) 8%,var(--surface));border-left-color:var(--blue)}
+.sb-link.active svg{opacity:1}
 
-  /* ── Main content ── */
-  .content{flex:1;max-width:860px;padding:40px 48px;min-width:0}
-  @media(max-width:900px){.sidebar{display:none}.content{padding:24px 20px}}
+/* ══ CONTENT ══ */
+.content{flex:1;min-width:0;padding:0}
+.section{padding:48px 56px;border-bottom:1px solid var(--border)}
+.section:last-child{border-bottom:none}
+@media(max-width:960px){.sidebar{display:none}.section{padding:32px 20px}}
 
-  /* ── Typography ── */
-  h1{font-size:28px;font-weight:800;letter-spacing:-.04em;margin-bottom:8px}
-  h2{font-size:20px;font-weight:700;letter-spacing:-.02em;margin:40px 0 14px;padding-bottom:10px;border-bottom:2px solid var(--border)}
-  h3{font-size:15px;font-weight:700;margin:24px 0 10px;color:var(--text)}
-  h4{font-size:var(--fs-sm);font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:18px 0 8px}
-  p{margin-bottom:12px;color:var(--muted);line-height:1.7}
-  p strong{color:var(--text)}
-  ul,ol{margin:0 0 14px 20px;color:var(--muted)}
-  li{margin-bottom:5px;line-height:1.6}
-  li strong{color:var(--text)}
-  code{background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:1px 6px;font-family:'SF Mono',Consolas,monospace;font-size:12px;color:var(--blue)}
-  .lead{font-size:var(--fs-lg);color:var(--muted);margin-bottom:24px;line-height:1.6}
+/* ══ HERO ══ */
+.hero{background:linear-gradient(160deg,#0d1e36 0%,#1e1030 50%,#0a2b20 100%);padding:60px 56px 52px;border-bottom:1px solid var(--border);position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 60% at 80% 40%,#6eb8ff0a,transparent),radial-gradient(ellipse 50% 50% at 20% 70%,#c084fc08,transparent)}
+.hero-label{font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--blue);margin-bottom:12px}
+.hero h1{font-size:40px;font-weight:900;letter-spacing:-.04em;line-height:1.1;margin-bottom:14px;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.hero-lead{font-size:17px;color:var(--muted);line-height:1.6;max-width:600px;margin-bottom:28px}
+.hero-pills{display:flex;gap:8px;flex-wrap:wrap}
+.hero-pill{background:var(--surface2);border:1px solid var(--border2);border-radius:99px;padding:5px 14px;font-size:13px;font-weight:600;color:var(--muted)}
 
-  /* ── Cards ── */
-  .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:18px 20px;margin-bottom:16px}
-  .card-head{font-size:var(--fs-xs);font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:12px}
+/* ══ TYPOGRAPHY ══ */
+.sec-label{font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--blue);margin-bottom:10px}
+h2{font-size:28px;font-weight:800;letter-spacing:-.03em;margin-bottom:6px;line-height:1.2}
+h2 .dim{color:var(--hint)}
+.sec-lead{font-size:16px;color:var(--muted);line-height:1.6;margin-bottom:28px;max-width:640px}
+h3{font-size:19px;font-weight:700;letter-spacing:-.02em;margin:36px 0 12px;display:flex;align-items:center;gap:10px}
+h3 .h3-icon{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+h4{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin:24px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+p{color:var(--muted);line-height:1.7;margin-bottom:14px}
+p strong,li strong{color:var(--text)}
+ul,ol{margin:0 0 16px 0;padding:0;list-style:none}
+ul li,ol li{padding:5px 0 5px 22px;color:var(--muted);line-height:1.6;border-bottom:1px solid var(--border);font-size:15px;position:relative}
+ul li:last-child,ol li:last-child{border-bottom:none}
+ul li::before{content:'›';position:absolute;left:4px;color:var(--blue);font-weight:700}
+ol{counter-reset:ol}
+ol li{counter-increment:ol}
+ol li::before{content:counter(ol);position:absolute;left:0;font-size:11px;font-weight:800;color:var(--blue);background:var(--blue-bg);border-radius:4px;width:16px;height:16px;display:flex;align-items:center;justify-content:center;top:8px}
+code{background:var(--surface3);border:1px solid var(--border2);border-radius:5px;padding:2px 8px;font-family:'SF Mono',Consolas,monospace;font-size:13px;color:var(--blue)}
+kbd{background:var(--surface2);border:1px solid var(--border2);border-bottom:2px solid var(--border2);border-radius:6px;padding:3px 9px;font-size:13px;font-weight:700;color:var(--text);font-family:inherit}
 
-  /* ── Tip / Note boxes ── */
-  .tip,.note,.warn{border-radius:var(--r);padding:12px 16px;margin:16px 0;font-size:var(--fs-sm);display:flex;gap:10px;align-items:flex-start}
-  .tip{background:var(--green-bg);border:1px solid var(--green);color:var(--green)}
-  .note{background:var(--blue-bg);border:1px solid var(--blue);color:var(--blue)}
-  .warn{background:var(--amber-bg);border:1px solid var(--amber);color:var(--amber)}
-  .tip-icon,.note-icon,.warn-icon{font-size:14px;flex-shrink:0;margin-top:1px}
+/* ══ BOXES ══ */
+.tip,.note,.warn,.info{border-radius:var(--rl);padding:14px 18px;margin:20px 0;font-size:14px;display:flex;gap:12px;align-items:flex-start;line-height:1.6}
+.tip{background:var(--green-bg);border:1px solid #1a4a35;color:#7eedd3}
+.note{background:var(--blue-bg);border:1px solid #1a3a5a;color:#9fd0ff}
+.warn{background:var(--amber-bg);border:1px solid #3a2800;color:#f5c878}
+.info{background:var(--surface2);border:1px solid var(--border2);color:var(--muted)}
+.box-icon{font-size:16px;flex-shrink:0;margin-top:1px}
 
-  /* ── Mockups ── */
-  .mockup{background:var(--surface2);border:1px solid var(--border);border-radius:var(--rl);padding:16px;margin:16px 0;position:relative;overflow:hidden}
-  .mockup-label{position:absolute;top:8px;right:10px;font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--hint);opacity:.6}
-  .mockup-topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:10px 16px;display:flex;align-items:center;justify-content:space-between;margin:-16px -16px 14px;border-radius:var(--rl) var(--rl) 0 0}
-  .mockup-tabs{display:flex;gap:0;border-bottom:1px solid var(--border);margin:-16px -16px 14px;overflow:hidden;border-radius:var(--rl) var(--rl) 0 0}
-  .mockup-tab{padding:8px 16px;font-size:var(--fs-xs);font-weight:600;color:var(--muted);border-bottom:2px solid transparent}
-  .mockup-tab.active{color:var(--blue);border-bottom-color:var(--blue)}
+/* ══ TABLE ══ */
+.tbl-wrap{border:1px solid var(--border);border-radius:var(--rl);overflow:hidden;margin:16px 0 24px}
+table{width:100%;border-collapse:collapse;font-size:15px}
+th{text-align:left;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--hint);padding:11px 16px;background:var(--surface2);border-bottom:1px solid var(--border)}
+td{padding:11px 16px;border-bottom:1px solid var(--border);color:var(--muted);vertical-align:top}
+td:first-child{color:var(--text);font-weight:600;white-space:nowrap}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:color-mix(in srgb,var(--blue) 3%,transparent)}
 
-  /* KPI mockup */
-  .kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-bottom:12px}
-  .kpi-box{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 12px}
-  .kpi-label{font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
-  .kpi-val{font-size:17px;font-weight:800;letter-spacing:-.03em}
-  .kpi-sub{font-size:10px;color:var(--muted);margin-top:2px}
+/* ══ MOCKUPS ══ */
+.mockup{background:var(--surface2);border:1px solid var(--border2);border-radius:var(--rl);overflow:hidden;margin:20px 0}
+.mockup-bar{background:var(--surface);border-bottom:1px solid var(--border);padding:10px 16px;display:flex;align-items:center;gap:8px}
+.mockup-dot{width:10px;height:10px;border-radius:50%}
+.mockup-title{flex:1;text-align:center;font-size:12px;color:var(--hint);font-weight:600}
+.mockup-body{padding:20px}
+.mockup-body.tight{padding:14px}
+.mockup-body.no-pad{padding:0}
+.mockup-topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:10px 18px;display:flex;align-items:center;justify-content:space-between}
+.mockup-tabs{display:flex;background:var(--surface);border-bottom:1px solid var(--border)}
+.mockup-tab{padding:10px 18px;font-size:13px;font-weight:600;color:var(--muted);border-bottom:2px solid transparent;white-space:nowrap}
+.mockup-tab.active{color:var(--blue);border-bottom-color:var(--blue);background:color-mix(in srgb,var(--blue) 5%,transparent)}
 
-  /* Entry row mockup */
-  .entry-row{display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--surface);border-radius:8px;margin-bottom:6px;border-left:3px solid}
-  .entry-name{font-size:var(--fs-sm);font-weight:600;flex:1}
-  .entry-amt{font-size:var(--fs-sm);font-weight:700}
-  .entry-badge{font-size:10px;font-weight:700;padding:1px 6px;border-radius:4px}
+/* ══ CALLOUT ANNOTATIONS ══ */
+.annotated{position:relative}
+.callout{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:var(--grad);color:#fff;font-size:11px;font-weight:800;flex-shrink:0;vertical-align:middle;margin:0 4px}
+.callout-list{margin:16px 0 0;padding:0;list-style:none;border:1px solid var(--border);border-radius:var(--rl);overflow:hidden}
+.callout-list li{display:flex;align-items:flex-start;gap:12px;padding:11px 16px;border-bottom:1px solid var(--border);font-size:14px;color:var(--muted)}
+.callout-list li:last-child{border-bottom:none}
+.callout-list li strong{color:var(--text)}
 
-  /* Section group mockup */
-  .sec-group{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);overflow:hidden;margin-bottom:10px}
-  .sec-header{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:2px solid}
-  .sec-body{padding:10px 14px}
+/* ══ KPIs ══ */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:14px}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 14px}
+.kpi-lbl{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--hint);margin-bottom:5px}
+.kpi-val{font-size:20px;font-weight:900;letter-spacing:-.03em;line-height:1}
+.kpi-sub{font-size:11px;color:var(--muted);margin-top:4px}
 
-  /* Badge */
-  .badge{display:inline-block;font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px}
-  .badge-green{background:var(--green-bg);color:var(--green)}
-  .badge-red{background:var(--red-bg);color:var(--red)}
-  .badge-blue{background:var(--blue-bg);color:var(--blue)}
-  .badge-amber{background:var(--amber-bg);color:var(--amber)}
+/* ══ ENTRY ROWS ══ */
+.entry-row{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--surface);border-radius:10px;margin-bottom:6px;border-left:3px solid}
+.entry-name{font-size:14px;font-weight:600;flex:1}
+.entry-amt{font-size:14px;font-weight:800;white-space:nowrap}
+.entry-badge{font-size:11px;font-weight:700;padding:2px 7px;border-radius:5px}
 
-  /* Shortcut key */
-  kbd{background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:2px 7px;font-family:inherit;font-size:12px;font-weight:700;color:var(--text)}
+/* ══ BADGES ══ */
+.badge{display:inline-block;font-size:11px;font-weight:800;padding:2px 8px;border-radius:5px;letter-spacing:.02em}
+.badge-green{background:var(--green-bg);color:var(--green);border:1px solid #1a4a35}
+.badge-red{background:var(--red-bg);color:var(--red);border:1px solid #4a1a1a}
+.badge-blue{background:var(--blue-bg);color:var(--blue);border:1px solid #1a3a5a}
+.badge-amber{background:var(--amber-bg);color:var(--amber);border:1px solid #3a2800}
 
-  /* Steps */
-  .steps{counter-reset:step;list-style:none;margin:0 0 16px;padding:0}
-  .steps li{counter-increment:step;display:flex;gap:12px;margin-bottom:12px;align-items:flex-start}
-  .steps li::before{content:counter(step);background:linear-gradient(135deg,#6eb8ff,#c084fc);color:#fff;font-size:11px;font-weight:800;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
-  .steps li span{color:var(--muted);font-size:var(--fs-sm);line-height:1.6}
-  .steps li span strong{color:var(--text)}
+/* ══ PROGRESS BAR ══ */
+.prog-wrap{height:8px;background:var(--surface3);border-radius:99px;overflow:hidden;margin:8px 0}
+.prog-bar{height:100%;border-radius:99px}
 
-  /* Two-col */
-  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
-  @media(max-width:600px){.two-col{grid-template-columns:1fr}}
+/* ══ STEPS ══ */
+.steps{margin:16px 0;padding:0;list-style:none;border:1px solid var(--border);border-radius:var(--rl);overflow:hidden;counter-reset:step}
+.steps li{counter-increment:step;display:flex;gap:14px;padding:14px 18px;border-bottom:1px solid var(--border);align-items:flex-start;font-size:15px;color:var(--muted)}
+.steps li:last-child{border-bottom:none}
+.steps li::before{content:counter(step);background:var(--grad);color:#fff;font-size:12px;font-weight:800;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
 
-  /* Divider */
-  hr{border:none;border-top:1px solid var(--border);margin:32px 0}
+/* ══ TWO-COL ══ */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px}
+@media(max-width:640px){.two-col{grid-template-columns:1fr}}
 
-  /* Page header */
-  .page-header{padding-bottom:24px;border-bottom:1px solid var(--border);margin-bottom:32px}
-  .page-header .version{font-size:var(--fs-xs);font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--hint);margin-bottom:8px}
+/* ══ MINI CARD ══ */
+.mini-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:16px 18px}
+.mini-card-title{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--hint);margin-bottom:10px}
 
-  /* Table */
-  table{width:100%;border-collapse:collapse;margin-bottom:16px;font-size:var(--fs-sm)}
-  th{text-align:left;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--hint);padding:8px 12px;border-bottom:1px solid var(--border)}
-  td{padding:8px 12px;border-bottom:1px solid var(--border);color:var(--muted)}
-  td:first-child{color:var(--text);font-weight:600}
-  tr:last-child td{border-bottom:none}
+/* ══ SLIDER MOCKUP ══ */
+.slider-track{height:8px;background:var(--surface3);border-radius:99px;position:relative;margin:12px 0}
+.slider-fill{height:100%;border-radius:99px;background:var(--grad);position:absolute;left:0}
+.slider-thumb{width:20px;height:20px;border-radius:50%;background:#fff;border:3px solid var(--blue);position:absolute;top:50%;transform:translate(-50%,-50%);cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.4)}
 
-  /* Annotation */
-  .anno{display:inline-block;background:linear-gradient(135deg,#6eb8ff,#c084fc);color:#fff;font-size:10px;font-weight:800;border-radius:50%;width:18px;height:18px;text-align:center;line-height:18px;margin-right:4px;flex-shrink:0}
+/* ══ SECTION GROUP ══ */
+.sec-group{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);overflow:hidden;margin-bottom:10px}
+.sec-hdr{display:flex;justify-content:space-between;align-items:center;padding:11px 16px}
+.sec-body{padding:10px 14px}
 
-  /* Progress bar */
-  .prog-wrap{height:6px;background:var(--surface2);border-radius:99px;overflow:hidden;margin:6px 0}
-  .prog-bar{height:100%;border-radius:99px}
+/* ══ TAG ══ */
+.tag{display:inline-flex;align-items:center;gap:5px;background:var(--surface2);border:1px solid var(--border2);border-radius:99px;padding:3px 10px;font-size:13px;font-weight:600;color:var(--muted)}
+.tag-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+
+/* ══ DIVIDER ══ */
+.divider{border:none;border-top:1px solid var(--border);margin:40px 0}
+
+/* ══ AGENDA ══ */
+.agenda-grid{display:grid;grid-template-columns:auto 1fr auto;gap:6px 14px;align-items:center;font-size:14px}
+.agenda-day{font-weight:800;border-radius:5px;padding:2px 8px;text-align:center;font-size:13px}
+
+/* ══ SHORTCUT ROW ══ */
+.sc-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);font-size:14px}
+.sc-row:last-child{border-bottom:none}
+.sc-keys{display:flex;gap:4px;align-items:center}
 </style>
 </head>
 <body>
+<div class="app-wrap">
 
-<!-- ── Sidebar ── -->
+<!-- ══ SIDEBAR ══ -->
 <nav class="sidebar">
-  <div class="sidebar-logo">
-    <div class="logo-title">Zénith</div>
-    <div class="logo-sub">Documentation utilisateur</div>
+  <div class="sb-header">
+    <div class="sb-logo">Zénith</div>
+    <div class="sb-tagline">Documentation utilisateur</div>
   </div>
 
-  <div class="sidebar-section">Démarrage</div>
-  <a href="#intro">Vue d'ensemble</a>
-  <a href="#connexion">Connexion & Profil</a>
-  <a href="#foyer">Foyer partagé</a>
-  <a href="#navigation">Navigation</a>
+  <div class="sb-group">Démarrage</div>
+  <a href="#intro" class="sb-link"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>Vue d'ensemble</a>
+  <a href="#connexion" class="sb-link"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Connexion & Profil</a>
+  <a href="#foyer" class="sb-link"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>Foyer partagé</a>
 
-  <div class="sidebar-section">Onglets</div>
-  <a href="#suivi">Suivi mensuel</a>
-  <a href="#budget">Budget prévisionnel</a>
-  <a href="#simulation">Simulation</a>
-  <a href="#epargne">Épargne</a>
-  <a href="#analyse">Analyse</a>
+  <div class="sb-group">Onglets</div>
+  <a href="#suivi" class="sb-link"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Suivi mensuel</a>
+  <a href="#slider" class="sb-link" style="padding-left:38px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="12" x2="20" y2="12"/><circle cx="12" cy="12" r="3"/></svg>Curseur épargne / loisir</a>
+  <a href="#corrections" class="sb-link" style="padding-left:38px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Corriger une charge</a>
+  <a href="#budget" class="sb-link"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>Budget prévisionnel</a>
+  <a href="#ajouter-entree" class="sb-link" style="padding-left:38px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Ajouter une entrée</a>
+  <a href="#simulation" class="sb-link"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Simulation</a>
+  <a href="#epargne" class="sb-link"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Épargne</a>
+  <a href="#objectif" class="sb-link" style="padding-left:38px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>Objectif annuel</a>
+  <a href="#analyse" class="sb-link"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Analyse</a>
 
-  <div class="sidebar-section">Fonctionnalités</div>
-  <a href="#recherche">Recherche globale</a>
-  <a href="#alertes">Alertes budgétaires</a>
-  <a href="#notifications">Notifications</a>
-  <a href="#mobile">Usage mobile</a>
-  <a href="#raccourcis">Raccourcis clavier</a>
+  <div class="sb-group">Outils</div>
+  <a href="#recherche" class="sb-link"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>Recherche globale</a>
+  <a href="#alertes" class="sb-link"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>Alertes & Notifs</a>
+  <a href="#mobile" class="sb-link"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>Usage mobile</a>
+  <a href="#raccourcis" class="sb-link"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M8 14h8"/></svg>Raccourcis clavier</a>
+  <a href="#faq" class="sb-link"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>FAQ</a>
 </nav>
 
-<!-- ── Main content ── -->
+<!-- ══ MAIN ══ -->
 <main class="content">
 
-  <!-- ══════════════════════════════════ INTRO ══════════════════════════════════ -->
-  <section id="intro">
-    <div class="page-header">
-      <div class="version">Documentation v1.0</div>
-      <h1>Zénith — Guide utilisateur</h1>
-      <p class="lead">Zénith est une application de gestion budgétaire familiale. Elle permet de suivre vos revenus, dépenses fixes, dépenses variables, votre épargne et d'analyser vos habitudes financières mois par mois.</p>
-    </div>
+<!-- ════════════════ HERO ════════════════ -->
+<div class="hero" id="intro">
+  <div class="hero-label">Documentation v1.0</div>
+  <h1>Guide utilisateur Zénith</h1>
+  <p class="hero-lead">Zénith est votre gestionnaire budgétaire familial. Suivez vos revenus, dépenses fixes, dépenses variables et épargne — mois par mois, en temps réel.</p>
+  <div class="hero-pills">
+    <div class="hero-pill">Suivi mensuel</div>
+    <div class="hero-pill">Budget prévisionnel</div>
+    <div class="hero-pill">Épargne & Objectifs</div>
+    <div class="hero-pill">Analyse multi-mois</div>
+    <div class="hero-pill">Foyer partagé</div>
+  </div>
+</div>
 
-    <h3>Les 4 onglets principaux</h3>
-    <div class="mockup">
-      <div class="mockup-label">Aperçu</div>
+<!-- ════════════════ VUE D'ENSEMBLE ════════════════ -->
+<section class="section" id="overview">
+  <div class="sec-label">Démarrage rapide</div>
+  <h2>Vue d'ensemble</h2>
+  <p class="sec-lead">L'application s'organise autour de 4 onglets principaux accessibles depuis la barre de navigation en haut.</p>
+
+  <div class="mockup">
+    <div class="mockup-bar">
+      <div class="mockup-dot" style="background:#ff5f57"></div>
+      <div class="mockup-dot" style="background:#ffbd2e"></div>
+      <div class="mockup-dot" style="background:#28c840"></div>
+      <div class="mockup-title">Zénith — Application</div>
+    </div>
+    <div class="mockup-body no-pad">
+      <div class="mockup-topbar">
+        <div style="font-size:17px;font-weight:900;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent">Zénith</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="padding:3px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:99px;font-size:12px;color:var(--muted)">Nicolas</div>
+          <div class="callout" style="width:26px;height:26px;font-size:11px;background:var(--surface2);color:var(--muted);border:1px solid var(--border)">ℹ</div>
+          <div style="width:26px;height:26px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:13px">🔔</div>
+          <div style="width:30px;height:30px;border-radius:50%;background:var(--grad);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff">N</div>
+        </div>
+      </div>
       <div class="mockup-tabs">
-        <div class="mockup-tab active">Suivi mensuel</div>
-        <div class="mockup-tab">Budget</div>
-        <div class="mockup-tab">Épargne</div>
-        <div class="mockup-tab">Analyse</div>
+        <div class="mockup-tab active">⊞ Suivi mensuel</div>
+        <div class="mockup-tab">☰ Budget</div>
+        <div class="mockup-tab">◷ Épargne</div>
+        <div class="mockup-tab">∿ Analyse</div>
       </div>
-      <p style="margin:0;font-size:var(--fs-sm)">La barre d'onglets est toujours visible en haut. Sur mobile, glissez gauche/droite pour naviguer entre onglets.</p>
-    </div>
-
-    <div class="two-col">
-      <div class="card">
-        <div class="card-head">Suivi mensuel</div>
-        <p style="margin:0;font-size:var(--fs-sm)">Vue en temps réel du mois en cours : ce que vous avez dépensé, ce qu'il reste, l'épargne du mois.</p>
-      </div>
-      <div class="card">
-        <div class="card-head">Budget prévisionnel</div>
-        <p style="margin:0;font-size:var(--fs-sm)">Configurez vos revenus, charges fixes, dépenses variables et épargne prévus chaque mois.</p>
-      </div>
-      <div class="card">
-        <div class="card-head">Épargne</div>
-        <p style="margin:0;font-size:var(--fs-sm)">Enregistrez votre capital épargne chaque mois et suivez votre progression vers un objectif annuel.</p>
-      </div>
-      <div class="card">
-        <div class="card-head">Analyse</div>
-        <p style="margin:0;font-size:var(--fs-sm)">Graphiques et statistiques sur plusieurs mois : tendances, records, répartition des dépenses.</p>
+      <div style="padding:20px;display:grid;grid-template-columns:repeat(4,1fr);gap:10px">
+        <div class="kpi"><div class="kpi-lbl">Reste à vivre</div><div class="kpi-val" style="color:var(--green)">+256 €</div><div class="kpi-sub">après épargne</div></div>
+        <div class="kpi"><div class="kpi-lbl">Dépenses</div><div class="kpi-val" style="color:var(--red)">1 840 €</div><div class="kpi-sub">réelles ce mois</div></div>
+        <div class="kpi"><div class="kpi-lbl">Épargne</div><div class="kpi-val" style="color:var(--blue)">+350 €</div><div class="kpi-sub">du mois</div></div>
+        <div class="kpi"><div class="kpi-lbl">Taux dépenses</div><div class="kpi-val" style="color:var(--amber)">72 %</div><div class="kpi-sub">du revenu net</div></div>
       </div>
     </div>
-  </section>
+  </div>
 
-  <hr>
+  <div class="two-col">
+    <div class="mini-card"><div class="mini-card-title" style="color:var(--blue)">⊞ Suivi mensuel</div><p style="margin:0;font-size:14px">Vue temps réel du mois : ce qui a été dépensé, ce qu'il reste, l'épargne réalisée. Naviguez mois par mois.</p></div>
+    <div class="mini-card"><div class="mini-card-title" style="color:var(--amber)">☰ Budget prévisionnel</div><p style="margin:0;font-size:14px">Configurez vos revenus, charges fixes, dépenses variables. Ce sont vos données de référence permanentes.</p></div>
+    <div class="mini-card"><div class="mini-card-title" style="color:var(--green)">◷ Épargne</div><p style="margin:0;font-size:14px">Enregistrez votre capital épargne chaque mois. Suivez votre progression vers un objectif annuel.</p></div>
+    <div class="mini-card"><div class="mini-card-title" style="color:var(--purple)">∿ Analyse</div><p style="margin:0;font-size:14px">Graphiques et statistiques sur plusieurs mois : tendances, records, répartitions par catégorie.</p></div>
+  </div>
+</section>
 
-  <!-- ══════════════════════════════════ CONNEXION ══════════════════════════════════ -->
-  <section id="connexion">
-    <h2>Connexion &amp; Profil</h2>
+<!-- ════════════════ CONNEXION ════════════════ -->
+<section class="section" id="connexion">
+  <div class="sec-label">Compte</div>
+  <h2>Connexion &amp; Profil</h2>
+  <p class="sec-lead">À l'ouverture, Zénith affiche les profils disponibles. Sélectionnez le vôtre et saisissez votre mot de passe.</p>
 
-    <h3>Se connecter</h3>
-    <p>À l'ouverture de l'application, l'écran de connexion affiche les profils disponibles. Cliquez sur votre avatar puis entrez votre mot de passe.</p>
-
-    <div class="mockup">
-      <div class="mockup-label">Écran de connexion</div>
-      <div style="display:flex;gap:12px;justify-content:center;padding:10px 0">
-        <div style="text-align:center">
-          <div style="width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#6eb8ff,#3ddba0);margin:0 auto 6px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#fff">N</div>
-          <div style="font-size:var(--fs-xs);color:var(--text);font-weight:600">Nicolas</div>
+  <div class="mockup">
+    <div class="mockup-bar"><div class="mockup-dot" style="background:#ff5f57"></div><div class="mockup-dot" style="background:#ffbd2e"></div><div class="mockup-dot" style="background:#28c840"></div><div class="mockup-title">Écran de connexion</div></div>
+    <div class="mockup-body" style="text-align:center;padding:30px 20px">
+      <p style="font-size:13px;color:var(--hint);margin-bottom:20px">Choisissez votre profil</p>
+      <div style="display:flex;gap:20px;justify-content:center;margin-bottom:24px">
+        <div style="text-align:center;cursor:pointer">
+          <div style="width:60px;height:60px;border-radius:50%;background:var(--grad);margin:0 auto 8px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;color:#fff;box-shadow:0 4px 20px #6eb8ff30">N</div>
+          <div style="font-size:14px;font-weight:700">Nicolas</div>
         </div>
-        <div style="text-align:center;opacity:.5">
-          <div style="width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#e06fa0,#c084fc);margin:0 auto 6px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#fff">C</div>
-          <div style="font-size:var(--fs-xs);color:var(--text);font-weight:600">Carla</div>
+        <div style="text-align:center;cursor:pointer;opacity:.5">
+          <div style="width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,#e06fa0,#c084fc);margin:0 auto 8px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;color:#fff">C</div>
+          <div style="font-size:14px;font-weight:700">Carla</div>
         </div>
       </div>
+      <input type="password" placeholder="Mot de passe…" style="padding:10px 16px;background:var(--surface);border:1px solid var(--border2);border-radius:var(--r);color:var(--text);font-size:14px;width:220px;margin-bottom:12px">
+      <br>
+      <div style="display:inline-block;background:var(--grad);color:#fff;padding:9px 28px;border-radius:var(--r);font-size:14px;font-weight:700;cursor:pointer">Se connecter</div>
     </div>
+  </div>
 
-    <h3>Gérer son profil</h3>
-    <p>Cliquez sur votre <strong>avatar en haut à droite</strong> de l'application pour accéder aux paramètres de votre profil.</p>
+  <h3><span class="h3-icon" style="background:var(--surface2)">⚙</span>Paramètres du profil</h3>
+  <p>Cliquez sur votre <strong>avatar (initiale colorée) en haut à droite</strong> pour accéder aux paramètres.</p>
 
+  <div class="tbl-wrap">
     <table>
       <thead><tr><th>Paramètre</th><th>Description</th></tr></thead>
       <tbody>
-        <tr><td>Nom & Email</td><td>Modifiez vos informations d'identification</td></tr>
-        <tr><td>Mot de passe</td><td>Changez votre mot de passe actuel</td></tr>
-        <tr><td>Couleur</td><td>Choisissez une couleur associée à votre profil (utilisée dans les graphiques)</td></tr>
-        <tr><td>Photo</td><td>Ajoutez une photo de profil (URL d'image)</td></tr>
-        <tr><td>% épargne</td><td>Votre taux d'épargne cible sur le reste à vivre (par défaut 60 %)</td></tr>
-        <tr><td>Thème</td><td>Basculez entre le mode sombre et le mode clair</td></tr>
+        <tr><td>Nom & Email</td><td>Modifiez vos informations de compte</td></tr>
+        <tr><td>Mot de passe</td><td>Changez votre mot de passe actuel (ancien requis)</td></tr>
+        <tr><td>Couleur de profil</td><td>Couleur utilisée dans les graphiques et badges membres</td></tr>
+        <tr><td>Photo</td><td>URL d'une image de profil (optionnel)</td></tr>
+        <tr><td>% épargne sur RAV</td><td>Part du reste à vivre allouée à l'épargne (défaut 60 %). L'autre part va au loisir.</td></tr>
+        <tr><td>Thème</td><td>Mode sombre (défaut) ou mode clair</td></tr>
       </tbody>
     </table>
+  </div>
+  <div class="tip"><span class="box-icon">✓</span><span>Le thème et les préférences sont sauvegardés localement — ils persistent entre les sessions sans nécessiter de connexion serveur.</span></div>
+</section>
 
-    <div class="tip"><span class="tip-icon">✓</span><span>Le thème et les préférences sont sauvegardés localement — ils persistent entre les sessions.</span></div>
-  </section>
+<!-- ════════════════ FOYER ════════════════ -->
+<section class="section" id="foyer">
+  <div class="sec-label">Multi-utilisateur</div>
+  <h2>Foyer partagé</h2>
+  <p class="sec-lead">Deux personnes peuvent partager leurs données au sein d'un foyer. Chacun garde son compte individuel mais accède aux données communes.</p>
 
-  <hr>
+  <h3><span class="h3-icon" style="background:var(--blue-bg)">🏠</span>Créer ou rejoindre un foyer</h3>
+  <ol class="steps">
+    <li>Ouvrez les <strong>Paramètres</strong> (avatar en haut à droite) → section <strong>Foyer</strong></li>
+    <li>Cliquez sur <strong>Créer un foyer</strong> si vous êtes le premier à configurer</li>
+    <li>Un <strong>code d'invitation</strong> (ou QR code) est généré — partagez-le avec l'autre membre</li>
+    <li>L'autre membre ouvre ses paramètres → <strong>Rejoindre avec un code</strong> et saisit le code</li>
+    <li>Les données sont maintenant <strong>partagées en temps réel</strong> entre les deux comptes</li>
+  </ol>
 
-  <!-- ══════════════════════════════════ FOYER ══════════════════════════════════ -->
-  <section id="foyer">
-    <h2>Foyer partagé</h2>
-    <p>Zénith permet à deux personnes de partager leurs données budgétaires au sein d'un <strong>foyer</strong>. Chaque membre garde son propre compte mais voit les données du foyer.</p>
-
-    <h3>Créer ou rejoindre un foyer</h3>
-    <ul class="steps">
-      <li><span>Ouvrez les <strong>Paramètres</strong> (avatar en haut à droite) puis la section <strong>Foyer</strong>.</span></li>
-      <li><span>Choisissez <strong>Créer un foyer</strong> si vous êtes le premier, ou <strong>Rejoindre avec un code</strong> si l'autre membre a déjà créé le foyer.</span></li>
-      <li><span>Partagez le <strong>code d'invitation</strong> (ou QR code) avec l'autre membre.</span></li>
-      <li><span>Une fois les deux membres connectés au même foyer, toutes les données sont <strong>automatiquement partagées</strong>.</span></li>
-    </ul>
-
-    <h3>Filtrage par membre</h3>
-    <p>Dans chaque onglet, des <strong>onglets membres</strong> apparaissent en haut :</p>
-    <div class="mockup">
-      <div style="display:flex;gap:6px;padding:4px 0">
-        <div style="padding:5px 14px;background:linear-gradient(135deg,#6eb8ff,#c084fc);border-radius:20px;font-size:var(--fs-xs);font-weight:700;color:#fff">Tous</div>
-        <div style="padding:5px 14px;background:var(--surface);border:1px solid var(--border);border-radius:20px;font-size:var(--fs-xs);font-weight:600;color:var(--muted)">Nicolas</div>
-        <div style="padding:5px 14px;background:var(--surface);border:1px solid var(--border);border-radius:20px;font-size:var(--fs-xs);font-weight:600;color:var(--muted)">Carla</div>
+  <h3><span class="h3-icon" style="background:var(--surface2)">👤</span>Filtrer par membre</h3>
+  <p>Dans chaque onglet, des onglets membres permettent de filtrer les données :</p>
+  <div class="mockup">
+    <div class="mockup-body tight">
+      <div style="display:flex;gap:8px">
+        <div style="padding:6px 16px;background:var(--grad);border-radius:99px;font-size:13px;font-weight:700;color:#fff">Tous</div>
+        <div style="padding:6px 16px;background:var(--surface);border:1px solid var(--border2);border-radius:99px;font-size:13px;font-weight:600;color:var(--muted)">Nicolas</div>
+        <div style="padding:6px 16px;background:var(--surface);border:1px solid var(--border2);border-radius:99px;font-size:13px;font-weight:600;color:var(--muted)">Carla</div>
+      </div>
+      <div class="callout-list" style="margin-top:14px">
+        <li><span class="callout">T</span><span><strong>Tous</strong> — vue combinée du foyer, somme des données des deux membres</span></li>
+        <li><span class="callout">N</span><span><strong>Nom du membre</strong> — filtre les données sur ce membre uniquement (budget, épargne, objectif…)</span></li>
       </div>
     </div>
-    <ul>
-      <li><strong>Tous</strong> — vue combinée du foyer</li>
-      <li><strong>Nom du membre</strong> — vue individuelle filtrée sur ce membre</li>
-    </ul>
-  </section>
+  </div>
+  <div class="note"><span class="box-icon">ℹ</span><span>Certaines données (comme les entrées budget) sont rattachées à un membre spécifique. La vue <strong>Commun</strong> ou <strong>Tous</strong> les additionne.</span></div>
+</section>
 
-  <hr>
+<!-- ════════════════ SUIVI MENSUEL ════════════════ -->
+<section class="section" id="suivi">
+  <div class="sec-label">Onglet principal</div>
+  <h2>Suivi mensuel</h2>
+  <p class="sec-lead">Vue en temps réel du mois en cours. Compare ce que vous avez <em>réellement dépensé</em> avec votre budget prévisionnel.</p>
 
-  <!-- ══════════════════════════════════ NAVIGATION ══════════════════════════════════ -->
-  <section id="navigation">
-    <h2>Navigation générale</h2>
-
-    <h3>Barre du haut (topbar)</h3>
-    <div class="mockup">
-      <div class="mockup-topbar">
-        <div style="font-size:16px;font-weight:800;background:linear-gradient(135deg,#6eb8ff,#c084fc);-webkit-background-clip:text;-webkit-text-fill-color:transparent">Zénith</div>
-        <div style="display:flex;align-items:center;gap:8px">
-          <div style="font-size:var(--fs-xs);color:var(--muted);background:var(--surface2);border:1px solid var(--border);border-radius:99px;padding:2px 8px">Nicolas</div>
-          <div style="width:28px;height:28px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--muted)">🔔</div>
-          <div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#6eb8ff,#3ddba0);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff">N</div>
+  <h3><span class="h3-icon" style="background:var(--surface2)">◀▶</span>Naviguer dans le temps</h3>
+  <div class="mockup">
+    <div class="mockup-body tight">
+      <div style="display:flex;align-items:center;justify-content:center;gap:20px;padding:8px 0">
+        <div style="width:36px;height:36px;background:var(--surface);border:1px solid var(--border2);border-radius:var(--r);display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--muted);cursor:pointer">‹</div>
+        <div style="text-align:center">
+          <div style="font-size:22px;font-weight:800;letter-spacing:-.03em">Mai 2026</div>
+          <div style="font-size:12px;color:var(--hint)">Mois en cours</div>
         </div>
-      </div>
-      <div style="display:flex;gap:6px;align-items:center;padding:4px 0;font-size:var(--fs-xs);color:var(--muted)">
-        <span class="anno">1</span> Nom du membre connecté &nbsp;·&nbsp;
-        <span class="anno">2</span> Notifications &nbsp;·&nbsp;
-        <span class="anno">3</span> Profil / Paramètres
+        <div style="width:36px;height:36px;background:var(--surface);border:1px solid var(--border2);border-radius:var(--r);display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--muted);cursor:pointer">›</div>
       </div>
     </div>
+  </div>
+  <ul>
+    <li>Cliquez sur <strong>‹ ›</strong> pour changer de mois</li>
+    <li>Touches <kbd>←</kbd> <kbd>→</kbd> du clavier</li>
+    <li>Sur mobile : <strong>swipez gauche/droite</strong></li>
+  </ul>
 
-    <h3>Recherche rapide</h3>
-    <p>Appuyez sur <kbd>Ctrl</kbd> + <kbd>K</kbd> (ou <kbd>/</kbd>) pour ouvrir la <strong>recherche globale</strong> — elle cherche simultanément dans le budget prévisionnel et le suivi mensuel.</p>
-  </section>
-
-  <hr>
-
-  <!-- ══════════════════════════════════ SUIVI MENSUEL ══════════════════════════════════ -->
-  <section id="suivi">
-    <h2>Suivi mensuel</h2>
-    <p>L'onglet <strong>Suivi mensuel</strong> est la vue principale. Il compare ce que vous avez <em>réellement dépensé</em> ce mois-ci avec votre budget prévisionnel.</p>
-
-    <h3>Navigation dans le temps</h3>
-    <div class="mockup">
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0">
-        <div style="width:28px;height:28px;background:var(--surface);border:1px solid var(--border);border-radius:6px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:16px">‹</div>
-        <div style="font-size:var(--fs-lg);font-weight:700">Mai 2026</div>
-        <div style="width:28px;height:28px;background:var(--surface);border:1px solid var(--border);border-radius:6px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:16px">›</div>
-      </div>
-    </div>
-    <p>Utilisez les flèches <strong>◀ ▶</strong> (ou les touches <kbd>←</kbd> <kbd>→</kbd> du clavier) pour naviguer mois par mois. Sur mobile, <strong>swipez gauche/droite</strong>.</p>
-
-    <h3>KPIs du mois (bloc héros)</h3>
-    <div class="mockup">
-      <div class="kpi-row">
-        <div class="kpi-box">
-          <div class="kpi-label">Reste à vivre</div>
+  <h3><span class="h3-icon" style="background:var(--blue-bg)">📊</span>KPIs du mois</h3>
+  <div class="mockup">
+    <div class="mockup-bar"><div class="mockup-dot" style="background:#ff5f57"></div><div class="mockup-dot" style="background:#ffbd2e"></div><div class="mockup-dot" style="background:#28c840"></div><div class="mockup-title">Tableau de bord — Mai 2026</div></div>
+    <div class="mockup-body">
+      <div class="kpi-grid">
+        <div class="kpi" style="border-color:#1a4a35">
+          <div class="kpi-lbl" style="color:var(--green)">Reste à vivre</div>
           <div class="kpi-val" style="color:var(--green)">+256 €</div>
-          <div class="kpi-sub">après épargne</div>
+          <div class="kpi-sub">après épargne · prévu +420 €</div>
         </div>
-        <div class="kpi-box">
-          <div class="kpi-label">Dépenses réelles</div>
+        <div class="kpi" style="border-color:#4a1a1a">
+          <div class="kpi-lbl" style="color:var(--red)">Dépenses réelles</div>
           <div class="kpi-val" style="color:var(--red)">1 840 €</div>
-          <div class="kpi-sub">fixes + variables</div>
+          <div class="kpi-sub">fixes prélevées + variables</div>
         </div>
-        <div class="kpi-box">
-          <div class="kpi-label">Épargne du mois</div>
+        <div class="kpi" style="border-color:#1a3a5a">
+          <div class="kpi-lbl" style="color:var(--blue)">Épargne du mois</div>
           <div class="kpi-val" style="color:var(--blue)">+350 €</div>
-          <div class="kpi-sub">vs prévu 420 €</div>
+          <div class="kpi-sub">enregistrée dans Épargne</div>
         </div>
-        <div class="kpi-box">
-          <div class="kpi-label">Taux de dépenses</div>
+        <div class="kpi">
+          <div class="kpi-lbl">Taux de dépenses</div>
           <div class="kpi-val" style="color:var(--amber)">72 %</div>
           <div class="kpi-sub">du revenu net</div>
         </div>
       </div>
     </div>
+  </div>
 
+  <div class="tbl-wrap">
     <table>
-      <thead><tr><th>Indicateur</th><th>Ce qu'il mesure</th></tr></thead>
+      <thead><tr><th>Indicateur</th><th>Calcul</th></tr></thead>
       <tbody>
-        <tr><td>Reste à vivre (RAV)</td><td>Revenu net − charges fixes (prélevées) − dépenses variables − épargne du mois. Si positif : il vous reste de l'argent disponible.</td></tr>
-        <tr><td>Dépenses réelles</td><td>Somme des charges fixes <em>déjà prélevées</em> + dépenses variables saisies ce mois.</td></tr>
-        <tr><td>Épargne du mois</td><td>Variation de votre capital épargne ce mois (enregistrée dans l'onglet Épargne).</td></tr>
-        <tr><td>Taux de dépenses</td><td>Pourcentage du revenu net consommé en dépenses (hors épargne).</td></tr>
+        <tr><td>Reste à vivre (RAV)</td><td>Revenu net − charges fixes prélevées − dépenses variables − épargne du mois. Positif = argent disponible.</td></tr>
+        <tr><td>Dépenses réelles</td><td>Charges fixes dont la date de prélèvement est passée + toutes les dépenses variables saisies ce mois.</td></tr>
+        <tr><td>Épargne du mois</td><td>Variation de capital épargne (delta entre ce mois et le précédent, enregistré dans l'onglet Épargne).</td></tr>
+        <tr><td>Taux de dépenses</td><td>Dépenses réelles ÷ revenu net × 100.</td></tr>
       </tbody>
     </table>
+  </div>
 
-    <div class="note"><span class="note-icon">ℹ</span><span><strong>Charges fixes et dates de prélèvement :</strong> le RAV exclut automatiquement les charges fixes dont la date de prélèvement (<code>debit_day</code>) n'est pas encore passée dans le mois. Cela reflète ce qui est <em>réellement</em> sorti de votre compte.</span></div>
+  <div class="note"><span class="box-icon">ℹ</span><span><strong>Important sur les charges fixes :</strong> seules les charges dont le <code>jour de prélèvement</code> est ≤ aujourd'hui sont comptées dans les dépenses réelles du mois. Les prélèvements futurs n'ont pas encore quitté votre compte.</span></div>
+</section>
 
-    <h3>Curseur épargne / loisir</h3>
-    <p>Sous le bloc héros, un <strong>curseur interactif</strong> permet de répartir le reste à vivre entre épargne supplémentaire et loisir. Glissez le curseur pour ajuster en temps réel. Ces valeurs sont sauvegardées par mois.</p>
+<!-- ════════════════ CURSEUR ÉPARGNE ════════════════ -->
+<section class="section" id="slider">
+  <div class="sec-label">Fonctionnalité clé</div>
+  <h2>Ajuster l'épargne et le loisir</h2>
+  <p class="sec-lead">Sous les KPIs, un curseur interactif vous permet de répartir votre <strong>reste à vivre</strong> entre épargne supplémentaire et loisir, mois par mois.</p>
 
-    <h3>Sections groupées</h3>
-    <p>Les dépenses sont organisées en 4 groupes. Cliquez sur un en-tête pour <strong>replier/déplier</strong> le groupe.</p>
-
-    <div class="mockup">
-      <div class="sec-group">
-        <div class="sec-header" style="border-color:#0d9e6e">
-          <div style="display:flex;align-items:center;gap:8px">
-            <span style="font-size:var(--fs-xs);font-weight:700;text-transform:uppercase;color:#0d9e6e">Revenus &amp; Impôts</span>
-            <span class="badge badge-green">3</span>
-            <span class="badge badge-green">▼ 2%</span>
-          </div>
-          <span style="font-weight:800;color:var(--green)">2 400 €</span>
+  <div class="mockup">
+    <div class="mockup-bar"><div class="mockup-dot" style="background:#ff5f57"></div><div class="mockup-dot" style="background:#ffbd2e"></div><div class="mockup-dot" style="background:#28c840"></div><div class="mockup-title">Bloc héros — Curseur épargne / loisir</div></div>
+    <div class="mockup-body">
+      <!-- RAV display -->
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:16px;margin-bottom:14px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+          <span style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)">Reste à vivre · Mai 2026</span>
+          <span style="font-size:22px;font-weight:900;color:var(--green)">+420 €</span>
         </div>
-        <div class="sec-body">
-          <div class="entry-row" style="border-color:#0d9e6e">
-            <span class="entry-name">Salaire Nicolas</span>
-            <span class="entry-amt" style="color:var(--green)">2 800 €</span>
-          </div>
-          <div class="entry-row" style="border-color:#f59e0b">
-            <span class="entry-name">Impôt mensuel</span>
-            <span class="entry-amt" style="color:var(--amber)">400 €</span>
-          </div>
-        </div>
+        <div style="font-size:12px;color:var(--hint)">Revenu net − fixes − variables · prévu</div>
       </div>
-      <div class="sec-group">
-        <div class="sec-header" style="border-color:#d93535">
-          <div style="display:flex;align-items:center;gap:8px">
-            <span style="font-size:var(--fs-xs);font-weight:700;text-transform:uppercase;color:#d93535">Charges fixes</span>
-            <span class="badge badge-red">8</span>
-            <span class="badge badge-red">DÉPASSÉ</span>
+
+      <!-- Slider -->
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:16px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <span style="font-size:13px;color:var(--blue);font-weight:700">Épargne</span>
+          <span style="font-size:15px;font-weight:800;color:var(--text)" id="doc-ep-val">252 € (60 %)</span>
+          <span style="font-size:13px;color:var(--amber);font-weight:700">Loisir</span>
+        </div>
+        <div style="position:relative;margin:16px 0">
+          <div class="slider-track">
+            <div class="slider-fill" style="width:60%"></div>
+            <div class="slider-thumb" style="left:60%"></div>
           </div>
-          <span style="font-weight:800;color:var(--red)">1 250 €</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-top:8px">
+          <div style="text-align:left">
+            <div style="font-size:18px;font-weight:900;color:var(--blue)">252 €</div>
+            <div style="font-size:11px;color:var(--hint)">→ épargne ce mois</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:18px;font-weight:900;color:var(--amber)">168 €</div>
+            <div style="font-size:11px;color:var(--hint)">→ loisir ce mois</div>
+          </div>
         </div>
       </div>
     </div>
+  </div>
 
-    <h4>Calendrier des prélèvements</h4>
-    <p>Dans le groupe <strong>Charges fixes</strong>, un mini agenda liste toutes vos charges par date de prélèvement :</p>
-    <div class="mockup">
-      <div style="font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:6px">Prélèvements du mois</div>
-      <div style="display:grid;grid-template-columns:auto 1fr auto;gap:4px 12px;font-size:var(--fs-sm)">
-        <span style="background:var(--green)18;color:var(--green);font-weight:800;border-radius:4px;padding:1px 6px;text-align:center">1</span>
-        <span style="color:var(--text);font-weight:600">Loyer</span>
+  <ol class="steps">
+    <li>Le curseur apparaît dans le <strong>bloc héros</strong> du suivi mensuel, sous les KPIs</li>
+    <li>Le reste à vivre total est affiché en haut (ex: +420 €)</li>
+    <li><strong>Glissez le curseur</strong> vers la gauche (plus d'épargne) ou la droite (plus de loisir)</li>
+    <li>Les montants se recalculent en temps réel — <strong>Épargne = RAV × % curseur</strong></li>
+    <li>Ce réglage est <strong>sauvegardé pour ce mois</strong> spécifiquement et ne modifie pas les autres mois</li>
+  </ol>
+
+  <div class="two-col">
+    <div class="mini-card">
+      <div class="mini-card-title" style="color:var(--blue)">Épargne (gauche)</div>
+      <p style="margin:0;font-size:14px">Plus vous glissez à gauche, plus la part d'épargne augmente. Cette valeur est indicative — elle correspond à ce que vous <em>prévoyez</em> de mettre de côté.</p>
+    </div>
+    <div class="mini-card">
+      <div class="mini-card-title" style="color:var(--amber)">Loisir (droite)</div>
+      <p style="margin:0;font-size:14px">La part restante va au budget loisir du mois. Cela influence le calcul des dépenses de loisir autorisées.</p>
+    </div>
+  </div>
+
+  <div class="tip"><span class="box-icon">✓</span><span>Le <strong>% par défaut</strong> (60 % épargne / 40 % loisir) est configuré dans vos paramètres de profil. Le curseur du suivi mensuel permet de l'ajuster ponctuellement pour un mois donné.</span></div>
+  <div class="warn"><span class="box-icon">!</span><span>Ce curseur ne <strong>déplace pas réellement d'argent</strong>. Il sert uniquement à calculer vos prévisions pour le mois. L'épargne réelle est enregistrée séparément dans l'onglet Épargne.</span></div>
+</section>
+
+<!-- ════════════════ CORRECTIONS MENSUELLES ════════════════ -->
+<section class="section" id="corrections">
+  <div class="sec-label">Suivi mensuel</div>
+  <h2>Corriger une charge ce mois</h2>
+  <p class="sec-lead">Les charges fixes viennent automatiquement du budget prévisionnel. Pour un mois spécifique, vous pouvez corriger leur montant ou les supprimer.</p>
+
+  <div class="mockup">
+    <div class="mockup-bar"><div class="mockup-dot" style="background:#ff5f57"></div><div class="mockup-dot" style="background:#ffbd2e"></div><div class="mockup-dot" style="background:#28c840"></div><div class="mockup-title">Charges fixes — Suivi mensuel</div></div>
+    <div class="mockup-body tight">
+      <div class="entry-row" style="border-color:#d93535">
+        <div style="width:8px;height:8px;border-radius:50%;background:var(--green);flex-shrink:0"></div>
+        <span class="entry-name">Loyer</span>
+        <span style="font-size:12px;color:var(--muted);text-decoration:line-through;margin-right:4px">850 €</span>
+        <span class="badge badge-amber">Corrigé</span>
+        <span class="entry-amt" style="color:var(--red)">820 €</span>
+      </div>
+      <div class="entry-row" style="border-color:#d93535">
+        <div style="width:8px;height:8px;border-radius:50%;background:var(--green);flex-shrink:0"></div>
+        <span class="entry-name">Assurance habitation</span>
+        <span class="entry-amt" style="color:var(--red)">22 €</span>
+      </div>
+      <div class="entry-row" style="border-color:#d93535;opacity:.6;text-decoration:line-through">
+        <div style="width:8px;height:8px;border-radius:50%;background:var(--muted);flex-shrink:0"></div>
+        <span class="entry-name">Parking</span>
+        <span class="badge badge-red">Supprimé</span>
+        <span class="entry-amt" style="color:var(--muted)">—</span>
+      </div>
+    </div>
+  </div>
+
+  <h4>Corriger le montant</h4>
+  <ol class="steps">
+    <li><strong>Cliquez sur la ligne</strong> de la charge fixe dans le suivi mensuel (desktop) ou tapez dessus (mobile)</li>
+    <li>Un modal s'ouvre avec le montant actuel pré-rempli</li>
+    <li>Modifiez le <strong>montant</strong> et ajoutez une <strong>note</strong> optionnelle (ex: "Régularisation loyer")</li>
+    <li>Validez — la ligne affiche le badge <span class="badge badge-amber">Corrigé</span> et le montant original barré</li>
+  </ol>
+
+  <h4>Supprimer une charge ce mois</h4>
+  <ol class="steps">
+    <li>Sur <strong>mobile</strong> : swipez la ligne vers la gauche pour révéler le bouton de suppression</li>
+    <li>Sur <strong>desktop</strong> : cliquez sur la ligne → bouton "Supprimer ce mois"</li>
+    <li>La ligne reste visible avec le style <span class="badge badge-red">Supprimé</span> pour indiquer qu'elle a été exclue</li>
+  </ol>
+
+  <div class="tip"><span class="box-icon">✓</span><span>Les corrections mensuelles ne modifient pas votre budget prévisionnel permanent. Elles ne s'appliquent qu'au mois concerné.</span></div>
+
+  <h4>Ajouter une dépense manuelle (variables, loisir)</h4>
+  <ol class="steps">
+    <li>Cliquez sur <strong>+ Ajouter</strong> dans la toolbar ou le bouton flottant + (mobile)</li>
+    <li>Renseignez la désignation, le montant et sélectionnez la catégorie (<strong>Variable</strong> ou <strong>Loisir</strong>)</li>
+    <li>Optionnellement : note et case <strong>"Dépense exceptionnelle"</strong> (pour exclure des calculs de tendance)</li>
+    <li>Validez — la dépense s'ajoute dans la section correspondante du mois</li>
+  </ol>
+
+  <h4>Calendrier des prélèvements</h4>
+  <p>Dans le groupe <strong>Charges fixes</strong>, un mini agenda liste vos prélèvements triés par date :</p>
+  <div class="mockup">
+    <div class="mockup-body tight">
+      <div style="font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--hint);margin-bottom:10px">Prélèvements du mois</div>
+      <div class="agenda-grid">
+        <span class="agenda-day" style="background:var(--green)18;color:var(--green)">1</span>
+        <span style="font-weight:600">Loyer</span>
         <span style="color:var(--green);font-weight:700;text-align:right">850 €</span>
-        <span style="background:var(--green)18;color:var(--green);font-weight:800;border-radius:4px;padding:1px 6px;text-align:center">5</span>
-        <span style="color:var(--text);font-weight:600">Assurance habitation</span>
+        <span class="agenda-day" style="background:var(--green)18;color:var(--green)">5</span>
+        <span style="font-weight:600">Assurance habitation</span>
         <span style="color:var(--green);font-weight:700;text-align:right">22 €</span>
-        <span style="background:var(--amber)18;color:var(--amber);font-weight:800;border-radius:4px;padding:1px 6px;text-align:center">22</span>
-        <span style="color:var(--text);font-weight:600">Moto</span>
+        <span class="agenda-day" style="background:var(--green)18;color:var(--green)">15</span>
+        <span style="font-weight:600">Abonnement téléphone</span>
+        <span style="color:var(--green);font-weight:700;text-align:right">19 €</span>
+        <span class="agenda-day" style="background:var(--amber)18;color:var(--amber)">22</span>
+        <span style="font-weight:600">Moto</span>
         <span style="color:var(--amber);font-weight:700;text-align:right">132 €</span>
-        <span style="background:var(--amber)18;color:var(--amber);font-weight:800;border-radius:4px;padding:1px 6px;text-align:center">27</span>
-        <span style="color:var(--text);font-weight:600">Abonnement Ra.</span>
+        <span class="agenda-day" style="background:var(--amber)18;color:var(--amber)">27</span>
+        <span style="font-weight:600">Abonnement Ra.</span>
         <span style="color:var(--amber);font-weight:700;text-align:right">45 €</span>
       </div>
-      <div style="display:flex;gap:12px;margin-top:10px;font-size:10px">
-        <span style="color:var(--green)">● Prélevé</span>
-        <span style="color:var(--amber)">● À venir</span>
+      <div style="display:flex;gap:16px;margin-top:12px;font-size:13px">
+        <span style="color:var(--green)">● Déjà prélevé</span>
+        <span style="color:var(--amber)">● À venir ce mois</span>
       </div>
     </div>
+  </div>
+</section>
 
-    <h4>Badge DÉPASSÉ</h4>
-    <p>Si les dépenses réelles d'un groupe dépassent le budget prévu, un badge <span class="badge badge-red">DÉPASSÉ</span> s'affiche dans l'en-tête du groupe. La tendance vs le mois précédent est également affichée (<span class="badge badge-green">▼ 2%</span> ou <span class="badge badge-red">▲ 8%</span>).</p>
+<!-- ════════════════ BUDGET ════════════════ -->
+<section class="section" id="budget">
+  <div class="sec-label">Configuration</div>
+  <h2>Budget prévisionnel</h2>
+  <p class="sec-lead">Vos données de référence permanentes : revenus, charges fixes, dépenses variables prévues. Ces informations alimentent le suivi mensuel.</p>
 
-    <h3>Ajouter une dépense manuelle</h3>
-    <p>Les groupes <strong>Dépenses variables</strong> et <strong>Loisir</strong> ne sont pas pré-remplis depuis le budget. Vous devez saisir vos dépenses réelles :</p>
-    <ul class="steps">
-      <li><span>Cliquez sur le bouton <strong>+ Ajouter</strong> dans la toolbar ou sur le <strong>bouton flottant +</strong> (mobile).</span></li>
-      <li><span>Renseignez la désignation, le montant et la catégorie.</span></li>
-      <li><span>Optionnellement, ajoutez une <strong>note</strong> et cochez <strong>dépense exceptionnelle</strong> si ce n'est pas récurrent.</span></li>
-      <li><span>Sauvegardez. La dépense apparaît dans la section correspondante.</span></li>
-    </ul>
-
-    <h3>Corriger / Supprimer une charge fixe du mois</h3>
-    <p>Les charges fixes viennent automatiquement du budget prévisionnel. Pour ce mois spécifique, vous pouvez :</p>
-    <ul>
-      <li><strong>Corriger le montant</strong> — cliquez sur la ligne pour ouvrir le modal de correction mensuelle</li>
-      <li><strong>Supprimer (supprimer ce mois)</strong> — swipez la ligne vers la gauche (mobile) ou utilisez l'icône poubelle</li>
-      <li><strong>Sélectionner plusieurs</strong> — cochez les cases pour agir en masse</li>
-    </ul>
-
-    <h3>Recherche et filtres</h3>
-    <div class="mockup">
-      <div style="display:flex;gap:8px;align-items:center">
-        <div style="flex:1;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:7px 10px;font-size:var(--fs-sm);color:var(--hint)">Rechercher…</div>
-        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:7px 10px;font-size:var(--fs-sm);color:var(--hint)">Toutes catégories ▾</div>
-        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:7px 10px;font-size:var(--fs-sm);color:var(--muted)">Montant ↓</div>
-      </div>
-    </div>
-    <ul>
-      <li><strong>Recherche textuelle</strong> — tapez un nom ou une catégorie (<em>épargne</em>, <em>loisir</em>, <em>fixe</em>…). La recherche est insensible aux accents.</li>
-      <li><strong>Filtre catégorie</strong> — filtrez par type de dépense</li>
-      <li><strong>Tri</strong> — cliquez sur le bouton tri pour alterner : Montant ↓ → Nom A→Z → Montant ↑. Les catégories sans résultat sont masquées automatiquement.</li>
-    </ul>
-
-    <div class="tip"><span class="tip-icon">✓</span><span>Les catégories vides (épargne, loisir calculés) sont masquées quand un filtre est actif pour garder la vue propre.</span></div>
-  </section>
-
-  <hr>
-
-  <!-- ══════════════════════════════════ BUDGET ══════════════════════════════════ -->
-  <section id="budget">
-    <h2>Budget prévisionnel</h2>
-    <p>L'onglet <strong>Budget</strong> contient votre configuration budgétaire de base — les entrées qui servent de référence pour le suivi mensuel. Ces données sont <em>permanentes</em> (elles ne changent pas de mois en mois, sauf si vous les modifiez).</p>
-
-    <h3>Catégories disponibles</h3>
+  <div class="tbl-wrap">
     <table>
       <thead><tr><th>Catégorie</th><th>Usage</th><th>Couleur</th></tr></thead>
       <tbody>
-        <tr><td>Revenu</td><td>Salaires, revenus réguliers (montant positif)</td><td style="color:var(--green)">Vert</td></tr>
-        <tr><td>Impôt</td><td>Impôts mensuels, taxes prélevées (déduit du revenu)</td><td style="color:var(--amber)">Amber</td></tr>
-        <tr><td>Fixe</td><td>Charges fixes mensuelles (loyer, abonnements…)</td><td style="color:var(--red)">Rouge</td></tr>
-        <tr><td>Variable</td><td>Dépenses variables prévues (alimentation, carburant…)</td><td style="color:#e07020">Orange</td></tr>
-        <tr><td>Épargne</td><td>Épargne calculée automatiquement depuis le RAV</td><td style="color:var(--blue)">Bleu</td></tr>
-        <tr><td>Loisir</td><td>Budget loisir calculé automatiquement depuis le RAV</td><td style="color:var(--amber)">Amber</td></tr>
+        <tr><td>Revenu</td><td>Salaires, revenus réguliers (montant positif automatique)</td><td><span class="badge badge-green">Vert</span></td></tr>
+        <tr><td>Impôt</td><td>Impôts prélevés mensuellement — déduit du revenu brut</td><td><span class="badge badge-amber">Amber</span></td></tr>
+        <tr><td>Fixe</td><td>Charges fixes (loyer, abonnements) avec date de prélèvement</td><td><span class="badge badge-red">Rouge</span></td></tr>
+        <tr><td>Variable</td><td>Dépenses variables prévues (alimentation, carburant…)</td><td><span class="badge" style="background:#2a1000;color:#e07020;border-color:#3a1800">Orange</span></td></tr>
+        <tr><td>Épargne</td><td>Calculée automatiquement (RAV × % épargne profil)</td><td><span class="badge badge-blue">Bleu</span></td></tr>
+        <tr><td>Loisir</td><td>Calculé automatiquement (RAV × % loisir profil)</td><td><span class="badge badge-amber">Amber</span></td></tr>
       </tbody>
     </table>
+  </div>
+</section>
 
-    <h3>Ajouter une entrée</h3>
-    <ul class="steps">
-      <li><span>Cliquez sur <strong>+ Ajouter</strong> (bouton en haut à droite) ou sur le <strong>+</strong> dans l'en-tête d'un groupe.</span></li>
-      <li><span>Renseignez la <strong>désignation</strong> et le <strong>montant</strong>. Le signe est auto-détecté selon la catégorie (les charges sont automatiquement négatives).</span></li>
-      <li><span>Pour les charges fixes, renseignez la <strong>date de prélèvement</strong> (jour du mois, ex : 5). Cela permet au suivi mensuel de savoir si la charge a déjà été prélevée.</span></li>
-      <li><span>Choisissez le <strong>membre</strong> concerné et sauvegardez.</span></li>
-    </ul>
+<!-- ════════════════ AJOUTER ENTRÉE ════════════════ -->
+<section class="section" id="ajouter-entree">
+  <div class="sec-label">Budget prévisionnel</div>
+  <h2>Ajouter &amp; modifier une entrée</h2>
+  <p class="sec-lead">Chaque entrée du budget représente un revenu ou une dépense récurrente. Voici comment les gérer.</p>
 
-    <div class="mockup">
-      <div style="font-size:var(--fs-xs);font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Exemple — Charge fixe</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+  <h3><span class="h3-icon" style="background:var(--green-bg)">+</span>Créer une nouvelle entrée</h3>
+  <ol class="steps">
+    <li>Cliquez sur <strong>+ Ajouter</strong> (bouton en haut à droite de la toolbar) ou sur le <strong>+</strong> dans l'en-tête d'un groupe</li>
+    <li>Renseignez la <strong>désignation</strong> (nom de la charge)</li>
+    <li>Saisissez le <strong>montant</strong> — le signe est auto-détecté selon la catégorie (les charges sont automatiquement négatives)</li>
+    <li>Sélectionnez la <strong>catégorie</strong> : Revenu, Impôt, Fixe, Variable, etc.</li>
+    <li>Pour les charges <strong>Fixes</strong> : renseignez le <strong>jour de prélèvement</strong> (1-31). Ex: 5 = prélevé le 5 de chaque mois.</li>
+    <li>Choisissez le <strong>membre</strong> concerné (Nicolas, Carla, ou Commun)</li>
+    <li>Cliquez sur <strong>Enregistrer</strong></li>
+  </ol>
+
+  <div class="mockup">
+    <div class="mockup-bar"><div class="mockup-dot" style="background:#ff5f57"></div><div class="mockup-dot" style="background:#ffbd2e"></div><div class="mockup-dot" style="background:#28c840"></div><div class="mockup-title">Modal — Ajouter une entrée</div></div>
+    <div class="mockup-body">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
         <div>
-          <div style="font-size:var(--fs-xs);color:var(--muted);margin-bottom:4px">Désignation</div>
-          <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:8px;font-size:var(--fs-sm)">Loyer</div>
+          <div style="font-size:12px;color:var(--hint);margin-bottom:5px;font-weight:600">Désignation *</div>
+          <div style="background:var(--surface);border:1px solid var(--border2);border-radius:var(--r);padding:9px 12px;font-size:14px">Loyer</div>
         </div>
         <div>
-          <div style="font-size:var(--fs-xs);color:var(--muted);margin-bottom:4px">Montant</div>
-          <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:8px;font-size:var(--fs-sm)">850</div>
+          <div style="font-size:12px;color:var(--hint);margin-bottom:5px;font-weight:600">Montant *</div>
+          <div style="background:var(--surface);border:1px solid var(--border2);border-radius:var(--r);padding:9px 12px;font-size:14px">850</div>
         </div>
         <div>
-          <div style="font-size:var(--fs-xs);color:var(--muted);margin-bottom:4px">Catégorie</div>
-          <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:8px;font-size:var(--fs-sm)">Fixe</div>
+          <div style="font-size:12px;color:var(--hint);margin-bottom:5px;font-weight:600">Catégorie *</div>
+          <div style="background:var(--surface);border:1px solid var(--border2);border-radius:var(--r);padding:9px 12px;font-size:14px;color:var(--red)">Fixe ▾</div>
         </div>
         <div>
-          <div style="font-size:var(--fs-xs);color:var(--muted);margin-bottom:4px">Prélèvement le</div>
-          <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:8px;font-size:var(--fs-sm)">1 <span style="color:var(--muted);font-size:10px">(1er du mois)</span></div>
+          <div style="font-size:12px;color:var(--hint);margin-bottom:5px;font-weight:600">Prélèvement le</div>
+          <div style="background:var(--surface);border:1px solid var(--border2);border-radius:var(--r);padding:9px 12px;font-size:14px">1 <span style="color:var(--hint);font-size:12px">(1er du mois)</span></div>
+        </div>
+        <div>
+          <div style="font-size:12px;color:var(--hint);margin-bottom:5px;font-weight:600">Membre</div>
+          <div style="background:var(--surface);border:1px solid var(--border2);border-radius:var(--r);padding:9px 12px;font-size:14px">Nicolas ▾</div>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px">
+        <div style="padding:9px 20px;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--r);font-size:14px;color:var(--muted);cursor:pointer">Annuler</div>
+        <div style="padding:9px 20px;background:var(--grad);border-radius:var(--r);font-size:14px;font-weight:700;color:#fff;cursor:pointer">Enregistrer</div>
+      </div>
+    </div>
+  </div>
+
+  <h3><span class="h3-icon" style="background:var(--surface2)">✎</span>Modifier une entrée</h3>
+  <ul>
+    <li><strong>Desktop :</strong> cliquez sur la ligne dans le tableau — le modal s'ouvre pré-rempli</li>
+    <li><strong>Mobile :</strong> tapez sur la carte pour ouvrir le modal de modification</li>
+    <li>Modifiez les champs souhaités et cliquez sur <strong>Enregistrer</strong></li>
+  </ul>
+
+  <h3><span class="h3-icon" style="background:var(--red-bg)">🗑</span>Supprimer une entrée</h3>
+  <ul>
+    <li><strong>Desktop :</strong> icône poubelle dans la ligne du tableau (colonne actions)</li>
+    <li><strong>Mobile :</strong> swipez la carte vers la gauche pour révéler le bouton supprimer</li>
+  </ul>
+  <div class="warn"><span class="box-icon">!</span><span>La suppression d'une entrée du budget prévisionnel est <strong>définitive</strong> et s'applique à tous les mois (les données historiques du suivi mensuel ne sont pas affectées).</span></div>
+
+  <h3><span class="h3-icon" style="background:var(--surface2)">⧉</span>Dupliquer une entrée</h3>
+  <p>Cliquez sur l'icône <strong>dupliquer</strong> (deux carrés) à droite d'une entrée pour créer une copie pré-remplie. Utile pour des abonnements similaires ou des charges récurrentes légèrement différentes.</p>
+
+  <h3><span class="h3-icon" style="background:var(--surface2)">⠿</span>Réorganiser l'ordre</h3>
+  <p>Sur desktop, <strong>glissez-déposez</strong> les lignes via la poignée ⠿ en début de ligne pour changer leur ordre à l'intérieur d'un groupe. L'ordre est sauvegardé en base de données.</p>
+
+  <h3><span class="h3-icon" style="background:var(--surface2)">⇅</span>Trier les entrées</h3>
+  <div class="mockup">
+    <div class="mockup-body tight">
+      <div style="display:flex;gap:8px;align-items:center">
+        <div style="flex:1;background:var(--surface);border:1px solid var(--border2);border-radius:var(--r);padding:8px 12px;font-size:13px;color:var(--hint)">Rechercher…</div>
+        <div style="background:var(--surface);border:1px solid var(--border2);border-radius:var(--r);padding:8px 12px;font-size:13px;color:var(--hint)">Toutes catégories ▾</div>
+        <div style="background:var(--surface);border:1px solid var(--border2);border-radius:var(--r);padding:8px 12px;font-size:13px;font-weight:700;color:var(--text);cursor:pointer">Montant ↓</div>
+        <div style="background:var(--grad);border-radius:var(--r);padding:8px 14px;font-size:13px;font-weight:700;color:#fff;cursor:pointer">+ Ajouter</div>
+      </div>
+    </div>
+  </div>
+  <p>Le bouton <strong>Montant ↓</strong> dans la toolbar cycle entre 3 modes de tri :</p>
+  <ul>
+    <li><strong>Montant ↓</strong> — du plus grand au plus petit (défaut)</li>
+    <li><strong>Nom A→Z</strong> — ordre alphabétique</li>
+    <li><strong>Montant ↑</strong> — du plus petit au plus grand</li>
+  </ul>
+</section>
+
+<!-- ════════════════ SIMULATION ════════════════ -->
+<section class="section" id="simulation">
+  <div class="sec-label">Budget</div>
+  <h2>Simulation budgétaire</h2>
+  <p class="sec-lead">Testez des scénarios hypothétiques sans modifier votre budget réel. Idéal pour anticiper l'impact d'une nouvelle charge ou d'une augmentation.</p>
+
+  <div class="mockup">
+    <div class="mockup-bar"><div class="mockup-dot" style="background:#ff5f57"></div><div class="mockup-dot" style="background:#ffbd2e"></div><div class="mockup-dot" style="background:#28c840"></div><div class="mockup-title">Budget → Simulation</div></div>
+    <div class="mockup-body no-pad">
+      <div class="mockup-tabs">
+        <div class="mockup-tab">Prévisionnel</div>
+        <div class="mockup-tab active" style="color:var(--amber);border-bottom-color:var(--amber)">Simulation</div>
+      </div>
+      <div style="padding:14px">
+        <div class="kpi-grid" style="margin-bottom:12px">
+          <div class="kpi"><div class="kpi-lbl">Revenu net</div><div class="kpi-val" style="color:var(--green)">2 400 €</div></div>
+          <div class="kpi"><div class="kpi-lbl">Simulation RAV</div><div class="kpi-val" style="color:var(--amber)">+220 €</div></div>
+        </div>
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:8px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <span style="font-size:13px;font-weight:700">Loyer</span>
+            <span style="font-size:13px;color:var(--red);font-weight:800">950 €</span>
+          </div>
+          <div style="position:relative">
+            <div class="slider-track"><div class="slider-fill" style="width:70%"></div><div class="slider-thumb" style="left:70%"></div></div>
+          </div>
         </div>
       </div>
     </div>
+  </div>
 
-    <h3>Modifier / Supprimer une entrée</h3>
-    <ul>
-      <li><strong>Desktop</strong> : cliquez sur la ligne dans le tableau pour ouvrir le modal de modification. L'icône poubelle supprime l'entrée.</li>
-      <li><strong>Mobile</strong> : tapez sur la carte pour modifier. <strong>Swipez vers la gauche</strong> pour révéler le bouton de suppression.</li>
-    </ul>
+  <ol class="steps">
+    <li>Dans l'onglet <strong>Budget</strong>, cliquez sur le sous-onglet <strong>Simulation</strong> (en jaune)</li>
+    <li>Utilisez les <strong>curseurs</strong> pour ajuster les montants des entrées</li>
+    <li>Les KPIs se recalculent en temps réel — observez l'impact sur le RAV</li>
+    <li>Basculez sur l'onglet <strong>Analyse</strong> de la simulation pour voir la répartition graphique</li>
+    <li>Cliquez sur <strong>Réinitialiser</strong> pour revenir aux valeurs réelles</li>
+  </ol>
 
-    <h3>Dupliquer une entrée</h3>
-    <p>Dans le menu d'une entrée existante, cliquez sur <strong>Dupliquer</strong> pour créer une copie pré-remplie. Utile pour les abonnements similaires.</p>
+  <div class="warn"><span class="box-icon">!</span><span>Les modifications de simulation ne sont <strong>jamais sauvegardées</strong>. Elles disparaissent en quittant l'onglet.</span></div>
+</section>
 
-    <h3>Réorganiser l'ordre</h3>
-    <p>Sur desktop, <strong>glissez-déposez</strong> les lignes via la poignée <span style="color:var(--muted)">⠿</span> en début de ligne pour réorganiser l'ordre à l'intérieur d'un groupe. L'ordre est sauvegardé.</p>
+<!-- ════════════════ ÉPARGNE ════════════════ -->
+<section class="section" id="epargne">
+  <div class="sec-label">Onglet</div>
+  <h2>Épargne</h2>
+  <p class="sec-lead">Suivez l'évolution de votre capital épargne mois par mois. Vous saisissez votre <strong>solde total</strong> en fin de mois — la variation est calculée automatiquement.</p>
 
-    <h3>KPIs récapitulatifs</h3>
-    <div class="mockup">
-      <div class="kpi-row">
-        <div class="kpi-box">
-          <div class="kpi-label">Revenu net</div>
-          <div class="kpi-val" style="color:var(--green)">2 400 €</div>
-          <div class="kpi-sub">après impôts</div>
+  <h3><span class="h3-icon" style="background:var(--green-bg)">+</span>Enregistrer un mois</h3>
+  <ol class="steps">
+    <li>Sélectionnez votre <strong>membre</strong> (onglet en haut)</li>
+    <li>Cliquez sur le bouton <strong>+</strong> (flottant sur mobile, toolbar sur desktop)</li>
+    <li>Choisissez l'<strong>année</strong> et le <strong>mois</strong> concerné</li>
+    <li>Saisissez votre <strong>capital épargne total</strong> à la fin de ce mois (ex: 6 150 €) — c'est le solde de votre compte épargne, pas ce que vous avez mis de côté ce mois-là</li>
+    <li>Validez. La <strong>variation mensuelle</strong> (delta) est calculée automatiquement.</li>
+  </ol>
+
+  <div class="info"><span class="box-icon">ℹ</span><span><strong>Exemple :</strong> vous aviez 5 800 € en avril et 6 150 € fin mai → le delta calculé est <strong>+350 €</strong> d'épargne pour mai.</span></div>
+</section>
+
+<!-- ════════════════ OBJECTIF ════════════════ -->
+<section class="section" id="objectif">
+  <div class="sec-label">Épargne</div>
+  <h2>Objectif d'épargne annuel</h2>
+  <p class="sec-lead">Définissez un objectif de capital épargne pour l'année et suivez votre progression en temps réel.</p>
+
+  <div class="mockup">
+    <div class="mockup-bar"><div class="mockup-dot" style="background:#ff5f57"></div><div class="mockup-dot" style="background:#ffbd2e"></div><div class="mockup-dot" style="background:#28c840"></div><div class="mockup-title">Objectif d'épargne 2026</div></div>
+    <div class="mockup-body">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <span style="font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--hint)">Objectif d'épargne 2026</span>
+        <input type="number" value="10000" style="width:130px;padding:6px 10px;background:var(--surface);border:1px solid var(--border2);border-radius:var(--r);color:var(--text);font-size:14px;font-weight:700">
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px">
+        <span style="font-size:16px;font-weight:800;color:var(--blue)">6 150 € / 10 000 €</span>
+        <span style="font-size:13px;font-weight:800;color:var(--blue)">62 % atteint</span>
+      </div>
+      <div class="prog-wrap"><div class="prog-bar" style="width:62%;background:linear-gradient(90deg,var(--blue),#c084fc)"></div></div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:14px">
+        <div style="background:var(--surface2);border-radius:10px;padding:10px 12px">
+          <div style="font-size:11px;color:var(--hint);margin-bottom:4px">Épargne actuelle</div>
+          <div style="font-size:15px;font-weight:800">6 150 €</div>
         </div>
-        <div class="kpi-box">
-          <div class="kpi-label">Charges fixes</div>
-          <div class="kpi-val" style="color:var(--red)">1 180 €</div>
-          <div class="kpi-sub">49 % du net</div>
+        <div style="background:var(--surface2);border-radius:10px;padding:10px 12px">
+          <div style="font-size:11px;color:var(--hint);margin-bottom:4px">Reste à atteindre</div>
+          <div style="font-size:15px;font-weight:800;color:var(--amber)">3 850 €</div>
         </div>
-        <div class="kpi-box">
-          <div class="kpi-label">Reste à vivre</div>
-          <div class="kpi-val" style="color:var(--green)">+420 €</div>
-          <div class="kpi-sub">prévu</div>
+        <div style="background:var(--surface2);border-radius:10px;padding:10px 12px">
+          <div style="font-size:11px;color:var(--hint);margin-bottom:4px">Rythme mensuel</div>
+          <div style="font-size:15px;font-weight:800">350 €</div>
         </div>
-        <div class="kpi-box">
-          <div class="kpi-label">Épargne prévue</div>
-          <div class="kpi-val" style="color:var(--blue)">252 €</div>
-          <div class="kpi-sub">60 % du RAV</div>
+        <div style="background:var(--surface2);border-radius:10px;padding:10px 12px">
+          <div style="font-size:11px;color:var(--hint);margin-bottom:4px">Date estimée</div>
+          <div style="font-size:14px;font-weight:800;color:var(--blue)">nov. 2026</div>
         </div>
       </div>
     </div>
+  </div>
 
-    <div class="note"><span class="note-icon">ℹ</span><span>L'épargne et le loisir <strong>prévus</strong> sont calculés automatiquement : Épargne = RAV × % épargne (paramètre profil). Ils ne sont pas saisis manuellement dans le budget.</span></div>
-  </section>
+  <ol class="steps">
+    <li>Le champ <strong>Montant cible €</strong> en haut à droite de la section — saisissez votre objectif (ex: 10 000 €)</li>
+    <li>L'objectif est sauvegardé <strong>localement</strong> dans votre navigateur (par année)</li>
+    <li>La barre de progression se met à jour automatiquement avec votre épargne actuelle</li>
+    <li>Si vous filtrez sur votre <strong>membre uniquement</strong>, seule votre épargne personnelle est comparée à l'objectif</li>
+  </ol>
 
-  <hr>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>Indicateur</th><th>Signification</th></tr></thead>
+      <tbody>
+        <tr><td>Épargne actuelle</td><td>Votre capital épargne selon le dernier enregistrement (trié par date)</td></tr>
+        <tr><td>Reste à atteindre</td><td>Objectif − épargne actuelle. En rouge si positif, vert si objectif atteint.</td></tr>
+        <tr><td>Rythme mensuel</td><td>Moyenne de vos deltas mensuels récents (= même valeur que le KPI "Moyenne mensuelle")</td></tr>
+        <tr><td>Date estimée</td><td>Mois/année d'atteinte de l'objectif si le rythme actuel se maintient</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
 
-  <!-- ══════════════════════════════════ SIMULATION ══════════════════════════════════ -->
-  <section id="simulation">
-    <h2>Simulation budgétaire</h2>
-    <p>Le sous-onglet <strong>Simulation</strong> (dans Budget) vous permet de tester des scénarios hypothétiques sans modifier votre budget réel.</p>
+<!-- ════════════════ ANALYSE ════════════════ -->
+<section class="section" id="analyse">
+  <div class="sec-label">Onglet</div>
+  <h2>Analyse</h2>
+  <p class="sec-lead">Vision multi-mois de vos finances : tendances, répartitions et records sur l'historique de données.</p>
 
-    <h3>Comment ça fonctionne</h3>
-    <ul>
-      <li>Activez la simulation depuis l'onglet Budget → <strong>Simulation</strong></li>
-      <li>Modifiez les montants des entrées avec les <strong>curseurs</strong> ou les champs de saisie</li>
-      <li>Les KPIs se recalculent en temps réel pour vous montrer l'impact</li>
-      <li>Cliquez sur <strong>Réinitialiser</strong> pour revenir aux valeurs réelles</li>
-    </ul>
-
-    <div class="warn"><span class="warn-icon">!</span><span>Les modifications en simulation ne sont <strong>jamais sauvegardées</strong>. Elles disparaissent dès que vous quittez l'onglet Simulation.</span></div>
-
-    <h3>Vue Analyse de la simulation</h3>
-    <p>Le sous-onglet <strong>Analyse</strong> de la simulation affiche un graphique en beignet (donut) de répartition des dépenses selon le scénario simulé, ainsi que la règle 50/30/20.</p>
-  </section>
-
-  <hr>
-
-  <!-- ══════════════════════════════════ ÉPARGNE ══════════════════════════════════ -->
-  <section id="epargne">
-    <h2>Épargne</h2>
-    <p>L'onglet <strong>Épargne</strong> permet de suivre votre capital épargne mois par mois. Contrairement au budget, ici vous saisissez votre <em>solde réel</em> en fin de mois.</p>
-
-    <h3>Enregistrer un mois d'épargne</h3>
-    <ul class="steps">
-      <li><span>Sélectionnez votre <strong>membre</strong> (onglet en haut).</span></li>
-      <li><span>Cliquez sur <strong>+ Ajouter</strong> (bouton flottant ou toolbar).</span></li>
-      <li><span>Saisissez l'<strong>année</strong>, le <strong>mois</strong> et votre <strong>capital épargne total</strong> à la fin de ce mois (ex : 6 150 €).</span></li>
-      <li><span>Sauvegardez. La variation (delta) est calculée automatiquement par rapport au mois précédent.</span></li>
-    </ul>
-
-    <div class="note"><span class="note-icon">ℹ</span><span>Le champ <strong>Montant</strong> représente votre <em>capital total épargné</em> (solde du compte épargne), pas seulement ce que vous avez mis de côté ce mois. La variation mensuelle est calculée automatiquement.</span></div>
-
-    <h3>Objectif d'épargne annuel</h3>
-    <div class="mockup">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-        <span style="font-size:var(--fs-xs);font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)">Objectif d'épargne 2026</span>
-        <input type="number" placeholder="Montant cible €" style="width:120px;padding:4px 8px;border:1px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text);font-size:var(--fs-sm)" value="10000">
-      </div>
-      <div style="display:flex;justify-content:space-between;margin-bottom:6px">
-        <span style="font-size:var(--fs-sm);font-weight:700;color:var(--blue)">6 150 € / 10 000 €</span>
-        <span style="font-size:var(--fs-xs);font-weight:700;color:var(--blue)">62% atteint</span>
-      </div>
-      <div class="prog-wrap"><div class="prog-bar" style="width:62%;background:var(--blue)"></div></div>
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px">
-        <div style="background:var(--surface2);border-radius:8px;padding:8px 10px">
-          <div style="font-size:var(--fs-xs);color:var(--muted);margin-bottom:3px">Épargne actuelle</div>
-          <div style="font-size:var(--fs-sm);font-weight:700">6 150 €</div>
-        </div>
-        <div style="background:var(--surface2);border-radius:8px;padding:8px 10px">
-          <div style="font-size:var(--fs-xs);color:var(--muted);margin-bottom:3px">Reste à atteindre</div>
-          <div style="font-size:var(--fs-sm);font-weight:700;color:var(--red)">3 850 €</div>
-        </div>
-        <div style="background:var(--surface2);border-radius:8px;padding:8px 10px">
-          <div style="font-size:var(--fs-xs);color:var(--muted);margin-bottom:3px">Rythme mensuel</div>
-          <div style="font-size:var(--fs-sm);font-weight:700">350 €</div>
-        </div>
-        <div style="background:var(--surface2);border-radius:8px;padding:8px 10px">
-          <div style="font-size:var(--fs-xs);color:var(--muted);margin-bottom:3px">Date estimée</div>
-          <div style="font-size:var(--fs-sm);font-weight:700;color:var(--blue)">novembre 2026</div>
-        </div>
-      </div>
+  <div class="two-col">
+    <div class="mini-card">
+      <div class="mini-card-title" style="color:var(--purple)">Répartition (donut)</div>
+      <p style="margin:0;font-size:14px">Graphique anneau affichant la part de chaque catégorie dans le total des dépenses du mois sélectionné.</p>
     </div>
-
-    <ul>
-      <li><strong>Montant cible</strong> : saisissez votre objectif annuel dans le champ en haut à droite. Il est sauvegardé localement.</li>
-      <li><strong>Rythme mensuel</strong> : moyenne des deltas mensuels récents (même valeur que le KPI "Moyenne mensuelle").</li>
-      <li><strong>Date estimée</strong> : projection basée sur le rythme actuel pour atteindre l'objectif.</li>
-    </ul>
-
-    <h3>Graphique d'évolution</h3>
-    <p>Le graphique en barres affiche l'évolution de votre épargne mois par mois (vue Mois) ou année par année (vue Année). Les barres de chaque membre sont colorées différemment.</p>
-
-    <h3>Projection fin d'année</h3>
-    <p>Le KPI <strong>Projection fin d'année</strong> extrapole votre capital épargne en décembre de l'année en cours, basé sur votre rythme mensuel actuel.</p>
-
-    <h3>Vue Année</h3>
-    <p>Basculez en vue <strong>Année</strong> pour comparer vos bilans annuels. Filtrez par année avec le sélecteur qui apparaît. La tendance d'une année sur l'autre est affichée en pourcentage.</p>
-  </section>
-
-  <hr>
-
-  <!-- ══════════════════════════════════ ANALYSE ══════════════════════════════════ -->
-  <section id="analyse">
-    <h2>Analyse</h2>
-    <p>L'onglet <strong>Analyse</strong> offre une vision multi-mois de vos finances : tendances, répartitions, et records.</p>
-
-    <h3>Graphique de répartition (donut)</h3>
-    <p>Un graphique en anneau affiche la répartition de vos dépenses par catégorie sur le mois sélectionné. Cliquez sur une tranche pour filtrer la vue.</p>
-
-    <h3>Règle 50/30/20</h3>
-    <p>Zénith compare automatiquement votre budget à la règle 50/30/20 :</p>
-    <ul>
-      <li><strong>50 %</strong> — Besoins (charges fixes + essentiels)</li>
-      <li><strong>30 %</strong> — Envies (loisir, sorties)</li>
-      <li><strong>20 %</strong> — Épargne</li>
-    </ul>
-    <p>Votre répartition réelle est affichée face à cette règle pour identifier où vous en êtes.</p>
-
-    <h3>Tendance par catégorie</h3>
-    <p>Un tableau affiche la tendance de chaque catégorie mois par mois (▲ hausse / ▼ baisse) avec le montant moyen sur la période analysée.</p>
-
-    <h3>Records</h3>
-    <div class="mockup">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-        <div class="card" style="margin:0">
-          <div style="font-size:var(--fs-xs);color:var(--muted);margin-bottom:4px">Mois le plus chargé</div>
-          <div style="font-size:15px;font-weight:800;color:var(--red)">2 340 €</div>
-          <div style="font-size:var(--fs-xs);color:var(--muted);margin-top:2px">Janvier 2026</div>
-        </div>
-        <div class="card" style="margin:0">
-          <div style="font-size:var(--fs-xs);color:var(--muted);margin-bottom:4px">Mois le plus léger</div>
-          <div style="font-size:15px;font-weight:800;color:var(--green)">980 €</div>
-          <div style="font-size:var(--fs-xs);color:var(--muted);margin-top:2px">Août 2025</div>
-        </div>
-      </div>
+    <div class="mini-card">
+      <div class="mini-card-title" style="color:var(--blue)">Règle 50/30/20</div>
+      <p style="margin:0;font-size:14px">Votre répartition réelle comparée à la règle : 50 % besoins, 30 % envies, 20 % épargne.</p>
     </div>
-
-    <h3>Graphique barres membres</h3>
-    <p>En vue "Tous", un graphique compare les dépenses de chaque membre par catégorie côte à côte.</p>
-  </section>
-
-  <hr>
-
-  <!-- ══════════════════════════════════ RECHERCHE GLOBALE ══════════════════════════════════ -->
-  <section id="recherche">
-    <h2>Recherche globale</h2>
-    <p>La recherche globale permet de trouver instantanément n'importe quelle entrée du budget ou du suivi mensuel.</p>
-
-    <h3>Ouvrir la recherche</h3>
-    <div style="display:flex;gap:10px;align-items:center;margin:12px 0">
-      <kbd>Ctrl</kbd> + <kbd>K</kbd>
-      <span style="color:var(--muted)">ou</span>
-      <kbd>/</kbd>
-      <span style="color:var(--muted)">depuis n'importe quel onglet (sauf champ de saisie actif)</span>
+    <div class="mini-card">
+      <div class="mini-card-title" style="color:var(--amber)">Records</div>
+      <p style="margin:0;font-size:14px">Mois le plus chargé et mois le plus léger en dépenses sur tout votre historique.</p>
     </div>
+    <div class="mini-card">
+      <div class="mini-card-title" style="color:var(--green)">Tendances</div>
+      <p style="margin:0;font-size:14px">Évolution par catégorie mois par mois — montants moyens et direction (▲ hausse / ▼ baisse).</p>
+    </div>
+  </div>
+</section>
 
-    <div class="mockup">
-      <div style="display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--blue);border-radius:var(--rl);padding:10px 14px;margin-bottom:10px">
-        <span style="color:var(--muted)">🔍</span>
-        <span style="color:var(--hint);flex:1;font-size:var(--fs-sm)">Rechercher une dépense…</span>
+<!-- ════════════════ RECHERCHE ════════════════ -->
+<section class="section" id="recherche">
+  <div class="sec-label">Outil global</div>
+  <h2>Recherche globale</h2>
+  <p class="sec-lead">Trouvez instantanément n'importe quelle entrée — budget prévisionnel et suivi mensuel — en une seule frappe.</p>
+
+  <div style="display:flex;align-items:center;gap:10px;margin:20px 0">
+    <kbd>Ctrl</kbd><span style="color:var(--hint)">+</span><kbd>K</kbd>
+    <span style="color:var(--hint);margin:0 6px">ou</span>
+    <kbd>/</kbd>
+    <span style="color:var(--muted);font-size:14px">— ouvre la recherche depuis n'importe quel onglet</span>
+  </div>
+
+  <div class="mockup">
+    <div class="mockup-bar"><div class="mockup-dot" style="background:#ff5f57"></div><div class="mockup-dot" style="background:#ffbd2e"></div><div class="mockup-dot" style="background:#28c840"></div><div class="mockup-title">Recherche globale</div></div>
+    <div class="mockup-body">
+      <div style="display:flex;align-items:center;gap:10px;background:var(--surface);border:1.5px solid var(--blue);border-radius:var(--rl);padding:12px 16px;margin-bottom:12px">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--muted)"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <span style="flex:1;font-size:15px;color:var(--hint)">loyer</span>
         <kbd>Esc</kbd>
       </div>
       <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);overflow:hidden">
-        <div style="padding:5px 14px;font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)">Budget prévisionnel (3)</div>
-        <div style="padding:9px 14px;display:flex;align-items:center;gap:12px;border-top:1px solid var(--border)">
-          <span style="font-size:10px;font-weight:700;color:var(--red);background:var(--red-bg);padding:2px 6px;border-radius:4px">fixe</span>
-          <span style="flex:1;font-size:var(--fs-sm);font-weight:600">Loyer</span>
-          <span style="font-size:var(--fs-sm);font-weight:700;color:var(--red)">850 €</span>
+        <div style="padding:6px 16px;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--hint);background:var(--surface2)">Budget prévisionnel (1)</div>
+        <div style="padding:10px 16px;display:flex;align-items:center;gap:12px;border-top:1px solid var(--border);cursor:pointer">
+          <span class="badge badge-red">fixe</span>
+          <span style="flex:1;font-size:14px;font-weight:600">Loyer</span>
+          <span style="font-size:14px;font-weight:800;color:var(--red)">850 €</span>
         </div>
-        <div style="padding:5px 14px;font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);border-top:1px solid var(--border)">Suivi mensuel (1)</div>
-        <div style="padding:9px 14px;display:flex;align-items:center;gap:12px;border-top:1px solid var(--border)">
-          <span style="font-size:10px;font-weight:700;color:var(--amber);background:var(--amber-bg);padding:2px 6px;border-radius:4px">variable</span>
-          <span style="flex:1;font-size:var(--fs-sm);font-weight:600">Courses Lidl</span>
-          <span style="font-size:var(--fs-sm);font-weight:700;color:var(--red)">67 €</span>
+        <div style="padding:6px 16px;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--hint);background:var(--surface2);border-top:1px solid var(--border)">Suivi mensuel (1)</div>
+        <div style="padding:10px 16px;display:flex;align-items:center;gap:12px;border-top:1px solid var(--border);cursor:pointer">
+          <span class="badge badge-amber">variable</span>
+          <span style="flex:1;font-size:14px;font-weight:600">Loyer studio étudiant</span>
+          <span style="font-size:14px;font-weight:800;color:var(--red)">450 €</span>
         </div>
       </div>
     </div>
+  </div>
 
-    <ul>
-      <li>Les résultats s'affichent en temps réel pendant la frappe.</li>
-      <li>Cliquez sur un résultat pour naviguer directement vers l'onglet correspondant.</li>
-      <li>Appuyez sur <kbd>Esc</kbd> pour fermer la recherche.</li>
-    </ul>
-  </section>
+  <ul>
+    <li>La recherche est <strong>insensible aux accents</strong> — tapez <em>epargne</em> pour trouver <em>épargne</em></li>
+    <li>Cliquez sur un résultat pour <strong>naviguer directement</strong> vers l'onglet correspondant</li>
+    <li><kbd>Esc</kbd> ferme la recherche</li>
+  </ul>
+</section>
 
-  <hr>
+<!-- ════════════════ ALERTES ════════════════ -->
+<section class="section" id="alertes">
+  <div class="sec-label">Surveillance</div>
+  <h2>Alertes &amp; Notifications</h2>
+  <p class="sec-lead">Zénith surveille vos budgets et vous notifie automatiquement en cas de dépassement.</p>
 
-  <!-- ══════════════════════════════════ ALERTES ══════════════════════════════════ -->
-  <section id="alertes">
-    <h2>Alertes budgétaires</h2>
-    <p>Zénith surveille automatiquement vos dépenses et vous notifie quand un budget de catégorie est sur le point d'être dépassé.</p>
+  <h3><span class="h3-icon" style="background:var(--amber-bg)">⚠</span>Alertes budgétaires</h3>
+  <ul>
+    <li><strong>80 % du budget atteint</strong> → notification d'avertissement pour la catégorie</li>
+    <li><strong>100 % dépassé</strong> → badge <span class="badge badge-red">DÉPASSÉ</span> dans le suivi mensuel + notification rouge</li>
+  </ul>
 
-    <h3>Quand sont-elles déclenchées ?</h3>
-    <ul>
-      <li>Quand les dépenses réelles d'une catégorie atteignent <strong>80 %</strong> du budget prévu → alerte jaune</li>
-      <li>Quand elles dépassent <strong>100 %</strong> → alerte rouge + badge <span class="badge badge-red">DÉPASSÉ</span> dans le suivi mensuel</li>
-    </ul>
+  <h3><span class="h3-icon" style="background:var(--surface2)">🔔</span>Panneau de notifications</h3>
+  <p>Cliquez sur l'icône <strong>cloche 🔔</strong> dans la topbar pour afficher l'historique. Un badge rouge indique les non-lues.</p>
 
-    <h3>Vérification manuelle</h3>
-    <p>Dans Paramètres → section Notifications, le bouton <strong>Vérifier les alertes budgétaires</strong> force une vérification immédiate.</p>
+  <div class="mockup">
+    <div class="mockup-bar"><div class="mockup-dot" style="background:#ff5f57"></div><div class="mockup-dot" style="background:#ffbd2e"></div><div class="mockup-dot" style="background:#28c840"></div><div class="mockup-title">Panneau de notifications</div></div>
+    <div class="mockup-body tight">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <span style="font-size:13px;font-weight:700">Notifications</span>
+        <span style="font-size:12px;color:var(--blue);cursor:pointer">Tout marquer lu</span>
+      </div>
+      <div style="background:color-mix(in srgb,var(--red) 8%,var(--surface));border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:6px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px">
+          <span style="width:8px;height:8px;border-radius:50%;background:var(--red);flex-shrink:0"></span>
+          <span style="font-size:13px;font-weight:700;color:var(--text)">Budget dépassé : Loisir</span>
+        </div>
+        <p style="margin:0;font-size:12px;padding-left:16px">Vos dépenses loisir (245 €) dépassent le budget prévu (200 €)</p>
+      </div>
+      <div style="background:color-mix(in srgb,var(--amber) 6%,var(--surface));border:1px solid var(--border);border-radius:10px;padding:10px 12px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px">
+          <span style="width:8px;height:8px;border-radius:50%;background:var(--amber);flex-shrink:0"></span>
+          <span style="font-size:13px;font-weight:700;color:var(--text)">Alerte : Variables à 85 %</span>
+        </div>
+        <p style="margin:0;font-size:12px;padding-left:16px">Dépenses variables : 340 € / 400 € prévus</p>
+      </div>
+    </div>
+  </div>
+</section>
 
-    <div class="tip"><span class="tip-icon">✓</span><span>Les alertes sont vérifiées automatiquement à chaque chargement du suivi mensuel. Une notification est ajoutée dans le panneau de notifications.</span></div>
-  </section>
+<!-- ════════════════ MOBILE ════════════════ -->
+<section class="section" id="mobile">
+  <div class="sec-label">Application mobile</div>
+  <h2>Usage mobile</h2>
+  <p class="sec-lead">Zénith est entièrement optimisé pour smartphone. Voici tous les gestes tactiles disponibles.</p>
 
-  <hr>
-
-  <!-- ══════════════════════════════════ NOTIFICATIONS ══════════════════════════════════ -->
-  <section id="notifications">
-    <h2>Notifications</h2>
-    <p>Le panneau de notifications (cloche en haut à droite) affiche l'historique des alertes et événements importants.</p>
-
-    <h3>Accéder aux notifications</h3>
-    <p>Cliquez sur l'icône <strong>cloche 🔔</strong> dans la barre du haut. Un badge rouge indique le nombre de notifications non lues.</p>
-
-    <h3>Actions disponibles</h3>
-    <ul>
-      <li><strong>Marquer tout comme lu</strong> — efface le badge de notifications</li>
-      <li><strong>Supprimer une notification</strong> — cliquez sur la croix à côté d'une notification</li>
-      <li><strong>Tout effacer</strong> — supprime toutes les notifications</li>
-    </ul>
-  </section>
-
-  <hr>
-
-  <!-- ══════════════════════════════════ MOBILE ══════════════════════════════════ -->
-  <section id="mobile">
-    <h2>Usage mobile</h2>
-    <p>Zénith est optimisé pour mobile. Voici les gestes disponibles :</p>
-
+  <div class="tbl-wrap">
     <table>
       <thead><tr><th>Geste</th><th>Action</th></tr></thead>
       <tbody>
         <tr><td>Swipe gauche/droite</td><td>Naviguer entre les onglets principaux</td></tr>
-        <tr><td>Swipe gauche/droite (Suivi mensuel)</td><td>Changer de mois (mois précédent / suivant)</td></tr>
-        <tr><td>Swipe gauche sur une ligne de dépense</td><td>Révéler le bouton de suppression / suppression du mois</td></tr>
-        <tr><td>Tap sur la carte</td><td>Ouvrir le modal de modification</td></tr>
-        <tr><td>Tap long / mode sélection</td><td>Activer le mode multi-sélection — tapez ensuite sur les lignes pour les sélectionner</td></tr>
-        <tr><td>Pull-to-refresh</td><td>Actualiser les données (tirer vers le bas depuis le haut de la page)</td></tr>
+        <tr><td>Swipe gauche/droite (Suivi mensuel)</td><td>Mois précédent / suivant</td></tr>
+        <tr><td>Swipe gauche sur une ligne</td><td>Révéler le bouton de suppression ou correction</td></tr>
+        <tr><td>Tap sur une carte</td><td>Ouvrir le modal de modification</td></tr>
+        <tr><td>Tap sur une ligne (mode sélection actif)</td><td>Sélectionner/désélectionner la ligne</td></tr>
+        <tr><td>Pull-to-refresh</td><td>Actualiser les données (tirer vers le bas depuis le haut)</td></tr>
       </tbody>
     </table>
+  </div>
 
-    <h3>Bouton flottant (+)</h3>
-    <p>Sur mobile, un bouton <strong>+</strong> flottant en bas à droite permet d'ajouter une entrée rapidement dans l'onglet actif.</p>
+  <div class="note"><span class="box-icon">ℹ</span><span>La <strong>première fois</strong> que vous swipez une ligne, une animation apparaît pour vous montrer le geste. Elle ne s'affiche qu'une seule fois.</span></div>
 
-    <div class="note"><span class="note-icon">ℹ</span><span>La <strong>première fois</strong> que vous swipez une ligne, une animation indique qu'on peut supprimer par glissement. Cette astuce n'apparaît qu'une seule fois.</span></div>
-  </section>
+  <div class="tip"><span class="box-icon">✓</span><span>Zénith est une <strong>PWA installable</strong> — dans votre navigateur mobile, choisissez "Ajouter à l'écran d'accueil" pour l'utiliser comme une app native.</span></div>
+</section>
 
-  <hr>
+<!-- ════════════════ RACCOURCIS ════════════════ -->
+<section class="section" id="raccourcis">
+  <div class="sec-label">Productivité</div>
+  <h2>Raccourcis clavier</h2>
 
-  <!-- ══════════════════════════════════ RACCOURCIS ══════════════════════════════════ -->
-  <section id="raccourcis">
-    <h2>Raccourcis clavier</h2>
+  <div class="sc-row"><span style="font-size:15px;color:var(--muted)">Ouvrir la recherche globale</span><div class="sc-keys"><kbd>Ctrl</kbd><span style="color:var(--hint);font-size:12px">+</span><kbd>K</kbd></div></div>
+  <div class="sc-row"><span style="font-size:15px;color:var(--muted)">Ouvrir la recherche globale (alt)</span><div class="sc-keys"><kbd>/</kbd></div></div>
+  <div class="sc-row"><span style="font-size:15px;color:var(--muted)">Fermer la recherche / un modal</span><div class="sc-keys"><kbd>Esc</kbd></div></div>
+  <div class="sc-row"><span style="font-size:15px;color:var(--muted)">Mois précédent (Suivi mensuel / Analyse)</span><div class="sc-keys"><kbd>←</kbd></div></div>
+  <div class="sc-row"><span style="font-size:15px;color:var(--muted)">Mois suivant (Suivi mensuel / Analyse)</span><div class="sc-keys"><kbd>→</kbd></div></div>
+</section>
 
-    <table>
-      <thead><tr><th>Raccourci</th><th>Action</th></tr></thead>
-      <tbody>
-        <tr><td><kbd>Ctrl</kbd> + <kbd>K</kbd></td><td>Ouvrir la recherche globale</td></tr>
-        <tr><td><kbd>/</kbd></td><td>Ouvrir la recherche globale (hors champ de saisie)</td></tr>
-        <tr><td><kbd>Esc</kbd></td><td>Fermer la recherche globale ou un modal ouvert</td></tr>
-        <tr><td><kbd>←</kbd> <kbd>→</kbd></td><td>Mois précédent / suivant dans Suivi mensuel</td></tr>
-        <tr><td><kbd>←</kbd> <kbd>→</kbd></td><td>Mois précédent / suivant dans Analyse et Dashboard</td></tr>
-      </tbody>
-    </table>
+<!-- ════════════════ FAQ ════════════════ -->
+<section class="section" id="faq">
+  <div class="sec-label">Questions fréquentes</div>
+  <h2>FAQ</h2>
 
-    <hr>
+  <h3><span class="h3-icon" style="background:var(--surface2)">?</span>Pourquoi mon RAV ne correspond pas à mon solde bancaire ?</h3>
+  <p>Le RAV est calculé à partir du budget <em>prévisionnel</em>. Deux raisons possibles :</p>
+  <ul>
+    <li>Des charges fixes ont un <strong>jour de prélèvement futur</strong> — elles ne sont pas encore comptées</li>
+    <li>Vous avez des dépenses variables non encore saisies dans le suivi mensuel</li>
+  </ul>
 
-    <h2>Questions fréquentes</h2>
+  <h3><span class="h3-icon" style="background:var(--surface2)">?</span>Pourquoi certaines charges fixes sont orange dans le calendrier ?</h3>
+  <p>Orange = prélèvement à venir dans le mois en cours (date de prélèvement > aujourd'hui). Vert = déjà prélevé. Ces charges oranges sont <strong>exclues du RAV réel</strong> car elles n'ont pas encore quitté votre compte.</p>
 
-    <h3>Pourquoi mon RAV ne correspond pas à ce que j'ai en banque ?</h3>
-    <p>Le RAV est calculé à partir du budget <em>prévisionnel</em> (charges fixes configurées). Si certaines charges fixes ont un jour de prélèvement futur, elles sont exclues du calcul pour le mois en cours. Vérifiez que toutes vos charges fixes ont bien une <strong>date de prélèvement</strong> renseignée.</p>
+  <h3><span class="h3-icon" style="background:var(--surface2)">?</span>Comment changer le % d'épargne par défaut ?</h3>
+  <p>Dans <strong>Paramètres</strong> (votre avatar en haut à droite) → ajustez le paramètre <strong>% épargne sur RAV</strong>. Ce réglage s'applique à tous les mois par défaut. Vous pouvez l'ajuster ponctuellement via le curseur dans le suivi mensuel.</p>
 
-    <h3>Comment la date de prélèvement affecte le calcul ?</h3>
-    <p>Pour le mois en cours, les charges fixes dont le <code>debit_day</code> est <strong>supérieur à aujourd'hui</strong> ne sont pas encore sorties de votre compte — elles sont donc exclues du RAV réel pour refléter fidèlement votre solde bancaire actuel.</p>
+  <h3><span class="h3-icon" style="background:var(--surface2)">?</span>Le curseur épargne/loisir modifie-t-il mon budget réel ?</h3>
+  <p>Non. Le curseur dans le suivi mensuel est <strong>uniquement prévisionnel</strong> pour ce mois. Il calcule combien vous prévoyez d'épargner vs dépenser en loisir. L'épargne réelle doit être enregistrée séparément dans l'onglet Épargne.</p>
 
-    <h3>Les données sont-elles sauvegardées automatiquement ?</h3>
-    <p>Oui. Toutes les entrées, corrections mensuelles et données d'épargne sont sauvegardées en base de données dès que vous validez. Les préférences (thème, % épargne, objectifs) sont sauvegardées localement dans votre navigateur.</p>
+  <h3><span class="h3-icon" style="background:var(--surface2)">?</span>Les données sont-elles sauvegardées automatiquement ?</h3>
+  <p>Oui. Toutes les entrées et corrections sont sauvegardées en base de données dès validation. Les préférences locales (thème, objectifs, % épargne) sont dans votre navigateur et persistent entre sessions.</p>
 
-    <h3>Puis-je utiliser l'application hors-ligne ?</h3>
-    <p>Partiellement. L'application est une PWA installable. Les données récemment consultées peuvent être affichées hors-ligne, mais les modifications nécessitent une connexion au serveur.</p>
+  <h3><span class="h3-icon" style="background:var(--surface2)">?</span>L'objectif épargne s'applique-t-il aux deux membres ?</h3>
+  <p>Cela dépend du membre sélectionné. En vue <strong>Tous</strong>, l'objectif est comparé à l'épargne combinée des deux membres. Filtrez sur votre nom pour comparer uniquement votre épargne personnelle.</p>
 
-    <h3>Comment changer le % d'épargne par défaut ?</h3>
-    <p>Dans <strong>Paramètres</strong> (avatar en haut à droite) → ajustez le curseur <strong>% épargne sur RAV</strong>. Ce pourcentage détermine la répartition épargne/loisir sur votre reste à vivre.</p>
-  </section>
-
-  <div style="height:60px"></div>
+  <div style="height:48px"></div>
+</section>
 
 </main>
 
 <script>
-  // Sidebar active link on scroll
-  const sections = document.querySelectorAll('section[id]');
-  const links = document.querySelectorAll('.sidebar a');
-  const obs = new IntersectionObserver(entries => {
-    entries.forEach(e => {
-      if (e.isIntersecting) {
-        links.forEach(l => l.classList.remove('active'));
-        const a = document.querySelector(`.sidebar a[href="#${e.target.id}"]`);
-        if (a) a.classList.add('active');
-      }
-    });
-  }, { rootMargin: '-20% 0px -70% 0px' });
-  sections.forEach(s => obs.observe(s));
-
-  document.querySelectorAll('.sidebar a').forEach(a => {
-    a.addEventListener('click', e => {
-      e.preventDefault();
-      document.querySelector(a.getAttribute('href')).scrollIntoView({ behavior: 'smooth' });
-    });
+const sections = document.querySelectorAll('section[id], div[id]');
+const links = document.querySelectorAll('.sb-link');
+const obs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      links.forEach(l => l.classList.remove('active'));
+      const a = document.querySelector(`.sb-link[href="#${e.target.id}"]`);
+      if (a) a.classList.add('active');
+    }
   });
+}, { rootMargin: '-10% 0px -80% 0px' });
+sections.forEach(s => obs.observe(s));
+
+document.querySelectorAll('.sb-link').forEach(a => {
+  a.addEventListener('click', e => {
+    e.preventDefault();
+    const target = document.querySelector(a.getAttribute('href'));
+    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+});
 </script>
+</div><!-- /.app-wrap -->
 </body>
 </html>
