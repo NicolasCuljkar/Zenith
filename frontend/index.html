@@ -3745,12 +3745,12 @@ function memberTableHtml(rows,isMobile,memberName){
         const _dots=_fixD.map(e=>{
           const isPast=e.debit_day<=_todD;
           const col=isPast?'var(--green)':'var(--amber)';
-          return`<span style="font-size:var(--fs-xs);font-weight:800;color:${col};background:${col}18;border-radius:4px;padding:1px 6px;text-align:center;white-space:nowrap;align-self:center">${e.debit_day}</span>
-            <span style="font-size:var(--fs-xs);font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${e.name}</span>
-            <span style="font-size:var(--fs-xs);font-weight:700;color:${col};white-space:nowrap;text-align:right">${eur(Math.abs(e.amount))}</span>`;
+          return`<span style="font-size:var(--fs-xs);font-weight:600;color:${isPast?'var(--green)':'var(--hint)'};text-align:center;white-space:nowrap;align-self:center;opacity:.7">${e.debit_day}</span>
+            <span style="font-size:var(--fs-xs);font-weight:500;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${e.name}</span>
+            <span style="font-size:var(--fs-xs);font-weight:600;color:var(--hint);white-space:nowrap;text-align:right;opacity:.85">${eur(Math.abs(e.amount))}</span>`;
         }).join('');
         _budFixCal=`<div style="margin-bottom:8px;border-bottom:1px solid var(--border);padding-bottom:10px">
-          <div style="font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:5px">Prélèvements du mois</div>
+          <div style="font-size:9px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--hint);margin-bottom:5px;opacity:.7">Prélèvements du mois</div>
           <div style="display:grid;grid-template-columns:auto 1fr auto;gap:4px 10px;align-items:center">${_dots}</div>
         </div>`;
       }
@@ -4689,12 +4689,13 @@ function _monthlyAutoGroup(rows, overrides, extras, g, isMobile) {
         const amt = ov2 ? Math.abs(ov2.amount) : Math.abs(e.amount);
         const nameCol = isSup ? 'var(--muted)' : 'var(--text)';
         const rowOp = isSup ? 'opacity:.5;' : '';
-        return `<span style="${rowOp}font-size:var(--fs-xs);font-weight:800;color:${col};background:${col}18;border-radius:4px;padding:1px 6px;text-align:center;white-space:nowrap;align-self:center">${e.debit_day}</span>
-          <span style="${rowOp}font-size:var(--fs-xs);font-weight:600;color:${nameCol};overflow:hidden;text-overflow:ellipsis;white-space:nowrap${isSup?';text-decoration:line-through':''}">${e.name}</span>
-          <span style="${rowOp}font-size:var(--fs-xs);font-weight:700;color:${col};white-space:nowrap;text-align:right">${isSup?'—':eur(amt)}</span>`;
+        const dayCol = isSup ? 'var(--hint)' : isPast ? 'var(--green)' : 'var(--hint)';
+        return `<span style="${rowOp}font-size:var(--fs-xs);font-weight:600;color:${dayCol};text-align:center;white-space:nowrap;align-self:center;opacity:.7">${e.debit_day}</span>
+          <span style="${rowOp}font-size:var(--fs-xs);font-weight:500;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap${isSup?';text-decoration:line-through':''}">${e.name}</span>
+          <span style="${rowOp}font-size:var(--fs-xs);font-weight:600;color:var(--hint);white-space:nowrap;text-align:right;opacity:.85">${isSup?'—':eur(amt)}</span>`;
       }).join('');
       _fixCalendar = `<div style="margin-bottom:8px;border-bottom:1px solid var(--border);padding-bottom:10px">
-        <div style="font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:5px">Prélèvements du mois</div>
+        <div style="font-size:9px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--hint);margin-bottom:5px;opacity:.7">Prélèvements du mois</div>
         <div style="display:grid;grid-template-columns:auto 1fr auto;gap:4px 10px;align-items:center">${rows2}</div>
       </div>`;
     }
