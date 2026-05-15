@@ -3717,7 +3717,27 @@ function memberTableHtml(rows,isMobile,memberName){
       </div>
     </div></div>`}).join('');
     const _isFixGrp=g.key==='fixes';
-    const inner=isMobile?mobileRows:`<div class="tbl-wrap"><table style="width:100%;table-layout:fixed">
+    // Calendrier prélèvements (budget prévisionnel, groupe fixes)
+    let _budFixCal='';
+    if(_isFixGrp){
+      const _isNowM=(new Date().getFullYear()===new Date().getFullYear()&&new Date().getMonth()===new Date().getMonth());
+      const _todD=new Date().getDate();
+      const _fixD=gRows.filter(e=>e.debit_day&&!e._synthetic).sort((a,b)=>a.debit_day-b.debit_day);
+      if(_fixD.length>0){
+        const _dots=_fixD.map(e=>{
+          const isPast=e.debit_day<=_todD;
+          const bg=isPast?'var(--green-bg)':'color-mix(in srgb,var(--amber) 15%,var(--surface))';
+          const col=isPast?'var(--green)':'var(--amber)';
+          const shortN=e.name.length>12?e.name.slice(0,11)+'…':e.name;
+          return`<div style="display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:10px;background:${bg};border:1.5px solid ${col};flex-shrink:0">
+            <div style="width:36px;height:36px;border-radius:50%;background:${col}22;border:2px solid ${col};display:flex;align-items:center;justify-content:center;font-size:var(--fs-sm);font-weight:800;color:${col};flex-shrink:0">${e.debit_day}</div>
+            <div><div style="font-size:var(--fs-sm);font-weight:700;color:var(--text)">${shortN}</div><div style="font-size:var(--fs-xs);font-weight:600;color:${col}">${eur(Math.abs(e.amount))} · ${isPast?'prélevé':'à venir'}</div></div>
+          </div>`;
+        }).join('');
+        _budFixCal=`<div style="display:flex;gap:8px;flex-wrap:wrap;padding:8px 0 10px;border-bottom:1px solid var(--border);margin-bottom:8px">${_dots}</div>`;
+      }
+    }
+    const inner=isMobile?`${_budFixCal}${mobileRows}`:`${_budFixCal}<div class="tbl-wrap"><table style="width:100%;table-layout:fixed">
       ${_isFixGrp?`<colgroup><col style="width:50%"><col style="width:16%"><col style="width:22%"><col style="width:12%"></colgroup>`:`<colgroup><col style="width:60%"><col style="width:28%"><col style="width:12%"></colgroup>`}
       <thead><tr><th>Désignation</th>${_isFixGrp?'<th>Prélèvement</th>':''}<th style="text-align:right">Montant</th><th></th></tr></thead>
       <tbody id="drag-${memberName}-${g.key}">${tableRows}
