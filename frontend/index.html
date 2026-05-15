@@ -6093,8 +6093,9 @@ function renderSavings(){
   const allMembers=orderedMembers();
   const showMembers=savingsMember==='all'?allMembers:[savingsMember];
   const isSingle=showMembers.length===1;
-  const latestFirst=savings.filter(s=>s.member===first).slice(-1)[0];
-  const latestSecond=savings.filter(s=>s.member===second).slice(-1)[0];
+  const _savSort=arr=>[...arr].sort((a,b)=>b.year-a.year||MONTH_NAMES.indexOf(b.month)-MONTH_NAMES.indexOf(a.month));
+  const latestFirst=_savSort(savings.filter(s=>s.member===first))[0];
+  const latestSecond=_savSort(savings.filter(s=>s.member===second))[0];
   const totalSav=(latestFirst?.amount||0)+(latestSecond?.amount||0);
   // ── Objectif annuel ──
   const _goalYear=new Date().getFullYear();
@@ -6102,22 +6103,44 @@ function renderSavings(){
   const _goal=parseInt(localStorage.getItem(_goalKey))||0;
   const _goalPct=_goal>0&&totalSav>0?Math.min(100,Math.round(totalSav/_goal*100)):0;
   const _goalCol=_goalPct>=100?'var(--green)':_goalPct>=70?'var(--amber)':'var(--blue)';
+  const _avgDelta=arr=>{const r=arr.slice(0,6);return r.length?r.reduce((s,x)=>s+(x.delta!=null?x.delta:0),0)/r.length:0;};
+  const _monthlyRate=_avgDelta(_savSort(savings.filter(s=>s.member===first)))+_avgDelta(_savSort(savings.filter(s=>s.member===second)));
+  const _remaining=Math.max(0,_goal-totalSav);
+  const _monthsNeeded=_monthlyRate>0&&_remaining>0?Math.ceil(_remaining/_monthlyRate):null;
+  const _estDate=_monthsNeeded!=null?(()=>{const d=new Date();d.setMonth(d.getMonth()+_monthsNeeded);return d.toLocaleDateString('fr-FR',{month:'long',year:'numeric'});})():null;
   const _goalEl=document.getElementById('savings-goal-section');
   if(_goalEl)_goalEl.innerHTML=`<div class="card" style="padding:14px 16px">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
       <span style="font-size:var(--fs-xs);font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)">Objectif d'épargne ${_goalYear}</span>
-      <div style="display:flex;align-items:center;gap:6px">
-        <input type="number" min="0" step="100" placeholder="Montant cible €" value="${_goal||''}"
-          onchange="localStorage.setItem('${_goalKey}',this.value||'0');renderSavings()"
-          style="width:130px;padding:5px 8px;border:1px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text);font-size:var(--fs-sm);font-family:inherit">
-      </div>
+      <input type="number" min="0" step="100" placeholder="Montant cible €" value="${_goal||''}"
+        onchange="localStorage.setItem('${_goalKey}',this.value||'0');renderSavings()"
+        style="width:130px;padding:5px 8px;border:1px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text);font-size:var(--fs-sm);font-family:inherit">
     </div>
-    ${_goal>0?`<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px">
+    ${_goal>0?`
+    <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px">
       <span style="font-size:var(--fs-sm);font-weight:700;color:${_goalCol}">${eur(totalSav)} / ${eur(_goal)}</span>
       <span style="font-size:var(--fs-xs);color:${_goalCol};font-weight:700">${_goalPct}% atteint</span>
     </div>
-    <div style="height:6px;background:var(--surface2);border-radius:99px;overflow:hidden">
+    <div style="height:6px;background:var(--surface2);border-radius:99px;overflow:hidden;margin-bottom:12px">
       <div style="width:${_goalPct}%;height:100%;background:${_goalCol};border-radius:99px;transition:width .4s"></div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px">
+      <div style="background:var(--surface2);border-radius:8px;padding:8px 10px">
+        <div style="font-size:var(--fs-xs);color:var(--muted);margin-bottom:3px">Épargne actuelle</div>
+        <div style="font-size:var(--fs-sm);font-weight:700;color:var(--text)">${eur(totalSav)}</div>
+      </div>
+      <div style="background:var(--surface2);border-radius:8px;padding:8px 10px">
+        <div style="font-size:var(--fs-xs);color:var(--muted);margin-bottom:3px">Reste à atteindre</div>
+        <div style="font-size:var(--fs-sm);font-weight:700;color:${_remaining>0?'var(--red)':'var(--green)'}">${_remaining>0?eur(_remaining):'Atteint ✓'}</div>
+      </div>
+      <div style="background:var(--surface2);border-radius:8px;padding:8px 10px">
+        <div style="font-size:var(--fs-xs);color:var(--muted);margin-bottom:3px">Rythme mensuel</div>
+        <div style="font-size:var(--fs-sm);font-weight:700;color:var(--text)">${_monthlyRate>0?eur(Math.round(_monthlyRate)):'—'}</div>
+      </div>
+      <div style="background:var(--surface2);border-radius:8px;padding:8px 10px">
+        <div style="font-size:var(--fs-xs);color:var(--muted);margin-bottom:3px">Date estimée</div>
+        <div style="font-size:var(--fs-sm);font-weight:700;color:${_estDate?'var(--blue)':'var(--muted)'}">${_goalPct>=100?'Objectif atteint':_estDate||'—'}</div>
+      </div>
     </div>`:
     `<div style="font-size:var(--fs-xs);color:var(--muted)">Saisissez un objectif pour suivre votre progression.</div>`}
   </div>`;
