@@ -991,7 +991,7 @@ if(window.location.hostname==='localhost'||window.location.hostname==='127.0.0.1
             <option value="epargne">Épargne</option><option value="loisir">Loisir</option>
           </select>
         </div>
-        <button id="entries-sort-btn" onclick="_cycleEntriesSort()" class="btn btn-add-desktop" style="flex-shrink:0;padding:7px 10px;font-size:var(--fs-xs)">Montant ↓</button>
+        <button id="entries-sort-btn" onclick="_cycleEntriesSort()" class="btn" style="flex-shrink:0;white-space:nowrap">Montant ↓</button>
         <button class="btn-add btn-add-desktop" id="btn-add-entry"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Ajouter</button>
       </div>
       <div id="entries-sections"></div>
@@ -3367,6 +3367,7 @@ async function renderDashboard(){
       <option value="epargne">Épargne</option>
       <option value="revenu">Revenus</option>
     </select>
+    <button class="btn mly-sort-btn" onclick="_cycleMlySort()" style="flex-shrink:0;white-space:nowrap">Montant ↓</button>
     <button class="btn-add btn-add-desktop" onclick="monthlyYear=dashYear;monthlyMonth=dashMonth;window._mlyCtxDash=true;openAddMonthlyExpense()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Ajouter</button>
   </div>
   <div id="dash-monthly-sections"></div>`;
@@ -3604,6 +3605,18 @@ function getSortedGroupRows(gRows){
   if(_entriesSort==='name_asc')return [...gRows].sort((a,b)=>a.name.localeCompare(b.name,'fr'));
   if(_entriesSort==='amount_asc')return [...gRows].sort((a,b)=>Math.abs(a.amount)-Math.abs(b.amount));
   return [...gRows].sort((a,b)=>Math.abs(b.amount)-Math.abs(a.amount));
+}
+let _mlySort='amount_desc';
+function _cycleMlySort(){
+  _mlySort=_mlySort==='amount_desc'?'name_asc':_mlySort==='name_asc'?'amount_asc':'amount_desc';
+  const lbl={amount_desc:'Montant ↓',name_asc:'Nom A→Z',amount_asc:'Montant ↑'}[_mlySort];
+  document.querySelectorAll('.mly-sort-btn').forEach(b=>b.textContent=lbl);
+  if(_lastMonthlyStats)_renderMonthlySections(_lastMonthlyStats,monthlyExpenses,_lastMonthlySavings,_lastMonthlyEntryStats,_lastMlyMemberStats);
+}
+function _mlySorted(arr){
+  if(_mlySort==='name_asc')return [...arr].sort((a,b)=>a.name.localeCompare(b.name,'fr'));
+  if(_mlySort==='amount_asc')return [...arr].sort((a,b)=>Math.abs(a.amount)-Math.abs(b.amount));
+  return [...arr].sort((a,b)=>Math.abs(b.amount)-Math.abs(a.amount));
 }
 
 function initDragDrop(container, memberName, groupKey){
@@ -4548,12 +4561,12 @@ function _renderMonthlySections(stats, expenses, savingsData = [], entryStats = 
 
     const _isFiltering = !!(  _mlySearch || _mlyCat);
     if (g.auto) {
-      const rows   = filteredAutoEntries.filter(e => g.cats.includes(e.cat)).sort((a, b) => Math.abs(b.amount) - Math.abs(a.amount));
-      const extras = filteredManualExpenses.filter(e => g.cats.includes(e.cat)).sort((a, b) => Math.abs(b.amount) - Math.abs(a.amount));
+      const rows   = _mlySorted(filteredAutoEntries.filter(e => g.cats.includes(e.cat)));
+      const extras = _mlySorted(filteredManualExpenses.filter(e => g.cats.includes(e.cat)));
       if (_isFiltering && !rows.length && !extras.length) return '';
       return _monthlyAutoGroup(rows, overrides, extras, g, isMobile);
     } else {
-      const rows = filteredManualExpenses.filter(e => g.cats.includes(e.cat)).sort((a, b) => Math.abs(b.amount) - Math.abs(a.amount));
+      const rows = _mlySorted(filteredManualExpenses.filter(e => g.cats.includes(e.cat)));
       if (_isFiltering && !rows.length) return '';
       let budgetTotal = g.cats.reduce((s, c) => s + (stats[c]?.budget || 0), 0);
       if (budgetTotal === 0 && g.key === 'loisir' && entryStats) {
