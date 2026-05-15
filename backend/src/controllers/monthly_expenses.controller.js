@@ -41,16 +41,16 @@ async function getHistory(req, res, next) {
 
 async function createExpense(req, res, next) {
   try {
-    const { year, month, name, amount, cat, member, note, entry_id } = req.body;
-    const expense = monthlyService.create({ year, month, name, amount, cat, member, note, entry_id }, req.user.id);
+    const { year, month, name, amount, cat, member, note, entry_id, day } = req.body;
+    const expense = monthlyService.create({ year, month, name, amount, cat, member, note, entry_id, day }, req.user.id);
     res.status(201).json({ success: true, data: expense });
   } catch (err) { next(err); }
 }
 
 async function updateExpense(req, res, next) {
   try {
-    const { name, amount, cat, member, note, is_exceptional } = req.body;
-    const expense = monthlyService.update(Number(req.params.id), { name, amount, cat, member, note, is_exceptional }, req.user.id);
+    const { name, amount, cat, member, note, is_exceptional, day } = req.body;
+    const expense = monthlyService.update(Number(req.params.id), { name, amount, cat, member, note, is_exceptional, day }, req.user.id);
     res.json({ success: true, data: expense });
   } catch (err) { next(err); }
 }
