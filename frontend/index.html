@@ -3740,11 +3740,10 @@ function memberTableHtml(rows,isMobile,memberName){
         const _dots=_fixD.map(e=>{
           const isPast=e.debit_day<=_todD;
           const col=isPast?'var(--green)':'var(--amber)';
-          const shortN=e.name.length>14?e.name.slice(0,13)+'…':e.name;
-          return`<div title="${e.name} · ${eur(Math.abs(e.amount))}" style="display:inline-flex;align-items:center;gap:4px;padding:2px 7px 2px 3px;border-radius:20px;border:1px solid ${col};background:${col}12;flex-shrink:0">
-            <span style="font-size:10px;font-weight:800;color:${col};background:${col}22;border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0">${e.debit_day}</span>
-            <span style="font-size:var(--fs-xs);font-weight:600;color:var(--text);white-space:nowrap">${shortN}</span>
-            <span style="font-size:var(--fs-xs);color:${col};font-weight:700;white-space:nowrap">${eur(Math.abs(e.amount))}</span>
+          const shortN=e.name.length>10?e.name.slice(0,9)+'…':e.name;
+          return`<div title="${e.name} · ${eur(Math.abs(e.amount))}" style="display:inline-flex;align-items:center;gap:3px;padding:1px 6px 1px 2px;border-radius:20px;border:1px solid ${col};background:${col}12">
+            <span style="font-size:8px;font-weight:800;color:${col};background:${col}22;border-radius:50%;width:14px;height:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0">${e.debit_day}</span>
+            <span style="font-size:9px;font-weight:600;color:var(--text);white-space:nowrap">${shortN}</span>
           </div>`;
         }).join('');
         _budFixCal=`<div style="margin-bottom:6px;border-bottom:1px solid var(--border);padding-bottom:8px"><div class="cal-scroll" style="display:flex;flex-wrap:wrap;gap:5px;padding-top:6px">${_dots}</div></div>`;
@@ -4682,11 +4681,10 @@ function _monthlyAutoGroup(rows, overrides, extras, g, isMobile) {
         const isPast = _isNowMonth && e.debit_day <= _todayD;
         const col = isSup ? 'var(--muted)' : isPast ? 'var(--green)' : 'var(--amber)';
         const amt = ov2 ? Math.abs(ov2.amount) : Math.abs(e.amount);
-        const shortName = e.name.length > 14 ? e.name.slice(0,13)+'…' : e.name;
-        return `<div title="${e.name} · ${eur(amt)}" style="display:inline-flex;align-items:center;gap:4px;padding:2px 7px 2px 3px;border-radius:20px;border:1px solid ${col};background:${col}12;flex-shrink:0${isSup?';opacity:.5':''}">
-          <span style="font-size:10px;font-weight:800;color:${col};background:${col}22;border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0">${e.debit_day}</span>
-          <span style="font-size:var(--fs-xs);font-weight:600;color:var(--text);white-space:nowrap">${shortName}</span>
-          <span style="font-size:var(--fs-xs);color:${col};font-weight:700;white-space:nowrap">${eur(amt)}</span>
+        const shortName = e.name.length > 10 ? e.name.slice(0,9)+'…' : e.name;
+        return `<div title="${e.name} · ${eur(amt)}" style="display:inline-flex;align-items:center;gap:3px;padding:1px 6px 1px 2px;border-radius:20px;border:1px solid ${col};background:${col}12${isSup?';opacity:.5':''}">
+          <span style="font-size:8px;font-weight:800;color:${col};background:${col}22;border-radius:50%;width:14px;height:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0">${e.debit_day}</span>
+          <span style="font-size:9px;font-weight:600;color:var(--text);white-space:nowrap">${shortName}</span>
         </div>`;
       }).join('');
       _fixCalendar = `<div style="margin-bottom:6px;border-bottom:1px solid var(--border);padding-bottom:8px"><div class="cal-scroll" style="display:flex;flex-wrap:wrap;gap:5px;padding-top:6px">${dots}</div></div>`;
