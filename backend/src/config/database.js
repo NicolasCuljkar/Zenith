@@ -312,6 +312,9 @@ UPDATE households SET creator_id = (
   );
   CREATE INDEX IF NOT EXISTS idx_notif_user ON notifications(user_id)`,
 
+  // v28 — jour de saisie sur les dépenses mensuelles manuelles (1-31, nullable)
+  `ALTER TABLE monthly_expenses ADD COLUMN day INTEGER`,
+
 ];
 
 // ── Apply pending migrations ──────────────────────────────────────────────────

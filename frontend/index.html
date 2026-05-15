@@ -1446,7 +1446,10 @@ if(window.location.hostname==='localhost'||window.location.hostname==='127.0.0.1
           </div>
         </div>
       </div>
-      <div class="fgrp"><label>Montant (€)</label><input type="number" id="fme-amount" min="0" step="0.01" placeholder="0" inputmode="decimal"></div>
+      <div class="frow">
+        <div class="fgrp" style="flex:2"><label>Montant (€)</label><input type="number" id="fme-amount" min="0" step="0.01" placeholder="0" inputmode="decimal"></div>
+        <div class="fgrp" style="flex:1"><label>Jour</label><input type="number" id="fme-day" min="1" max="31" inputmode="numeric"></div>
+      </div>
       <div class="fgrp"><label>Note</label><input type="text" id="fme-note" placeholder="Ex. Leclerc, Total…" required></div>
       <div id="fme-exceptional-row" style="display:none">
         <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px 12px;background:var(--surface2);border-radius:var(--r);border:1px solid var(--border)">
@@ -3613,14 +3616,21 @@ function getSortedGroupRows(gRows){
 }
 let _mlySort='amount_desc';
 function _cycleMlySort(){
-  _mlySort=_mlySort==='amount_desc'?'name_asc':_mlySort==='name_asc'?'amount_asc':'amount_desc';
-  const lbl={amount_desc:'Montant ↓',name_asc:'Nom A→Z',amount_asc:'Montant ↑'}[_mlySort];
+  const cycle=['amount_desc','name_asc','amount_asc','date_asc'];
+  _mlySort=cycle[(cycle.indexOf(_mlySort)+1)%cycle.length];
+  const lbl={amount_desc:'Montant ↓',name_asc:'Nom A→Z',amount_asc:'Montant ↑',date_asc:'Date ↑'}[_mlySort];
   document.querySelectorAll('.mly-sort-btn').forEach(b=>b.textContent=lbl);
   if(_lastMonthlyStats)_renderMonthlySections(_lastMonthlyStats,monthlyExpenses,_lastMonthlySavings,_lastMonthlyEntryStats,_lastMlyMemberStats);
 }
 function _mlySorted(arr){
   if(_mlySort==='name_asc')return [...arr].sort((a,b)=>a.name.localeCompare(b.name,'fr'));
   if(_mlySort==='amount_asc')return [...arr].sort((a,b)=>Math.abs(a.amount)-Math.abs(b.amount));
+  if(_mlySort==='date_asc')return [...arr].sort((a,b)=>{
+    if(a.day==null&&b.day==null)return 0;
+    if(a.day==null)return 1;
+    if(b.day==null)return -1;
+    return a.day-b.day;
+  });
   return [...arr].sort((a,b)=>Math.abs(b.amount)-Math.abs(a.amount));
 }
 
@@ -3750,8 +3760,7 @@ function memberTableHtml(rows,isMobile,memberName){
             <span style="font-size:var(--fs-xs);font-weight:600;color:var(--hint);white-space:nowrap;text-align:right;opacity:.85">${eur(Math.abs(e.amount))}</span>`;
         }).join('');
         _budFixCal=`<div style="margin-bottom:8px;border-bottom:1px solid var(--border);padding-bottom:10px">
-          <div style="font-size:9px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--hint);margin-bottom:5px;opacity:.7">Prélèvements du mois</div>
-          <div style="display:grid;grid-template-columns:auto 1fr auto;gap:4px 10px;align-items:center">${_dots}</div>
+                    <div style="display:grid;grid-template-columns:auto 1fr auto;gap:4px 10px;align-items:center">${_dots}</div>
         </div>`;
       }
     }
@@ -4695,8 +4704,7 @@ function _monthlyAutoGroup(rows, overrides, extras, g, isMobile) {
           <span style="${rowOp}font-size:var(--fs-xs);font-weight:600;color:var(--hint);white-space:nowrap;text-align:right;opacity:.85">${isSup?'—':eur(amt)}</span>`;
       }).join('');
       _fixCalendar = `<div style="margin-bottom:8px;border-bottom:1px solid var(--border);padding-bottom:10px">
-        <div style="font-size:9px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--hint);margin-bottom:5px;opacity:.7">Prélèvements du mois</div>
-        <div style="display:grid;grid-template-columns:auto 1fr auto;gap:4px 10px;align-items:center">${rows2}</div>
+                <div style="display:grid;grid-template-columns:auto 1fr auto;gap:4px 10px;align-items:center">${rows2}</div>
       </div>`;
     }
   }
@@ -4744,9 +4752,10 @@ function _monthlyAutoGroup(rows, overrides, extras, g, isMobile) {
   }
   return `<div style="margin-bottom:var(--sg)">${hdr}<div id="monthly-body-${g.key}" style="${collapsed?'display:none':''}">
 ${bar}${_fixCalendar}    <div class="tbl-wrap"><table style="width:100%;table-layout:fixed">
-      <colgroup><col style="width:3%"><col style="width:58%"><col style="width:27%"><col style="width:12%"></colgroup>
+      <colgroup><col style="width:3%"><col style="width:6%"><col style="width:52%"><col style="width:27%"><col style="width:12%"></colgroup>
       <thead><tr>
         <th><input type="checkbox" data-group="${g.key}" onchange="toggleMonthlySelectAll(this,'${g.key}')"></th>
+        <th style="text-align:center;color:var(--hint);font-size:var(--fs-xs)">Jour</th>
         <th>Désignation</th><th style="text-align:right">Montant</th><th></th>
       </tr></thead>
       <tbody>
@@ -4775,6 +4784,7 @@ ${bar}${_fixCalendar}    <div class="tbl-wrap"><table style="width:100%;table-la
             : `<td style="text-align:right;font-weight:600;color:${ac}">${eur(displayAmt)}</td>`;
           return `<tr style="${rowStyle}">
             <td>${canSelect?`<input type="checkbox" class="monthly-cb monthly-cb-suppress" data-entry-id="${e.id}" data-group="${g.key}" data-ov-id="${ov?ov.id:''}" ${monthlySelectedSuppress.has(e.id)?'checked':''} onchange="toggleMonthlySelectSuppress(${e.id},${ov?ov.id:'null'},this)">`:''}</td>
+            <td style="text-align:center;font-size:var(--fs-xs);font-weight:600;color:var(--hint)">${e.debit_day||'—'}</td>
             <td style="font-weight:500;${isSuppressed?'color:var(--muted);':''}">${e.name}${statusBadge}</td>
             ${amtCell}
             <td><div style="display:flex;gap:3px;justify-content:flex-end">
@@ -4786,6 +4796,7 @@ ${bar}${_fixCalendar}    <div class="tbl-wrap"><table style="width:100%;table-la
         }).join('')}
         ${extras.map(e => { const c=CATS[e.cat]; const exAc=e.cat==='revenu'?'var(--green)':e.cat==='impot'?'var(--amber)':'var(--red)'; return `<tr style="border-left:3px solid ${c.hex};background:${c.bg}">
           <td><input type="checkbox" class="monthly-cb" data-id="${e.id}" data-group="${g.key}" ${monthlySelected.has(e.id)?'checked':''} onchange="toggleMonthlySelect(${e.id},this)"></td>
+          <td style="text-align:center;font-size:var(--fs-xs);font-weight:600;color:var(--hint)">${e.day||'—'}</td>
           <td><div style="font-weight:500">${e.name}<span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:1px 6px;border-radius:4px;background:var(--surface2);color:var(--muted);border:1px solid var(--border);margin-left:6px;vertical-align:middle">+ ajouté</span></div>${e.note?`<div style="font-size:var(--fs-xs);color:var(--muted);margin-top:2px">${e.note}</div>`:''}</td>
           <td style="text-align:right;font-weight:600;color:${exAc}">${eur(Math.abs(e.amount))}</td>
           <td><div style="display:flex;gap:3px;justify-content:flex-end">
@@ -4794,7 +4805,7 @@ ${bar}${_fixCalendar}    <div class="tbl-wrap"><table style="width:100%;table-la
             <button class="btn-act btn-act-danger" onclick="deleteMonthlyExpense(${e.id})">${DEL_ICON}</button>
           </div></td>
         </tr>`; }).join('')}
-        <tr style="background:var(--surface2)"><td></td><td style="font-size:var(--fs-sm);font-weight:600;color:var(--muted)">Total ${g.label.toLowerCase()}</td><td style="text-align:right;font-weight:700;color:${g.totColor}">${eur(tot)}</td><td></td></tr>
+        <tr style="background:var(--surface2)"><td></td><td></td><td style="font-size:var(--fs-sm);font-weight:600;color:var(--muted)">Total ${g.label.toLowerCase()}</td><td style="text-align:right;font-weight:700;color:${g.totColor}">${eur(tot)}</td><td></td></tr>
       </tbody>
     </table></div>
   </div></div>`;
@@ -4850,6 +4861,7 @@ function _monthlyManualGroup(rows, g, budgetTotal, isMobile, revNet = 0) {
       <div class="entry-card swipeable" data-swipe-fn="deleteMonthlyExpense(${e.id})" style="border-left-color:${c.hex};background:${c.bg};padding:9px 12px;${e.is_exceptional?'opacity:.55;':''}" onclick="openEditMonthlyExpense(${e.id})">
         <div style="display:flex;align-items:center;gap:8px">
           <input type="checkbox" class="monthly-cb" data-id="${e.id}" ${monthlySelected.has(e.id)?'checked':''} onclick="event.stopPropagation()" onchange="event.stopPropagation();toggleMonthlySelect(${e.id},this)" style="flex-shrink:0">
+          ${e.day?`<span style="font-size:var(--fs-xs);font-weight:700;color:var(--hint);flex-shrink:0;min-width:18px;text-align:center">${e.day}</span>`:''}
           <span style="font-weight:600;font-size:var(--fs-sm);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;${e.is_exceptional?'text-decoration:line-through;':''}">${e.name}</span>
           <span style="font-size:var(--fs-sm);font-weight:700;color:${mAc};flex-shrink:0">${eur(Math.abs(e.amount))}</span>
         </div>
@@ -4860,14 +4872,16 @@ function _monthlyManualGroup(rows, g, budgetTotal, isMobile, revNet = 0) {
 
   return `<div style="margin-bottom:var(--sg)">${hdr}<div id="monthly-body-${g.key}" style="${collapsed2?'display:none':''}">
 ${bar}    <div class="tbl-wrap"><table style="width:100%;table-layout:fixed">
-      <colgroup><col style="width:3%"><col style="width:58%"><col style="width:27%"><col style="width:12%"></colgroup>
+      <colgroup><col style="width:3%"><col style="width:6%"><col style="width:52%"><col style="width:27%"><col style="width:12%"></colgroup>
       <thead><tr>
         <th><input type="checkbox" data-group="${g.key}" onchange="toggleMonthlySelectAll(this,'${g.key}')"></th>
+        <th style="text-align:center;color:var(--hint);font-size:var(--fs-xs)">Jour</th>
         <th>Désignation</th><th style="text-align:right">Montant</th><th></th>
       </tr></thead>
       <tbody>
         ${rows.map(e => { const c=CATS[e.cat]; const mAc=e.cat==='revenu'?'var(--green)':e.cat==='impot'?'var(--amber)':e.cat==='epargne'?'var(--blue)':'var(--red)'; return `<tr style="border-left:3px solid ${c.hex};background:${c.bg}">
           <td><input type="checkbox" class="monthly-cb" data-id="${e.id}" data-group="${g.key}" ${monthlySelected.has(e.id)?'checked':''} onchange="toggleMonthlySelect(${e.id},this)"></td>
+          <td style="text-align:center;font-size:var(--fs-xs);font-weight:600;color:var(--hint)">${e.day||'—'}</td>
           <td><div style="font-weight:500">${e.name}</div>${e.note?`<div style="font-size:var(--fs-xs);color:var(--muted);margin-top:2px">${e.note}</div>`:''}</td>
           <td style="text-align:right;font-weight:600;color:${mAc}">${eur(Math.abs(e.amount))}</td>
           <td><div style="display:flex;gap:4px">
@@ -5105,6 +5119,7 @@ function openAddMonthlyExpense(defaultCat = null, locked = false, allowedCats = 
   catEl.disabled = locked;
   catEl.value    = defaultCat;
   document.getElementById('fme-amount').value = '';
+  document.getElementById('fme-day').value    = new Date().getDate();
   document.getElementById('fme-note').value   = '';
   cancelAddLabel();
   _allowedCats = allowedCats || [defaultCat];
@@ -5209,6 +5224,7 @@ function openEditMonthlyExpense(id) {
   catEl.disabled = false;
   catEl.value    = e.cat;
   document.getElementById('fme-amount').value = Math.abs(e.amount);
+  document.getElementById('fme-day').value    = e.day || '';
   document.getElementById('fme-note').value   = e.note || '';
   cancelAddLabel();
   _allowedCats = [e.cat];
@@ -5380,6 +5396,8 @@ document.getElementById('modal-me-save').onclick = async () => {
   const catEl = document.getElementById('fme-cat');
   const cat  = catEl.value || catEl.options[catEl.selectedIndex]?.value || 'variable';
   const note = document.getElementById('fme-note').value.trim();
+  const dayRaw = document.getElementById('fme-day').value;
+  const day  = dayRaw ? Math.min(31, Math.max(1, parseInt(dayRaw, 10))) : null;
   if (!name || isNaN(amt) || amt <= 0) return showApiError('Sélectionnez une désignation et renseignez un montant.');
   if (!note) return showApiError('La note est obligatoire.');
   // Mémorise la catégorie pour la prochaine ouverture
@@ -5392,10 +5410,10 @@ document.getElementById('modal-me-save').onclick = async () => {
   const isExceptional = document.getElementById('fme-exceptional')?.checked ? 1 : 0;
   try {
     if (editMonthlyId) {
-      await API.monthlyExpenses.update(editMonthlyId, { name, amount, cat, member, note, entry_id: editMonthlyEntryId, is_exceptional: isExceptional });
+      await API.monthlyExpenses.update(editMonthlyId, { name, amount, cat, member, note, entry_id: editMonthlyEntryId, is_exceptional: isExceptional, day });
       showToast('Dépense modifiée ✓');
     } else {
-      await API.monthlyExpenses.create({ year: monthlyYear, month: monthlyMonth, name, amount, cat, member, note, entry_id: editMonthlyEntryId });
+      await API.monthlyExpenses.create({ year: monthlyYear, month: monthlyMonth, name, amount, cat, member, note, entry_id: editMonthlyEntryId, day });
       showToast('Dépense ajoutée ✓');
     }
     editMonthlyEntryId = null;

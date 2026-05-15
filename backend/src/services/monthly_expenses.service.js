@@ -194,7 +194,7 @@ function getHistory(filters = {}) {
 
 // ── Écriture ─────────────────────────────────────────────────────
 
-function create({ year, month, name, amount, cat, member, note, entry_id }, userId) {
+function create({ year, month, name, amount, cat, member, note, entry_id, day }, userId) {
   if (!name || !name.trim())  throw httpError('La désignation est requise.', 400);
   if (isNaN(Number(amount))) throw httpError('Le montant doit être un nombre.', 400);
   if (!year || !month)       throw httpError('Année et mois requis.', 400);
@@ -202,17 +202,17 @@ function create({ year, month, name, amount, cat, member, note, entry_id }, user
   const isAuto   = AUTO_CATS.includes(cat);
   const isManual = MANUAL_CATS.includes(cat);
   if (!isAuto && !isManual) throw httpError(`Catégorie invalide : ${cat}`, 400);
-  // entry_id requis uniquement pour les overrides (cat auto + entry_id fourni) — sans entry_id c'est une dépense exceptionnelle
 
+  const dayVal = day ? Math.min(31, Math.max(1, Number(day))) : null;
   const result = db.prepare(`
-    INSERT INTO monthly_expenses (user_id, year, month, name, amount, cat, member, note, entry_id, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
-  `).run(userId, Number(year), Number(month), name.trim(), Number(amount), cat, member, note || null, entry_id || null);
+    INSERT INTO monthly_expenses (user_id, year, month, name, amount, cat, member, note, entry_id, day, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+  `).run(userId, Number(year), Number(month), name.trim(), Number(amount), cat, member, note || null, entry_id || null, dayVal);
 
   return getById(result.lastInsertRowid);
 }
 
-function update(id, { name, amount, cat, member, note, entry_id, is_exceptional }, userId) {
+function update(id, { name, amount, cat, member, note, entry_id, is_exceptional, day }, userId) {
   const existing = getById(id);
   if (!existing)                   throw httpError('Dépense introuvable.', 404);
   if (existing.user_id !== userId) throw httpError('Non autorisé.', 403);
@@ -224,14 +224,15 @@ function update(id, { name, amount, cat, member, note, entry_id, is_exceptional 
   const updatedNote        = note           !== undefined ? note                  : existing.note;
   const updatedEntryId     = entry_id       !== undefined ? entry_id             : existing.entry_id;
   const updatedExceptional = is_exceptional !== undefined ? (is_exceptional?1:0) : existing.is_exceptional;
+  const updatedDay         = day            !== undefined ? (day ? Math.min(31, Math.max(1, Number(day))) : null) : existing.day;
 
   if (!AUTO_CATS.includes(updatedCat) && !MANUAL_CATS.includes(updatedCat)) throw httpError(`Catégorie invalide : ${updatedCat}`, 400);
 
   db.prepare(`
     UPDATE monthly_expenses
-    SET name = ?, amount = ?, cat = ?, member = ?, note = ?, entry_id = ?, is_exceptional = ?, updated_at = datetime('now')
+    SET name = ?, amount = ?, cat = ?, member = ?, note = ?, entry_id = ?, is_exceptional = ?, day = ?, updated_at = datetime('now')
     WHERE id = ?
-  `).run(updatedName, updatedAmount, updatedCat, updatedMember, updatedNote, updatedEntryId, updatedExceptional, id);
+  `).run(updatedName, updatedAmount, updatedCat, updatedMember, updatedNote, updatedEntryId, updatedExceptional, updatedDay, id);
 
   return getById(id);
 }
