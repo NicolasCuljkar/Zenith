@@ -6103,8 +6103,8 @@ function renderSavings(){
   const _goal=parseInt(localStorage.getItem(_goalKey))||0;
   const _goalPct=_goal>0&&totalSav>0?Math.min(100,Math.round(totalSav/_goal*100)):0;
   const _goalCol=_goalPct>=100?'var(--green)':_goalPct>=70?'var(--amber)':'var(--blue)';
-  const _avgDelta=arr=>{const r=arr.slice(0,6);return r.length?r.reduce((s,x)=>s+(x.delta!=null?x.delta:0),0)/r.length:0;};
-  const _monthlyRate=_avgDelta(_savSort(savings.filter(s=>s.member===first)))+_avgDelta(_savSort(savings.filter(s=>s.member===second)));
+  const _goalDeltas=showMembers.flatMap(m=>savings.filter(s=>s.member===m&&s.delta!=null).map(s=>s.delta));
+  const _monthlyRate=_goalDeltas.length?Math.round(_goalDeltas.reduce((a,d)=>a+d,0)/_goalDeltas.length):0;
   const _remaining=Math.max(0,_goal-totalSav);
   const _monthsNeeded=_monthlyRate>0&&_remaining>0?Math.ceil(_remaining/_monthlyRate):null;
   const _estDate=_monthsNeeded!=null?(()=>{const d=new Date();d.setMonth(d.getMonth()+_monthsNeeded);return d.toLocaleDateString('fr-FR',{month:'long',year:'numeric'});})():null;
