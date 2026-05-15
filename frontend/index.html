@@ -3745,26 +3745,7 @@ function memberTableHtml(rows,isMobile,memberName){
       </div>
     </div></div>`}).join('');
     const _isFixGrp=g.key==='fixes';
-    // Calendrier prélèvements (budget prévisionnel, groupe fixes)
-    let _budFixCal='';
-    if(_isFixGrp){
-      const _isNowM=(new Date().getFullYear()===new Date().getFullYear()&&new Date().getMonth()===new Date().getMonth());
-      const _todD=new Date().getDate();
-      const _fixD=gRows.filter(e=>e.debit_day&&!e._synthetic).sort((a,b)=>a.debit_day-b.debit_day);
-      if(_fixD.length>0){
-        const _dots=_fixD.map(e=>{
-          const isPast=e.debit_day<=_todD;
-          const col=isPast?'var(--green)':'var(--amber)';
-          return`<span style="font-size:var(--fs-xs);font-weight:600;color:${isPast?'var(--green)':'var(--hint)'};text-align:center;white-space:nowrap;align-self:center;opacity:.7">${e.debit_day}</span>
-            <span style="font-size:var(--fs-xs);font-weight:500;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${e.name}</span>
-            <span style="font-size:var(--fs-xs);font-weight:600;color:var(--hint);white-space:nowrap;text-align:right;opacity:.85">${eur(Math.abs(e.amount))}</span>`;
-        }).join('');
-        _budFixCal=`<div style="margin-bottom:8px;border-bottom:1px solid var(--border);padding-bottom:10px">
-                    <div style="display:grid;grid-template-columns:auto 1fr auto;gap:4px 10px;align-items:center">${_dots}</div>
-        </div>`;
-      }
-    }
-    const inner=isMobile?`${_budFixCal}${mobileRows}`:`${_budFixCal}<div class="tbl-wrap"><table style="width:100%;table-layout:fixed">
+    const inner=isMobile?`${mobileRows}`:`<div class="tbl-wrap"><table style="width:100%;table-layout:fixed">
       ${_isFixGrp?`<colgroup><col style="width:50%"><col style="width:16%"><col style="width:22%"><col style="width:12%"></colgroup>`:`<colgroup><col style="width:60%"><col style="width:28%"><col style="width:12%"></colgroup>`}
       <thead><tr><th>Désignation</th>${_isFixGrp?'<th>Prélèvement</th>':''}<th style="text-align:right">Montant</th><th></th></tr></thead>
       <tbody id="drag-${memberName}-${g.key}">${tableRows}
@@ -4683,38 +4664,13 @@ function _monthlyAutoGroup(rows, overrides, extras, g, isMobile) {
   </div>`;
 
   // ── Calendrier des prélèvements (groupe fixe uniquement)
-  let _fixCalendar = '';
-  if (g.cats.includes('fixe')) {
-    const _isNowMonth = (monthlyYear === new Date().getFullYear() && monthlyMonth === new Date().getMonth()+1);
-    const _todayD = new Date().getDate();
-    const fixWithDay = rows.filter(e => e.debit_day).sort((a,b) => a.debit_day - b.debit_day);
-    if (fixWithDay.length > 0) {
-      const rows2 = fixWithDay.map(e => {
-        const getOv2 = (id) => overrides.find(o => Number(o.entry_id) === id);
-        const ov2 = getOv2(e.id);
-        const isSup = ov2 && ov2.amount === 0;
-        const isPast = _isNowMonth && e.debit_day <= _todayD;
-        const col = isSup ? 'var(--muted)' : isPast ? 'var(--green)' : 'var(--amber)';
-        const amt = ov2 ? Math.abs(ov2.amount) : Math.abs(e.amount);
-        const nameCol = isSup ? 'var(--muted)' : 'var(--text)';
-        const rowOp = isSup ? 'opacity:.5;' : '';
-        const dayCol = isSup ? 'var(--hint)' : isPast ? 'var(--green)' : 'var(--hint)';
-        return `<span style="${rowOp}font-size:var(--fs-xs);font-weight:600;color:${dayCol};text-align:center;white-space:nowrap;align-self:center;opacity:.7">${e.debit_day}</span>
-          <span style="${rowOp}font-size:var(--fs-xs);font-weight:500;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap${isSup?';text-decoration:line-through':''}">${e.name}</span>
-          <span style="${rowOp}font-size:var(--fs-xs);font-weight:600;color:var(--hint);white-space:nowrap;text-align:right;opacity:.85">${isSup?'—':eur(amt)}</span>`;
-      }).join('');
-      _fixCalendar = `<div style="margin-bottom:8px;border-bottom:1px solid var(--border);padding-bottom:10px">
-                <div style="display:grid;grid-template-columns:auto 1fr auto;gap:4px 10px;align-items:center">${rows2}</div>
-      </div>`;
-    }
-  }
 
   if (!rows.length && !extras.length) {
     return `<div style="margin-bottom:var(--sg)">${hdr}<div id="monthly-body-${g.key}" style="${collapsed?'display:none':''}">${bar}<div class="tbl-empty">Aucune ligne pour ce mois</div></div></div>`;
   }
 
   if (isMobile) {
-    return `<div style="margin-bottom:1rem">${hdr}<div id="monthly-body-${g.key}" style="${collapsed?'display:none':''}">${bar}${_fixCalendar}${rows.map(e => {
+    return `<div style="margin-bottom:1rem">${hdr}<div id="monthly-body-${g.key}" style="${collapsed?'display:none':''}">${bar}${rows.map(e => {
       const ov = getOv(e.id);
       const displayAmt = ov ? Math.abs(ov.amount) : Math.abs(e.amount);
       const isOverridden = !!ov;
@@ -4751,7 +4707,7 @@ function _monthlyAutoGroup(rows, overrides, extras, g, isMobile) {
     }).join('')}</div></div>`;
   }
   return `<div style="margin-bottom:var(--sg)">${hdr}<div id="monthly-body-${g.key}" style="${collapsed?'display:none':''}">
-${bar}${_fixCalendar}    <div class="tbl-wrap"><table style="width:100%;table-layout:fixed">
+${bar}    <div class="tbl-wrap"><table style="width:100%;table-layout:fixed">
       <colgroup><col style="width:3%"><col style="width:6%"><col style="width:52%"><col style="width:27%"><col style="width:12%"></colgroup>
       <thead><tr>
         <th><input type="checkbox" data-group="${g.key}" onchange="toggleMonthlySelectAll(this,'${g.key}')"></th>
@@ -4891,7 +4847,7 @@ ${bar}    <div class="tbl-wrap"><table style="width:100%;table-layout:fixed">
           </div></td>
         </tr>`; }).join('')}
         <tr style="background:var(--surface2)">
-          <td></td><td style="font-size:var(--fs-sm);font-weight:600;color:var(--muted)">Total ${g.label.toLowerCase()}</td>
+          <td></td><td></td><td style="font-size:var(--fs-sm);font-weight:600;color:var(--muted)">Total ${g.label.toLowerCase()}</td>
           <td style="text-align:right;font-weight:700;color:${g.totColor}">${eur(actualTotal)}</td><td></td>
         </tr>
       </tbody>
