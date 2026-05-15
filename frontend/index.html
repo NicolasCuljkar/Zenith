@@ -3747,7 +3747,7 @@ function memberTableHtml(rows,isMobile,memberName){
             <span style="font-size:var(--fs-xs);color:${col};font-weight:700;white-space:nowrap">${eur(Math.abs(e.amount))}</span>
           </div>`;
         }).join('');
-        _budFixCal=`<div style="overflow:hidden;margin-bottom:6px;border-bottom:1px solid var(--border)"><div class="cal-scroll" style="display:flex;gap:6px;overflow-x:auto;padding:6px 6px 8px 0;scrollbar-width:none;-webkit-overflow-scrolling:touch">${_dots}</div></div>`;
+        _budFixCal=`<div style="margin-bottom:6px;border-bottom:1px solid var(--border);padding-bottom:8px"><div class="cal-scroll" style="display:flex;flex-wrap:wrap;gap:5px;padding-top:6px">${_dots}</div></div>`;
       }
     }
     const inner=isMobile?`${_budFixCal}${mobileRows}`:`${_budFixCal}<div class="tbl-wrap"><table style="width:100%;table-layout:fixed">
@@ -4689,7 +4689,7 @@ function _monthlyAutoGroup(rows, overrides, extras, g, isMobile) {
           <span style="font-size:var(--fs-xs);color:${col};font-weight:700;white-space:nowrap">${eur(amt)}</span>
         </div>`;
       }).join('');
-      _fixCalendar = `<div style="overflow:hidden;margin-bottom:6px;border-bottom:1px solid var(--border)"><div class="cal-scroll" style="display:flex;gap:6px;overflow-x:auto;padding:6px 6px 8px 0;scrollbar-width:none;-webkit-overflow-scrolling:touch">${dots}</div></div>`;
+      _fixCalendar = `<div style="margin-bottom:6px;border-bottom:1px solid var(--border);padding-bottom:8px"><div class="cal-scroll" style="display:flex;flex-wrap:wrap;gap:5px;padding-top:6px">${dots}</div></div>`;
     }
   }
 
