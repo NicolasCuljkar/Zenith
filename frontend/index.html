@@ -3726,15 +3726,15 @@ function memberTableHtml(rows,isMobile,memberName){
       if(_fixD.length>0){
         const _dots=_fixD.map(e=>{
           const isPast=e.debit_day<=_todD;
-          const bg=isPast?'var(--green-bg)':'color-mix(in srgb,var(--amber) 15%,var(--surface))';
           const col=isPast?'var(--green)':'var(--amber)';
-          const shortN=e.name.length>12?e.name.slice(0,11)+'…':e.name;
-          return`<div style="display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:10px;background:${bg};border:1.5px solid ${col};flex-shrink:0">
-            <div style="width:36px;height:36px;border-radius:50%;background:${col}22;border:2px solid ${col};display:flex;align-items:center;justify-content:center;font-size:var(--fs-sm);font-weight:800;color:${col};flex-shrink:0">${e.debit_day}</div>
-            <div><div style="font-size:var(--fs-sm);font-weight:700;color:var(--text)">${shortN}</div><div style="font-size:var(--fs-xs);font-weight:600;color:${col}">${eur(Math.abs(e.amount))} · ${isPast?'prélevé':'à venir'}</div></div>
+          const shortN=e.name.length>14?e.name.slice(0,13)+'…':e.name;
+          return`<div title="${e.name} · ${eur(Math.abs(e.amount))}" style="display:inline-flex;align-items:center;gap:5px;padding:3px 8px 3px 4px;border-radius:20px;border:1px solid ${col};background:${col}12;flex-shrink:0">
+            <span style="font-size:10px;font-weight:800;color:${col};background:${col}22;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;flex-shrink:0">${e.debit_day}</span>
+            <span style="font-size:var(--fs-xs);font-weight:600;color:var(--text);white-space:nowrap">${shortN}</span>
+            <span style="font-size:var(--fs-xs);color:${col};font-weight:700;white-space:nowrap">${eur(Math.abs(e.amount))}</span>
           </div>`;
         }).join('');
-        _budFixCal=`<div style="display:flex;gap:8px;flex-wrap:wrap;padding:8px 0 10px;border-bottom:1px solid var(--border);margin-bottom:8px">${_dots}</div>`;
+        _budFixCal=`<div style="display:flex;gap:6px;overflow-x:auto;padding:6px 0 8px;margin-bottom:6px;border-bottom:1px solid var(--border);scrollbar-width:none">${_dots}</div>`;
       }
     }
     const inner=isMobile?`${_budFixCal}${mobileRows}`:`${_budFixCal}<div class="tbl-wrap"><table style="width:100%;table-layout:fixed">
@@ -4658,7 +4658,7 @@ function _monthlyAutoGroup(rows, overrides, extras, g, isMobile) {
   // ── Calendrier des prélèvements (groupe fixe uniquement)
   let _fixCalendar = '';
   if (g.cats.includes('fixe')) {
-    const _isNowMonth = (_lastMonthlyStats && monthlyYear === new Date().getFullYear() && monthlyMonth === new Date().getMonth()+1);
+    const _isNowMonth = (monthlyYear === new Date().getFullYear() && monthlyMonth === new Date().getMonth()+1);
     const _todayD = new Date().getDate();
     const fixWithDay = rows.filter(e => e.debit_day).sort((a,b) => a.debit_day - b.debit_day);
     if (fixWithDay.length > 0) {
@@ -4667,20 +4667,16 @@ function _monthlyAutoGroup(rows, overrides, extras, g, isMobile) {
         const ov2 = getOv2(e.id);
         const isSup = ov2 && ov2.amount === 0;
         const isPast = _isNowMonth && e.debit_day <= _todayD;
-        const isFuture = _isNowMonth && !isPast;
-        const bg = isSup ? 'var(--surface2)' : isPast ? 'var(--green-bg)' : 'color-mix(in srgb,var(--amber) 15%,var(--surface))';
         const col = isSup ? 'var(--muted)' : isPast ? 'var(--green)' : 'var(--amber)';
         const amt = ov2 ? Math.abs(ov2.amount) : Math.abs(e.amount);
-        const shortName = e.name.length > 12 ? e.name.slice(0,11)+'…' : e.name;
-        return `<div style="display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:10px;background:${bg};border:1.5px solid ${col}${isSup?';opacity:.5':''};min-width:0;flex-shrink:0">
-          <div style="width:36px;height:36px;border-radius:50%;background:${col}22;border:2px solid ${col};display:flex;align-items:center;justify-content:center;font-size:var(--fs-sm);font-weight:800;color:${col};flex-shrink:0">${e.debit_day}</div>
-          <div style="min-width:0">
-            <div style="font-size:var(--fs-sm);font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${shortName}</div>
-            <div style="font-size:var(--fs-xs);font-weight:600;color:${col}">${eur(amt)}${_isNowMonth?(isPast?' · prélevé':' · à venir'):''}</div>
-          </div>
+        const shortName = e.name.length > 14 ? e.name.slice(0,13)+'…' : e.name;
+        return `<div title="${e.name} · ${eur(amt)}" style="display:inline-flex;align-items:center;gap:5px;padding:3px 8px 3px 4px;border-radius:20px;border:1px solid ${col};background:${col}12;flex-shrink:0${isSup?';opacity:.5':''}">
+          <span style="font-size:10px;font-weight:800;color:${col};background:${col}22;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;flex-shrink:0">${e.debit_day}</span>
+          <span style="font-size:var(--fs-xs);font-weight:600;color:var(--text);white-space:nowrap">${shortName}</span>
+          <span style="font-size:var(--fs-xs);color:${col};font-weight:700;white-space:nowrap">${eur(amt)}</span>
         </div>`;
       }).join('');
-      _fixCalendar = `<div style="display:flex;gap:8px;flex-wrap:wrap;padding:8px 0 10px;border-bottom:1px solid var(--border);margin-bottom:8px">${dots}</div>`;
+      _fixCalendar = `<div style="display:flex;gap:6px;overflow-x:auto;padding:6px 0 8px;margin-bottom:6px;border-bottom:1px solid var(--border);scrollbar-width:none">${dots}</div>`;
     }
   }
 
