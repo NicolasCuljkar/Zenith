@@ -89,7 +89,7 @@ function create({ name, amount, cat, member, debit_day }, userId) {
   if (!VALID_CATS.includes(cat))                    throw httpError(`Catégorie invalide : ${cat}`, 400);
   if (!getValidMembers(userId).includes(member))    throw httpError(`Membre invalide : ${member}`, 400);
 
-  const dd = (cat === 'fixe' && debit_day != null && debit_day !== '') ? Math.min(31, Math.max(1, parseInt(debit_day))) : null;
+  const dd = (['fixe','revenu'].includes(cat) && debit_day != null && debit_day !== '') ? Math.min(31, Math.max(1, parseInt(debit_day))) : null;
 
   const maxOrder = db.prepare(
     'SELECT COALESCE(MAX(sort_order), 0) AS m FROM entries WHERE member = ?'
@@ -120,9 +120,9 @@ function update(id, { name, amount, cat, member, debit_day }, userId) {
   const updatedAmount = amount !== undefined ? Number(amount) : existing.amount;
   const updatedCat    = cat    !== undefined ? cat            : existing.cat;
   const updatedMember = member !== undefined ? member         : existing.member;
-  const updatedDd     = updatedCat === 'fixe' && debit_day !== undefined
+  const updatedDd     = ['fixe','revenu'].includes(updatedCat) && debit_day !== undefined
     ? (debit_day != null && debit_day !== '' ? Math.min(31, Math.max(1, parseInt(debit_day))) : null)
-    : (updatedCat !== 'fixe' ? null : existing.debit_day);
+    : (!['fixe','revenu'].includes(updatedCat) ? null : existing.debit_day);
 
   db.prepare(`
     UPDATE entries
